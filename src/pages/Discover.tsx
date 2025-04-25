@@ -21,18 +21,25 @@ import {
 } from "@/components/ui/accordion";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { Search, MapPin, Compass, Map } from "lucide-react";
+import { Search, MapPin, Compass, Map, Cannabis } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useTrails } from '@/hooks/use-trails';
+import { useTrails, TrailDifficulty } from '@/hooks/use-trails';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/use-auth';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
 
 const Discover = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [difficultyFilter, setDifficultyFilter] = useState<string | null>(null);
-  // Fix 1: Explicitly type this as a tuple with 2 elements
   const [lengthRange, setLengthRange] = useState<[number, number]>([0, 10]);
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
+  const [showAgeRestricted, setShowAgeRestricted] = useState(false);
+  
+  const { user } = useAuth();
+  const { toast } = useToast();
   const navigate = useNavigate();
   
   // Fetch trails using our custom hook
@@ -40,6 +47,7 @@ const Discover = () => {
     searchQuery,
     difficulty: difficultyFilter,
     lengthRange,
+    showAgeRestricted: user ? showAgeRestricted : false
   });
 
   const handleResetFilters = () => {
@@ -50,6 +58,18 @@ const Discover = () => {
 
   const handleTrailClick = (trailId: string) => {
     navigate(`/trail/${trailId}`);
+  };
+  
+  const handleAgeRestrictedToggle = () => {
+    if (!user) {
+      toast({
+        title: "Login Required",
+        description: "You must be signed in and age verified to see 21+ content",
+        variant: "destructive"
+      });
+      return;
+    }
+    setShowAgeRestricted(!showAgeRestricted);
   };
 
   return (
@@ -149,6 +169,29 @@ const Discover = () => {
                         <span>{lengthRange[1]} miles</span>
                       </div>
                     </div>
+                  </div>
+                  
+                  {/* Age Restricted Content Toggle */}
+                  <div className="pt-2 border-t border-greentrail-200 dark:border-greentrail-700">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <Cannabis className="h-4 w-4 text-purple-600" />
+                        <label htmlFor="age-restricted" className="text-sm font-medium text-greentrail-700 dark:text-greentrail-300">
+                          21+ Content
+                        </label>
+                      </div>
+                      <Switch 
+                        id="age-restricted" 
+                        checked={showAgeRestricted}
+                        onCheckedChange={handleAgeRestrictedToggle}
+                        disabled={!user}
+                      />
+                    </div>
+                    {!user && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        <Link to="/auth" className="text-greentrail-600 hover:underline">Sign in</Link> to view 21+ content
+                      </p>
+                    )}
                   </div>
                   
                   {/* Additional Filters */}
@@ -269,17 +312,18 @@ const Discover = () => {
                     {trails.length > 0 ? (
                       trails.map((trail) => (
                         <Link to={`/trail/${trail.id}`} key={trail.id}>
-                          {/* Fix 3: Cast difficulty to the correct type */}
                           <TrailCard 
                             id={trail.id}
                             name={trail.name}
                             location={trail.location}
                             imageUrl={trail.imageUrl}
-                            difficulty={trail.difficulty as 'easy' | 'moderate' | 'hard' | 'expert'}
+                            difficulty={trail.difficulty as TrailDifficulty}
                             length={trail.length}
                             elevation={trail.elevation}
                             tags={trail.tags}
                             likes={trail.likes}
+                            strainTags={trail.strainTags}
+                            isAgeRestricted={trail.isAgeRestricted}
                           />
                         </Link>
                       ))

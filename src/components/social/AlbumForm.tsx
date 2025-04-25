@@ -1,16 +1,16 @@
 
 import React, { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { MapPin, Upload, X, Image, Camera } from 'lucide-react';
+import { MapPin, Upload, X, Camera } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
-import { useNavigate } from 'react-router-dom';
+import { useCreateAlbum } from '@/hooks/use-create-album';
 
 interface AlbumFormProps {
   className?: string;
@@ -21,6 +21,7 @@ const AlbumForm: React.FC<AlbumFormProps> = ({ className }) => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { handleCreateAlbum, isSubmitting } = useCreateAlbum();
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -28,7 +29,6 @@ const AlbumForm: React.FC<AlbumFormProps> = ({ className }) => {
   const [isPrivate, setIsPrivate] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [useLocation, setUseLocation] = useState(false);
   const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
   
@@ -109,103 +109,10 @@ const AlbumForm: React.FC<AlbumFormProps> = ({ className }) => {
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!user) {
-      toast({
-        title: 'Error',
-        description: 'You must be signed in to create an album.',
-        variant: 'destructive',
-      });
-      return;
-    }
-    
-    if (!title) {
-      toast({
-        title: 'Error',
-        description: 'Please enter a title for your album.',
-        variant: 'destructive',
-      });
-      return;
-    }
-    
-    if (files.length === 0) {
-      toast({
-        title: 'Error',
-        description: 'Please add at least one photo or video to your album.',
-        variant: 'destructive',
-      });
-      return;
-    }
-    
-    setIsSubmitting(true);
-    
-    try {
-      // Create album
-      const { data: album, error: albumError } = await supabase
-        .from('albums')
-        .insert({
-          title,
-          description,
-          location,
-          is_private: isPrivate,
-          user_id: user.id,
-          // Add coordinates if using location
-          ...(useLocation && userLocation ? {
-            coordinates: `POINT(${userLocation.lng} ${userLocation.lat})`
-          } : {})
-        })
-        .select()
-        .single();
-      
-      if (albumError) throw albumError;
-      
-      // Upload files
-      for (const file of files) {
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
-        const filePath = `${fileName}`;
-        
-        // Upload to storage
-        const { error: uploadError } = await supabase.storage
-          .from('media')
-          .upload(filePath, file);
-        
-        if (uploadError) throw uploadError;
-        
-        // Add to media table
-        const { error: mediaError } = await supabase
-          .from('media')
-          .insert({
-            album_id: album.id,
-            user_id: user.id,
-            file_path: filePath,
-            file_type: file.type,
-            caption: ''
-          });
-        
-        if (mediaError) throw mediaError;
-      }
-      
-      toast({
-        title: 'Album Created',
-        description: 'Your album has been created successfully.',
-      });
-      
-      // Navigate to social page
-      navigate('/social');
-      
-    } catch (error: any) {
-      console.error('Error creating album:', error);
-      toast({
-        title: 'Error',
-        description: error.message || 'An unexpected error occurred.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+    await handleCreateAlbum(title, description, location, isPrivate, files, userLocation);
   };
 
+  // UI rendering
   return (
     <Card className={className}>
       <CardHeader>
@@ -213,6 +120,7 @@ const AlbumForm: React.FC<AlbumFormProps> = ({ className }) => {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Title field */}
           <div className="space-y-2">
             <Label htmlFor="title">Album Title</Label>
             <Input
@@ -224,6 +132,7 @@ const AlbumForm: React.FC<AlbumFormProps> = ({ className }) => {
             />
           </div>
           
+          {/* Description field */}
           <div className="space-y-2">
             <Label htmlFor="description">Description (Optional)</Label>
             <Textarea
@@ -235,6 +144,7 @@ const AlbumForm: React.FC<AlbumFormProps> = ({ className }) => {
             />
           </div>
           
+          {/* Location field */}
           <div className="space-y-2">
             <Label htmlFor="location">Location (Optional)</Label>
             <div className="flex gap-2">
@@ -256,6 +166,7 @@ const AlbumForm: React.FC<AlbumFormProps> = ({ className }) => {
             </div>
           </div>
           
+          {/* Photos/Videos upload */}
           <div className="space-y-4">
             <Label>Photos/Videos</Label>
             
@@ -303,6 +214,7 @@ const AlbumForm: React.FC<AlbumFormProps> = ({ className }) => {
             </div>
           </div>
           
+          {/* Privacy toggle & action buttons */}
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <Switch 

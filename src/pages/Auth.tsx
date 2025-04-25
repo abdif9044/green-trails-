@@ -1,318 +1,287 @@
 
-import React, { useState, useEffect } from 'react';
-import { useSearchParams, Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/hooks/use-auth';
-import { useToast } from '@/hooks/use-toast';
-
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
-import { Button } from '@/components/ui/button';
+import { useState } from 'react';
+import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
+import { 
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardFooter, 
+  CardHeader, 
+  CardTitle 
+} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import AgeVerification from '@/components/auth/AgeVerification';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertCircle } from 'lucide-react';
+import { useAuth } from '@/hooks/use-auth';
+import { useToast } from '@/hooks/use-toast';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
+import AgeVerificationForm from '@/components/auth/AgeVerificationForm';
 
 const Auth = () => {
-  const { signIn, signUp, session } = useAuth();
+  const [searchParams] = useSearchParams();
+  const { user, signIn, signUp } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const [activeTab, setActiveTab] = useState<"signin" | "signup">(
-    searchParams.get('signup') === 'true' ? 'signup' : 'signin'
-  );
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [ageVerified, setAgeVerified] = useState(false);
+  const [showAgeVerification, setShowAgeVerification] = useState(false);
   
-  // Redirect if already signed in
-  useEffect(() => {
-    if (session) {
-      navigate('/');
-    }
-  }, [session, navigate]);
-
+  const defaultTab = searchParams.get('signup') === 'true' ? 'signup' : 'signin';
+  const [activeTab, setActiveTab] = useState(defaultTab);
+  
+  if (user) {
+    return <Navigate to="/" />;
+  }
+  
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
+    setLoading(true);
     
     if (!email || !password) {
-      toast({
-        title: 'Error',
-        description: 'Please fill in all fields.',
-        variant: 'destructive',
-      });
+      setError('Email and password are required');
+      setLoading(false);
       return;
     }
     
-    setLoading(true);
-    
     try {
       const { error } = await signIn(email, password);
+      if (error) throw error;
       
-      if (error) {
-        toast({
-          title: 'Sign In Failed',
-          description: error.message || 'There was a problem signing in.',
-          variant: 'destructive',
-        });
-        return;
-      }
-      
-      // Success is handled by the auth state change in useAuth
-    } catch (err) {
       toast({
-        title: 'Error',
-        description: 'An unexpected error occurred.',
-        variant: 'destructive',
+        title: "Welcome back!",
+        description: "You have successfully signed in.",
+        variant: "default",
       });
+      
+      navigate('/');
+    } catch (err: any) {
+      console.error('Sign in error:', err);
+      setError(err.message || 'Failed to sign in');
     } finally {
       setLoading(false);
     }
   };
-
-  const handleSignUp = async (e: React.FormEvent) => {
+  
+  const handleSignUpStart = (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
     
-    if (!email || !password || !confirmPassword) {
-      toast({
-        title: 'Error',
-        description: 'Please fill in all fields.',
-        variant: 'destructive',
-      });
+    if (!email || !password) {
+      setError('Email and password are required');
       return;
     }
     
     if (password !== confirmPassword) {
-      toast({
-        title: 'Error',
-        description: 'Passwords do not match.',
-        variant: 'destructive',
-      });
+      setError('Passwords do not match');
       return;
     }
     
-    if (!ageVerified) {
-      toast({
-        title: 'Age Verification Required',
-        description: 'You must verify you are 21 or older to create an account.',
-        variant: 'destructive',
-      });
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters');
       return;
     }
     
+    // Show age verification before proceeding with signup
+    setShowAgeVerification(true);
+  };
+  
+  const handleSignUp = async () => {
     setLoading(true);
     
     try {
       const { error } = await signUp(email, password);
-      
-      if (error) {
-        toast({
-          title: 'Sign Up Failed',
-          description: error.message || 'There was a problem creating your account.',
-          variant: 'destructive',
-        });
-        return;
-      }
+      if (error) throw error;
       
       toast({
-        title: 'Account Created',
-        description: 'Your account has been created successfully. You can now sign in.',
-        // Fixed here: changed 'success' to 'default'
-        variant: 'default',
+        title: "Account created!",
+        description: "Your account has been successfully created. Please check your email to verify your account.",
       });
       
+      // Auto switch to signin tab
       setActiveTab('signin');
-    } catch (err) {
-      toast({
-        title: 'Error',
-        description: 'An unexpected error occurred.',
-        variant: 'destructive',
-      });
+    } catch (err: any) {
+      console.error('Sign up error:', err);
+      setError(err.message || 'Failed to create account');
     } finally {
       setLoading(false);
+      setShowAgeVerification(false);
     }
   };
-
-  const handleAgeVerification = (isVerified: boolean) => {
-    setAgeVerified(isVerified);
-    if (!isVerified) {
-      toast({
-        title: 'Age Verification Failed',
-        description: 'You must be 21 or older to use GreenTrails.',
-        variant: 'destructive',
-      });
-    } else {
-      toast({
-        title: 'Age Verified',
-        description: 'You have been verified as 21 or older.',
-        // Fixed here: changed 'success' to 'default'
-        variant: 'default',
-      });
-    }
-  };
-
+  
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
       
-      <main className="flex-grow flex items-center justify-center bg-greentrail-50 dark:bg-greentrail-950 py-12">
-        <div className="container max-w-md px-4">
-          <div className="mb-8 flex justify-center">
-            <img 
-              src="/lovable-uploads/0c2a9cc4-4fdb-4d4a-965c-47b406e4ec4e.png" 
-              alt="GreenTrails Logo" 
-              className="h-16 w-auto"
+      <div className="flex-grow flex items-center justify-center bg-greentrail-50 dark:bg-greentrail-950 py-12">
+        <div className="w-full max-w-md px-4">
+          {showAgeVerification ? (
+            <AgeVerificationForm 
+              onVerified={handleSignUp}
+              onCancel={() => setShowAgeVerification(false)}
             />
-          </div>
-          
-          <Tabs
-            defaultValue={activeTab}
-            value={activeTab}
-            onValueChange={(value) => setActiveTab(value as 'signin' | 'signup')}
-            className="w-full"
-          >
-            <TabsList className="grid grid-cols-2 mb-8 w-full">
-              <TabsTrigger value="signin">Sign In</TabsTrigger>
-              <TabsTrigger value="signup">Sign Up</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="signin" className="mt-0">
-              <Card>
-                <CardHeader className="pb-2">
-                  <h1 className="text-2xl font-bold text-greentrail-800 dark:text-greentrail-200 text-center">
-                    Welcome Back
-                  </h1>
-                </CardHeader>
-                <CardContent>
-                  <form onSubmit={handleSignIn} className="space-y-4 mt-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="signin-email">Email</Label>
-                      <Input
-                        id="signin-email"
-                        type="email"
-                        placeholder="your.email@example.com"
-                        autoComplete="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor="signin-password">Password</Label>
-                        <Link to="/forgot-password" className="text-sm text-greentrail-600 hover:text-greentrail-800 dark:text-greentrail-400 dark:hover:text-greentrail-200">
-                          Forgot password?
-                        </Link>
-                      </div>
-                      <Input
-                        id="signin-password"
-                        type="password"
-                        autoComplete="current-password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <Button type="submit" className="w-full" disabled={loading}>
-                      {loading ? 'Signing In...' : 'Sign In'}
-                    </Button>
-                  </form>
-                  <div className="mt-6 text-center text-sm text-greentrail-600 dark:text-greentrail-400">
-                    Don't have an account?{' '}
-                    <button
-                      type="button"
-                      className="font-medium text-greentrail-600 hover:text-greentrail-700 dark:text-greentrail-400 dark:hover:text-greentrail-300"
-                      onClick={() => setActiveTab('signup')}
-                    >
-                      Sign Up
-                    </button>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="signup" className="mt-0">
-              <Card>
-                <CardHeader className="pb-2">
-                  <h1 className="text-2xl font-bold text-greentrail-800 dark:text-greentrail-200 text-center">
-                    Create an Account
-                  </h1>
-                </CardHeader>
-                <CardContent>
-                  {!ageVerified ? (
-                    <AgeVerification onVerify={handleAgeVerification} />
-                  ) : (
-                    <form onSubmit={handleSignUp} className="space-y-4 mt-4">
+          ) : (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-center text-2xl">Welcome to GreenTrails</CardTitle>
+                <CardDescription className="text-center">
+                  Sign in to your account or create a new one
+                </CardDescription>
+              </CardHeader>
+              
+              <CardContent>
+                <Tabs defaultValue={activeTab} value={activeTab} onValueChange={setActiveTab} className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="signin">Sign In</TabsTrigger>
+                    <TabsTrigger value="signup">Sign Up</TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="signin">
+                    <form onSubmit={handleSignIn} className="space-y-4 mt-4">
+                      {error && (
+                        <Alert variant="destructive">
+                          <AlertCircle className="h-4 w-4" />
+                          <AlertDescription>{error}</AlertDescription>
+                        </Alert>
+                      )}
+                      
                       <div className="space-y-2">
-                        <Label htmlFor="signup-email">Email</Label>
+                        <Label htmlFor="email-signin">Email</Label>
                         <Input
-                          id="signup-email"
+                          id="email-signin"
                           type="email"
-                          placeholder="your.email@example.com"
-                          autoComplete="email"
+                          placeholder="Enter your email"
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
                           required
                         />
                       </div>
+                      
                       <div className="space-y-2">
-                        <Label htmlFor="signup-password">Password</Label>
+                        <div className="flex justify-between">
+                          <Label htmlFor="password-signin">Password</Label>
+                          <a href="#" className="text-xs text-greentrail-600 hover:underline">
+                            Forgot password?
+                          </a>
+                        </div>
                         <Input
-                          id="signup-password"
+                          id="password-signin"
                           type="password"
-                          autoComplete="new-password"
+                          placeholder="Enter your password"
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
                           required
                         />
                       </div>
+                      
+                      <Button type="submit" className="w-full" disabled={loading}>
+                        {loading ? 'Signing in...' : 'Sign In'}
+                      </Button>
+                    </form>
+                  </TabsContent>
+                  
+                  <TabsContent value="signup">
+                    <form onSubmit={handleSignUpStart} className="space-y-4 mt-4">
+                      {error && (
+                        <Alert variant="destructive">
+                          <AlertCircle className="h-4 w-4" />
+                          <AlertDescription>{error}</AlertDescription>
+                        </Alert>
+                      )}
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="email-signup">Email</Label>
+                        <Input
+                          id="email-signup"
+                          type="email"
+                          placeholder="Enter your email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          required
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="password-signup">Password</Label>
+                        <Input
+                          id="password-signup"
+                          type="password"
+                          placeholder="Create a password"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          required
+                        />
+                      </div>
+                      
                       <div className="space-y-2">
                         <Label htmlFor="confirm-password">Confirm Password</Label>
                         <Input
                           id="confirm-password"
                           type="password"
-                          autoComplete="new-password"
+                          placeholder="Confirm your password"
                           value={confirmPassword}
                           onChange={(e) => setConfirmPassword(e.target.value)}
                           required
                         />
                       </div>
+                      
+                      <div className="text-xs text-muted-foreground">
+                        By signing up, you agree to the <a href="#" className="text-greentrail-600 hover:underline">Terms of Service</a> and <a href="#" className="text-greentrail-600 hover:underline">Privacy Policy</a>.
+                        <br />
+                        <strong>You must be 21 years or older to create an account.</strong>
+                      </div>
+                      
                       <Button type="submit" className="w-full" disabled={loading}>
-                        {loading ? 'Creating Account...' : 'Sign Up'}
+                        {loading ? 'Creating account...' : 'Continue'}
                       </Button>
                     </form>
-                  )}
-                  
-                  <div className="mt-6 text-center text-sm text-greentrail-600 dark:text-greentrail-400">
-                    Already have an account?{' '}
-                    <button
-                      type="button"
-                      className="font-medium text-greentrail-600 hover:text-greentrail-700 dark:text-greentrail-400 dark:hover:text-greentrail-300"
-                      onClick={() => setActiveTab('signin')}
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+              
+              <CardFooter className="flex justify-center text-sm text-muted-foreground">
+                {activeTab === 'signin' ? (
+                  <p>
+                    Don't have an account?{' '}
+                    <a 
+                      href="#" 
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setActiveTab('signup');
+                      }}
+                      className="text-greentrail-600 hover:underline"
                     >
-                      Sign In
-                    </button>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-          
-          <div className="mt-8 text-center text-sm text-greentrail-600 dark:text-greentrail-400">
-            By signing in or creating an account, you agree to our{' '}
-            <Link to="/terms" className="font-medium text-greentrail-600 hover:text-greentrail-700 dark:text-greentrail-400 dark:hover:text-greentrail-300">
-              Terms of Service
-            </Link>{' '}
-            and{' '}
-            <Link to="/privacy" className="font-medium text-greentrail-600 hover:text-greentrail-700 dark:text-greentrail-400 dark:hover:text-greentrail-300">
-              Privacy Policy
-            </Link>
-          </div>
+                      Sign up
+                    </a>
+                  </p>
+                ) : (
+                  <p>
+                    Already have an account?{' '}
+                    <a 
+                      href="#" 
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setActiveTab('signin');
+                      }}
+                      className="text-greentrail-600 hover:underline"
+                    >
+                      Sign in
+                    </a>
+                  </p>
+                )}
+              </CardFooter>
+            </Card>
+          )}
         </div>
-      </main>
+      </div>
       
       <Footer />
     </div>

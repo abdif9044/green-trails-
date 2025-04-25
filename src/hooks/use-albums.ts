@@ -15,21 +15,47 @@ export const useAlbums = (filter: 'feed' | 'following') => {
 
         const followingIds = followingData?.map(f => f.following_id) || [];
 
-        const { data: albums } = await supabase
+        if (followingIds.length === 0) {
+          return []; // No followings, return empty array
+        }
+
+        const { data: albums, error } = await supabase
           .from('albums')
-          .select('*, user:user_id(*)')
+          .select(`
+            *,
+            user:user_id (
+              id,
+              email
+            )
+          `)
           .in('user_id', followingIds)
           .order('created_at', { ascending: false });
+
+        if (error) {
+          console.error('Error fetching following albums:', error);
+          return [];
+        }
 
         return albums || [];
       }
 
       // Fetch all public albums for the feed
-      const { data: albums } = await supabase
+      const { data: albums, error } = await supabase
         .from('albums')
-        .select('*, user:user_id(*)')
+        .select(`
+          *,
+          user:user_id (
+            id,
+            email
+          )
+        `)
         .eq('is_private', false)
         .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching feed albums:', error);
+        return [];
+      }
 
       return albums || [];
     }

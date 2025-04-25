@@ -9,9 +9,27 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
 
 export const NavbarAuth = () => {
   const { user, signOut } = useAuth();
+  const { toast } = useToast();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      toast({
+        title: "Signed out successfully",
+        description: "You have been signed out of your account.",
+      });
+    } catch (error) {
+      toast({
+        title: "Sign out failed",
+        description: "There was an error signing out. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   if (!user) {
     return (
@@ -55,7 +73,12 @@ export const NavbarAuth = () => {
             Profile
           </DropdownMenuItem>
         </Link>
-        <DropdownMenuItem onClick={() => signOut()}>
+        <Link to="/social">
+          <DropdownMenuItem>
+            Social Feed
+          </DropdownMenuItem>
+        </Link>
+        <DropdownMenuItem onClick={handleSignOut}>
           Sign out
         </DropdownMenuItem>
       </DropdownMenuContent>

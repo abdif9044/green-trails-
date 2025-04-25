@@ -49,18 +49,18 @@ const Social = () => {
               {isLoading ? (
                 <div className="text-center py-12">Loading albums...</div>
               ) : albums && albums.length > 0 ? (
-                albums.map((album) => (
+                albums.map((album: any) => (
                   <AlbumCard
                     key={album.id}
                     id={album.id}
                     title={album.title}
                     description={album.description || undefined}
-                    coverImage={undefined} // We'll implement this later with the first media item
+                    coverImage={undefined}
                     location={album.location || undefined}
                     authorName={album.user?.email || 'Unknown'}
-                    authorAvatar={undefined} // We'll implement this later with user profiles
-                    likesCount={0} // We'll implement this later with likes count
-                    commentsCount={0} // We'll implement this later with comments count
+                    authorAvatar={undefined}
+                    likesCount={0}
+                    commentsCount={0}
                     isPrivate={album.is_private}
                     createdAt={album.created_at}
                   />
@@ -87,7 +87,7 @@ const Social = () => {
               ) : isLoading ? (
                 <div className="text-center py-12">Loading following feed...</div>
               ) : albums && albums.length > 0 ? (
-                albums.map((album) => (
+                albums.map((album: any) => (
                   <AlbumCard
                     key={album.id}
                     id={album.id}

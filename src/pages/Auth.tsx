@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useLocation, Link } from "react-router-dom";
+import { useLocation, Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,6 +20,7 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
@@ -27,10 +28,13 @@ const Auth = () => {
   const { search } = useLocation();
   const [activeTab, setActiveTab] = useState("signin");
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const { signIn, signUp, user } = useAuth();
 
   // Email and password for sign in
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
   
   // Additional fields for registration
   const [name, setName] = useState("");
@@ -38,6 +42,13 @@ const Auth = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isAdult, setIsAdult] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
+
+  // Redirect if user is already logged in
+  useEffect(() => {
+    if (user) {
+      navigate('/');
+    }
+  }, [user, navigate]);
 
   // Check if the URL contains signup parameter
   useEffect(() => {
@@ -47,17 +58,37 @@ const Auth = () => {
     }
   }, [search]);
 
-  const handleSignIn = (e: React.FormEvent) => {
+  const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
     
-    // This will be replaced with Supabase auth later
-    toast({
-      title: "Sign-in Attempted",
-      description: "Supabase authentication will be implemented soon. For now, this is a placeholder.",
-    });
+    try {
+      const { error } = await signIn(email, password);
+      if (error) {
+        toast({
+          title: "Sign In Failed",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Welcome back!",
+          description: "You've successfully signed in.",
+        });
+        navigate('/');
+      }
+    } catch (err: any) {
+      toast({
+        title: "Sign In Error",
+        description: err.message || "An unexpected error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleSignUp = (e: React.FormEvent) => {
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Validation
@@ -87,12 +118,33 @@ const Auth = () => {
       });
       return;
     }
+
+    setLoading(true);
     
-    // This will be replaced with Supabase auth later
-    toast({
-      title: "Sign-up Attempted",
-      description: "Supabase authentication will be implemented soon. For now, this is a placeholder.",
-    });
+    try {
+      const { error } = await signUp(email, password);
+      if (error) {
+        toast({
+          title: "Sign Up Failed",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Account Created!",
+          description: "Your account was created successfully. Please check your email for verification.",
+        });
+        // Note: User might need to verify email before being redirected
+      }
+    } catch (err: any) {
+      toast({
+        title: "Sign Up Error",
+        description: err.message || "An unexpected error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -144,6 +196,7 @@ const Auth = () => {
                         required 
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
+                        disabled={loading}
                       />
                     </div>
                     <div className="space-y-2">
@@ -160,12 +213,17 @@ const Auth = () => {
                         required 
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
+                        disabled={loading}
                       />
                     </div>
                   </CardContent>
                   <CardFooter>
-                    <Button type="submit" className="w-full bg-greentrail-600 hover:bg-greentrail-700">
-                      Sign In
+                    <Button 
+                      type="submit" 
+                      className="w-full bg-greentrail-600 hover:bg-greentrail-700"
+                      disabled={loading}
+                    >
+                      {loading ? "Signing In..." : "Sign In"}
                     </Button>
                   </CardFooter>
                 </form>
@@ -190,6 +248,7 @@ const Auth = () => {
                         required 
                         value={name}
                         onChange={(e) => setName(e.target.value)}
+                        disabled={loading}
                       />
                     </div>
                     <div className="space-y-2">
@@ -200,6 +259,7 @@ const Auth = () => {
                         required 
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
+                        disabled={loading}
                       />
                     </div>
                     <div className="space-y-2">
@@ -211,6 +271,7 @@ const Auth = () => {
                         required 
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
+                        disabled={loading}
                       />
                     </div>
                     <div className="space-y-2">
@@ -222,6 +283,7 @@ const Auth = () => {
                         required 
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
+                        disabled={loading}
                       />
                     </div>
                     <div className="space-y-2">
@@ -233,6 +295,7 @@ const Auth = () => {
                         required 
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
+                        disabled={loading}
                       />
                     </div>
                     <div className="space-y-3 pt-2">
@@ -241,6 +304,7 @@ const Auth = () => {
                           id="age-verification" 
                           checked={isAdult}
                           onCheckedChange={(checked) => setIsAdult(checked as boolean)}
+                          disabled={loading}
                         />
                         <label 
                           htmlFor="age-verification" 
@@ -254,6 +318,7 @@ const Auth = () => {
                           id="terms" 
                           checked={agreeTerms}
                           onCheckedChange={(checked) => setAgreeTerms(checked as boolean)}
+                          disabled={loading}
                         />
                         <label 
                           htmlFor="terms" 
@@ -265,8 +330,12 @@ const Auth = () => {
                     </div>
                   </CardContent>
                   <CardFooter>
-                    <Button type="submit" className="w-full bg-greentrail-600 hover:bg-greentrail-700">
-                      Create Account
+                    <Button 
+                      type="submit" 
+                      className="w-full bg-greentrail-600 hover:bg-greentrail-700"
+                      disabled={loading}
+                    >
+                      {loading ? "Creating Account..." : "Create Account"}
                     </Button>
                   </CardFooter>
                 </form>

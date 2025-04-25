@@ -191,7 +191,7 @@ const Discover = () => {
                         <SelectValue placeholder="Any difficulty" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Any difficulty</SelectItem>
+                        <SelectItem value="all">Any difficulty</SelectItem>
                         <SelectItem value="easy">Easy</SelectItem>
                         <SelectItem value="moderate">Moderate</SelectItem>
                         <SelectItem value="hard">Hard</SelectItem>

@@ -7,35 +7,13 @@ import AlbumCard from "@/components/social/AlbumCard";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PlusCircle, Compass, Users } from "lucide-react";
+import { useAlbums } from '@/hooks/use-albums';
+import { useAuth } from '@/hooks/use-auth';
 
 const Social = () => {
-  // Temporary mock data - to be replaced with Supabase data
-  const mockAlbums = [
-    {
-      id: "1",
-      title: "Sunset Hike at Emerald Trail",
-      description: "Amazing evening spent watching the sunset from the peak. Perfect spot for meditation and relaxation.",
-      coverImage: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=2070&auto=format&fit=crop",
-      location: "Emerald Trail, Boulder, CO",
-      authorName: "Jane Cooper",
-      authorAvatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop",
-      likesCount: 124,
-      commentsCount: 12,
-      isPrivate: false,
-      createdAt: "2024-04-20"
-    },
-    {
-      id: "2",
-      title: "Morning Meditation Group",
-      description: "Great session with the community this morning. The weather was perfect!",
-      location: "Green Mountain Trail",
-      authorName: "Alex Johnson",
-      likesCount: 89,
-      commentsCount: 8,
-      isPrivate: false,
-      createdAt: "2024-04-19"
-    }
-  ];
+  const [currentTab, setCurrentTab] = useState<'feed' | 'following'>('feed');
+  const { data: albums, isLoading } = useAlbums(currentTab);
+  const { session } = useAuth();
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -45,15 +23,17 @@ const Social = () => {
         <div className="container mx-auto px-4 py-8">
           <div className="flex justify-between items-center mb-8">
             <h1 className="text-3xl font-bold text-foreground">Social Feed</h1>
-            <Link to="/albums/new">
-              <Button className="bg-greentrail-600 hover:bg-greentrail-700">
-                <PlusCircle className="mr-2 h-5 w-5" />
-                Create Album
-              </Button>
-            </Link>
+            {session && (
+              <Link to="/albums/new">
+                <Button className="bg-greentrail-600 hover:bg-greentrail-700">
+                  <PlusCircle className="mr-2 h-5 w-5" />
+                  Create Album
+                </Button>
+              </Link>
+            )}
           </div>
           
-          <Tabs defaultValue="feed" className="space-y-6">
+          <Tabs value={currentTab} onValueChange={(value) => setCurrentTab(value as 'feed' | 'following')} className="space-y-6">
             <TabsList>
               <TabsTrigger value="feed" className="flex items-center gap-2">
                 <Compass className="h-4 w-4" />
@@ -66,22 +46,75 @@ const Social = () => {
             </TabsList>
             
             <TabsContent value="feed" className="space-y-6">
-              {mockAlbums.map((album) => (
-                <AlbumCard key={album.id} {...album} />
-              ))}
+              {isLoading ? (
+                <div className="text-center py-12">Loading albums...</div>
+              ) : albums && albums.length > 0 ? (
+                albums.map((album) => (
+                  <AlbumCard
+                    key={album.id}
+                    id={album.id}
+                    title={album.title}
+                    description={album.description || undefined}
+                    coverImage={undefined} // We'll implement this later with the first media item
+                    location={album.location || undefined}
+                    authorName={album.user?.email || 'Unknown'}
+                    authorAvatar={undefined} // We'll implement this later with user profiles
+                    likesCount={0} // We'll implement this later with likes count
+                    commentsCount={0} // We'll implement this later with comments count
+                    isPrivate={album.is_private}
+                    createdAt={album.created_at}
+                  />
+                ))
+              ) : (
+                <div className="text-center py-12">
+                  <p className="text-muted-foreground mb-4">No albums found in your feed</p>
+                </div>
+              )}
             </TabsContent>
             
             <TabsContent value="following" className="space-y-6">
-              <div className="text-center py-12">
-                <Users className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" />
-                <h3 className="text-lg font-semibold mb-2">Follow Some Trailblazers</h3>
-                <p className="text-muted-foreground mb-4">
-                  Connect with other members to see their adventures in your feed
-                </p>
-                <Button asChild>
-                  <Link to="/discover">Discover Users</Link>
-                </Button>
-              </div>
+              {!session ? (
+                <div className="text-center py-12">
+                  <Users className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">Sign in to Follow Trailblazers</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Create an account to connect with other members and see their adventures
+                  </p>
+                  <Button asChild>
+                    <Link to="/auth">Sign In</Link>
+                  </Button>
+                </div>
+              ) : isLoading ? (
+                <div className="text-center py-12">Loading following feed...</div>
+              ) : albums && albums.length > 0 ? (
+                albums.map((album) => (
+                  <AlbumCard
+                    key={album.id}
+                    id={album.id}
+                    title={album.title}
+                    description={album.description || undefined}
+                    coverImage={undefined}
+                    location={album.location || undefined}
+                    authorName={album.user?.email || 'Unknown'}
+                    authorAvatar={undefined}
+                    likesCount={0}
+                    commentsCount={0}
+                    isPrivate={album.is_private}
+                    createdAt={album.created_at}
+                  />
+                ))
+              ) : (
+                <div className="text-center py-12">
+                  <Users className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">Follow Some Trailblazers</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Connect with other members to see their adventures in your feed
+                  </p>
+                  <Button asChild>
+                    <Link to="/discover">Discover Users</Link>
+                  </Button>
+                </div>
+              )}
             </TabsContent>
           </Tabs>
         </div>

@@ -2,12 +2,14 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
+export type TrailDifficulty = 'easy' | 'moderate' | 'hard' | 'expert';
+
 export type Trail = {
   id: string;
   name: string;
   location: string;
   imageUrl: string;
-  difficulty: 'easy' | 'moderate' | 'hard' | 'expert';
+  difficulty: TrailDifficulty;
   length: number;
   elevation: number;
   tags: string[];
@@ -37,7 +39,7 @@ export const useTrails = (filters?: {
           location: "Boulder, CO",
           coordinates: [-105.2839, 40.0202] as [number, number],
           imageUrl: "https://images.unsplash.com/photo-1534174533380-5c8a7e77453b?q=80&w=1000&auto=format&fit=crop",
-          difficulty: "moderate",
+          difficulty: "moderate" as TrailDifficulty,
           length: 3.2,
           elevation: 450,
           tags: ["scenic", "forest", "dog-friendly"],
@@ -49,7 +51,7 @@ export const useTrails = (filters?: {
           location: "Portland, OR",
           coordinates: [-122.7162, 45.5202] as [number, number],
           imageUrl: "https://images.unsplash.com/photo-1501854140801-50d01698950b?q=80&w=1000&auto=format&fit=crop",
-          difficulty: "hard",
+          difficulty: "hard" as TrailDifficulty,
           length: 5.8,
           elevation: 1200,
           tags: ["waterfall", "views", "challenging"],
@@ -61,7 +63,7 @@ export const useTrails = (filters?: {
           location: "Austin, TX",
           coordinates: [-97.7431, 30.2672] as [number, number],
           imageUrl: "https://images.unsplash.com/photo-1523472721958-978152a13ad5?q=80&w=1000&auto=format&fit=crop",
-          difficulty: "easy",
+          difficulty: "easy" as TrailDifficulty,
           length: 2.1,
           elevation: 120,
           tags: ["accessible", "river", "beginner"],
@@ -73,7 +75,7 @@ export const useTrails = (filters?: {
           location: "Seattle, WA",
           coordinates: [-122.3301, 47.6038] as [number, number],
           imageUrl: "https://images.unsplash.com/photo-1552083375-1447ce886485?q=80&w=1000&auto=format&fit=crop",
-          difficulty: "moderate",
+          difficulty: "moderate" as TrailDifficulty,
           length: 4.3,
           elevation: 850,
           tags: ["creek", "forest", "wildlife"],
@@ -85,7 +87,7 @@ export const useTrails = (filters?: {
           location: "San Francisco, CA",
           coordinates: [-122.4194, 37.7749] as [number, number],
           imageUrl: "https://images.unsplash.com/photo-1511497584788-876760111969?q=80&w=1000&auto=format&fit=crop",
-          difficulty: "easy",
+          difficulty: "easy" as TrailDifficulty,
           length: 1.8,
           elevation: 200,
           tags: ["redwoods", "serene", "family-friendly"],
@@ -97,7 +99,7 @@ export const useTrails = (filters?: {
           location: "Denver, CO",
           coordinates: [-104.9903, 39.7392] as [number, number],
           imageUrl: "https://images.unsplash.com/photo-1551632811-561732d1e306?q=80&w=1000&auto=format&fit=crop",
-          difficulty: "expert",
+          difficulty: "expert" as TrailDifficulty,
           length: 7.6,
           elevation: 2800,
           tags: ["alpine", "views", "challenging"],
@@ -163,7 +165,7 @@ export const useTrail = (trailId: string | undefined) => {
           location: "Boulder, CO",
           coordinates: [-105.2839, 40.0202] as [number, number],
           imageUrl: "https://images.unsplash.com/photo-1534174533380-5c8a7e77453b?q=80&w=1000&auto=format&fit=crop",
-          difficulty: "moderate",
+          difficulty: "moderate" as TrailDifficulty,
           length: 3.2,
           elevation: 450,
           elevationGain: 450,

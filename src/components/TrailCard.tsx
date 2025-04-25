@@ -3,13 +3,14 @@ import { Heart, MapPin, Users } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
+import { TrailDifficulty } from '@/hooks/use-trails';
 
 interface TrailCardProps {
   id: string;
   name: string;
   location: string;
   imageUrl: string;
-  difficulty: 'easy' | 'moderate' | 'hard' | 'expert';
+  difficulty: TrailDifficulty;
   length: number;
   elevation: number;
   tags: readonly string[] | string[]; // Updated to accept readonly arrays
@@ -27,7 +28,7 @@ const TrailCard = ({
   tags,
   likes
 }: TrailCardProps) => {
-  const getDifficultyColor = (difficulty: string) => {
+  const getDifficultyColor = (difficulty: TrailDifficulty) => {
     switch (difficulty) {
       case 'easy': return 'bg-green-500';
       case 'moderate': return 'bg-blue-500';

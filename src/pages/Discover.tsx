@@ -30,7 +30,8 @@ import { Link, useNavigate } from 'react-router-dom';
 const Discover = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [difficultyFilter, setDifficultyFilter] = useState<string | null>(null);
-  const [lengthRange, setLengthRange] = useState([0, 10]);
+  // Fix 1: Explicitly type this as a tuple with 2 elements
+  const [lengthRange, setLengthRange] = useState<[number, number]>([0, 10]);
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
   const navigate = useNavigate();
   
@@ -114,7 +115,7 @@ const Discover = () => {
                     <label htmlFor="difficulty" className="block text-sm font-medium text-greentrail-700 dark:text-greentrail-300 mb-2">
                       Difficulty
                     </label>
-                    <Select value={difficultyFilter || ""} onValueChange={(value) => setDifficultyFilter(value || null)}>
+                    <Select value={difficultyFilter || "all"} onValueChange={(value) => setDifficultyFilter(value === "all" ? null : value)}>
                       <SelectTrigger id="difficulty" className="bg-white dark:bg-greentrail-800 border-greentrail-200 dark:border-greentrail-700">
                         <SelectValue placeholder="Any difficulty" />
                       </SelectTrigger>
@@ -140,7 +141,7 @@ const Discover = () => {
                         max={10}
                         step={0.5}
                         value={lengthRange}
-                        onValueChange={setLengthRange}
+                        onValueChange={(value) => setLengthRange(value as [number, number])}
                         className="py-4"
                       />
                       <div className="flex justify-between text-xs text-greentrail-600 dark:text-greentrail-400">
@@ -268,7 +269,18 @@ const Discover = () => {
                     {trails.length > 0 ? (
                       trails.map((trail) => (
                         <Link to={`/trail/${trail.id}`} key={trail.id}>
-                          <TrailCard {...trail} />
+                          {/* Fix 3: Cast difficulty to the correct type */}
+                          <TrailCard 
+                            id={trail.id}
+                            name={trail.name}
+                            location={trail.location}
+                            imageUrl={trail.imageUrl}
+                            difficulty={trail.difficulty as 'easy' | 'moderate' | 'hard' | 'expert'}
+                            length={trail.length}
+                            elevation={trail.elevation}
+                            tags={trail.tags}
+                            likes={trail.likes}
+                          />
                         </Link>
                       ))
                     ) : (

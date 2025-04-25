@@ -120,6 +120,8 @@ const Auth = () => {
       toast({
         title: 'Account Created',
         description: 'Your account has been created successfully. You can now sign in.',
+        // Fixed here: changed 'success' to 'default'
+        variant: 'default',
       });
       
       setActiveTab('signin');
@@ -146,7 +148,8 @@ const Auth = () => {
       toast({
         title: 'Age Verified',
         description: 'You have been verified as 21 or older.',
-        variant: 'success',
+        // Fixed here: changed 'success' to 'default'
+        variant: 'default',
       });
     }
   };

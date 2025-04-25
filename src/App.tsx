@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Discover from "./pages/Discover";
 import Profile from "./pages/Profile";
 import Auth from "./pages/Auth";
+import Social from "./pages/Social";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,8 +23,8 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/discover" element={<Discover />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/social" element={<Social />} />
           <Route path="/auth" element={<Auth />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

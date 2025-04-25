@@ -1,6 +1,8 @@
+
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { NavbarAuth } from './NavbarAuth';
 import { 
   MapPin, 
   User, 
@@ -40,16 +42,7 @@ const Navbar = () => {
             <User size={18} />
             <span>Profile</span>
           </Link>
-          <Link to="/auth">
-            <Button variant="outline" className="border-greentrail-500 text-greentrail-700 hover:bg-greentrail-100 hover:text-greentrail-800 dark:border-greentrail-400 dark:text-greentrail-200 dark:hover:bg-greentrail-800 dark:hover:text-greentrail-100">
-              Sign In
-            </Button>
-          </Link>
-          <Link to="/auth?signup=true">
-            <Button className="bg-greentrail-600 hover:bg-greentrail-700 text-white">
-              Join Now
-            </Button>
-          </Link>
+          <NavbarAuth />
         </div>
 
         <button 
@@ -87,16 +80,9 @@ const Navbar = () => {
               <User size={20} />
               <span>Profile</span>
             </Link>
-            <Link to="/auth" className="w-full" onClick={() => setIsMenuOpen(false)}>
-              <Button variant="outline" className="w-full border-greentrail-500 text-greentrail-700 hover:bg-greentrail-100 dark:border-greentrail-400 dark:text-greentrail-200 dark:hover:bg-greentrail-800">
-                Sign In
-              </Button>
-            </Link>
-            <Link to="/auth?signup=true" className="w-full" onClick={() => setIsMenuOpen(false)}>
-              <Button className="w-full bg-greentrail-600 hover:bg-greentrail-700 text-white">
-                Join Now
-              </Button>
-            </Link>
+            <div className="pt-2">
+              <NavbarAuth />
+            </div>
           </div>
         </div>
       )}

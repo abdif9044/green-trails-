@@ -17,12 +17,7 @@ export const useAlbums = (filter: 'feed' | 'following') => {
 
         const { data: albums } = await supabase
           .from('albums')
-          .select(`
-            *,
-            user:user_id (
-              email
-            )
-          `)
+          .select('*, user:user_id(*)')
           .in('user_id', followingIds)
           .order('created_at', { ascending: false });
 
@@ -32,12 +27,7 @@ export const useAlbums = (filter: 'feed' | 'following') => {
       // Fetch all public albums for the feed
       const { data: albums } = await supabase
         .from('albums')
-        .select(`
-          *,
-          user:user_id (
-            email
-          )
-        `)
+        .select('*, user:user_id(*)')
         .eq('is_private', false)
         .order('created_at', { ascending: false });
 

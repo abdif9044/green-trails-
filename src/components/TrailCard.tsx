@@ -12,7 +12,7 @@ interface TrailCardProps {
   difficulty: 'easy' | 'moderate' | 'hard' | 'expert';
   length: number;
   elevation: number;
-  tags: string[];
+  tags: readonly string[] | string[]; // Updated to accept readonly arrays
   likes: number;
 }
 

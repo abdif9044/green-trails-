@@ -17,6 +17,7 @@ export type Trail = {
   coordinates?: [number, number]; // [longitude, latitude]
   strainTags?: string[];
   isAgeRestricted?: boolean;
+  description?: string; // Added description field to fix type error
 };
 
 export const useTrails = (filters?: {

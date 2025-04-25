@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import TrailCard from "@/components/TrailCard";
+import TrailMap from "@/components/map/TrailMap";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { 
@@ -20,107 +21,34 @@ import {
 } from "@/components/ui/accordion";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { Search, MapPin, Compass } from "lucide-react";
+import { Search, MapPin, Compass, Map } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useTrails } from '@/hooks/use-trails';
+import { Link, useNavigate } from 'react-router-dom';
 
 const Discover = () => {
-  // Sample trail data - to be replaced with Supabase data later
-  const allTrails = [
-    {
-      id: "1",
-      name: "Emerald Forest Loop",
-      location: "Boulder, CO",
-      imageUrl: "https://images.unsplash.com/photo-1534174533380-5c8a7e77453b?q=80&w=1000&auto=format&fit=crop",
-      difficulty: "moderate",
-      length: 3.2,
-      elevation: 450,
-      tags: ["scenic", "forest", "dog-friendly"],
-      likes: 241
-    },
-    {
-      id: "2",
-      name: "Sunrise Mountain Trail",
-      location: "Portland, OR",
-      imageUrl: "https://images.unsplash.com/photo-1501854140801-50d01698950b?q=80&w=1000&auto=format&fit=crop",
-      difficulty: "hard",
-      length: 5.8,
-      elevation: 1200,
-      tags: ["waterfall", "views", "challenging"],
-      likes: 189
-    },
-    {
-      id: "3",
-      name: "Riverside Path",
-      location: "Austin, TX",
-      imageUrl: "https://images.unsplash.com/photo-1523472721958-978152a13ad5?q=80&w=1000&auto=format&fit=crop",
-      difficulty: "easy",
-      length: 2.1,
-      elevation: 120,
-      tags: ["accessible", "river", "beginner"],
-      likes: 312
-    },
-    {
-      id: "4",
-      name: "Mountain Creek Trail",
-      location: "Seattle, WA",
-      imageUrl: "https://images.unsplash.com/photo-1552083375-1447ce886485?q=80&w=1000&auto=format&fit=crop",
-      difficulty: "moderate",
-      length: 4.3,
-      elevation: 850,
-      tags: ["creek", "forest", "wildlife"],
-      likes: 178
-    },
-    {
-      id: "5",
-      name: "Redwood Sanctuary Path",
-      location: "San Francisco, CA",
-      imageUrl: "https://images.unsplash.com/photo-1511497584788-876760111969?q=80&w=1000&auto=format&fit=crop",
-      difficulty: "easy",
-      length: 1.8,
-      elevation: 200,
-      tags: ["redwoods", "serene", "family-friendly"],
-      likes: 422
-    },
-    {
-      id: "6",
-      name: "Alpine Summit Route",
-      location: "Denver, CO",
-      imageUrl: "https://images.unsplash.com/photo-1551632811-561732d1e306?q=80&w=1000&auto=format&fit=crop",
-      difficulty: "expert",
-      length: 7.6,
-      elevation: 2800,
-      tags: ["alpine", "views", "challenging"],
-      likes: 97
-    },
-  ] as const;
-
   const [searchQuery, setSearchQuery] = useState('');
   const [difficultyFilter, setDifficultyFilter] = useState<string | null>(null);
   const [lengthRange, setLengthRange] = useState([0, 10]);
+  const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
+  const navigate = useNavigate();
   
-  // Filter trails based on search and filters
-  const filteredTrails = allTrails.filter(trail => {
-    // Text search
-    const matchesSearch = 
-      searchQuery === '' || 
-      trail.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      trail.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      trail.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
-    
-    // Difficulty filter
-    const matchesDifficulty = !difficultyFilter || trail.difficulty === difficultyFilter;
-    
-    // Length filter
-    const matchesLength = 
-      trail.length >= lengthRange[0] && trail.length <= lengthRange[1];
-    
-    return matchesSearch && matchesDifficulty && matchesLength;
+  // Fetch trails using our custom hook
+  const { data: trails = [], isLoading } = useTrails({
+    searchQuery,
+    difficulty: difficultyFilter,
+    lengthRange,
   });
 
   const handleResetFilters = () => {
     setSearchQuery('');
     setDifficultyFilter(null);
     setLengthRange([0, 10]);
+  };
+
+  const handleTrailClick = (trailId: string) => {
+    navigate(`/trail/${trailId}`);
   };
 
   return (
@@ -137,7 +65,7 @@ const Discover = () => {
             </div>
             <div className="mt-4 md:mt-0">
               <Badge className="bg-greentrail-600 hover:bg-greentrail-700 text-white py-2 px-4 text-lg">
-                {filteredTrails.length} trails found
+                {trails.length} trails found
               </Badge>
             </div>
           </div>
@@ -302,39 +230,86 @@ const Discover = () => {
                 <h2 className="text-xl font-semibold text-greentrail-800 dark:text-greentrail-200">
                   Trails
                 </h2>
-                <Select defaultValue="popular">
-                  <SelectTrigger className="w-[180px] bg-white dark:bg-greentrail-800 border-greentrail-200 dark:border-greentrail-700">
-                    <SelectValue placeholder="Sort by" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="popular">Most Popular</SelectItem>
-                    <SelectItem value="recent">Recently Added</SelectItem>
-                    <SelectItem value="length-asc">Length (Shortest)</SelectItem>
-                    <SelectItem value="length-desc">Length (Longest)</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="flex items-center gap-3">
+                  <Tabs 
+                    value={viewMode} 
+                    onValueChange={(value) => setViewMode(value as 'list' | 'map')}
+                    className="mr-2"
+                  >
+                    <TabsList className="grid grid-cols-2 h-9 w-[160px]">
+                      <TabsTrigger value="list" className="text-xs">
+                        <Compass className="h-4 w-4 mr-1" />
+                        List View
+                      </TabsTrigger>
+                      <TabsTrigger value="map" className="text-xs">
+                        <Map className="h-4 w-4 mr-1" />
+                        Map View
+                      </TabsTrigger>
+                    </TabsList>
+                  </Tabs>
+                  
+                  <Select defaultValue="popular">
+                    <SelectTrigger className="w-[180px] bg-white dark:bg-greentrail-800 border-greentrail-200 dark:border-greentrail-700">
+                      <SelectValue placeholder="Sort by" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="popular">Most Popular</SelectItem>
+                      <SelectItem value="recent">Recently Added</SelectItem>
+                      <SelectItem value="length-asc">Length (Shortest)</SelectItem>
+                      <SelectItem value="length-desc">Length (Longest)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                {filteredTrails.length > 0 ? (
-                  filteredTrails.map((trail) => (
-                    <TrailCard key={trail.id} {...trail} />
-                  ))
-                ) : (
-                  <div className="col-span-full py-12 text-center">
-                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-greentrail-100 dark:bg-greentrail-800 text-greentrail-600 dark:text-greentrail-400 mb-4">
-                      <Compass size={32} />
-                    </div>
-                    <h3 className="text-xl font-semibold text-greentrail-800 dark:text-greentrail-200 mb-2">No trails found</h3>
-                    <p className="text-greentrail-600 dark:text-greentrail-400 max-w-md mx-auto mb-4">
-                      Try adjusting your search criteria or filters to find trails that match your preferences.
-                    </p>
-                    <Button onClick={handleResetFilters}>
-                      Reset Filters
-                    </Button>
+              <Tabs value={viewMode} className="mt-6">
+                <TabsContent value="list" className="mt-0">
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {trails.length > 0 ? (
+                      trails.map((trail) => (
+                        <Link to={`/trail/${trail.id}`} key={trail.id}>
+                          <TrailCard {...trail} />
+                        </Link>
+                      ))
+                    ) : (
+                      <div className="col-span-full py-12 text-center">
+                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-greentrail-100 dark:bg-greentrail-800 text-greentrail-600 dark:text-greentrail-400 mb-4">
+                          <Compass size={32} />
+                        </div>
+                        <h3 className="text-xl font-semibold text-greentrail-800 dark:text-greentrail-200 mb-2">No trails found</h3>
+                        <p className="text-greentrail-600 dark:text-greentrail-400 max-w-md mx-auto mb-4">
+                          Try adjusting your search criteria or filters to find trails that match your preferences.
+                        </p>
+                        <Button onClick={handleResetFilters}>
+                          Reset Filters
+                        </Button>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
+                </TabsContent>
+                
+                <TabsContent value="map" className="mt-0">
+                  <div className="bg-white dark:bg-greentrail-900 rounded-xl shadow-sm overflow-hidden">
+                    <TrailMap 
+                      trails={trails} 
+                      onTrailSelect={handleTrailClick}
+                      className="h-[600px] w-full"
+                    />
+                  </div>
+                  
+                  {trails.length === 0 && (
+                    <div className="py-6 text-center mt-4">
+                      <h3 className="text-xl font-semibold text-greentrail-800 dark:text-greentrail-200 mb-2">No trails found</h3>
+                      <p className="text-greentrail-600 dark:text-greentrail-400 max-w-md mx-auto mb-4">
+                        Try adjusting your search criteria or filters to find trails that match your preferences.
+                      </p>
+                      <Button onClick={handleResetFilters}>
+                        Reset Filters
+                      </Button>
+                    </div>
+                  )}
+                </TabsContent>
+              </Tabs>
             </div>
           </div>
         </div>

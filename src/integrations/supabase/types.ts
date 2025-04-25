@@ -216,6 +216,142 @@ export type Database = {
           },
         ]
       }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string | null
+          full_name: string | null
+          id: string
+          is_age_verified: boolean | null
+          updated_at: string | null
+          username: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id: string
+          is_age_verified?: boolean | null
+          updated_at?: string | null
+          username?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id?: string
+          is_age_verified?: boolean | null
+          updated_at?: string | null
+          username?: string | null
+        }
+        Relationships: []
+      }
+      trail_comments: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          trail_id: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          trail_id: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          trail_id?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trail_comments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trail_likes: {
+        Row: {
+          created_at: string | null
+          id: string
+          trail_id: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          trail_id: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          trail_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trail_likes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trail_weather: {
+        Row: {
+          condition: string | null
+          high: number | null
+          id: string
+          low: number | null
+          precipitation: string | null
+          sunrise: string | null
+          sunset: string | null
+          temperature: number | null
+          trail_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          condition?: string | null
+          high?: number | null
+          id?: string
+          low?: number | null
+          precipitation?: string | null
+          sunrise?: string | null
+          sunset?: string | null
+          temperature?: number | null
+          trail_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          condition?: string | null
+          high?: number | null
+          id?: string
+          low?: number | null
+          precipitation?: string | null
+          sunrise?: string | null
+          sunset?: string | null
+          temperature?: number | null
+          trail_id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

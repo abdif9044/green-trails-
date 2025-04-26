@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { MapPin, Mountain, ArrowUpRight, Heart, Users, MessageSquare, Image, ArrowLeft, Star, Cloud, Sun } from "lucide-react";
 import { useAuth } from '@/hooks/use-auth';
+import { Trail as TrailType } from '@/hooks/use-trails';
 
 const Trail = () => {
   const { trailId } = useParams<{ trailId: string }>();
@@ -216,7 +217,12 @@ const Trail = () => {
                       name: trail.name,
                       location: trail.location,
                       coordinates: trail.coordinates,
-                      difficulty: trail.difficulty
+                      difficulty: trail.difficulty,
+                      imageUrl: trail.imageUrl,
+                      length: trail.length,
+                      elevation: trail.elevation,
+                      tags: trail.tags,
+                      likes: trail.likes
                     }]}
                     center={trail.coordinates}
                     zoom={14}

@@ -12,7 +12,7 @@ import { useAuth } from '@/hooks/use-auth';
 
 const Social = () => {
   const [currentTab, setCurrentTab] = useState<'feed' | 'following'>('feed');
-  const { data: albums, isLoading } = useAlbums(currentTab);
+  const { data: albums, isLoading } = useAlbums(currentTab === 'following' ? 'following' : undefined);
   const { session } = useAuth();
 
   return (
@@ -49,21 +49,8 @@ const Social = () => {
               {isLoading ? (
                 <div className="text-center py-12">Loading albums...</div>
               ) : albums && albums.length > 0 ? (
-                albums.map((album: any) => (
-                  <AlbumCard
-                    key={album.id}
-                    id={album.id}
-                    title={album.title}
-                    description={album.description || undefined}
-                    coverImage={undefined}
-                    location={album.location || undefined}
-                    authorName={album.user?.email || 'Unknown'}
-                    authorAvatar={undefined}
-                    likesCount={0}
-                    commentsCount={0}
-                    isPrivate={album.is_private}
-                    createdAt={album.created_at}
-                  />
+                albums.map((album) => (
+                  <AlbumCard key={album.id} album={album} />
                 ))
               ) : (
                 <div className="text-center py-12">
@@ -87,21 +74,8 @@ const Social = () => {
               ) : isLoading ? (
                 <div className="text-center py-12">Loading following feed...</div>
               ) : albums && albums.length > 0 ? (
-                albums.map((album: any) => (
-                  <AlbumCard
-                    key={album.id}
-                    id={album.id}
-                    title={album.title}
-                    description={album.description || undefined}
-                    coverImage={undefined}
-                    location={album.location || undefined}
-                    authorName={album.user?.email || 'Unknown'}
-                    authorAvatar={undefined}
-                    likesCount={0}
-                    commentsCount={0}
-                    isPrivate={album.is_private}
-                    createdAt={album.created_at}
-                  />
+                albums.map((album) => (
+                  <AlbumCard key={album.id} album={album} />
                 ))
               ) : (
                 <div className="text-center py-12">

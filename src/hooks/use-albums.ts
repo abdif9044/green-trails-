@@ -18,7 +18,7 @@ export interface Album {
   user?: {
     id: string;
     email: string;
-  };
+  } | null; // Make user optional and nullable to handle error cases
 }
 
 export const useAlbums = (userId?: string) => {
@@ -44,7 +44,11 @@ export const useAlbums = (userId?: string) => {
           return [];
         }
 
-        return data as Album[] || [];
+        // Handle the case where relation might not be found
+        return data.map(album => ({
+          ...album,
+          user: album.user && typeof album.user === 'object' ? album.user : null
+        })) as Album[];
       }
 
       // Default: fetch all public albums 
@@ -65,7 +69,11 @@ export const useAlbums = (userId?: string) => {
         return [];
       }
 
-      return data as Album[] || [];
+      // Handle the case where relation might not be found
+      return data.map(album => ({
+        ...album,
+        user: album.user && typeof album.user === 'object' ? album.user : null
+      })) as Album[];
     },
     enabled: true,
   });

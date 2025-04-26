@@ -12,7 +12,7 @@ export const useAlbumLikeCount = (albumId: string) => {
       const { count, error } = await supabase
         .from('likes')
         .select('*', { count: 'exact', head: true })
-        .eq('album_id', albumId);
+        .eq('media_id', albumId);
         
       if (error) {
         console.error('Error fetching like count:', error);
@@ -37,7 +37,7 @@ export const useHasLikedAlbum = (albumId: string) => {
       const { data, error } = await supabase
         .from('likes')
         .select('id')
-        .eq('album_id', albumId)
+        .eq('media_id', albumId)
         .eq('user_id', user.id)
         .maybeSingle();
         
@@ -68,7 +68,7 @@ export const useToggleAlbumLike = () => {
       const { data: existingLike } = await supabase
         .from('likes')
         .select('id')
-        .eq('album_id', albumId)
+        .eq('media_id', albumId)
         .eq('user_id', user.id)
         .maybeSingle();
       
@@ -85,10 +85,10 @@ export const useToggleAlbumLike = () => {
         // Like: add a new like
         const { error } = await supabase
           .from('likes')
-          .insert([{
-            album_id: albumId,
+          .insert({
+            media_id: albumId,
             user_id: user.id
-          }]);
+          });
           
         if (error) throw error;
         return { action: 'liked', albumId };

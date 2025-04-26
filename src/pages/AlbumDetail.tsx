@@ -1,5 +1,5 @@
 
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import Navbar from '@/components/Navbar';
@@ -193,11 +193,11 @@ const AlbumDetail = () => {
                 disabled={toggleLike.isPending}
               >
                 <Heart className={`h-5 w-5 ${hasLiked ? 'fill-current' : ''}`} />
-                <span>{likesCount} {likesCount === 1 ? 'Like' : 'Likes'}</span>
+                <span>{likesCount}</span>
               </Button>
               <Button variant="ghost" className="space-x-2">
                 <MessageCircle className="h-5 w-5" />
-                <span>{commentsCount} {commentsCount === 1 ? 'Comment' : 'Comments'}</span>
+                <span>{commentsCount}</span>
               </Button>
               <Button variant="ghost" onClick={handleShare}>
                 <Share2 className="h-5 w-5 mr-2" />

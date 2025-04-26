@@ -2,22 +2,23 @@
 import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { Compass, Layers, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Loader2 } from 'lucide-react';
+import MapControls from './MapControls';
+import { Trail } from '@/hooks/use-trails';
 
-// Temporary mapbox token for development - should be moved to Supabase secrets in production
 const MAPBOX_TOKEN = 'pk.eyJ1IjoiZ3JlZW50cmFpbHMtdGVzdCIsImEiOiJjbDBjZXlmYWMwMDQxM2RydDJ1bm1zYmVqIn0.OnS8ThN47ArmXCkV2NBa9A';
 
+const mapStyles = {
+  outdoors: 'mapbox://styles/mapbox/outdoors-v12',
+  satellite: 'mapbox://styles/mapbox/satellite-streets-v12',
+  light: 'mapbox://styles/mapbox/light-v11',
+  dark: 'mapbox://styles/mapbox/dark-v11'
+};
+
 interface TrailMapProps {
-  trails?: Array<{
-    id: string;
-    name: string;
-    location: string;
-    coordinates?: [number, number]; // [longitude, latitude]
-    difficulty: string;
-  }>;
+  trails?: Trail[];
   onTrailSelect?: (trailId: string) => void;
-  center?: [number, number]; // [longitude, latitude]
+  center?: [number, number];
   zoom?: number;
   className?: string;
 }
@@ -25,7 +26,7 @@ interface TrailMapProps {
 const TrailMap: React.FC<TrailMapProps> = ({
   trails = [],
   onTrailSelect,
-  center = [-105.2705, 40.0150], // Default to Boulder, CO
+  center = [-105.2705, 40.0150],
   zoom = 10,
   className = 'h-[500px] w-full'
 }) => {
@@ -34,7 +35,9 @@ const TrailMap: React.FC<TrailMapProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [weatherLayer, setWeatherLayer] = useState(false);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
+  const [currentStyle, setCurrentStyle] = useState<keyof typeof mapStyles>('outdoors');
 
+  // Initialize map
   useEffect(() => {
     if (!mapContainer.current) return;
 
@@ -42,17 +45,19 @@ const TrailMap: React.FC<TrailMapProps> = ({
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/outdoors-v12',
+      style: mapStyles[currentStyle],
       center: center,
       zoom: zoom,
-      pitch: 30, // Add some 3D perspective
+      pitch: 30,
       attributionControl: true
     });
 
-    const nav = new mapboxgl.NavigationControl({
-      visualizePitch: true
-    });
-    map.current.addControl(nav, 'top-right');
+    map.current.addControl(
+      new mapboxgl.NavigationControl({
+        visualizePitch: true
+      }),
+      'bottom-right'
+    );
 
     map.current.on('load', () => {
       setIsLoading(false);
@@ -89,9 +94,9 @@ const TrailMap: React.FC<TrailMapProps> = ({
         map.current = null;
       }
     };
-  }, []);
+  }, [currentStyle]);
 
-  // Add markers for each trail
+  // Handle markers
   useEffect(() => {
     if (!map.current || isLoading) return;
 
@@ -104,30 +109,33 @@ const TrailMap: React.FC<TrailMapProps> = ({
 
       const element = document.createElement('div');
       element.className = `trail-marker trail-marker-${trail.difficulty.toLowerCase()}`;
-      element.style.width = '22px';
-      element.style.height = '22px';
-      element.style.borderRadius = '50%';
-      element.style.cursor = 'pointer';
       
-      // Difficulty colors
-      const colors: {[key: string]: string} = {
-        easy: '#4ade80',
-        moderate: '#fbbf24',
-        hard: '#f87171',
-        expert: '#000000'
+      // Style the marker
+      const markerStyle = {
+        width: '24px',
+        height: '24px',
+        borderRadius: '50%',
+        cursor: 'pointer',
+        border: '2px solid white',
+        boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+        backgroundColor: 
+          trail.difficulty === 'easy' ? '#4ade80' :
+          trail.difficulty === 'moderate' ? '#fbbf24' :
+          trail.difficulty === 'hard' ? '#f87171' :
+          '#000000'
       };
       
-      element.style.backgroundColor = colors[trail.difficulty.toLowerCase()] || '#4ade80';
-      element.style.border = '2px solid white';
-      element.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
+      Object.assign(element.style, markerStyle);
       
       const popup = new mapboxgl.Popup({
         offset: 25,
-        closeButton: false
+        closeButton: false,
+        className: 'bg-white dark:bg-greentrail-800 shadow-lg rounded-lg'
       }).setHTML(`
-        <div class="p-2">
-          <h3 class="font-semibold text-greentrail-800">${trail.name}</h3>
-          <p class="text-sm text-greentrail-600">${trail.location}</p>
+        <div class="p-3">
+          <h3 class="font-semibold text-greentrail-800 dark:text-greentrail-200">${trail.name}</h3>
+          <p class="text-sm text-greentrail-600 dark:text-greentrail-400">${trail.location}</p>
+          ${trail.length ? `<p class="text-sm text-greentrail-600 dark:text-greentrail-400 mt-1">${trail.length} miles</p>` : ''}
         </div>
       `);
       
@@ -146,16 +154,28 @@ const TrailMap: React.FC<TrailMapProps> = ({
     });
   }, [trails, isLoading, onTrailSelect]);
 
-  // Toggle weather overlay
+  const handleStyleChange = (style: string) => {
+    setCurrentStyle(style as keyof typeof mapStyles);
+  };
+
+  const handleResetView = () => {
+    map.current?.flyTo({
+      center: center,
+      zoom: zoom,
+      pitch: 30,
+      bearing: 0,
+      duration: 1500
+    });
+  };
+
   const toggleWeatherLayer = () => {
-    if (!map.current) return;
-    
-    setWeatherLayer(prevState => {
-      const newState = !prevState;
+    setWeatherLayer(prev => {
+      const newState = !prev;
+      
+      if (!map.current) return prev;
       
       if (newState) {
-        // Add weather layer from a weather API
-        map.current!.addLayer({
+        map.current.addLayer({
           id: 'weather-layer',
           type: 'raster',
           source: {
@@ -171,11 +191,11 @@ const TrailMap: React.FC<TrailMapProps> = ({
           }
         });
       } else {
-        if (map.current!.getLayer('weather-layer')) {
-          map.current!.removeLayer('weather-layer');
+        if (map.current.getLayer('weather-layer')) {
+          map.current.removeLayer('weather-layer');
         }
-        if (map.current!.getSource('weather-layer')) {
-          map.current!.removeSource('weather-layer');
+        if (map.current.getSource('weather-layer')) {
+          map.current.removeSource('weather-layer');
         }
       }
       
@@ -187,37 +207,14 @@ const TrailMap: React.FC<TrailMapProps> = ({
     <div className={`relative rounded-lg overflow-hidden ${className}`}>
       <div ref={mapContainer} className="absolute inset-0" />
       
-      {/* Controls */}
-      <div className="absolute top-2 left-2 z-10 flex flex-col gap-2">
-        <Button 
-          variant="secondary" 
-          size="sm" 
-          className="bg-white/90 hover:bg-white shadow-md"
-          onClick={() => {
-            if (map.current) {
-              map.current.flyTo({
-                center: center,
-                zoom: zoom,
-                pitch: 30,
-                bearing: 0,
-                duration: 1500
-              });
-            }
-          }}
-        >
-          <Compass className="h-4 w-4 mr-1" />
-          <span className="text-xs">Reset View</span>
-        </Button>
-        
-        <Button 
-          variant={weatherLayer ? "default" : "secondary"}
-          size="sm" 
-          className={weatherLayer ? "shadow-md" : "bg-white/90 hover:bg-white shadow-md"}
-          onClick={toggleWeatherLayer}
-        >
-          <Layers className="h-4 w-4 mr-1" />
-          <span className="text-xs">Weather</span>
-        </Button>
+      {/* Map Controls */}
+      <div className="absolute top-2 left-2 z-10">
+        <MapControls
+          onResetView={handleResetView}
+          onStyleChange={handleStyleChange}
+          onWeatherToggle={toggleWeatherLayer}
+          weatherEnabled={weatherLayer}
+        />
       </div>
       
       {/* Loading indicator */}

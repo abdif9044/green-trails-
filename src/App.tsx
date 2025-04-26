@@ -28,6 +28,7 @@ const App = () => (
             <Route path="/discover" element={<Discover />} />
             <Route path="/trail/:trailId" element={<Trail />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/profile/:userId" element={<Profile />} />
             <Route path="/social" element={<Social />} />
             <Route path="/albums/new" element={<CreateAlbum />} />
             <Route path="/auth" element={<Auth />} />

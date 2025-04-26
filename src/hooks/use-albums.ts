@@ -2,24 +2,32 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-export const useAlbums = (filter: 'feed' | 'following') => {
+// Define proper types for filtering
+export type AlbumFilterType = 'feed' | 'following' | string;
+
+export interface Album {
+  id: string;
+  title: string;
+  description?: string;
+  location?: string;
+  is_private: boolean;
+  user_id: string;
+  trail_id?: string;
+  created_at: string;
+  updated_at: string;
+  user?: {
+    id: string;
+    email: string;
+  };
+}
+
+export const useAlbums = (userId?: string) => {
   return useQuery({
-    queryKey: ['albums', filter],
+    queryKey: ['albums', userId],
     queryFn: async () => {
-      if (filter === 'following') {
-        // Fetch albums from users we follow
-        const { data: followingData } = await supabase
-          .from('follows')
-          .select('following_id')
-          .eq('follower_id', (await supabase.auth.getUser()).data.user?.id);
-
-        const followingIds = followingData?.map(f => f.following_id) || [];
-
-        if (followingIds.length === 0) {
-          return []; // No followings, return empty array
-        }
-
-        const { data: albums, error } = await supabase
+      // If userId is provided, fetch albums for that user
+      if (userId) {
+        const { data, error } = await supabase
           .from('albums')
           .select(`
             *,
@@ -28,19 +36,19 @@ export const useAlbums = (filter: 'feed' | 'following') => {
               email
             )
           `)
-          .in('user_id', followingIds)
+          .eq('user_id', userId)
           .order('created_at', { ascending: false });
 
         if (error) {
-          console.error('Error fetching following albums:', error);
+          console.error('Error fetching user albums:', error);
           return [];
         }
 
-        return albums || [];
+        return data as Album[] || [];
       }
 
-      // Fetch all public albums for the feed
-      const { data: albums, error } = await supabase
+      // Default: fetch all public albums 
+      const { data, error } = await supabase
         .from('albums')
         .select(`
           *,
@@ -57,7 +65,8 @@ export const useAlbums = (filter: 'feed' | 'following') => {
         return [];
       }
 
-      return albums || [];
-    }
+      return data as Album[] || [];
+    },
+    enabled: true,
   });
 };

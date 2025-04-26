@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './use-auth';
@@ -10,7 +9,7 @@ type FollowsResponse = {
   following_id: string;
   created_at: string;
   profiles: {
-    username: string;
+    username: string | null;
     avatar_url: string | null;
     full_name: string | null;
   };
@@ -27,12 +26,19 @@ export const useFollowersList = (userId: string) => {
           follower_id,
           following_id,
           created_at,
-          profiles:follower_id (username, avatar_url, full_name)
+          profiles:follower_id(username, avatar_url, full_name)
         `)
         .eq('following_id', userId);
         
       if (error) throw error;
-      return data as FollowsResponse[];
+      
+      // Transform the data to match FollowsResponse type
+      const transformedData = data?.map(item => ({
+        ...item,
+        profiles: item.profiles || { username: null, avatar_url: null, full_name: null }
+      })) as FollowsResponse[];
+      
+      return transformedData || [];
     },
     enabled: !!userId,
   });
@@ -49,12 +55,19 @@ export const useFollowingList = (userId: string) => {
           follower_id,
           following_id,
           created_at,
-          profiles:following_id (username, avatar_url, full_name)
+          profiles:following_id(username, avatar_url, full_name)
         `)
         .eq('follower_id', userId);
         
       if (error) throw error;
-      return data as FollowsResponse[];
+      
+      // Transform the data to match FollowsResponse type
+      const transformedData = data?.map(item => ({
+        ...item,
+        profiles: item.profiles || { username: null, avatar_url: null, full_name: null }
+      })) as FollowsResponse[];
+      
+      return transformedData || [];
     },
     enabled: !!userId,
   });

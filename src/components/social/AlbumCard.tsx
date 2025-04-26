@@ -5,48 +5,44 @@ import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Album } from '@/hooks/use-albums';
 
-interface AlbumCardProps {
-  id: string;
-  title: string;
-  description?: string;
-  coverImage?: string;
-  location?: string;
-  authorName: string;
-  authorAvatar?: string;
-  likesCount: number;
-  commentsCount: number;
-  isPrivate: boolean;
-  createdAt: string;
+// Props interface now accepts the album object directly
+export interface AlbumCardProps {
+  album: Album;
 }
 
-const AlbumCard = ({
-  id,
-  title,
-  description,
-  coverImage,
-  location,
-  authorName,
-  authorAvatar,
-  likesCount,
-  commentsCount,
-  isPrivate,
-  createdAt,
-}: AlbumCardProps) => {
+const AlbumCard = ({ album }: AlbumCardProps) => {
+  const {
+    id,
+    title,
+    description,
+    location,
+    is_private,
+    created_at,
+    user_id
+  } = album;
+  
+  // Default values for display
+  const authorName = album.user?.email?.split('@')[0] || 'User';
+  const authorAvatar = null; // Could be fetched from profiles in the future
+  const likesCount = 0; // Placeholder until likes are implemented
+  const commentsCount = 0; // Placeholder until comments are implemented
+  
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow">
       <CardHeader className="p-4">
         <div className="flex items-center space-x-4">
           <Avatar>
-            <AvatarImage src={authorAvatar} />
+            <AvatarImage src={authorAvatar || undefined} />
             <AvatarFallback>{authorName[0]}</AvatarFallback>
           </Avatar>
           <div className="flex-1">
             <div className="flex items-center justify-between">
-              <Link to={`/profile/${authorName}`} className="font-semibold hover:underline">
+              <Link to={`/profile/${user_id}`} className="font-semibold hover:underline">
                 {authorName}
               </Link>
-              {isPrivate && (
+              {is_private && (
                 <Badge variant="secondary">Private</Badge>
               )}
             </div>
@@ -57,17 +53,9 @@ const AlbumCard = ({
       
       <Link to={`/albums/${id}`}>
         <div className="relative aspect-video bg-muted">
-          {coverImage ? (
-            <img 
-              src={coverImage} 
-              alt={title}
-              className="object-cover w-full h-full"
-            />
-          ) : (
-            <div className="flex items-center justify-center h-full">
-              <Image className="h-12 w-12 text-muted-foreground/50" />
-            </div>
-          )}
+          <div className="flex items-center justify-center h-full">
+            <Image className="h-12 w-12 text-muted-foreground/50" />
+          </div>
         </div>
       </Link>
       

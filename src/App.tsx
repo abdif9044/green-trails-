@@ -13,6 +13,7 @@ import Social from "./pages/Social";
 import NotFound from "./pages/NotFound";
 import Trail from "./pages/Trail";
 import CreateAlbum from "./pages/CreateAlbum";
+import AlbumDetail from "./pages/AlbumDetail";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +32,7 @@ const App = () => (
             <Route path="/profile/:userId" element={<Profile />} />
             <Route path="/social" element={<Social />} />
             <Route path="/albums/new" element={<CreateAlbum />} />
+            <Route path="/albums/:albumId" element={<AlbumDetail />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

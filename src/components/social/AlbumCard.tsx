@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Album } from '@/hooks/use-albums';
-import { useState } from 'react';
-import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
+import { useAlbumLikeCount, useHasLikedAlbum, useToggleAlbumLike } from '@/hooks/use-album-likes';
+import { useAuth } from '@/hooks/use-auth';
+import { useToast } from '@/hooks/use-toast';
 
 // Props interface now accepts the album object directly
 export interface AlbumCardProps {
@@ -26,21 +27,34 @@ const AlbumCard = ({ album }: AlbumCardProps) => {
     user_id
   } = album;
   
-  const [liked, setLiked] = useState(false);
+  const { user } = useAuth();
   const { toast } = useToast();
+  
+  // Use the album likes hooks
+  const { data: likesCount = 0, isLoading: isLoadingLikes } = useAlbumLikeCount(id);
+  const { data: hasLiked = false, isLoading: isLoadingHasLiked } = useHasLikedAlbum(id);
+  const toggleLike = useToggleAlbumLike();
   
   // Default values for display
   const authorName = album.user?.email?.split('@')[0] || 'User';
   const authorAvatar = null; // Could be fetched from profiles in the future
-  const likesCount = liked ? 1 : 0; // Placeholder until likes are implemented
   const commentsCount = 0; // Placeholder until comments are implemented
   
-  const handleLike = () => {
-    setLiked(!liked);
-    toast({
-      title: liked ? "Unliked" : "Liked",
-      description: liked ? "You've unliked this album" : "You've liked this album",
-    });
+  const handleLike = async () => {
+    if (!user) {
+      toast({
+        title: "Sign in required",
+        description: "You need to sign in to like albums",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    try {
+      await toggleLike.mutateAsync(id);
+    } catch (error) {
+      // Error is handled by useMutation
+    }
   };
   
   const handleShare = () => {
@@ -101,11 +115,12 @@ const AlbumCard = ({ album }: AlbumCardProps) => {
           <Button 
             variant="ghost" 
             size="sm" 
-            className={`space-x-1 ${liked ? 'text-red-500' : ''}`} 
+            className={`space-x-1 ${hasLiked ? 'text-red-500' : ''}`} 
             onClick={handleLike}
+            disabled={toggleLike.isPending}
           >
-            <Heart className={`h-4 w-4 ${liked ? 'fill-current' : ''}`} />
-            <span>{likesCount}</span>
+            <Heart className={`h-4 w-4 ${hasLiked ? 'fill-current' : ''}`} />
+            <span>{isLoadingLikes ? '...' : likesCount}</span>
           </Button>
           <Button variant="ghost" size="sm" className="space-x-1">
             <MessageCircle className="h-4 w-4" />

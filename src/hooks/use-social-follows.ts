@@ -3,16 +3,18 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './use-auth';
 import { useToast } from './use-toast';
 
+type Profile = {
+  username: string | null;
+  avatar_url: string | null;
+  full_name: string | null;
+};
+
 type FollowsResponse = {
   id: string;
   follower_id: string;
   following_id: string;
   created_at: string;
-  profiles: {
-    username: string | null;
-    avatar_url: string | null;
-    full_name: string | null;
-  };
+  profiles: Profile | null;
 };
 
 export const useFollowersList = (userId: string) => {
@@ -32,10 +34,10 @@ export const useFollowersList = (userId: string) => {
         
       if (error) throw error;
       
-      // Transform the data to match FollowsResponse type
+      // Transform the data to ensure it matches FollowsResponse type
       const transformedData = data?.map(item => ({
         ...item,
-        profiles: item.profiles || { username: null, avatar_url: null, full_name: null }
+        profiles: item.profiles && typeof item.profiles === 'object' ? item.profiles as Profile : null
       })) as FollowsResponse[];
       
       return transformedData || [];
@@ -61,10 +63,10 @@ export const useFollowingList = (userId: string) => {
         
       if (error) throw error;
       
-      // Transform the data to match FollowsResponse type
+      // Transform the data to ensure it matches FollowsResponse type
       const transformedData = data?.map(item => ({
         ...item,
-        profiles: item.profiles || { username: null, avatar_url: null, full_name: null }
+        profiles: item.profiles && typeof item.profiles === 'object' ? item.profiles as Profile : null
       })) as FollowsResponse[];
       
       return transformedData || [];

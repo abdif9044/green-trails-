@@ -9,12 +9,26 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PlusCircle, Compass, Users } from "lucide-react";
 import { useAlbums } from '@/hooks/use-albums';
 import { useAuth } from '@/hooks/use-auth';
+import { toast } from '@/hooks/use-toast';
 
 const Social = () => {
   const [currentTab, setCurrentTab] = useState<'feed' | 'following'>('feed');
-  const { data: albums, isLoading } = useAlbums(currentTab === 'following' ? 'following' : undefined);
-  const { session } = useAuth();
+  const { user, session } = useAuth();
+  const { data: albums, isLoading } = useAlbums(currentTab === 'following' ? 'following' : 'feed');
 
+  const handleTabChange = (tab: 'feed' | 'following') => {
+    if (tab === 'following' && !session) {
+      toast({
+        title: "Sign in required",
+        description: "You need to sign in to see albums from people you follow.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setCurrentTab(tab);
+  };
+  
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -33,7 +47,11 @@ const Social = () => {
             )}
           </div>
           
-          <Tabs value={currentTab} onValueChange={(value) => setCurrentTab(value as 'feed' | 'following')} className="space-y-6">
+          <Tabs 
+            value={currentTab} 
+            onValueChange={(value) => handleTabChange(value as 'feed' | 'following')}
+            className="space-y-6"
+          >
             <TabsList>
               <TabsTrigger value="feed" className="flex items-center gap-2">
                 <Compass className="h-4 w-4" />

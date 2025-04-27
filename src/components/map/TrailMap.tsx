@@ -1,10 +1,9 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { Loader2 } from 'lucide-react';
 import MapControls from './MapControls';
-import { Trail } from '@/hooks/use-trails';
+import { Trail } from '@/types/trails';
 
 const MAPBOX_TOKEN = 'pk.eyJ1IjoiZ3JlZW50cmFpbHMtdGVzdCIsImEiOiJjbDBjZXlmYWMwMDQxM2RydDJ1bm1zYmVqIn0.OnS8ThN47ArmXCkV2NBa9A';
 
@@ -37,7 +36,6 @@ const TrailMap: React.FC<TrailMapProps> = ({
   const markersRef = useRef<mapboxgl.Marker[]>([]);
   const [currentStyle, setCurrentStyle] = useState<keyof typeof mapStyles>('outdoors');
 
-  // Initialize map
   useEffect(() => {
     if (!mapContainer.current) return;
 
@@ -63,7 +61,6 @@ const TrailMap: React.FC<TrailMapProps> = ({
       setIsLoading(false);
       
       if (map.current) {
-        // Add 3D terrain
         map.current.addSource('terrain', {
           type: 'raster-dem',
           url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
@@ -75,7 +72,6 @@ const TrailMap: React.FC<TrailMapProps> = ({
           exaggeration: 1.5
         });
 
-        // Add sky layer
         map.current.addLayer({
           id: 'sky',
           type: 'sky',
@@ -96,11 +92,9 @@ const TrailMap: React.FC<TrailMapProps> = ({
     };
   }, [currentStyle]);
 
-  // Handle markers
   useEffect(() => {
     if (!map.current || isLoading) return;
 
-    // Clear existing markers
     markersRef.current.forEach(marker => marker.remove());
     markersRef.current = [];
 
@@ -110,7 +104,6 @@ const TrailMap: React.FC<TrailMapProps> = ({
       const element = document.createElement('div');
       element.className = `trail-marker trail-marker-${trail.difficulty.toLowerCase()}`;
       
-      // Style the marker
       const markerStyle = {
         width: '24px',
         height: '24px',
@@ -207,7 +200,6 @@ const TrailMap: React.FC<TrailMapProps> = ({
     <div className={`relative rounded-lg overflow-hidden ${className}`}>
       <div ref={mapContainer} className="absolute inset-0" />
       
-      {/* Map Controls */}
       <div className="absolute top-2 left-2 z-10">
         <MapControls
           onResetView={handleResetView}
@@ -217,7 +209,6 @@ const TrailMap: React.FC<TrailMapProps> = ({
         />
       </div>
       
-      {/* Loading indicator */}
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-white/80 dark:bg-greentrail-950/80 z-20">
           <div className="flex flex-col items-center">

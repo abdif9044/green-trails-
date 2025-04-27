@@ -1,3 +1,4 @@
+
 import { Trail } from "@/types/trails";
 
 export const mockTrails: Trail[] = [
@@ -27,6 +28,7 @@ export const mockTrails: Trail[] = [
     elevation: 1200,
     tags: ["waterfall", "views", "challenging"],
     likes: 189,
+    isAgeRestricted: false,
     description: "Sunrise Mountain Trail is a challenging 5.8 mile out and back trail with spectacular views of Portland and Mount Hood. This trail has steep sections and is best for experienced hikers. Beautiful views await those who reach the summit, especially at sunrise as the name suggests.",
   },
   {
@@ -40,6 +42,7 @@ export const mockTrails: Trail[] = [
     elevation: 120,
     tags: ["accessible", "river", "beginner"],
     likes: 312,
+    isAgeRestricted: false,
     description: "The Riverside Path is a relaxing 2.1 mile paved trail that follows the Colorado River through downtown Austin. This is an excellent trail for beginners or those looking for an easy walk, run, or bike ride. The path is accessible year-round and is popular with locals for daily exercise.",
   },
   {
@@ -68,6 +71,7 @@ export const mockTrails: Trail[] = [
     elevation: 200,
     tags: ["redwoods", "serene", "family-friendly"],
     likes: 422,
+    isAgeRestricted: false,
     description: undefined
   },
   {

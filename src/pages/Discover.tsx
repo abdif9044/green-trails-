@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -42,7 +41,6 @@ const Discover = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   
-  // Fetch trails using our custom hook
   const { data: trails = [], isLoading } = useTrails({
     searchQuery,
     difficulty: difficultyFilter,
@@ -76,7 +74,6 @@ const Discover = () => {
     <div className="min-h-screen flex flex-col">
       <Navbar />
       
-      {/* Page Header */}
       <div className="bg-greentrail-800 dark:bg-greentrail-900 text-white py-12">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-center">
@@ -93,11 +90,9 @@ const Discover = () => {
         </div>
       </div>
       
-      {/* Main Content */}
       <div className="flex-grow bg-white dark:bg-greentrail-950 py-8">
         <div className="container mx-auto px-4">
           <div className="flex flex-col lg:flex-row gap-6">
-            {/* Filters Sidebar */}
             <div className="lg:w-1/4">
               <div className="bg-greentrail-50 dark:bg-greentrail-900 p-4 rounded-xl shadow-sm sticky top-20">
                 <div className="flex justify-between items-center mb-4">
@@ -113,7 +108,6 @@ const Discover = () => {
                 </div>
                 
                 <div className="space-y-6">
-                  {/* Search */}
                   <div>
                     <label htmlFor="search" className="block text-sm font-medium text-greentrail-700 dark:text-greentrail-300 mb-2">
                       Search
@@ -130,7 +124,6 @@ const Discover = () => {
                     </div>
                   </div>
                   
-                  {/* Difficulty */}
                   <div>
                     <label htmlFor="difficulty" className="block text-sm font-medium text-greentrail-700 dark:text-greentrail-300 mb-2">
                       Difficulty
@@ -149,7 +142,6 @@ const Discover = () => {
                     </Select>
                   </div>
                   
-                  {/* Length */}
                   <div>
                     <label className="block text-sm font-medium text-greentrail-700 dark:text-greentrail-300 mb-2">
                       Trail Length
@@ -171,7 +163,6 @@ const Discover = () => {
                     </div>
                   </div>
                   
-                  {/* Age Restricted Content Toggle */}
                   <div className="pt-2 border-t border-greentrail-200 dark:border-greentrail-700">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
@@ -194,7 +185,6 @@ const Discover = () => {
                     )}
                   </div>
                   
-                  {/* Additional Filters */}
                   <Accordion type="single" collapsible className="border-t border-greentrail-200 dark:border-greentrail-700 pt-2">
                     <AccordionItem value="features">
                       <AccordionTrigger className="text-greentrail-700 dark:text-greentrail-300">
@@ -268,7 +258,6 @@ const Discover = () => {
               </div>
             </div>
             
-            {/* Trail Cards */}
             <div className="lg:w-3/4">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-semibold text-greentrail-800 dark:text-greentrail-200">
@@ -317,12 +306,16 @@ const Discover = () => {
                             name={trail.name}
                             location={trail.location}
                             imageUrl={trail.imageUrl}
-                            difficulty={trail.difficulty as TrailDifficulty}
+                            difficulty={trail.difficulty}
                             length={trail.length}
                             elevation={trail.elevation}
                             tags={trail.tags}
                             likes={trail.likes}
-                            strainTags={trail.strainTags}
+                            strainTags={typeof trail.strainTags === 'object' && !Array.isArray(trail.strainTags) ? 
+                              [] : 
+                              Array.isArray(trail.strainTags) ? trail.strainTags.map(tag => 
+                                typeof tag === 'string' ? tag : tag.name
+                              ) : []}
                             isAgeRestricted={trail.isAgeRestricted}
                           />
                         </Link>

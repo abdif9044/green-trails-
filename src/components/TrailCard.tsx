@@ -3,7 +3,7 @@ import { Heart, MapPin, Users, Cannabis } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
-import { TrailDifficulty } from '@/hooks/use-trails';
+import { TrailDifficulty } from '@/types/trails';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 

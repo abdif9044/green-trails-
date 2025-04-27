@@ -31,3 +31,6 @@ export const useTrail = (trailId: string | undefined) => {
     enabled: !!trailId,
   });
 };
+
+// Re-export types from the types file for components that import from this file
+export type { Trail, TrailFilters, TrailDifficulty } from '@/types/trails';

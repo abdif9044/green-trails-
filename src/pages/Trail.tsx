@@ -211,7 +211,8 @@ const Trail: React.FC = () => {
                             length: trail.length,
                             elevation: trail.elevation,
                             tags: trail.tags,
-                            likes: trail.likes
+                            likes: trail.likes,
+                            isAgeRestricted: trail.isAgeRestricted
                           }]}
                           center={trail.coordinates}
                           zoom={12}

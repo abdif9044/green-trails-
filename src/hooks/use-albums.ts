@@ -16,6 +16,7 @@ export interface Album {
   trail_id?: string;
   created_at: string;
   updated_at: string;
+  coverImage?: string;
   user?: {
     id: string;
     email: string;
@@ -69,10 +70,13 @@ export const useAlbums = (filterType?: AlbumFilterType) => {
         }
         
         // Handle the case where relation might not be found
-        return data.map(album => ({
+        const albums = data.map(album => ({
           ...album,
           user: album.user && typeof album.user === 'object' ? album.user : null
         })) as Album[];
+        
+        // Get cover images for each album
+        return await addCoverImageToAlbums(albums);
       }
       
       // If specific user ID provided
@@ -95,10 +99,43 @@ export const useAlbums = (filterType?: AlbumFilterType) => {
         }
 
         // Handle the case where relation might not be found
-        return data.map(album => ({
+        const albums = data.map(album => ({
           ...album,
           user: album.user && typeof album.user === 'object' ? album.user : null
         })) as Album[];
+        
+        // Get cover images for each album
+        return await addCoverImageToAlbums(albums);
+      }
+      
+      // If trail ID is provided
+      if (filterType && !filterType.includes('-')) {
+        const { data, error } = await supabase
+          .from('albums')
+          .select(`
+            *,
+            user:user_id (
+              id,
+              email
+            )
+          `)
+          .eq('trail_id', filterType)
+          .eq('is_private', false)
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.error('Error fetching trail albums:', error);
+          return [];
+        }
+
+        // Handle the case where relation might not be found
+        const albums = data.map(album => ({
+          ...album,
+          user: album.user && typeof album.user === 'object' ? album.user : null
+        })) as Album[];
+        
+        // Get cover images for each album
+        return await addCoverImageToAlbums(albums);
       }
 
       // Default: fetch all public albums 
@@ -120,11 +157,47 @@ export const useAlbums = (filterType?: AlbumFilterType) => {
       }
 
       // Handle the case where relation might not be found
-      return data.map(album => ({
+      const albums = data.map(album => ({
         ...album,
         user: album.user && typeof album.user === 'object' ? album.user : null
       })) as Album[];
+      
+      // Get cover images for each album
+      return await addCoverImageToAlbums(albums);
     },
     enabled: true,
   });
+};
+
+// Helper function to add cover images to albums
+const addCoverImageToAlbums = async (albums: Album[]): Promise<Album[]> => {
+  if (!albums || albums.length === 0) return [];
+  
+  const albumsWithCoverImage = await Promise.all(
+    albums.map(async (album) => {
+      // Get first media item for this album as the cover image
+      const { data, error } = await supabase
+        .from('media')
+        .select('file_path')
+        .eq('album_id', album.id)
+        .limit(1)
+        .single();
+      
+      if (error || !data) {
+        return album;
+      }
+      
+      // Generate the public URL for the file
+      const coverImageUrl = supabase.storage
+        .from('media')
+        .getPublicUrl(data.file_path).data.publicUrl;
+      
+      return {
+        ...album,
+        coverImage: coverImageUrl
+      };
+    })
+  );
+  
+  return albumsWithCoverImage;
 };

@@ -1,7 +1,16 @@
 
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { CloudRain, CloudSnow, CloudSun, Thermometer } from 'lucide-react';
+import { 
+  CloudRain, 
+  CloudSnow, 
+  CloudSun, 
+  Thermometer, 
+  SunRise, 
+  SunSet, 
+  Wind, 
+  Droplets 
+} from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface WeatherInfoProps {
@@ -34,6 +43,8 @@ const WeatherInfo: React.FC<WeatherInfoProps> = ({
       return <CloudRain className="h-7 w-7 text-blue-500" />;
     } else if (lowerCondition.includes('snow')) {
       return <CloudSnow className="h-7 w-7 text-sky-300" />;
+    } else if (lowerCondition.includes('cloud')) {
+      return <CloudSun className="h-7 w-7 text-gray-500" />;
     } else {
       return <CloudSun className="h-7 w-7 text-amber-500" />;
     }
@@ -86,14 +97,19 @@ const WeatherInfo: React.FC<WeatherInfoProps> = ({
                 : '--'}
             </div>
             <div className="text-xs text-muted-foreground">
+              <Droplets className="inline-block h-3 w-3 mr-1" />
               {precipitation || 'Precipitation: --'}
             </div>
           </div>
         </div>
         {(sunrise || sunset) && (
           <div className="mt-3 pt-3 border-t border-border flex justify-between text-xs text-muted-foreground">
-            <div>Sunrise: {sunrise || '--'}</div>
-            <div>Sunset: {sunset || '--'}</div>
+            <div className="flex items-center gap-1">
+              <SunRise className="h-3 w-3" /> {sunrise || '--'}
+            </div>
+            <div className="flex items-center gap-1">
+              <SunSet className="h-3 w-3" /> {sunset || '--'}
+            </div>
           </div>
         )}
       </CardContent>

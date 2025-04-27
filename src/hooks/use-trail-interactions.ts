@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './use-auth';
@@ -56,6 +55,8 @@ export const useTrailWeather = (trailId: string) => {
       if (error && error.code !== 'PGRST116') throw error;
       return data;
     },
+    staleTime: 1000 * 60 * 60, // 1 hour
+    cacheTime: 1000 * 60 * 60 * 24, // 24 hours
   });
 };
 

@@ -27,20 +27,24 @@ export const useSimilarTrails = (trailId: string) => {
 
       if (error) throw error;
       
-      return (data || []).map(trail => ({
-        id: trail.id as string,
-        name: trail.name as string,
-        location: trail.location as string,
-        imageUrl: trail.imageurl as string,
-        difficulty: trail.difficulty as string,
-        length: Number(trail.length),
-        elevation: Number(trail.elevation),
-        tags: Array.isArray(trail.tags) ? trail.tags : [],
-        likes: Number(trail.likes),
-        isAgeRestricted: false,
-        coordinates: undefined,
-        strainTags: [],
-      })) as Trail[];
+      return (data || []).map(item => {
+        // Explicitly type the item as a Record<string, any> to access properties
+        const trail = item as Record<string, any>;
+        return {
+          id: String(trail.id),
+          name: String(trail.name),
+          location: String(trail.location),
+          imageUrl: String(trail.imageurl || trail.imageUrl),
+          difficulty: String(trail.difficulty),
+          length: Number(trail.length),
+          elevation: Number(trail.elevation),
+          tags: Array.isArray(trail.tags) ? trail.tags : [],
+          likes: Number(trail.likes),
+          isAgeRestricted: false,
+          coordinates: undefined,
+          strainTags: [],
+        };
+      }) as Trail[];
     },
   });
 };

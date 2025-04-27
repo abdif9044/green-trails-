@@ -25,11 +25,15 @@ export const useTrailRatings = (trailId: string) => {
 
       if (error) throw error;
       
-      return (data || []).map(item => ({
-        rating: Number(item.rating),
-        user_id: item.user_id as string,
-        trail_id: item.trail_id as string
-      })) as TrailRating[];
+      return (data || []).map(item => {
+        // Explicitly type the item as a Record<string, any>
+        const rating = item as Record<string, any>;
+        return {
+          rating: Number(rating.rating),
+          user_id: String(rating.user_id),
+          trail_id: String(rating.trail_id)
+        };
+      }) as TrailRating[];
     },
   });
 };

@@ -32,14 +32,15 @@ export const useTrailStats = (trailId: string) => {
 
       if (error) throw error;
 
-      const statsData = data?.[0] as Record<string, number>;
+      // Type the data correctly by accessing the first item and casting it
+      const statsData = data?.[0] as Record<string, any> || {};
       
       return {
-        visit_count: Math.round(statsData?.visit_count || 0),
-        completion_count: Math.round(statsData?.completion_count || 0),
-        avg_rating: Number((statsData?.avg_rating || 0).toFixed(1)),
-        rating_count: Math.round(statsData?.rating_count || 0),
-        comment_count: Math.round(statsData?.comment_count || 0)
+        visit_count: Math.round(Number(statsData.visit_count || 0)),
+        completion_count: Math.round(Number(statsData.completion_count || 0)),
+        avg_rating: Number((Number(statsData.avg_rating || 0)).toFixed(1)),
+        rating_count: Math.round(Number(statsData.rating_count || 0)),
+        comment_count: Math.round(Number(statsData.comment_count || 0))
       } as TrailStats;
     },
   });

@@ -40,10 +40,12 @@ export const usePrefetch = () => {
           queryKey: ['similar-trails', trailId],
           queryFn: async () => {
             try {
-              const { data } = await queryClient.fetchQuery({
-                queryKey: ['similar-trails', trailId],
-              });
-              return data;
+              // Direct query to fetch similar trails data
+              const result = await fetch(`/api/trails/${trailId}/similar`);
+              if (!result.ok) {
+                return [];
+              }
+              return await result.json();
             } catch {
               return [];
             }
@@ -65,10 +67,12 @@ export const usePrefetch = () => {
           queryKey: ['trail-weather', trailId],
           queryFn: async () => {
             try {
-              const { data } = await queryClient.fetchQuery({
-                queryKey: ['trail-weather', trailId],
-              });
-              return data;
+              // Direct query to fetch weather data
+              const result = await fetch(`/api/trails/${trailId}/weather`);
+              if (!result.ok) {
+                return null;
+              }
+              return await result.json();
             } catch {
               return null;
             }

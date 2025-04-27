@@ -9,6 +9,8 @@ interface WeatherData {
   precipitation: string;
   sunrise: string;
   sunset: string;
+  windSpeed: string;
+  windDirection: string;
 }
 
 // Demo weather API for development purposes
@@ -21,7 +23,9 @@ const fetchWeatherFromAPI = async (lat: number, lng: number): Promise<WeatherDat
   
   // Generate realistic but randomized weather data
   const conditions = ["Clear", "Partly Cloudy", "Cloudy", "Rain", "Thunderstorm", "Snow", "Fog"];
+  const directions = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
   const baseTemp = Math.floor(10 + Math.random() * 25); // Base temp between 10-35°C
+  const windSpeed = Math.floor(Math.random() * 30); // Wind speed in km/h
   
   return {
     temperature: baseTemp,
@@ -31,6 +35,8 @@ const fetchWeatherFromAPI = async (lat: number, lng: number): Promise<WeatherDat
     precipitation: `${Math.floor(Math.random() * 50)}%`,
     sunrise: "06:15 AM",
     sunset: "08:45 PM",
+    windSpeed: `${windSpeed} km/h`,
+    windDirection: directions[Math.floor(Math.random() * directions.length)]
   };
 };
 
@@ -52,7 +58,9 @@ export const getTrailWeather = async (trailId: string, coordinates?: [number, nu
         low: cachedWeather.low,
         precipitation: cachedWeather.precipitation,
         sunrise: cachedWeather.sunrise,
-        sunset: cachedWeather.sunset
+        sunset: cachedWeather.sunset,
+        windSpeed: cachedWeather.wind_speed || '',
+        windDirection: cachedWeather.wind_direction || ''
       };
     }
     
@@ -74,6 +82,8 @@ export const getTrailWeather = async (trailId: string, coordinates?: [number, nu
         precipitation: weatherData.precipitation,
         sunrise: weatherData.sunrise,
         sunset: weatherData.sunset,
+        wind_speed: weatherData.windSpeed,
+        wind_direction: weatherData.windDirection
       }, { onConflict: 'trail_id' });
     
     return weatherData;

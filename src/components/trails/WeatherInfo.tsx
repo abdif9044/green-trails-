@@ -21,6 +21,8 @@ interface WeatherInfoProps {
   precipitation?: string;
   sunrise?: string;
   sunset?: string;
+  windSpeed?: string;
+  windDirection?: string;
   isLoading?: boolean;
 }
 
@@ -32,6 +34,8 @@ const WeatherInfo: React.FC<WeatherInfoProps> = ({
   precipitation,
   sunrise,
   sunset,
+  windSpeed,
+  windDirection,
   isLoading = false
 }) => {
   const getWeatherIcon = () => {
@@ -102,6 +106,18 @@ const WeatherInfo: React.FC<WeatherInfoProps> = ({
             </div>
           </div>
         </div>
+        
+        {/* Wind information section */}
+        {(windSpeed || windDirection) && (
+          <div className="mt-2 pt-2 border-t border-border flex items-center justify-center text-sm text-muted-foreground">
+            <Wind className="h-3 w-3 mr-1" />
+            <span>
+              {windSpeed || '--'} 
+              {windDirection ? ` ${windDirection}` : ''}
+            </span>
+          </div>
+        )}
+        
         {(sunrise || sunset) && (
           <div className="mt-3 pt-3 border-t border-border flex justify-between text-xs text-muted-foreground">
             <div className="flex items-center gap-1">

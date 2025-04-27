@@ -19,7 +19,7 @@ export interface Trail {
   tags: string[];
   likes: number;
   coordinates?: [number, number]; // [longitude, latitude]
-  strainTags?: StrainTag[];
+  strainTags?: string[] | StrainTag[];
   isAgeRestricted: boolean;
   description?: string;
 }

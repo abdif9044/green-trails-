@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -11,7 +12,7 @@ import TrailMap from "@/components/map/TrailMap";
 import { Card, CardContent } from "@/components/ui/card";
 import { MapPin, Mountain, ArrowUpRight, Heart, Users, MessageSquare, Image, ArrowLeft, Star, Cloud, Sun } from "lucide-react";
 import { useAuth } from '@/hooks/use-auth';
-import { Trail as TrailType } from '@/hooks/use-trails';
+import { Trail as TrailType, StrainTag } from '@/types/trails';
 import { useToggleLike, useTrailLikes } from "@/hooks/use-trail-interactions";
 import TrailComments from "@/components/trails/TrailComments";
 import AgeRestrictionWarning from "@/components/trails/AgeRestrictionWarning";
@@ -180,9 +181,17 @@ const Trail: React.FC = () => {
                         </h3>
                         <Separator className="bg-greentrail-200 dark:bg-greentrail-700" />
                         <div className="flex flex-wrap gap-2">
-                          {trail.strainTags.map((tag) => (
-                            <StrainTagBadge key={tag.name} tag={tag} />
-                          ))}
+                          {trail.strainTags.map((strainTag) => {
+                            // Create proper StrainTag objects
+                            const strain: StrainTag = {
+                              name: strainTag,
+                              type: 'hybrid', // Default type since we don't have this info from the string
+                              effects: []
+                            };
+                            return (
+                              <StrainTagBadge key={strainTag} strain={strain} />
+                            );
+                          })}
                         </div>
                       </div>
                     )}
@@ -192,7 +201,18 @@ const Trail: React.FC = () => {
                     <Card>
                       <CardContent className="p-0">
                         <TrailMap
-                          trails={[trail]}
+                          trails={[{
+                            id: trail.id,
+                            name: trail.name,
+                            location: trail.location,
+                            coordinates: trail.coordinates,
+                            difficulty: trail.difficulty,
+                            imageUrl: trail.imageUrl,
+                            length: trail.length,
+                            elevation: trail.elevation,
+                            tags: trail.tags,
+                            likes: trail.likes
+                          }]}
                           center={trail.coordinates}
                           zoom={12}
                           className="h-[400px] w-full"

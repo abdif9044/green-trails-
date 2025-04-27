@@ -50,7 +50,10 @@ const MapMarker: React.FC<MapMarkerProps> = ({ trail, map, onSelect }) => {
       element.addEventListener('click', () => onSelect(trail.id));
     }
     
-    return () => marker.remove();
+    // Return a cleanup function that removes the marker
+    return () => {
+      marker.remove();
+    };
   }, [trail, map, onSelect]);
   
   return null;

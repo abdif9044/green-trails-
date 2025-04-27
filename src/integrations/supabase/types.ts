@@ -313,6 +313,33 @@ export type Database = {
           },
         ]
       }
+      trail_ratings: {
+        Row: {
+          created_at: string | null
+          id: string
+          rating: number
+          trail_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          rating: number
+          trail_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          rating?: number
+          trail_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       trail_weather: {
         Row: {
           condition: string | null
@@ -364,7 +391,7 @@ export type Database = {
     }
     Functions: {
       execute_sql: {
-        Args: { sql_query: string }
+        Args: { sql_query: string } | { sql_query: string; params?: Json }
         Returns: Json[]
       }
     }

@@ -14,37 +14,22 @@ export const useTrailRatings = (trailId: string) => {
   return useQuery({
     queryKey: ['trail-ratings', trailId],
     queryFn: async () => {
-      // Use execute_sql to query ratings with proper SQL interpolation
       const { data, error } = await supabase.rpc('execute_sql', {
         sql_query: `
-          SELECT rating::integer, user_id, '${trailId}' as trail_id
-          FROM (
-            SELECT 
-              CASE 
-                WHEN EXISTS (SELECT 1 FROM trail_ratings WHERE trail_id = '${trailId}') 
-                THEN (SELECT json_agg(r) FROM (SELECT rating, user_id FROM trail_ratings WHERE trail_id = '${trailId}') r)
-                ELSE '[]'::json
-              END as ratings
-          ) sub, 
-          json_array_elements(CASE WHEN ratings IS NULL THEN '[]'::json ELSE ratings END) as r
-        `
+          SELECT rating, user_id, trail_id
+          FROM trail_ratings
+          WHERE trail_id = $1
+        `,
+        params: JSON.stringify([trailId])
       });
 
       if (error) throw error;
       
-      // Process and transform the data into TrailRating[] format with proper type casting
-      if (data && Array.isArray(data) && data.length > 0) {
-        return data.map(item => {
-          const record = item as Record<string, any>;
-          return {
-            rating: parseInt(record.rating || '0'),
-            user_id: record.user_id as string,
-            trail_id: trailId
-          };
-        }) as TrailRating[];
-      }
-      
-      return [] as TrailRating[];
+      return (data || []).map(item => ({
+        rating: Number(item.rating),
+        user_id: item.user_id as string,
+        trail_id: item.trail_id as string
+      })) as TrailRating[];
     },
   });
 };
@@ -58,18 +43,14 @@ export const useAddRating = (trailId: string) => {
     mutationFn: async (rating: number) => {
       if (!user) throw new Error('Must be logged in to rate trails');
 
-      // Create or update rating using execute_sql with proper parameter handling
       const { error } = await supabase.rpc('execute_sql', {
         sql_query: `
-          WITH upsert AS (
-            INSERT INTO trail_ratings (trail_id, user_id, rating)
-            VALUES ('${trailId}', '${user.id}', ${rating})
-            ON CONFLICT (trail_id, user_id) 
-            DO UPDATE SET rating = EXCLUDED.rating, updated_at = now()
-            RETURNING *
-          )
-          SELECT count(*) FROM upsert
-        `
+          INSERT INTO trail_ratings (trail_id, user_id, rating)
+          VALUES ($1, $2, $3)
+          ON CONFLICT (trail_id, user_id) 
+          DO UPDATE SET rating = EXCLUDED.rating, updated_at = now()
+        `,
+        params: JSON.stringify([trailId, user.id, rating])
       });
 
       if (error) throw error;

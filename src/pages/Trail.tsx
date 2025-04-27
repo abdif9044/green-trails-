@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -19,6 +18,7 @@ import AgeRestrictionWarning from "@/components/trails/AgeRestrictionWarning";
 import WeatherInfo from "@/components/trails/WeatherInfo";
 import { getTrailWeather } from "@/services/weather-service";
 import StrainTagBadge from "@/components/trails/StrainTagBadge";
+import TrailAlbums from "@/components/trails/TrailAlbums";
 
 interface Params extends Readonly<Record<string, string | undefined>> {
   trailId?: string;
@@ -55,7 +55,6 @@ const Trail: React.FC = () => {
     fetchTrail();
   }, [trailId]);
 
-  // Add this after the existing useEffect for fetching trail data
   const [weatherData, setWeatherData] = useState(null);
   const [isWeatherLoading, setIsWeatherLoading] = useState(false);
   
@@ -82,7 +81,6 @@ const Trail: React.FC = () => {
 
   const handleLikeClick = async () => {
     if (!user) {
-      // Handle unauthenticated state, maybe redirect to login
       return;
     }
 
@@ -151,7 +149,6 @@ const Trail: React.FC = () => {
             </div>
           </div>
           
-          {/* Update the content section to include the comments tab */}
           <div className="container mx-auto px-4 py-8">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               <div className="lg:col-span-2 space-y-8">
@@ -159,8 +156,8 @@ const Trail: React.FC = () => {
                   <TabsList className="grid w-full grid-cols-4">
                     <TabsTrigger value="details">Details</TabsTrigger>
                     <TabsTrigger value="map">Map</TabsTrigger>
+                    <TabsTrigger value="albums">Albums</TabsTrigger>
                     <TabsTrigger value="comments">Comments</TabsTrigger>
-                    <TabsTrigger value="photos">Photos</TabsTrigger>
                   </TabsList>
                   
                   <TabsContent value="details" className="mt-6 space-y-4">
@@ -182,10 +179,9 @@ const Trail: React.FC = () => {
                         <Separator className="bg-greentrail-200 dark:bg-greentrail-700" />
                         <div className="flex flex-wrap gap-2">
                           {trail.strainTags.map((strainTag) => {
-                            // Create proper StrainTag objects
                             const strain: StrainTag = {
                               name: strainTag,
-                              type: 'hybrid', // Default type since we don't have this info from the string
+                              type: 'hybrid',
                               effects: []
                             };
                             return (
@@ -221,6 +217,14 @@ const Trail: React.FC = () => {
                     </Card>
                   </TabsContent>
                   
+                  <TabsContent value="albums" className="mt-6">
+                    {trail.isAgeRestricted && !ageVerified ? (
+                      <AgeRestrictionWarning onVerified={() => setAgeVerified(true)} />
+                    ) : (
+                      <TrailAlbums trailId={trail.id} />
+                    )}
+                  </TabsContent>
+                  
                   <TabsContent value="comments" className="mt-6">
                     {trail.isAgeRestricted && !ageVerified ? (
                       <AgeRestrictionWarning onVerified={() => setAgeVerified(true)} />
@@ -228,29 +232,10 @@ const Trail: React.FC = () => {
                       <TrailComments trailId={trail.id} />
                     )}
                   </TabsContent>
-                  
-                  <TabsContent value="photos" className="mt-6">
-                    <div className="text-center py-12">
-                      <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-greentrail-100 dark:bg-greentrail-800 text-greentrail-600 dark:text-greentrail-400 mb-4">
-                        <Image className="h-8 w-8" />
-                      </div>
-                      <h3 className="text-xl font-semibold text-greentrail-800 dark:text-greentrail-200 mb-2">No Photos Yet</h3>
-                      <p className="text-greentrail-600 dark:text-greentrail-400 max-w-md mx-auto mb-6">
-                        Be the first to share your experience on this trail with the GreenTrails community.
-                      </p>
-                      <Button asChild>
-                        <Link to={`/albums/new?trailId=${trail.id}`}>
-                          Upload Photos
-                        </Link>
-                      </Button>
-                    </div>
-                  </TabsContent>
                 </Tabs>
               </div>
               
-              {/* Sidebar */}
               <div className="space-y-6">
-                {/* Weather Card */}
                 <div className="space-y-3">
                   <h3 className="flex items-center gap-2 font-semibold">
                     <Cloud className="h-4 w-4 text-greentrail-600" />

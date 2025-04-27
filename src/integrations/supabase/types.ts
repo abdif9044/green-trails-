@@ -325,6 +325,8 @@ export type Database = {
           temperature: number | null
           trail_id: string
           updated_at: string | null
+          wind_direction: string | null
+          wind_speed: string | null
         }
         Insert: {
           condition?: string | null
@@ -337,6 +339,8 @@ export type Database = {
           temperature?: number | null
           trail_id: string
           updated_at?: string | null
+          wind_direction?: string | null
+          wind_speed?: string | null
         }
         Update: {
           condition?: string | null
@@ -349,6 +353,8 @@ export type Database = {
           temperature?: number | null
           trail_id?: string
           updated_at?: string | null
+          wind_direction?: string | null
+          wind_speed?: string | null
         }
         Relationships: []
       }

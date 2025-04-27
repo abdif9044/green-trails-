@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 interface WeatherData {
@@ -59,7 +58,6 @@ export const getTrailWeather = async (trailId: string, coordinates?: [number, nu
         precipitation: cachedWeather.precipitation,
         sunrise: cachedWeather.sunrise,
         sunset: cachedWeather.sunset,
-        // Check if these properties exist, and provide fallbacks if they don't
         windSpeed: cachedWeather.wind_speed || '',
         windDirection: cachedWeather.wind_direction || ''
       };

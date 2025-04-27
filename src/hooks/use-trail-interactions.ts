@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './use-auth';
@@ -47,7 +46,6 @@ export const useTrailWeather = (trailId: string) => {
   return useQuery({
     queryKey: ['trail-weather', trailId],
     queryFn: async () => {
-      // We need to ensure that our response type matches our WeatherData interface
       try {
         const { data, error } = await supabase
           .from('trail_weather')
@@ -57,7 +55,6 @@ export const useTrailWeather = (trailId: string) => {
 
         if (error && error.code !== 'PGRST116') throw error;
         
-        // If data exists, transform it to match our WeatherData interface
         if (data) {
           return {
             temperature: data.temperature,
@@ -72,14 +69,14 @@ export const useTrailWeather = (trailId: string) => {
           };
         }
         
-        return data;
+        return null;
       } catch (error) {
         console.error('Error fetching trail weather:', error);
         return null;
       }
     },
     staleTime: 1000 * 60 * 60,        // 1 hour
-    gcTime: 1000 * 60 * 60 * 24,      // 24 hours, replaced cacheTime with gcTime
+    gcTime: 1000 * 60 * 60 * 24,      // 24 hours
   });
 };
 

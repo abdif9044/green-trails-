@@ -47,14 +47,36 @@ export const useTrailWeather = (trailId: string) => {
   return useQuery({
     queryKey: ['trail-weather', trailId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('trail_weather')
-        .select('*')
-        .eq('trail_id', trailId)
-        .single();
+      // We need to ensure that our response type matches our WeatherData interface
+      try {
+        const { data, error } = await supabase
+          .from('trail_weather')
+          .select('*')
+          .eq('trail_id', trailId)
+          .single();
 
-      if (error && error.code !== 'PGRST116') throw error;
-      return data;
+        if (error && error.code !== 'PGRST116') throw error;
+        
+        // If data exists, transform it to match our WeatherData interface
+        if (data) {
+          return {
+            temperature: data.temperature,
+            condition: data.condition,
+            high: data.high,
+            low: data.low,
+            precipitation: data.precipitation,
+            sunrise: data.sunrise,
+            sunset: data.sunset,
+            windSpeed: data.wind_speed || '',
+            windDirection: data.wind_direction || ''
+          };
+        }
+        
+        return data;
+      } catch (error) {
+        console.error('Error fetching trail weather:', error);
+        return null;
+      }
     },
     staleTime: 1000 * 60 * 60,        // 1 hour
     gcTime: 1000 * 60 * 60 * 24,      // 24 hours, replaced cacheTime with gcTime

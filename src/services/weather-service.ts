@@ -59,6 +59,7 @@ export const getTrailWeather = async (trailId: string, coordinates?: [number, nu
         precipitation: cachedWeather.precipitation,
         sunrise: cachedWeather.sunrise,
         sunset: cachedWeather.sunset,
+        // Check if these properties exist, and provide fallbacks if they don't
         windSpeed: cachedWeather.wind_speed || '',
         windDirection: cachedWeather.wind_direction || ''
       };
@@ -70,21 +71,26 @@ export const getTrailWeather = async (trailId: string, coordinates?: [number, nu
     // Fetch fresh weather data
     const weatherData = await fetchWeatherFromAPI(coordinates[1], coordinates[0]);
     
-    // Cache the weather data
-    await supabase
-      .from('trail_weather')
-      .upsert({
-        trail_id: trailId,
-        temperature: weatherData.temperature,
-        condition: weatherData.condition,
-        high: weatherData.high,
-        low: weatherData.low,
-        precipitation: weatherData.precipitation,
-        sunrise: weatherData.sunrise,
-        sunset: weatherData.sunset,
-        wind_speed: weatherData.windSpeed,
-        wind_direction: weatherData.windDirection
-      }, { onConflict: 'trail_id' });
+    try {
+      // Cache the weather data
+      await supabase
+        .from('trail_weather')
+        .upsert({
+          trail_id: trailId,
+          temperature: weatherData.temperature,
+          condition: weatherData.condition,
+          high: weatherData.high,
+          low: weatherData.low,
+          precipitation: weatherData.precipitation,
+          sunrise: weatherData.sunrise,
+          sunset: weatherData.sunset,
+          wind_speed: weatherData.windSpeed,
+          wind_direction: weatherData.windDirection
+        }, { onConflict: 'trail_id' });
+    } catch (dbError) {
+      console.error('Error updating trail weather in database:', dbError);
+      // We still return the weather data even if caching fails
+    }
     
     return weatherData;
   } catch (error) {

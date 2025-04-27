@@ -25,7 +25,7 @@ const Index = () => {
       id: "2",
       name: "Sunrise Mountain Trail",
       location: "Portland, OR",
-      imageUrl: "https://images.unsplash.com/photo-1510077143771-1b3make5f99ae8?q=80&w=1000&auto=format&fit=crop",
+      imageUrl: "https://images.unsplash.com/photo-1501854140801-50d01698950b?q=80&w=1000&auto=format&fit=crop",
       difficulty: "hard",
       length: 5.8,
       elevation: 1200,

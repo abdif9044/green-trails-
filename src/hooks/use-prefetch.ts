@@ -18,12 +18,18 @@ export const usePrefetch = () => {
         await queryClient.prefetchQuery({
           queryKey: ['trail', trailId],
           queryFn: async () => {
-            const response = await fetch(`/api/trails/${trailId}`);
-            if (!response.ok) {
-              throw new Error(`HTTP error! status: ${response.status}`);
+            try {
+              const response = await fetch(`/api/trails/${trailId}`);
+              if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+              }
+              return response.json();
+            } catch (error) {
+              console.error("Error prefetching trail:", error);
+              return null;
             }
-            return response.json();
           },
+          staleTime: 1000 * 60 * 5, // 5 minutes
         });
       }
     },
@@ -46,7 +52,8 @@ export const usePrefetch = () => {
                 return [];
               }
               return await result.json();
-            } catch {
+            } catch (error) {
+              console.error("Error prefetching similar trails:", error);
               return [];
             }
           },
@@ -73,7 +80,8 @@ export const usePrefetch = () => {
                 return null;
               }
               return await result.json();
-            } catch {
+            } catch (error) {
+              console.error("Error prefetching weather data:", error);
               return null;
             }
           },

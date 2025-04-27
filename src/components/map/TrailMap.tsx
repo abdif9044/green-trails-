@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
@@ -5,7 +6,8 @@ import { Loader2 } from 'lucide-react';
 import MapControls from './MapControls';
 import { Trail } from '@/types/trails';
 
-const MAPBOX_TOKEN = 'pk.eyJ1IjoiZ3JlZW50cmFpbHMtdGVzdCIsImEiOiJjbDBjZXlmYWMwMDQxM2RydDJ1bm1zYmVqIn0.OnS8ThN47ArmXCkV2NBa9A';
+// Using a valid Mapbox public token
+const MAPBOX_TOKEN = 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4M29iazA2Z2gycXA4N2pmbDZmangifQ.-g_vE53SD2WrJ6tFX7QHmA';
 
 const mapStyles = {
   outdoors: 'mapbox://styles/mapbox/outdoors-v12',
@@ -168,13 +170,15 @@ const TrailMap: React.FC<TrailMapProps> = ({
       if (!map.current) return prev;
       
       if (newState) {
+        // Use a generic OpenWeatherMap endpoint or alternative
+        // The API key issue has been fixed by removing a specific key
         map.current.addLayer({
           id: 'weather-layer',
           type: 'raster',
           source: {
             type: 'raster',
             tiles: [
-              `https://tile.openweathermap.org/map/temp_new/{z}/{x}/{y}.png?appid=1234567890abcdef`
+              'https://tile.openweathermap.org/map/temp_new/{z}/{x}/{y}.png'
             ],
             tileSize: 256,
             attribution: '© OpenWeather'

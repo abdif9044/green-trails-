@@ -11,46 +11,70 @@ export const useAnalytics = () => {
   const { user } = useAuth();
   
   const trackTrailView = useCallback((trailId: string, trailName: string) => {
-    analyticsService.trackEvent('trails', 'view', trailName, {
-      trailId,
-      userId: user?.id || 'anonymous',
-    });
+    try {
+      analyticsService.trackEvent('trails', 'view', trailName, {
+        trailId,
+        userId: user?.id || 'anonymous',
+      });
+    } catch (error) {
+      console.error('Error tracking trail view:', error);
+    }
   }, [user?.id]);
   
   const trackTrailLike = useCallback((trailId: string, trailName: string) => {
-    analyticsService.trackEvent('trails', 'like', trailName, {
-      trailId,
-      userId: user?.id || 'anonymous',
-    });
+    try {
+      analyticsService.trackEvent('trails', 'like', trailName, {
+        trailId,
+        userId: user?.id || 'anonymous',
+      });
+    } catch (error) {
+      console.error('Error tracking trail like:', error);
+    }
   }, [user?.id]);
   
   const trackTrailComment = useCallback((trailId: string) => {
-    analyticsService.trackEvent('trails', 'comment', undefined, {
-      trailId,
-      userId: user?.id || 'anonymous',
-    });
+    try {
+      analyticsService.trackEvent('trails', 'comment', undefined, {
+        trailId,
+        userId: user?.id || 'anonymous',
+      });
+    } catch (error) {
+      console.error('Error tracking trail comment:', error);
+    }
   }, [user?.id]);
   
   const trackTrailRating = useCallback((trailId: string, rating: number) => {
-    analyticsService.trackEvent('trails', 'rate', undefined, {
-      trailId,
-      rating,
-      userId: user?.id || 'anonymous',
-    });
+    try {
+      analyticsService.trackEvent('trails', 'rate', undefined, {
+        trailId,
+        rating,
+        userId: user?.id || 'anonymous',
+      });
+    } catch (error) {
+      console.error('Error tracking trail rating:', error);
+    }
   }, [user?.id]);
   
   const trackSearch = useCallback((query: string, resultCount: number) => {
-    analyticsService.trackEvent('search', 'search', query, {
-      resultCount,
-      userId: user?.id || 'anonymous',
-    });
+    try {
+      analyticsService.trackEvent('search', 'search', query, {
+        resultCount,
+        userId: user?.id || 'anonymous',
+      });
+    } catch (error) {
+      console.error('Error tracking search:', error);
+    }
   }, [user?.id]);
 
   const trackFilterUse = useCallback((filterType: string, filterValue: string) => {
-    analyticsService.trackEvent('search', 'filter', filterType, {
-      filterValue,
-      userId: user?.id || 'anonymous',
-    });
+    try {
+      analyticsService.trackEvent('search', 'filter', filterType, {
+        filterValue,
+        userId: user?.id || 'anonymous',
+      });
+    } catch (error) {
+      console.error('Error tracking filter use:', error);
+    }
   }, [user?.id]);
   
   return {

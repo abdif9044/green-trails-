@@ -7,7 +7,7 @@ export const useSimilarTrails = (trailId: string) => {
   return useQuery({
     queryKey: ['similar-trails', trailId],
     queryFn: async () => {
-      // Use the execute_sql function to run a query to find similar trails
+      // Use execute_sql to run a query to find similar trails with safe parameter handling
       const { data, error } = await supabase.rpc('execute_sql', {
         sql_query: `
           SELECT t.*
@@ -19,21 +19,29 @@ export const useSimilarTrails = (trailId: string) => {
                 {"id": "5", "name": "Redwood Sanctuary Path", "location": "San Francisco, CA", "imageUrl": "https://images.unsplash.com/photo-1511497584788-876760111969?q=80&w=1000&auto=format&fit=crop", "difficulty": "easy", "length": 1.8, "elevation": 200, "tags": ["redwoods", "serene", "family-friendly"], "likes": 422}
               ]'
             ) AS x(id text, name text, location text, imageUrl text, difficulty text, length numeric, elevation numeric, tags text[], likes integer)
-            WHERE x.id != $1
+            WHERE x.id != '${trailId}'
             LIMIT 3
           ) t
-        `,
-        params: [trailId]
+        `
       });
 
       if (error) throw error;
       
-      const trailsData = data as any[];
+      // Process the data and ensure it conforms to the Trail type
+      const trailsData = data as Record<string, any>[];
       return trailsData.map(trail => ({
-        ...trail,
-        isAgeRestricted: trail.is_age_restricted || false,
+        id: trail.id,
+        name: trail.name,
+        location: trail.location,
+        imageUrl: trail.imageurl,
+        difficulty: trail.difficulty,
+        length: parseFloat(trail.length || '0'),
+        elevation: parseInt(trail.elevation || '0'),
+        tags: Array.isArray(trail.tags) ? trail.tags : [],
+        likes: parseInt(trail.likes || '0'),
+        isAgeRestricted: trail.is_age_restricted === true,
         coordinates: trail.coordinates || undefined,
-        strainTags: trail.strain_tags || [],
+        strainTags: Array.isArray(trail.strain_tags) ? trail.strain_tags : [],
       })) as Trail[];
     },
   });

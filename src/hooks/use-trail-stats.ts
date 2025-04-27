@@ -14,23 +14,22 @@ export const useTrailStats = (trailId: string) => {
   return useQuery({
     queryKey: ['trail-stats', trailId],
     queryFn: async () => {
-      // Use execute_sql to get trail stats
+      // Use execute_sql to get trail stats with proper parameter handling
       const { data, error } = await supabase.rpc('execute_sql', {
         sql_query: `
           SELECT 
-            (SELECT COUNT(*) FROM trail_likes WHERE trail_id = $1) as visit_count,
-            COALESCE((SELECT COUNT(*) FROM trail_comments WHERE trail_id = $1), 0) as comment_count,
-            COALESCE((SELECT AVG(rating) FROM trail_ratings WHERE trail_id = $1), 0) as avg_rating,
-            COALESCE((SELECT COUNT(*) FROM trail_ratings WHERE trail_id = $1), 0) as rating_count,
+            COALESCE((SELECT COUNT(*) FROM trail_likes WHERE trail_id = '${trailId}'), 0) as visit_count,
+            COALESCE((SELECT COUNT(*) FROM trail_comments WHERE trail_id = '${trailId}'), 0) as comment_count,
+            COALESCE((SELECT AVG(rating) FROM trail_ratings WHERE trail_id = '${trailId}'), 0) as avg_rating,
+            COALESCE((SELECT COUNT(*) FROM trail_ratings WHERE trail_id = '${trailId}'), 0) as rating_count,
             0 as completion_count
-        `,
-        params: [trailId]
+        `
       });
 
       if (error) throw error;
       
-      // Extract the first row from the result set
-      const statsData = data && data[0] ? data[0] : null;
+      // Extract the first row from the result set and safely cast it
+      const statsData = data && data[0] ? data[0] as Record<string, any> : null;
       
       // Create default stats if no data was returned
       const stats: TrailStats = {

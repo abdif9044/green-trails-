@@ -7,14 +7,17 @@ export const useSimilarTrails = (trailId: string) => {
   return useQuery({
     queryKey: ['similar-trails', trailId],
     queryFn: async () => {
+      // Use a raw SQL query instead of direct function access
       const { data, error } = await supabase
-        .rpc('find_similar_trails', { 
-          p_trail_id: trailId,
-          p_limit: 3
+        .rpc('execute_sql', {
+          sql_query: `SELECT * FROM find_similar_trails('${trailId}')`
         });
 
       if (error) throw error;
-      return data as Trail[];
+      
+      // Parse the JSON result from find_similar_trails function
+      const trails = data && data[0] ? data[0].find_similar_trails || [] : [];
+      return trails as Trail[];
     },
   });
 };

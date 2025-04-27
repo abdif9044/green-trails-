@@ -4,17 +4,24 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 
+interface TrailRating {
+  rating: number;
+  user_id: string;
+  trail_id: string;
+}
+
 export const useTrailRatings = (trailId: string) => {
   return useQuery({
     queryKey: ['trail-ratings', trailId],
     queryFn: async () => {
+      // Use a raw SQL query instead of direct table access since types aren't updated
       const { data, error } = await supabase
-        .from('trail_ratings')
-        .select('rating, user_id')
-        .eq('trail_id', trailId);
+        .rpc('execute_sql', {
+          sql_query: `SELECT rating, user_id FROM trail_ratings WHERE trail_id = '${trailId}'`
+        });
 
       if (error) throw error;
-      return data;
+      return (data || []) as TrailRating[];
     },
   });
 };
@@ -28,16 +35,16 @@ export const useAddRating = (trailId: string) => {
     mutationFn: async (rating: number) => {
       if (!user) throw new Error('Must be logged in to rate trails');
 
+      // Use a raw SQL query for the upsert
       const { error } = await supabase
-        .from('trail_ratings')
-        .upsert(
-          {
-            trail_id: trailId,
-            user_id: user.id,
-            rating,
-          },
-          { onConflict: 'trail_id,user_id' }
-        );
+        .rpc('execute_sql', {
+          sql_query: `
+            INSERT INTO trail_ratings (trail_id, user_id, rating)
+            VALUES ('${trailId}', '${user.id}', ${rating})
+            ON CONFLICT (trail_id, user_id) 
+            DO UPDATE SET rating = ${rating}, updated_at = now()
+          `
+        });
 
       if (error) throw error;
     },

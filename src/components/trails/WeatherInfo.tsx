@@ -6,8 +6,8 @@ import {
   CloudSnow, 
   CloudSun, 
   Thermometer, 
-  SunRise, 
-  SunSet, 
+  Sunrise,  // Fixed import 
+  Sunset,   // Fixed import
   Wind, 
   Droplets 
 } from 'lucide-react';

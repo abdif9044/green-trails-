@@ -4,12 +4,20 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 
+/**
+ * Represents a trail rating submitted by a user
+ */
 interface TrailRating {
   rating: number;
   user_id: string;
   trail_id: string;
 }
 
+/**
+ * Hook to fetch trail ratings
+ * @param trailId - The unique identifier of the trail
+ * @returns An object containing trail ratings, loading state, and error information
+ */
 export const useTrailRatings = (trailId: string) => {
   return useQuery({
     queryKey: ['trail-ratings', trailId],
@@ -23,10 +31,12 @@ export const useTrailRatings = (trailId: string) => {
         params: JSON.stringify([trailId])
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching trail ratings:', error);
+        throw error;
+      }
       
       return (data || []).map(item => {
-        // Explicitly type the item as a Record<string, any>
         const rating = item as Record<string, any>;
         return {
           rating: Number(rating.rating),
@@ -35,9 +45,15 @@ export const useTrailRatings = (trailId: string) => {
         };
       }) as TrailRating[];
     },
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   });
 };
 
+/**
+ * Hook to add or update a trail rating
+ * @param trailId - The unique identifier of the trail
+ * @returns A mutation object for adding/updating ratings
+ */
 export const useAddRating = (trailId: string) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -57,7 +73,10 @@ export const useAddRating = (trailId: string) => {
         params: JSON.stringify([trailId, user.id, rating])
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error adding trail rating:', error);
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['trail-ratings', trailId] });
@@ -66,7 +85,8 @@ export const useAddRating = (trailId: string) => {
         description: "Your rating has been saved successfully.",
       });
     },
-    onError: (error) => {
+    onError: (error: Error) => {
+      console.error('Rating submission error:', error);
       toast({
         title: "Error",
         description: error.message,

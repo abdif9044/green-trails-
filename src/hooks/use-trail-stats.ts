@@ -2,6 +2,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
+/**
+ * Represents trail statistics including visits, ratings, and comments
+ */
 interface TrailStats {
   visit_count: number;
   completion_count: number;
@@ -10,6 +13,11 @@ interface TrailStats {
   comment_count: number;
 }
 
+/**
+ * Hook to fetch and manage trail statistics
+ * @param trailId - The unique identifier of the trail
+ * @returns An object containing trail statistics, loading state, and error information
+ */
 export const useTrailStats = (trailId: string) => {
   return useQuery({
     queryKey: ['trail-stats', trailId],
@@ -30,9 +38,11 @@ export const useTrailStats = (trailId: string) => {
         params: JSON.stringify([trailId])
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching trail stats:', error);
+        throw error;
+      }
 
-      // Type the data correctly by accessing the first item and casting it
       const statsData = data?.[0] as Record<string, any> || {};
       
       return {
@@ -43,5 +53,7 @@ export const useTrailStats = (trailId: string) => {
         comment_count: Math.round(Number(statsData.comment_count || 0))
       } as TrailStats;
     },
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+    gcTime: 1000 * 60 * 15, // Keep unused data for 15 minutes
   });
 };

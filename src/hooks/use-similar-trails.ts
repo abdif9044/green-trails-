@@ -3,6 +3,11 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Trail } from '@/types/trails';
 
+/**
+ * Hook to fetch similar trails based on a given trail ID
+ * @param trailId - The unique identifier of the reference trail
+ * @returns An object containing similar trails, loading state, and error information
+ */
 export const useSimilarTrails = (trailId: string) => {
   return useQuery({
     queryKey: ['similar-trails', trailId],
@@ -25,10 +30,12 @@ export const useSimilarTrails = (trailId: string) => {
         params: JSON.stringify([trailId])
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching similar trails:', error);
+        throw error;
+      }
       
       return (data || []).map(item => {
-        // Explicitly type the item as a Record<string, any> to access properties
         const trail = item as Record<string, any>;
         return {
           id: String(trail.id),
@@ -46,5 +53,6 @@ export const useSimilarTrails = (trailId: string) => {
         };
       }) as Trail[];
     },
+    staleTime: 1000 * 60 * 30, // Cache for 30 minutes since similar trails don't change often
   });
 };

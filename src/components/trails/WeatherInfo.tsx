@@ -6,8 +6,8 @@ import {
   CloudSnow, 
   CloudSun, 
   Thermometer, 
-  Sunrise,  // Fixed import 
-  Sunset,   // Fixed import
+  Sunrise,
+  Sunset,
   Wind, 
   Droplets 
 } from 'lucide-react';
@@ -105,10 +105,10 @@ const WeatherInfo: React.FC<WeatherInfoProps> = ({
         {(sunrise || sunset) && (
           <div className="mt-3 pt-3 border-t border-border flex justify-between text-xs text-muted-foreground">
             <div className="flex items-center gap-1">
-              <SunRise className="h-3 w-3" /> {sunrise || '--'}
+              <Sunrise className="h-3 w-3" /> {sunrise || '--'}
             </div>
             <div className="flex items-center gap-1">
-              <SunSet className="h-3 w-3" /> {sunset || '--'}
+              <Sunset className="h-3 w-3" /> {sunset || '--'}
             </div>
           </div>
         )}

@@ -3,9 +3,10 @@ import { Button } from "@/components/ui/button";
 import { Compass } from "lucide-react";
 import { Link } from "react-router-dom";
 import TrailCardPrefetch from "@/components/TrailCardPrefetch";
+import { Trail } from "@/types/trails";
 
 // Sample trail data - to be replaced with Supabase data later
-const featuredTrails = [
+const featuredTrails: Trail[] = [
   {
     id: "1",
     name: "Emerald Forest Loop",
@@ -15,7 +16,8 @@ const featuredTrails = [
     length: 3.2,
     elevation: 450,
     tags: ["scenic", "forest", "dog-friendly"],
-    likes: 241
+    likes: 241,
+    isAgeRestricted: false
   },
   {
     id: "2",
@@ -26,7 +28,8 @@ const featuredTrails = [
     length: 5.8,
     elevation: 1200,
     tags: ["waterfall", "views", "challenging"],
-    likes: 189
+    likes: 189,
+    isAgeRestricted: false
   },
   {
     id: "3",
@@ -37,9 +40,10 @@ const featuredTrails = [
     length: 2.1,
     elevation: 120,
     tags: ["accessible", "river", "beginner"],
-    likes: 312
+    likes: 312,
+    isAgeRestricted: false
   }
-] as const;
+];
 
 const FeaturedTrails = () => {
   return (

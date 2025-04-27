@@ -1,0 +1,88 @@
+
+import { useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { Trail } from '@/types/trails';
+
+/**
+ * Hook to prefetch data for trails to improve perceived performance
+ */
+export const usePrefetch = () => {
+  const queryClient = useQueryClient();
+
+  /**
+   * Prefetch trail data for a specific trail ID
+   */
+  const prefetchTrail = useCallback(
+    async (trailId: string) => {
+      if (!queryClient.getQueryData(['trail', trailId])) {
+        await queryClient.prefetchQuery({
+          queryKey: ['trail', trailId],
+          queryFn: async () => {
+            const response = await fetch(`/api/trails/${trailId}`);
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+          },
+        });
+      }
+    },
+    [queryClient]
+  );
+
+  /**
+   * Prefetch similar trails for a specific trail ID
+   */
+  const prefetchSimilarTrails = useCallback(
+    async (trailId: string) => {
+      if (!queryClient.getQueryData(['similar-trails', trailId])) {
+        await queryClient.prefetchQuery({
+          queryKey: ['similar-trails', trailId],
+          queryFn: async () => {
+            try {
+              const { data } = await queryClient.fetchQuery({
+                queryKey: ['similar-trails', trailId],
+              });
+              return data;
+            } catch {
+              return [];
+            }
+          },
+          staleTime: 1000 * 60 * 5, // 5 minutes
+        });
+      }
+    },
+    [queryClient]
+  );
+
+  /**
+   * Prefetch weather data for a specific trail
+   */
+  const prefetchWeatherData = useCallback(
+    async (trailId: string, coordinates: [number, number]) => {
+      if (!queryClient.getQueryData(['trail-weather', trailId])) {
+        await queryClient.prefetchQuery({
+          queryKey: ['trail-weather', trailId],
+          queryFn: async () => {
+            try {
+              const { data } = await queryClient.fetchQuery({
+                queryKey: ['trail-weather', trailId],
+              });
+              return data;
+            } catch {
+              return null;
+            }
+          },
+          staleTime: 1000 * 60 * 30, // 30 minutes
+        });
+      }
+    },
+    [queryClient]
+  );
+
+  return {
+    prefetchTrail,
+    prefetchSimilarTrails,
+    prefetchWeatherData,
+  };
+};

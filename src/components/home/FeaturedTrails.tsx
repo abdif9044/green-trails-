@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import TrailCardPrefetch from "@/components/TrailCardPrefetch";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { TrailDifficulty } from "@/types/trails";
 
 const useFeaturedTrails = () => {
   return useQuery({
@@ -44,32 +45,50 @@ const useFeaturedTrails = () => {
         })
       );
 
-      return trailsWithLikes.map(trail => ({
-        id: trail.id,
-        name: trail.name,
-        location: trail.location,
-        coordinates: [trail.longitude, trail.latitude] as [number, number],
-        imageUrl: trail.trail_images?.[0]?.image_path 
-          ? supabase.storage
-              .from('trail_images')
-              .getPublicUrl(trail.trail_images[0].image_path)
-              .data.publicUrl
-          : "https://images.unsplash.com/photo-1469474968028-56623f02e42e",
-        difficulty: trail.difficulty,
-        length: trail.length,
-        elevation: trail.elevation,
-        tags: trail.trail_tags
-          ?.filter(tag => !tag.is_strain_tag)
-          .map(tag => tag.tag) || [],
-        strainTags: trail.trail_tags
-          ?.filter(tag => tag.is_strain_tag)
-          .map(tag => tag.tag) || [],
-        isAgeRestricted: trail.is_age_restricted,
-        description: trail.description,
-        likes: trail.likesCount, // Added the likes property
-      }));
+      return trailsWithLikes.map(trail => {
+        // Ensure the difficulty is cast to a valid TrailDifficulty type
+        const difficulty = validateDifficulty(trail.difficulty);
+        
+        return {
+          id: trail.id,
+          name: trail.name,
+          location: trail.location,
+          coordinates: [trail.longitude, trail.latitude] as [number, number],
+          imageUrl: trail.trail_images?.[0]?.image_path 
+            ? supabase.storage
+                .from('trail_images')
+                .getPublicUrl(trail.trail_images[0].image_path)
+                .data.publicUrl
+            : "https://images.unsplash.com/photo-1469474968028-56623f02e42e",
+          difficulty: difficulty,
+          length: trail.length,
+          elevation: trail.elevation,
+          tags: trail.trail_tags
+            ?.filter(tag => !tag.is_strain_tag)
+            .map(tag => tag.tag) || [],
+          strainTags: trail.trail_tags
+            ?.filter(tag => tag.is_strain_tag)
+            .map(tag => tag.tag) || [],
+          isAgeRestricted: trail.is_age_restricted,
+          description: trail.description,
+          likes: trail.likesCount,
+        };
+      });
     }
   });
+};
+
+// Helper function to validate and convert string difficulty to TrailDifficulty type
+const validateDifficulty = (difficulty: string): TrailDifficulty => {
+  const validDifficulties: TrailDifficulty[] = ['easy', 'moderate', 'hard', 'expert'];
+  
+  if (validDifficulties.includes(difficulty as TrailDifficulty)) {
+    return difficulty as TrailDifficulty;
+  }
+  
+  // Default to 'moderate' if the difficulty is not valid
+  console.warn(`Invalid difficulty: ${difficulty}, defaulting to 'moderate'`);
+  return 'moderate';
 };
 
 const FeaturedTrails = () => {

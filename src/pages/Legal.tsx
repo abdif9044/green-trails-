@@ -26,7 +26,18 @@ const Legal: React.FC = () => {
       if (error) throw error;
       if (!data || data.length === 0) throw new Error('Legal content not found');
       
-      return data[0] as LegalContent;
+      // Properly convert the data to LegalContent type
+      const legalDoc = data[0];
+      if (typeof legalDoc === 'object' && legalDoc !== null) {
+        return {
+          id: String(legalDoc.id || ''),
+          title: String(legalDoc.title || ''),
+          content: String(legalDoc.content || ''),
+          updated_at: legalDoc.updated_at ? String(legalDoc.updated_at) : undefined
+        };
+      }
+      
+      throw new Error('Invalid legal content format');
     }
   });
   

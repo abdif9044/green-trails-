@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
@@ -7,6 +8,14 @@ import { Trail } from '@/types/trails';
 import { MapProvider, useMap } from './MapContext';
 import MapMarker from './MapMarker';
 import MapWeatherLayer from './MapWeatherLayer';
+import { supabase } from '@/integrations/supabase/client';
+
+// Set Mapbox access token from Supabase secrets
+const getMapboxToken = async () => {
+  const { data: { token }, error } = await supabase.functions.invoke('get-mapbox-token');
+  if (error) throw error;
+  return token;
+};
 
 const mapStyles = {
   outdoors: 'mapbox://styles/mapbox/outdoors-v12',
@@ -39,51 +48,63 @@ const MapContent: React.FC<TrailMapProps> = ({
   useEffect(() => {
     if (!mapContainer.current) return;
 
-    const newMap = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: mapStyles[currentStyle],
-      center: center,
-      zoom: zoom,
-      pitch: 30,
-      attributionControl: true
-    });
+    const initializeMap = async () => {
+      try {
+        const token = await getMapboxToken();
+        mapboxgl.accessToken = token;
 
-    newMap.addControl(
-      new mapboxgl.NavigationControl({
-        visualizePitch: true
-      }),
-      'bottom-right'
-    );
+        const newMap = new mapboxgl.Map({
+          container: mapContainer.current,
+          style: mapStyles[currentStyle],
+          center: center,
+          zoom: zoom,
+          pitch: 30,
+          attributionControl: true
+        });
 
-    newMap.on('load', () => {
-      setIsLoading(false);
-      
-      newMap.addSource('terrain', {
-        type: 'raster-dem',
-        url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
-        tileSize: 512
-      });
-      
-      newMap.setTerrain({
-        source: 'terrain',
-        exaggeration: 1.5
-      });
+        newMap.addControl(
+          new mapboxgl.NavigationControl({
+            visualizePitch: true
+          }),
+          'bottom-right'
+        );
 
-      newMap.addLayer({
-        id: 'sky',
-        type: 'sky',
-        paint: {
-          'sky-type': 'atmosphere',
-          'sky-atmosphere-sun': [0.0, 0.0],
-          'sky-atmosphere-sun-intensity': 15
-        }
-      });
-    });
+        newMap.on('load', () => {
+          setIsLoading(false);
+          
+          newMap.addSource('terrain', {
+            type: 'raster-dem',
+            url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
+            tileSize: 512
+          });
+          
+          newMap.setTerrain({
+            source: 'terrain',
+            exaggeration: 1.5
+          });
 
-    setMap(newMap);
+          newMap.addLayer({
+            id: 'sky',
+            type: 'sky',
+            paint: {
+              'sky-type': 'atmosphere',
+              'sky-atmosphere-sun': [0.0, 0.0],
+              'sky-atmosphere-sun-intensity': 15
+            }
+          });
+        });
+
+        setMap(newMap);
+      } catch (error) {
+        console.error('Error initializing map:', error);
+        setIsLoading(false);
+      }
+    };
+
+    initializeMap();
 
     return () => {
-      newMap.remove();
+      map?.remove();
       setMap(null);
     };
   }, [currentStyle, setMap]);

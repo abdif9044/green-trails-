@@ -1,4 +1,3 @@
-
 import { Trail } from "@/types/trails";
 
 export const mockTrails: Trail[] = [
@@ -7,7 +6,7 @@ export const mockTrails: Trail[] = [
     name: "Quarry Hills Park Trail",
     location: "Rochester, MN",
     coordinates: [-92.4631, 44.0553],
-    imageUrl: "https://images.unsplash.com/photo-1482938289607-e9573fc25ebb?q=80&w=1000&auto=format&fit=crop",
+    imageUrl: "https://images.unsplash.com/photo-1469474968028-56623f02e42e",
     difficulty: "moderate",
     length: 4.5,
     elevation: 320,
@@ -22,7 +21,7 @@ export const mockTrails: Trail[] = [
     name: "Chester Woods Trail",
     location: "Rochester, MN",
     coordinates: [-92.3688, 44.0461],
-    imageUrl: "https://images.unsplash.com/photo-1501534664411-9c427789d358?q=80&w=1000&auto=format&fit=crop",
+    imageUrl: "https://images.unsplash.com/photo-1433086966358-54859d0ed716",
     difficulty: "easy",
     length: 3.2,
     elevation: 150,
@@ -36,7 +35,7 @@ export const mockTrails: Trail[] = [
     name: "Silver Lake Loop",
     location: "Rochester, MN",
     coordinates: [-92.4570, 44.0241],
-    imageUrl: "https://images.unsplash.com/photo-1542318337-5eeea4c37d01?q=80&w=1000&auto=format&fit=crop",
+    imageUrl: "https://images.unsplash.com/photo-1472396961693-142e6e269027",
     difficulty: "easy",
     length: 2.1,
     elevation: 50,
@@ -90,4 +89,3 @@ export const mockTrails: Trail[] = [
     description: "Experience the pristine wilderness of Northern Minnesota on this trail through the famous Boundary Waters Canoe Area. Features dense forests, crystal-clear lakes, and incredible wildlife viewing opportunities."
   },
 ];
-

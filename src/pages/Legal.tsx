@@ -18,15 +18,15 @@ const Legal: React.FC = () => {
   const { data, isLoading } = useQuery<LegalContent>({
     queryKey: ['legal-content', type],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('legal_content')
-        .select('*')
-        .eq('id', type)
-        .single();
+      // Using execute_sql function to get around TypeScript limitations
+      const { data, error } = await supabase.rpc('execute_sql', {
+        sql_query: `SELECT * FROM legal_content WHERE id = '${type}'`
+      });
       
       if (error) throw error;
+      if (!data || data.length === 0) throw new Error('Legal content not found');
       
-      return data as LegalContent;
+      return data[0] as LegalContent;
     }
   });
   

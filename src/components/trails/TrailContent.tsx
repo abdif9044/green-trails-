@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Trail } from "@/types/trails";
@@ -7,15 +7,13 @@ import TrailMap from "@/components/map/TrailMap";
 import TrailDetails from "./TrailDetails";
 import TrailComments from "./TrailComments";
 import TrailAlbums from "./TrailAlbums";
-import AgeRestrictionWarning from "./AgeRestrictionWarning";
+import AgeRestrictedContent from "./AgeRestrictedContent";
 
 interface TrailContentProps {
   trail: Trail;
 }
 
 const TrailContent: React.FC<TrailContentProps> = ({ trail }) => {
-  const [ageVerified, setAgeVerified] = useState(false);
-
   return (
     <Tabs defaultValue="details" className="w-full">
       <TabsList className="grid w-full grid-cols-4">
@@ -58,19 +56,15 @@ const TrailContent: React.FC<TrailContentProps> = ({ trail }) => {
       </TabsContent>
       
       <TabsContent value="albums" className="mt-6">
-        {trail.isAgeRestricted && !ageVerified ? (
-          <AgeRestrictionWarning onVerified={() => setAgeVerified(true)} />
-        ) : (
+        <AgeRestrictedContent isAgeRestricted={trail.isAgeRestricted}>
           <TrailAlbums trailId={trail.id} />
-        )}
+        </AgeRestrictedContent>
       </TabsContent>
       
       <TabsContent value="comments" className="mt-6">
-        {trail.isAgeRestricted && !ageVerified ? (
-          <AgeRestrictionWarning onVerified={() => setAgeVerified(true)} />
-        ) : (
+        <AgeRestrictedContent isAgeRestricted={trail.isAgeRestricted}>
           <TrailComments trailId={trail.id} />
-        )}
+        </AgeRestrictedContent>
       </TabsContent>
     </Tabs>
   );

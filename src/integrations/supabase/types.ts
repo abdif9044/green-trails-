@@ -284,6 +284,44 @@ export type Database = {
           },
         ]
       }
+      trail_images: {
+        Row: {
+          caption: string | null
+          created_at: string | null
+          id: string
+          image_path: string
+          is_primary: boolean | null
+          trail_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string | null
+          id?: string
+          image_path: string
+          is_primary?: boolean | null
+          trail_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string | null
+          id?: string
+          image_path?: string
+          is_primary?: boolean | null
+          trail_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trail_images_trail_id_fkey"
+            columns: ["trail_id"]
+            isOneToOne: false
+            referencedRelation: "trails"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trail_likes: {
         Row: {
           created_at: string | null
@@ -340,6 +378,38 @@ export type Database = {
         }
         Relationships: []
       }
+      trail_tags: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_strain_tag: boolean | null
+          tag: string
+          trail_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_strain_tag?: boolean | null
+          tag: string
+          trail_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_strain_tag?: boolean | null
+          tag?: string
+          trail_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trail_tags_trail_id_fkey"
+            columns: ["trail_id"]
+            isOneToOne: false
+            referencedRelation: "trails"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trail_weather: {
         Row: {
           condition: string | null
@@ -382,6 +452,57 @@ export type Database = {
           updated_at?: string | null
           wind_direction?: string | null
           wind_speed?: string | null
+        }
+        Relationships: []
+      }
+      trails: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          difficulty: string
+          elevation: number
+          id: string
+          is_age_restricted: boolean | null
+          is_verified: boolean | null
+          latitude: number | null
+          length: number
+          location: string
+          longitude: number | null
+          name: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          difficulty: string
+          elevation: number
+          id?: string
+          is_age_restricted?: boolean | null
+          is_verified?: boolean | null
+          latitude?: number | null
+          length: number
+          location: string
+          longitude?: number | null
+          name: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          difficulty?: string
+          elevation?: number
+          id?: string
+          is_age_restricted?: boolean | null
+          is_verified?: boolean | null
+          latitude?: number | null
+          length?: number
+          location?: string
+          longitude?: number | null
+          name?: string
+          updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }

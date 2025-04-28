@@ -5,9 +5,24 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Heart, Mountain, MapPin } from "lucide-react";
 import { usePrefetch } from '@/hooks/use-prefetch';
-import { Trail, TrailDifficulty } from '@/types/trails';
+import { StrainTag, Trail, TrailDifficulty } from '@/types/trails';
+import { TrailTagsList } from './trails/TrailTagsList';
 
-type TrailCardProps = Trail;
+type TrailCardPrefetchProps = {
+  id: string;
+  name: string;
+  location: string;
+  imageUrl: string;
+  difficulty: TrailDifficulty;
+  length: number;
+  elevation: number;
+  tags: readonly string[] | string[];
+  likes: number;
+  coordinates?: [number, number];
+  strainTags?: string[] | StrainTag[];
+  isAgeRestricted: boolean;
+  description?: string;
+};
 
 // Helper function to get badge color based on difficulty
 const getDifficultyColor = (difficulty: TrailDifficulty) => {
@@ -25,7 +40,7 @@ const getDifficultyColor = (difficulty: TrailDifficulty) => {
   }
 };
 
-const TrailCardPrefetch: React.FC<TrailCardProps> = ({
+const TrailCardPrefetch: React.FC<TrailCardPrefetchProps> = ({
   id,
   name,
   location,
@@ -36,6 +51,7 @@ const TrailCardPrefetch: React.FC<TrailCardProps> = ({
   tags,
   likes,
   coordinates,
+  strainTags,
   isAgeRestricted
 }) => {
   const { prefetchTrail, prefetchSimilarTrails, prefetchWeatherData } = usePrefetch();
@@ -80,8 +96,8 @@ const TrailCardPrefetch: React.FC<TrailCardProps> = ({
             {location}
           </p>
           <div className="flex flex-wrap gap-1 mt-2">
-            {tags.slice(0, 3).map(tag => (
-              <Badge key={tag} variant="outline" className="bg-greentrail-50 dark:bg-greentrail-900">
+            {tags.slice(0, 3).map((tag, index) => (
+              <Badge key={index} variant="outline" className="bg-greentrail-50 dark:bg-greentrail-900">
                 {tag}
               </Badge>
             ))}

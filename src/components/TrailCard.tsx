@@ -3,12 +3,12 @@ import { Heart, MapPin } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
-import { TrailDifficulty } from '@/types/trails';
+import { StrainTag, TrailDifficulty } from '@/types/trails';
 import { TrailDifficultyBadge } from './trails/TrailDifficultyBadge';
 import { TrailCardStats } from './trails/TrailCardStats';
 import { TrailTagsList } from './trails/TrailTagsList';
 
-interface TrailCardProps {
+export interface TrailCardProps {
   id: string;
   name: string;
   location: string;
@@ -18,7 +18,7 @@ interface TrailCardProps {
   elevation: number;
   tags: readonly string[] | string[];
   likes: number;
-  strainTags?: string[];
+  strainTags?: string[] | StrainTag[];
   isAgeRestricted?: boolean;
 }
 

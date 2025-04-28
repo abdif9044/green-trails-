@@ -8,13 +8,31 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { StrainTag } from "@/types/trails";
 
 interface TrailTagsListProps {
   tags: readonly string[] | string[];
-  strainTags?: string[];
+  strainTags?: string[] | StrainTag[];
 }
 
 export const TrailTagsList = ({ tags, strainTags = [] }: TrailTagsListProps) => {
+  // Helper function to check if an item is a StrainTag object
+  const isStrainTagObject = (item: string | StrainTag): item is StrainTag => {
+    return typeof item !== 'string' && item !== null && 'name' in item;
+  };
+  
+  // Get strain names for display
+  const getStrainNames = () => {
+    return strainTags.map(strain => {
+      if (isStrainTagObject(strain)) {
+        return strain.name;
+      }
+      return strain;
+    });
+  };
+  
+  const strainNames = getStrainNames();
+
   return (
     <div className="flex flex-wrap gap-1">
       {tags.map((tag, index) => (
@@ -40,14 +58,14 @@ export const TrailTagsList = ({ tags, strainTags = [] }: TrailTagsListProps) => 
                 )}
               >
                 <Cannabis className="h-3 w-3" />
-                <span>{strainTags.length > 1 ? `${strainTags.length} strains` : strainTags[0]}</span>
+                <span>{strainNames.length > 1 ? `${strainNames.length} strains` : strainNames[0]}</span>
               </Badge>
             </TooltipTrigger>
             <TooltipContent>
               <div className="space-y-1 p-1">
                 <p className="font-medium text-xs">Recommended Strains:</p>
                 <div className="flex flex-wrap gap-1">
-                  {strainTags.map((strain, idx) => (
+                  {strainNames.map((strain, idx) => (
                     <span key={idx} className="text-xs">{strain}</span>
                   ))}
                 </div>

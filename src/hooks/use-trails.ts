@@ -1,8 +1,16 @@
 
 import { useQuery } from '@tanstack/react-query';
-import { Trail, TrailFilters } from '@/types/trails';
+import { Trail, TrailFilters, TrailDifficulty } from '@/types/trails';
 import { useTrailFilters } from './use-trail-filters';
 import { supabase } from '@/integrations/supabase/client';
+
+// Helper function to ensure difficulty is a valid TrailDifficulty
+const validateDifficulty = (difficulty: string): TrailDifficulty => {
+  const validDifficulties: TrailDifficulty[] = ['easy', 'moderate', 'hard', 'expert'];
+  return validDifficulties.includes(difficulty as TrailDifficulty) 
+    ? difficulty as TrailDifficulty 
+    : 'moderate';
+};
 
 export const useTrails = (filters?: TrailFilters) => {
   const { data: trails = [], ...rest } = useQuery({
@@ -43,8 +51,8 @@ export const useTrails = (filters?: TrailFilters) => {
             id: trail.id,
             name: trail.name,
             location: trail.location,
-            imageUrl: trail.image_url || 'https://images.unsplash.com/photo-1501854140801-50d01698950b?q=80&w=1000&auto=format&fit=crop',
-            difficulty: trail.difficulty,
+            imageUrl: 'https://images.unsplash.com/photo-1501854140801-50d01698950b?q=80&w=1000&auto=format&fit=crop',
+            difficulty: validateDifficulty(trail.difficulty),
             length: trail.length,
             elevation: trail.elevation,
             tags: tags,
@@ -112,8 +120,8 @@ export const useTrail = (trailId: string | undefined) => {
           id: data.id,
           name: data.name,
           location: data.location,
-          imageUrl: data.image_url || 'https://images.unsplash.com/photo-1501854140801-50d01698950b?q=80&w=1000&auto=format&fit=crop',
-          difficulty: data.difficulty,
+          imageUrl: 'https://images.unsplash.com/photo-1501854140801-50d01698950b?q=80&w=1000&auto=format&fit=crop',
+          difficulty: validateDifficulty(data.difficulty),
           length: data.length,
           elevation: data.elevation,
           tags: tags,

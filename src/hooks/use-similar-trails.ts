@@ -1,7 +1,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Trail } from '@/types/trails';
+import { Trail, TrailDifficulty } from '@/types/trails';
 
 /**
  * Hook to fetch similar trails based on a given trail ID
@@ -48,12 +48,15 @@ export const useSimilarTrails = (trailId: string) => {
         
         // Transform to Trail objects
         return uniqueTrails.map(trail => {
+          // Ensure difficulty is a valid TrailDifficulty type
+          const validDifficulty = validateDifficulty(trail.difficulty);
+          
           return {
             id: trail.id,
             name: trail.name,
             location: trail.location,
-            imageUrl: trail.image_url || 'https://images.unsplash.com/photo-1501854140801-50d01698950b?q=80&w=1000&auto=format&fit=crop',
-            difficulty: trail.difficulty,
+            imageUrl: 'https://images.unsplash.com/photo-1501854140801-50d01698950b?q=80&w=1000&auto=format&fit=crop',
+            difficulty: validDifficulty,
             length: trail.length,
             elevation: trail.elevation,
             tags: [],
@@ -70,4 +73,12 @@ export const useSimilarTrails = (trailId: string) => {
     },
     staleTime: 1000 * 60 * 30, // Cache for 30 minutes
   });
+};
+
+// Helper function to ensure difficulty is a valid TrailDifficulty
+const validateDifficulty = (difficulty: string): TrailDifficulty => {
+  const validDifficulties: TrailDifficulty[] = ['easy', 'moderate', 'hard', 'expert'];
+  return validDifficulties.includes(difficulty as TrailDifficulty) 
+    ? difficulty as TrailDifficulty 
+    : 'moderate';
 };

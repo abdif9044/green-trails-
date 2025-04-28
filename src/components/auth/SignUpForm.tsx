@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export const SignUpForm = ({ onSuccess }: { onSuccess: () => void }) => {
   const [email, setEmail] = useState('');
@@ -15,8 +16,57 @@ export const SignUpForm = ({ onSuccess }: { onSuccess: () => void }) => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   
+  // Date of birth state
+  const [day, setDay] = useState('');
+  const [month, setMonth] = useState('');
+  const [year, setYear] = useState('');
+  const [showDobFields, setShowDobFields] = useState(false);
+  
   const { signUp } = useAuth();
   const { toast } = useToast();
+
+  const months = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+
+  const validateDateOfBirth = (): Date | null => {
+    if (!day || !month || !year) {
+      setError('Please complete all date fields');
+      return null;
+    }
+    
+    const monthIndex = months.indexOf(month);
+    const birthDate = new Date(parseInt(year), monthIndex, parseInt(day));
+    const today = new Date();
+    
+    // Calculate age
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    
+    // Check if birthdate is valid
+    if (isNaN(birthDate.getTime())) {
+      setError('Please enter a valid date');
+      return null;
+    }
+    
+    // Check if date is in the future
+    if (birthDate > today) {
+      setError('Date cannot be in the future');
+      return null;
+    }
+    
+    // Check if user is 21 or older
+    if (age < 21) {
+      setError('You must be 21 or older to use this app');
+      return null;
+    }
+    
+    return birthDate;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,15 +87,32 @@ export const SignUpForm = ({ onSuccess }: { onSuccess: () => void }) => {
       return;
     }
     
+    if (!showDobFields) {
+      setShowDobFields(true);
+      return;
+    }
+    
+    const dateOfBirth = validateDateOfBirth();
+    if (!dateOfBirth) return;
+    
     setLoading(true);
     
     try {
-      const { error } = await signUp(email, password);
-      if (error) throw error;
+      const { error } = await signUp(email, password, dateOfBirth);
+      
+      if (error) {
+        console.error('Signup error details:', error);
+        if (error.message.includes('captcha')) {
+          setError('Captcha verification failed. Please try again with a different browser or contact support.');
+        } else {
+          setError(error.message || 'Failed to create account');
+        }
+        return;
+      }
       
       toast({
         title: "Account created!",
-        description: "Your account has been successfully created. Please check your email to verify your account.",
+        description: "Check your email to confirm your account. You can now sign in.",
       });
       
       onSuccess();
@@ -102,6 +169,59 @@ export const SignUpForm = ({ onSuccess }: { onSuccess: () => void }) => {
         />
       </div>
       
+      {showDobFields && (
+        <div className="space-y-4">
+          <div className="text-sm font-medium">Date of Birth (must be 21+)</div>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="space-y-2">
+              <Label htmlFor="day">Day</Label>
+              <Input 
+                id="day" 
+                placeholder="DD"
+                value={day}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, '');
+                  if (value === '' || (parseInt(value) > 0 && parseInt(value) <= 31)) {
+                    setDay(value);
+                  }
+                }}
+                maxLength={2}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="month">Month</Label>
+              <Select value={month} onValueChange={setMonth}>
+                <SelectTrigger id="month">
+                  <SelectValue placeholder="Month" />
+                </SelectTrigger>
+                <SelectContent>
+                  {months.map((m) => (
+                    <SelectItem key={m} value={m}>{m}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="year">Year</Label>
+              <Input 
+                id="year" 
+                placeholder="YYYY"
+                value={year}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, '');
+                  if (value === '' || (parseInt(value) >= 1900 && parseInt(value) <= new Date().getFullYear())) {
+                    setYear(value);
+                  }
+                }}
+                maxLength={4}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+      
       <div className="text-xs text-muted-foreground">
         By signing up, you agree to the <a href="#" className="text-greentrail-600 hover:underline">Terms of Service</a> and <a href="#" className="text-greentrail-600 hover:underline">Privacy Policy</a>.
         <br />
@@ -109,7 +229,7 @@ export const SignUpForm = ({ onSuccess }: { onSuccess: () => void }) => {
       </div>
       
       <Button type="submit" className="w-full" disabled={loading}>
-        {loading ? 'Creating account...' : 'Continue'}
+        {loading ? 'Creating account...' : showDobFields ? 'Create Account' : 'Continue'}
       </Button>
     </form>
   );

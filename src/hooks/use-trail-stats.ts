@@ -22,36 +22,52 @@ export const useTrailStats = (trailId: string) => {
   return useQuery({
     queryKey: ['trail-stats', trailId],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('execute_sql', {
-        sql_query: `
-          SELECT 
-            COALESCE(COUNT(DISTINCT tl.id), 0) as visit_count,
-            0 as completion_count,
-            COALESCE(AVG(tr.rating), 0) as avg_rating,
-            COALESCE(COUNT(DISTINCT tr.id), 0) as rating_count,
-            COALESCE(COUNT(DISTINCT tc.id), 0) as comment_count
-          FROM (SELECT $1::text as trail_id) t
-          LEFT JOIN trail_likes tl ON tl.trail_id = t.trail_id
-          LEFT JOIN trail_ratings tr ON tr.trail_id = t.trail_id
-          LEFT JOIN trail_comments tc ON tc.trail_id = t.trail_id
-        `,
-        params: JSON.stringify([trailId])
-      });
-
-      if (error) {
+      try {
+        // Count likes
+        const { count: likeCount, error: likesError } = await supabase
+          .from('trail_likes')
+          .select('*', { count: 'exact', head: true })
+          .eq('trail_id', trailId);
+          
+        if (likesError) throw likesError;
+        
+        // Get average rating
+        const { data: ratingsData, error: ratingsError } = await supabase
+          .from('trail_ratings')
+          .select('rating')
+          .eq('trail_id', trailId);
+          
+        if (ratingsError) throw ratingsError;
+        
+        const ratings = ratingsData || [];
+        const totalRating = ratings.reduce((sum, item) => sum + item.rating, 0);
+        const avgRating = ratings.length ? totalRating / ratings.length : 0;
+        
+        // Count comments
+        const { count: commentCount, error: commentsError } = await supabase
+          .from('trail_comments')
+          .select('*', { count: 'exact', head: true })
+          .eq('trail_id', trailId);
+          
+        if (commentsError) throw commentsError;
+        
+        return {
+          visit_count: likeCount || 0,
+          completion_count: 0, // We'll implement this feature later
+          avg_rating: Number(avgRating.toFixed(1)),
+          rating_count: ratings.length,
+          comment_count: commentCount || 0
+        } as TrailStats;
+      } catch (error) {
         console.error('Error fetching trail stats:', error);
-        throw error;
+        return {
+          visit_count: 0,
+          completion_count: 0,
+          avg_rating: 0,
+          rating_count: 0,
+          comment_count: 0
+        } as TrailStats;
       }
-
-      const statsData = data?.[0] as Record<string, any> || {};
-      
-      return {
-        visit_count: Math.round(Number(statsData.visit_count || 0)),
-        completion_count: Math.round(Number(statsData.completion_count || 0)),
-        avg_rating: Number((Number(statsData.avg_rating || 0)).toFixed(1)),
-        rating_count: Math.round(Number(statsData.rating_count || 0)),
-        comment_count: Math.round(Number(statsData.comment_count || 0))
-      } as TrailStats;
     },
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
     gcTime: 1000 * 60 * 15, // Keep unused data for 15 minutes

@@ -12,47 +12,62 @@ export const useSimilarTrails = (trailId: string) => {
   return useQuery({
     queryKey: ['similar-trails', trailId],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('execute_sql', {
-        sql_query: `
-          SELECT t.*
-          FROM (
-            SELECT * FROM json_to_recordset(
-              '[
-                {"id": "2", "name": "Sunrise Mountain Trail", "location": "Portland, OR", "imageUrl": "https://images.unsplash.com/photo-1501854140801-50d01698950b?q=80&w=1000&auto=format&fit=crop", "difficulty": "hard", "length": 5.8, "elevation": 1200, "tags": ["waterfall", "views", "challenging"], "likes": 189},
-                {"id": "3", "name": "Riverside Path", "location": "Austin, TX", "imageUrl": "https://images.unsplash.com/photo-1523472721958-978152a13ad5?q=80&w=1000&auto=format&fit=crop", "difficulty": "easy", "length": 2.1, "elevation": 120, "tags": ["accessible", "river", "beginner"], "likes": 312},
-                {"id": "5", "name": "Redwood Sanctuary Path", "location": "San Francisco, CA", "imageUrl": "https://images.unsplash.com/photo-1511497584788-876760111969?q=80&w=1000&auto=format&fit=crop", "difficulty": "easy", "length": 1.8, "elevation": 200, "tags": ["redwoods", "serene", "family-friendly"], "likes": 422}
-              ]'::json
-            ) AS x(id text, name text, location text, imageUrl text, difficulty text, length numeric, elevation numeric, tags text[], likes integer)
-            WHERE x.id != $1
-            LIMIT 3
-          ) t
-        `,
-        params: JSON.stringify([trailId])
-      });
+      try {
+        // Get the tags from the current trail
+        const { data: trailTags, error: tagsError } = await supabase
+          .from('trail_tags')
+          .select('tag')
+          .eq('trail_id', trailId)
+          .eq('is_strain_tag', false);
 
-      if (error) {
+        if (tagsError) throw tagsError;
+        
+        const tags = trailTags.map(t => t.tag);
+        
+        // Find trails with similar tags
+        const { data: similarTrailsData, error: similarError } = await supabase
+          .from('trails')
+          .select(`
+            *,
+            trail_tags!inner (
+              tag,
+              is_strain_tag
+            )
+          `)
+          .neq('id', trailId)
+          .eq('trail_tags.is_strain_tag', false)
+          .in('trail_tags.tag', tags)
+          .limit(3);
+
+        if (similarError) throw similarError;
+        
+        // De-duplicate trails
+        const uniqueTrails = Array.from(
+          new Map(similarTrailsData.map(trail => [trail.id, trail])).values()
+        );
+        
+        // Transform to Trail objects
+        return uniqueTrails.map(trail => {
+          return {
+            id: trail.id,
+            name: trail.name,
+            location: trail.location,
+            imageUrl: trail.image_url || 'https://images.unsplash.com/photo-1501854140801-50d01698950b?q=80&w=1000&auto=format&fit=crop',
+            difficulty: trail.difficulty,
+            length: trail.length,
+            elevation: trail.elevation,
+            tags: [],
+            likes: 0,
+            coordinates: trail.longitude && trail.latitude ? [trail.longitude, trail.latitude] : undefined,
+            strainTags: [],
+            isAgeRestricted: trail.is_age_restricted || false
+          } as Trail;
+        });
+      } catch (error) {
         console.error('Error fetching similar trails:', error);
-        throw error;
+        return [];
       }
-      
-      return (data || []).map(item => {
-        const trail = item as Record<string, any>;
-        return {
-          id: String(trail.id),
-          name: String(trail.name),
-          location: String(trail.location),
-          imageUrl: String(trail.imageurl || trail.imageUrl),
-          difficulty: String(trail.difficulty),
-          length: Number(trail.length),
-          elevation: Number(trail.elevation),
-          tags: Array.isArray(trail.tags) ? trail.tags : [],
-          likes: Number(trail.likes),
-          isAgeRestricted: false,
-          coordinates: undefined,
-          strainTags: [],
-        };
-      }) as Trail[];
     },
-    staleTime: 1000 * 60 * 30, // Cache for 30 minutes since similar trails don't change often
+    staleTime: 1000 * 60 * 30, // Cache for 30 minutes
   });
 };

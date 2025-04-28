@@ -1,6 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 
-interface WeatherData {
+export interface WeatherData {
   temperature: number;
   condition: string;
   high: number;
@@ -8,91 +8,56 @@ interface WeatherData {
   precipitation: string;
   sunrise: string;
   sunset: string;
-  windSpeed: string;
-  windDirection: string;
+  windSpeed?: string;
+  windDirection?: string;
 }
 
-// Demo weather API for development purposes
-// In production, this would connect to a real weather API
-const fetchWeatherFromAPI = async (lat: number, lng: number): Promise<WeatherData> => {
-  console.log(`Fetching weather for coordinates: ${lat}, ${lng}`);
-  
-  // Simulate API call delay
-  await new Promise(resolve => setTimeout(resolve, 500));
-  
-  // Generate realistic but randomized weather data
-  const conditions = ["Clear", "Partly Cloudy", "Cloudy", "Rain", "Thunderstorm", "Snow", "Fog"];
-  const directions = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
-  const baseTemp = Math.floor(10 + Math.random() * 25); // Base temp between 10-35°C
-  const windSpeed = Math.floor(Math.random() * 30); // Wind speed in km/h
-  
-  return {
-    temperature: baseTemp,
-    condition: conditions[Math.floor(Math.random() * conditions.length)],
-    high: baseTemp + Math.floor(Math.random() * 5),
-    low: baseTemp - Math.floor(Math.random() * 8),
-    precipitation: `${Math.floor(Math.random() * 50)}%`,
-    sunrise: "06:15 AM",
-    sunset: "08:45 PM",
-    windSpeed: `${windSpeed} km/h`,
-    windDirection: directions[Math.floor(Math.random() * directions.length)]
-  };
-};
-
-export const getTrailWeather = async (trailId: string, coordinates?: [number, number]): Promise<WeatherData | null> => {
+export const getTrailWeather = async (trailId: string, coordinates: [number, number]): Promise<WeatherData | null> => {
   try {
-    // First check if we have cached weather data
-    const { data: cachedWeather, error } = await supabase
+    // First check if we have recent weather data in the database (less than 1 hour old)
+    const { data: existingData, error } = await supabase
       .from('trail_weather')
       .select('*')
       .eq('trail_id', trailId)
       .single();
-    
-    // If we have recently cached data (less than 1 hour old), return it
-    if (cachedWeather && new Date(cachedWeather.updated_at) > new Date(Date.now() - 3600000)) {
-      return {
-        temperature: cachedWeather.temperature,
-        condition: cachedWeather.condition,
-        high: cachedWeather.high,
-        low: cachedWeather.low,
-        precipitation: cachedWeather.precipitation,
-        sunrise: cachedWeather.sunrise,
-        sunset: cachedWeather.sunset,
-        windSpeed: cachedWeather.wind_speed || '',
-        windDirection: cachedWeather.wind_direction || ''
-      };
+      
+    if (!error && existingData) {
+      const updatedAt = new Date(existingData.updated_at);
+      const now = new Date();
+      const diffHours = (now.getTime() - updatedAt.getTime()) / (1000 * 60 * 60);
+      
+      // If data is less than 1 hour old, use it
+      if (diffHours < 1) {
+        return {
+          temperature: existingData.temperature,
+          condition: existingData.condition,
+          high: existingData.high,
+          low: existingData.low,
+          precipitation: existingData.precipitation,
+          sunrise: existingData.sunrise,
+          sunset: existingData.sunset,
+          windSpeed: existingData.wind_speed,
+          windDirection: existingData.wind_direction
+        };
+      }
     }
     
-    // If no coordinates provided or no cached data, return null
-    if (!coordinates) return null;
+    // Otherwise, call our edge function to get fresh data
+    const { data, error: fetchError } = await supabase.functions.invoke('get-weather', {
+      body: { 
+        trailId, 
+        coordinates 
+      }
+    });
     
-    // Fetch fresh weather data
-    const weatherData = await fetchWeatherFromAPI(coordinates[1], coordinates[0]);
-    
-    try {
-      // Cache the weather data
-      await supabase
-        .from('trail_weather')
-        .upsert({
-          trail_id: trailId,
-          temperature: weatherData.temperature,
-          condition: weatherData.condition,
-          high: weatherData.high,
-          low: weatherData.low,
-          precipitation: weatherData.precipitation,
-          sunrise: weatherData.sunrise,
-          sunset: weatherData.sunset,
-          wind_speed: weatherData.windSpeed,
-          wind_direction: weatherData.windDirection
-        }, { onConflict: 'trail_id' });
-    } catch (dbError) {
-      console.error('Error updating trail weather in database:', dbError);
-      // We still return the weather data even if caching fails
+    if (fetchError) {
+      console.error('Weather function error:', fetchError);
+      return null;
     }
     
-    return weatherData;
+    return data;
   } catch (error) {
-    console.error('Error fetching trail weather:', error);
+    console.error('Error fetching weather data:', error);
     return null;
   }
 };

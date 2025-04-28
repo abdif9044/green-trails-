@@ -15,6 +15,7 @@ import NotFound from "./pages/NotFound";
 import Trail from "./pages/Trail";
 import CreateAlbum from "./pages/CreateAlbum";
 import AlbumDetail from "./pages/AlbumDetail";
+import Legal from "./pages/Legal";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -44,6 +45,8 @@ const App = () => (
               <Route path="/albums/new" element={<CreateAlbum />} />
               <Route path="/albums/:albumId" element={<AlbumDetail />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/legal/:type" element={<Legal />} />
+              <Route path="/legal" element={<Legal />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </ErrorBoundary>

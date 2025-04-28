@@ -33,9 +33,14 @@ export const TrailTagsList = ({ tags, strainTags = [] }: TrailTagsListProps) => 
   
   const strainNames = getStrainNames();
 
+  // Don't render anything if no tags
+  if (!tags?.length && !strainNames?.length) {
+    return null;
+  }
+
   return (
     <div className="flex flex-wrap gap-1">
-      {tags.map((tag, index) => (
+      {tags && tags.map((tag, index) => (
         <Badge
           key={index}
           variant="outline"

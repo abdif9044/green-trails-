@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -22,6 +23,7 @@ import TrailAlbums from "@/components/trails/TrailAlbums";
 import TrailRating from "@/components/trails/TrailRating";
 import TrailStats from "@/components/trails/TrailStats";
 import { useSimilarTrails } from "@/hooks/use-similar-trails";
+import { useTrail } from "@/hooks/use-trails";
 
 interface Params extends Readonly<Record<string, string | undefined>> {
   trailId?: string;
@@ -29,34 +31,10 @@ interface Params extends Readonly<Record<string, string | undefined>> {
 
 const Trail: React.FC = () => {
   const { trailId } = useParams<Params>();
-  const [trail, setTrail] = useState<TrailType | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [ageVerified, setAgeVerified] = useState(false);
   const { user } = useAuth();
 
-  useEffect(() => {
-    if (!trailId) return;
-
-    setIsLoading(true);
-    
-    const fetchTrail = async () => {
-      try {
-        const response = await fetch(`/api/trails/${trailId}`);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        setTrail(data);
-      } catch (error) {
-        console.error("Could not fetch trail:", error);
-        setTrail(null);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchTrail();
-  }, [trailId]);
+  const { data: trail, isLoading, error } = useTrail(trailId);
 
   const [weatherData, setWeatherData] = useState(null);
   const [isWeatherLoading, setIsWeatherLoading] = useState(false);

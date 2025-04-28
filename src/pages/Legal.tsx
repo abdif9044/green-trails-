@@ -28,19 +28,17 @@ const Legal: React.FC = () => {
       
       // Properly type check and convert the data
       if (Array.isArray(data) && data.length > 0) {
-        const legalDoc = data[0];
+        const legalDoc = data[0] as Record<string, any>;
         
-        if (legalDoc && typeof legalDoc === 'object') {
-          // Safely access properties with type checking
-          return {
-            id: typeof legalDoc.id === 'string' ? legalDoc.id : String(legalDoc.id || ''),
-            title: typeof legalDoc.title === 'string' ? legalDoc.title : String(legalDoc.title || ''),
-            content: typeof legalDoc.content === 'string' ? legalDoc.content : String(legalDoc.content || ''),
-            updated_at: legalDoc.updated_at ? 
-              (typeof legalDoc.updated_at === 'string' ? legalDoc.updated_at : String(legalDoc.updated_at)) : 
-              undefined
-          };
-        }
+        // Create a properly typed LegalContent object
+        return {
+          id: typeof legalDoc.id === 'string' ? legalDoc.id : String(legalDoc.id || ''),
+          title: typeof legalDoc.title === 'string' ? legalDoc.title : String(legalDoc.title || ''),
+          content: typeof legalDoc.content === 'string' ? legalDoc.content : String(legalDoc.content || ''),
+          updated_at: legalDoc.updated_at ? 
+            (typeof legalDoc.updated_at === 'string' ? legalDoc.updated_at : String(legalDoc.updated_at)) : 
+            undefined
+        } as LegalContent;
       }
       
       throw new Error('Invalid legal content format');

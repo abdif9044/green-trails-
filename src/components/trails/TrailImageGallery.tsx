@@ -4,6 +4,7 @@ import { useTrailImages, useDeleteTrailImage, type TrailImage } from '@/hooks/us
 import { Button } from "@/components/ui/button";
 import { Trash2, Loader2 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
+import { supabase } from '@/integrations/supabase/client'; // Added the missing import
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,7 +24,7 @@ interface TrailImageGalleryProps {
 
 const TrailImageGallery = ({ trailId, userId }: TrailImageGalleryProps) => {
   const { data: images, isLoading } = useTrailImages(trailId);
-  const { mutate: deleteImage, isLoading: isDeleting } = useDeleteTrailImage(trailId);
+  const { mutate: deleteImage, isPending } = useDeleteTrailImage(trailId); // Changed isLoading to isPending
   const [selectedImage, setSelectedImage] = useState<TrailImage | null>(null);
   const { user } = useAuth();
 
@@ -64,7 +65,7 @@ const TrailImageGallery = ({ trailId, userId }: TrailImageGalleryProps) => {
                   variant="destructive"
                   size="icon"
                   className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                  disabled={isDeleting}
+                  disabled={isPending}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -82,7 +83,7 @@ const TrailImageGallery = ({ trailId, userId }: TrailImageGalleryProps) => {
                     onClick={() => deleteImage(image.id)}
                     className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                   >
-                    {isDeleting ? (
+                    {isPending ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
                       'Delete'

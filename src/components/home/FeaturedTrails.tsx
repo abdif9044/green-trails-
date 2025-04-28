@@ -29,7 +29,22 @@ const useFeaturedTrails = () => {
 
       if (error) throw error;
 
-      return trails.map(trail => ({
+      // Count likes for each trail
+      const trailsWithLikes = await Promise.all(
+        trails.map(async (trail) => {
+          const { count } = await supabase
+            .from('trail_likes')
+            .select('*', { count: 'exact', head: true })
+            .eq('trail_id', trail.id);
+            
+          return {
+            ...trail,
+            likesCount: count || 0
+          };
+        })
+      );
+
+      return trailsWithLikes.map(trail => ({
         id: trail.id,
         name: trail.name,
         location: trail.location,
@@ -51,6 +66,7 @@ const useFeaturedTrails = () => {
           .map(tag => tag.tag) || [],
         isAgeRestricted: trail.is_age_restricted,
         description: trail.description,
+        likes: trail.likesCount, // Added the likes property
       }));
     }
   });

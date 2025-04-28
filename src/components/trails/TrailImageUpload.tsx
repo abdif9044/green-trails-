@@ -17,7 +17,7 @@ const TrailImageUpload = ({ trailId, onSuccess }: TrailImageUploadProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [caption, setCaption] = useState('');
   const [isPrimary, setIsPrimary] = useState(false);
-  const { mutate: uploadImage, isLoading } = useUploadTrailImage(trailId);
+  const { mutate: uploadImage, isPending } = useUploadTrailImage(trailId); // Changed isLoading to isPending
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -48,7 +48,7 @@ const TrailImageUpload = ({ trailId, onSuccess }: TrailImageUploadProps) => {
           type="file"
           accept="image/*"
           onChange={handleFileSelect}
-          disabled={isLoading}
+          disabled={isPending}
         />
       </div>
 
@@ -59,7 +59,7 @@ const TrailImageUpload = ({ trailId, onSuccess }: TrailImageUploadProps) => {
           value={caption}
           onChange={(e) => setCaption(e.target.value)}
           placeholder="Add a caption to your image..."
-          disabled={isLoading}
+          disabled={isPending}
         />
       </div>
 
@@ -68,7 +68,7 @@ const TrailImageUpload = ({ trailId, onSuccess }: TrailImageUploadProps) => {
           id="primary"
           checked={isPrimary}
           onCheckedChange={setIsPrimary}
-          disabled={isLoading}
+          disabled={isPending}
         />
         <Label htmlFor="primary">Set as primary image</Label>
       </div>
@@ -77,15 +77,15 @@ const TrailImageUpload = ({ trailId, onSuccess }: TrailImageUploadProps) => {
         type="button"
         variant="outline"
         className="w-full"
-        disabled={isLoading}
+        disabled={isPending}
         onClick={() => fileInputRef.current?.click()}
       >
-        {isLoading ? (
+        {isPending ? (
           <Loader2 className="h-4 w-4 animate-spin mr-2" />
         ) : (
           <Camera className="h-4 w-4 mr-2" />
         )}
-        {isLoading ? 'Uploading...' : 'Upload Image'}
+        {isPending ? 'Uploading...' : 'Upload Image'}
       </Button>
     </div>
   );

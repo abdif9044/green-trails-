@@ -7,7 +7,7 @@ export const mockTrails: Trail[] = [
     name: "Quarry Hills Park Trail",
     location: "Rochester, MN",
     coordinates: [-92.4631, 44.0553],
-    imageUrl: "https://images.unsplash.com/photo-1615937657715-bc7b4b7962c1?q=80&w=1000&auto=format&fit=crop",
+    imageUrl: "https://images.unsplash.com/photo-1482938289607-e9573fc25ebb?q=80&w=1000&auto=format&fit=crop",
     difficulty: "moderate",
     length: 4.5,
     elevation: 320,
@@ -90,3 +90,4 @@ export const mockTrails: Trail[] = [
     description: "Experience the pristine wilderness of Northern Minnesota on this trail through the famous Boundary Waters Canoe Area. Features dense forests, crystal-clear lakes, and incredible wildlife viewing opportunities."
   },
 ];
+

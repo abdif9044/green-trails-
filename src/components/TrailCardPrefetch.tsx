@@ -3,11 +3,27 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Heart, Users, Mountain, MapPin } from "lucide-react";
+import { Heart, Mountain, MapPin } from "lucide-react";
 import { usePrefetch } from '@/hooks/use-prefetch';
-import { Trail } from '@/types/trails';
+import { Trail, TrailDifficulty } from '@/types/trails';
 
 type TrailCardProps = Trail;
+
+// Helper function to get badge color based on difficulty
+const getDifficultyColor = (difficulty: TrailDifficulty) => {
+  switch(difficulty) {
+    case 'easy': 
+      return 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100';
+    case 'moderate':
+      return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100';
+    case 'hard':
+      return 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100';
+    case 'expert':
+      return 'bg-purple-100 text-purple-800 dark:bg-purple-800 dark:text-purple-100';
+    default:
+      return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100';
+  }
+};
 
 const TrailCardPrefetch: React.FC<TrailCardProps> = ({
   id,
@@ -51,7 +67,7 @@ const TrailCardPrefetch: React.FC<TrailCardProps> = ({
                 21+
               </Badge>
             )}
-            <Badge className={`bg-${difficulty}-100 text-${difficulty}-800 dark:bg-${difficulty}-800 dark:text-${difficulty}-100`}>
+            <Badge className={getDifficultyColor(difficulty)}>
               {difficulty}
             </Badge>
           </div>

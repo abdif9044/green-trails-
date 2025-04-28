@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
@@ -27,7 +26,7 @@ interface TrailMapProps {
 const MapContent: React.FC<TrailMapProps> = ({
   trails = [],
   onTrailSelect,
-  center = [-105.2705, 40.0150],
+  center = [-92.4631, 44.0553],
   zoom = 10,
   className = 'h-[500px] w-full'
 }) => {

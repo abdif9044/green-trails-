@@ -116,6 +116,27 @@ export type Database = {
         }
         Relationships: []
       }
+      legal_content: {
+        Row: {
+          content: string
+          id: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          content: string
+          id: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          content?: string
+          id?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       likes: {
         Row: {
           created_at: string | null

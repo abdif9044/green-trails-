@@ -10,6 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useNavigate } from 'react-router-dom';
 import { LegalContent } from '@/types/legal';
+import { format } from 'date-fns';
 
 const Legal: React.FC = () => {
   const { type = 'terms-of-service' } = useParams();
@@ -18,30 +19,16 @@ const Legal: React.FC = () => {
   const { data, isLoading } = useQuery<LegalContent>({
     queryKey: ['legal-content', type],
     queryFn: async () => {
-      // Using execute_sql function to get around TypeScript limitations
-      const { data, error } = await supabase.rpc('execute_sql', {
-        sql_query: `SELECT * FROM legal_content WHERE id = '${type}'`
-      });
+      const { data, error } = await supabase
+        .from('legal_content')
+        .select('*')
+        .eq('id', type)
+        .single();
       
       if (error) throw error;
-      if (!data || data.length === 0) throw new Error('Legal content not found');
+      if (!data) throw new Error('Legal content not found');
       
-      // Properly type check and convert the data
-      if (Array.isArray(data) && data.length > 0) {
-        const legalDoc = data[0] as Record<string, any>;
-        
-        // Create a properly typed LegalContent object
-        return {
-          id: typeof legalDoc.id === 'string' ? legalDoc.id : String(legalDoc.id || ''),
-          title: typeof legalDoc.title === 'string' ? legalDoc.title : String(legalDoc.title || ''),
-          content: typeof legalDoc.content === 'string' ? legalDoc.content : String(legalDoc.content || ''),
-          updated_at: legalDoc.updated_at ? 
-            (typeof legalDoc.updated_at === 'string' ? legalDoc.updated_at : String(legalDoc.updated_at)) : 
-            undefined
-        } as LegalContent;
-      }
-      
-      throw new Error('Invalid legal content format');
+      return data as LegalContent;
     }
   });
   
@@ -50,16 +37,26 @@ const Legal: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-greentrail-50 dark:bg-greentrail-950">
       <Navbar />
       
       <div className="flex-grow container mx-auto px-4 py-8">
-        <Card>
+        <Card className="border border-greentrail-200 dark:border-greentrail-800 shadow-md">
           <CardContent className="pt-6">
             <Tabs value={type} onValueChange={handleTabChange}>
-              <TabsList className="mb-6">
-                <TabsTrigger value="terms-of-service">Terms of Service</TabsTrigger>
-                <TabsTrigger value="privacy-policy">Privacy Policy</TabsTrigger>
+              <TabsList className="mb-6 w-full justify-start bg-greentrail-100 dark:bg-greentrail-900">
+                <TabsTrigger 
+                  value="terms-of-service"
+                  className="data-[state=active]:bg-greentrail-600 data-[state=active]:text-white"
+                >
+                  Terms of Service
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="privacy-policy"
+                  className="data-[state=active]:bg-greentrail-600 data-[state=active]:text-white"
+                >
+                  Privacy Policy
+                </TabsTrigger>
               </TabsList>
               
               <TabsContent value="terms-of-service" className="prose prose-green dark:prose-invert max-w-none">
@@ -74,7 +71,12 @@ const Legal: React.FC = () => {
                     <Skeleton className="h-6 w-full" />
                   </div>
                 ) : data?.id === 'terms-of-service' ? (
-                  <div dangerouslySetInnerHTML={{ __html: formatMarkdown(data.content) }} />
+                  <div>
+                    <div className="text-sm text-right text-greentrail-600 dark:text-greentrail-400 mb-4">
+                      Last updated: {data.updated_at ? format(new Date(data.updated_at), 'MMMM d, yyyy') : 'N/A'}
+                    </div>
+                    <div dangerouslySetInnerHTML={{ __html: formatMarkdown(data.content) }} />
+                  </div>
                 ) : (
                   <p>Terms of Service document not found.</p>
                 )}
@@ -92,7 +94,12 @@ const Legal: React.FC = () => {
                     <Skeleton className="h-6 w-full" />
                   </div>
                 ) : data?.id === 'privacy-policy' ? (
-                  <div dangerouslySetInnerHTML={{ __html: formatMarkdown(data.content) }} />
+                  <div>
+                    <div className="text-sm text-right text-greentrail-600 dark:text-greentrail-400 mb-4">
+                      Last updated: {data.updated_at ? format(new Date(data.updated_at), 'MMMM d, yyyy') : 'N/A'}
+                    </div>
+                    <div dangerouslySetInnerHTML={{ __html: formatMarkdown(data.content) }} />
+                  </div>
                 ) : (
                   <p>Privacy Policy document not found.</p>
                 )}
@@ -107,16 +114,39 @@ const Legal: React.FC = () => {
   );
 };
 
-// Simple markdown to HTML converter for basic formatting
+// Enhanced markdown to HTML converter for better formatting
 const formatMarkdown = (content: string): string => {
   if (!content) return '';
   
   // Convert headers
   let html = content
+    // Headers
     .replace(/^# (.*$)/gim, '<h1>$1</h1>')
     .replace(/^## (.*$)/gim, '<h2>$1</h2>')
     .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+    .replace(/^#### (.*$)/gim, '<h4>$1</h4>')
+    
+    // Bold and italic
+    .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/gim, '<em>$1</em>')
+    
+    // Lists
+    .replace(/^\- (.*$)/gim, '<li>$1</li>')
+    
+    // Wrap lists in ul tags
+    .replace(/(<li>.*<\/li>)/gims, '<ul>$1</ul>')
+    
+    // Links
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/gim, '<a href="$2" class="text-greentrail-600 dark:text-greentrail-400 hover:underline">$1</a>')
+    
+    // Paragraphs and line breaks
+    .replace(/\n\n/gim, '</p><p>')
     .replace(/\n/gim, '<br>');
+  
+  // Wrap in paragraph tags if not already done
+  if (!html.startsWith('<h') && !html.startsWith('<p>')) {
+    html = '<p>' + html + '</p>';
+  }
     
   return html;
 };

@@ -12,6 +12,8 @@ import TrailHeader from "@/components/trails/TrailHeader";
 import TrailContent from "@/components/trails/TrailContent";
 import TrailSidebar from "@/components/trails/TrailSidebar";
 import TrailStats from "@/components/trails/TrailStats";
+import SEOProvider from "@/components/SEOProvider";
+import { LazyImage } from "@/components/LazyImage";
 
 interface Params extends Readonly<Record<string, string | undefined>> {
   trailId?: string;
@@ -56,6 +58,15 @@ const Trail: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
+      {trail && (
+        <SEOProvider
+          title={`${trail.name} - GreenTrails`}
+          description={`Explore ${trail.name} in ${trail.location}. ${trail.description?.substring(0, 100)}...`}
+          image={trail.imageUrl}
+          type="article"
+        />
+      )}
+      
       <Navbar />
       
       {isLoading ? (

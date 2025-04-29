@@ -10,6 +10,7 @@ import DiscoverFilters from '@/components/discover/DiscoverFilters';
 import DiscoverHeader from '@/components/discover/DiscoverHeader';
 import DiscoverTrailsList from '@/components/discover/DiscoverTrailsList';
 import DiscoverViewControls from '@/components/discover/DiscoverViewControls';
+import SEOProvider from "@/components/SEOProvider";
 
 const Discover = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -39,6 +40,11 @@ const Discover = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <SEOProvider
+        title="Discover Trails - GreenTrails"
+        description="Find and explore the best hiking trails for cannabis-friendly adventures. Filter by difficulty, length, and more."
+      />
+      
       <Navbar />
       
       <DiscoverHeader trailCount={trails.length} />

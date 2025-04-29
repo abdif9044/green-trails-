@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/use-auth";
+import { HelmetProvider } from 'react-helmet-async';
 import ErrorBoundary from "@/components/ErrorBoundary";
 import Index from "./pages/Index";
 import Discover from "./pages/Discover";
@@ -29,30 +30,32 @@ const queryClient = new QueryClient({
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <Router>
-      <AuthProvider>
-        <TooltipProvider>
-          <ErrorBoundary>
-            <Toaster />
-            <Sonner />
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/discover" element={<Discover />} />
-              <Route path="/trail/:trailId" element={<Trail />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/profile/:userId" element={<Profile />} />
-              <Route path="/social" element={<Social />} />
-              <Route path="/albums/new" element={<CreateAlbum />} />
-              <Route path="/albums/:albumId" element={<AlbumDetail />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/legal/:type" element={<Legal />} />
-              <Route path="/legal" element={<Legal />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </ErrorBoundary>
-        </TooltipProvider>
-      </AuthProvider>
-    </Router>
+    <HelmetProvider>
+      <Router>
+        <AuthProvider>
+          <TooltipProvider>
+            <ErrorBoundary>
+              <Toaster />
+              <Sonner />
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/discover" element={<Discover />} />
+                <Route path="/trail/:trailId" element={<Trail />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/profile/:userId" element={<Profile />} />
+                <Route path="/social" element={<Social />} />
+                <Route path="/albums/new" element={<CreateAlbum />} />
+                <Route path="/albums/:albumId" element={<AlbumDetail />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/legal/:type" element={<Legal />} />
+                <Route path="/legal" element={<Legal />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </ErrorBoundary>
+          </TooltipProvider>
+        </AuthProvider>
+      </Router>
+    </HelmetProvider>
   </QueryClientProvider>
 );
 

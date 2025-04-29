@@ -7,6 +7,7 @@ import { StrainTag, TrailDifficulty } from '@/types/trails';
 import { TrailDifficultyBadge } from './trails/TrailDifficultyBadge';
 import { TrailCardStats } from './trails/TrailCardStats';
 import { TrailTagsList } from './trails/TrailTagsList';
+import { LazyImage } from './LazyImage';
 
 export interface TrailCardProps {
   id: string;
@@ -39,7 +40,7 @@ const TrailCard = ({
     <Card className="overflow-hidden hover:shadow-lg transition-all duration-200 trail-card-shadow border-greentrail-200 dark:border-greentrail-800">
       <Link to={`/trail/${id}`}>
         <div className="relative h-48 overflow-hidden">
-          <img 
+          <LazyImage 
             src={imageUrl} 
             alt={name} 
             className="w-full h-full object-cover transition-transform hover:scale-105 duration-500"

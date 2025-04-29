@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Compass, Layers, MapIcon, Cloud, CloudRain, CloudSun } from 'lucide-react';
+import { Compass, Layers, MapIcon, Cloud, CloudRain, CloudSun, ParkingMeter } from 'lucide-react';
 import { 
   Select,
   SelectContent,
@@ -16,7 +16,9 @@ interface MapControlsProps {
   onResetView: () => void;
   onStyleChange: (style: string) => void;
   onWeatherToggle: () => void;
+  onParkingToggle?: () => void;
   weatherEnabled: boolean;
+  parkingEnabled?: boolean;
   className?: string;
 }
 
@@ -24,7 +26,9 @@ const MapControls: React.FC<MapControlsProps> = ({
   onResetView,
   onStyleChange,
   onWeatherToggle,
+  onParkingToggle,
   weatherEnabled,
+  parkingEnabled = false,
   className = ''
 }) => {
   return (
@@ -71,6 +75,21 @@ const MapControls: React.FC<MapControlsProps> = ({
           </div>
         )}
       </div>
+      
+      {onParkingToggle && (
+        <div className="bg-white/90 hover:bg-white shadow-md p-2 rounded flex items-center justify-between">
+          <div className="flex items-center">
+            <ParkingMeter className="h-4 w-4 mr-1.5 text-greentrail-600" />
+            <Label htmlFor="parking-toggle" className="text-xs cursor-pointer text-black">Parking</Label>
+          </div>
+          <Switch 
+            id="parking-toggle"
+            checked={parkingEnabled}
+            onCheckedChange={onParkingToggle}
+            className="data-[state=checked]:bg-greentrail-600"
+          />
+        </div>
+      )}
     </div>
   );
 };

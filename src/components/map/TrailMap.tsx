@@ -8,6 +8,8 @@ import { Trail } from '@/types/trails';
 import { MapProvider, useMap } from './MapContext';
 import MapMarker from './MapMarker';
 import MapWeatherLayer from './MapWeatherLayer';
+import ParkingMarker from './ParkingMarker';
+import { useParkingSpots } from '@/hooks/use-parking-spots';
 import { supabase } from '@/integrations/supabase/client';
 
 // Set Mapbox access token from Supabase secrets
@@ -30,6 +32,7 @@ interface TrailMapProps {
   center?: [number, number];
   zoom?: number;
   className?: string;
+  showParking?: boolean;
 }
 
 const MapContent: React.FC<TrailMapProps> = ({
@@ -37,13 +40,24 @@ const MapContent: React.FC<TrailMapProps> = ({
   onTrailSelect,
   center = [-92.4631, 44.0553],
   zoom = 10,
-  className = 'h-[500px] w-full'
+  className = 'h-[500px] w-full',
+  showParking = true
 }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [weatherLayer, setWeatherLayer] = useState(false);
+  const [parkingLayer, setParkingLayer] = useState(showParking);
   const [currentStyle, setCurrentStyle] = useState<keyof typeof mapStyles>('outdoors');
   const { map, setMap } = useMap();
+  
+  // Get all trail IDs to fetch parking spots
+  const trailIds = trails.map(trail => trail.id);
+  const { data: parkingSpots = [] } = useParkingSpots();
+  
+  // Filter parking spots to only show ones for the visible trails
+  const relevantParkingSpots = parkingSpots.filter(
+    spot => trailIds.includes(spot.trail_id)
+  );
 
   useEffect(() => {
     if (!mapContainer.current) return;
@@ -132,7 +146,9 @@ const MapContent: React.FC<TrailMapProps> = ({
           onResetView={handleResetView}
           onStyleChange={handleStyleChange}
           onWeatherToggle={() => setWeatherLayer(!weatherLayer)}
+          onParkingToggle={() => setParkingLayer(!parkingLayer)}
           weatherEnabled={weatherLayer}
+          parkingEnabled={parkingLayer}
         />
       </div>
       
@@ -142,6 +158,14 @@ const MapContent: React.FC<TrailMapProps> = ({
           trail={trail}
           map={map}
           onSelect={onTrailSelect}
+        />
+      ))}
+      
+      {map && parkingLayer && relevantParkingSpots.map(parkingSpot => (
+        <ParkingMarker
+          key={parkingSpot.id}
+          parkingSpot={parkingSpot}
+          map={map}
         />
       ))}
 

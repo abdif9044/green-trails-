@@ -237,6 +237,56 @@ export type Database = {
           },
         ]
       }
+      parking_spots: {
+        Row: {
+          capacity: number | null
+          created_at: string | null
+          description: string | null
+          id: string
+          is_free: boolean | null
+          latitude: number
+          longitude: number
+          name: string
+          notes: string | null
+          trail_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          capacity?: number | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_free?: boolean | null
+          latitude: number
+          longitude: number
+          name: string
+          notes?: string | null
+          trail_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          capacity?: number | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_free?: boolean | null
+          latitude?: number
+          longitude?: number
+          name?: string
+          notes?: string | null
+          trail_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "parking_spots_trail_id_fkey"
+            columns: ["trail_id"]
+            isOneToOne: false
+            referencedRelation: "trails"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null

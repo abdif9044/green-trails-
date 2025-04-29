@@ -22,6 +22,13 @@ export interface Trail {
   strainTags?: string[] | StrainTag[];
   isAgeRestricted: boolean;
   description?: string;
+  country?: string;
+  state_province?: string;
+  surface?: string;
+  trail_type?: string;
+  geojson?: any; // GeoJSON data for trail path
+  source?: string;
+  source_id?: string;
 }
 
 export interface TrailFilters {
@@ -31,4 +38,6 @@ export interface TrailFilters {
   tags?: string[];
   strainTypes?: ('sativa' | 'indica' | 'hybrid')[];
   showAgeRestricted?: boolean;
+  country?: string;
+  stateProvince?: string;
 }

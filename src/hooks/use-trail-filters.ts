@@ -1,42 +1,76 @@
 
-import { Trail, TrailFilters } from "@/types/trails";
+import { useMemo } from 'react';
+import { Trail, TrailFilters } from '@/types/trails';
 
-export const useTrailFilters = (trails: Trail[], filters?: TrailFilters) => {
-  if (!filters) return trails;
-
-  let filtered = [...trails];
-
-  if (filters.searchQuery && filters.searchQuery !== '') {
-    const query = filters.searchQuery.toLowerCase();
-    filtered = filtered.filter(trail => 
-      trail.name.toLowerCase().includes(query) ||
-      trail.location.toLowerCase().includes(query) ||
-      trail.tags.some(tag => tag.toLowerCase().includes(query)) ||
-      (trail.strainTags && trail.strainTags.some(tag => 
-        typeof tag === 'string' ? tag.toLowerCase().includes(query) : tag.name.toLowerCase().includes(query)
-      ))
-    );
-  }
-
-  if (filters.difficulty && filters.difficulty !== 'all') {
-    filtered = filtered.filter(trail => trail.difficulty === filters.difficulty);
-  }
-
-  if (filters.lengthRange) {
-    filtered = filtered.filter(trail => 
-      trail.length >= filters.lengthRange![0] && trail.length <= filters.lengthRange![1]
-    );
-  }
-
-  if (filters.tags && filters.tags.length > 0) {
-    filtered = filtered.filter(trail => 
-      filters.tags!.some(tag => trail.tags.includes(tag))
-    );
-  }
-
-  if (filters.showAgeRestricted === false) {
-    filtered = filtered.filter(trail => !trail.isAgeRestricted);
-  }
-
-  return filtered;
+export const useTrailFilters = (trails: Trail[] = [], filters?: TrailFilters) => {
+  return useMemo(() => {
+    if (!filters || trails.length === 0) {
+      return trails;
+    }
+    
+    return trails.filter(trail => {
+      // Filter by search query (name or location)
+      if (filters.searchQuery) {
+        const search = filters.searchQuery.toLowerCase();
+        const nameMatch = trail.name?.toLowerCase().includes(search);
+        const locationMatch = trail.location?.toLowerCase().includes(search);
+        const descriptionMatch = trail.description?.toLowerCase().includes(search);
+        
+        if (!(nameMatch || locationMatch || descriptionMatch)) {
+          return false;
+        }
+      }
+      
+      // Filter by difficulty
+      if (filters.difficulty && trail.difficulty !== filters.difficulty) {
+        return false;
+      }
+      
+      // Filter by length range
+      if (filters.lengthRange) {
+        const [min, max] = filters.lengthRange;
+        if (trail.length < min || (max < 20 && trail.length > max)) {
+          return false;
+        }
+      }
+      
+      // Filter by tags
+      if (filters.tags && filters.tags.length > 0) {
+        const hasMatchingTag = filters.tags.some(tag => trail.tags.includes(tag));
+        if (!hasMatchingTag) {
+          return false;
+        }
+      }
+      
+      // Filter by strain types
+      if (filters.strainTypes && filters.strainTypes.length > 0 && trail.strainTags) {
+        let hasMatchingStrainType = false;
+        
+        if (Array.isArray(trail.strainTags)) {
+          if (typeof trail.strainTags[0] === 'string') {
+            // If strainTags is an array of strings, we can't filter by type
+            // So we'll consider it a match if it has any strain tags
+            hasMatchingStrainType = trail.strainTags.length > 0;
+          } else {
+            // If strainTags is an array of StrainTag objects
+            hasMatchingStrainType = trail.strainTags.some(strain => {
+              if (typeof strain === 'string') return false;
+              return filters.strainTypes?.includes(strain.type);
+            });
+          }
+        }
+        
+        if (!hasMatchingStrainType) {
+          return false;
+        }
+      }
+      
+      // Filter by age restriction
+      if (!filters.showAgeRestricted && trail.isAgeRestricted) {
+        return false;
+      }
+      
+      return true;
+    });
+  }, [trails, filters]);
 };

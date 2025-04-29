@@ -9,6 +9,7 @@ import { MapProvider, useMap } from './MapContext';
 import MapMarker from './MapMarker';
 import MapWeatherLayer from './MapWeatherLayer';
 import ParkingMarker from './ParkingMarker';
+import TrailPathLayer from './TrailPathLayer';
 import { useParkingSpots } from '@/hooks/use-parking-spots';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -33,6 +34,10 @@ interface TrailMapProps {
   zoom?: number;
   className?: string;
   showParking?: boolean;
+  showTrailPaths?: boolean;
+  country?: string;
+  stateProvince?: string;
+  difficulty?: string;
 }
 
 const MapContent: React.FC<TrailMapProps> = ({
@@ -41,12 +46,17 @@ const MapContent: React.FC<TrailMapProps> = ({
   center = [-92.4631, 44.0553],
   zoom = 10,
   className = 'h-[500px] w-full',
-  showParking = true
+  showParking = true,
+  showTrailPaths = false,
+  country,
+  stateProvince,
+  difficulty
 }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [weatherLayer, setWeatherLayer] = useState(false);
   const [parkingLayer, setParkingLayer] = useState(showParking);
+  const [trailPathsLayer, setTrailPathsLayer] = useState(showTrailPaths);
   const [currentStyle, setCurrentStyle] = useState<keyof typeof mapStyles>('outdoors');
   const { map, setMap } = useMap();
   
@@ -123,6 +133,15 @@ const MapContent: React.FC<TrailMapProps> = ({
     };
   }, [currentStyle, setMap]);
 
+  // Handle filter changes by updating the map
+  useEffect(() => {
+    if (!map) return;
+    
+    // You could implement filtering logic here
+    // For now, we're just using the filtered trails passed as props
+    
+  }, [map, country, stateProvince, difficulty]);
+
   const handleStyleChange = (style: string) => {
     setCurrentStyle(style as keyof typeof mapStyles);
   };
@@ -147,8 +166,10 @@ const MapContent: React.FC<TrailMapProps> = ({
           onStyleChange={handleStyleChange}
           onWeatherToggle={() => setWeatherLayer(!weatherLayer)}
           onParkingToggle={() => setParkingLayer(!parkingLayer)}
+          onTrailPathsToggle={() => setTrailPathsLayer(!trailPathsLayer)}
           weatherEnabled={weatherLayer}
           parkingEnabled={parkingLayer}
+          trailPathsEnabled={trailPathsLayer}
         />
       </div>
       
@@ -166,6 +187,15 @@ const MapContent: React.FC<TrailMapProps> = ({
           key={parkingSpot.id}
           parkingSpot={parkingSpot}
           map={map}
+        />
+      ))}
+      
+      {map && trailPathsLayer && trails.filter(trail => trail.geojson).map(trail => (
+        <TrailPathLayer
+          key={trail.id}
+          trail={trail}
+          map={map}
+          onClick={() => onTrailSelect?.(trail.id)}
         />
       ))}
 

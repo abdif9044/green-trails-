@@ -1,25 +1,31 @@
 
 import React from 'react';
+import {
+  Compass,
+  Cloud,
+  MapIcon,
+  RefreshCw,
+  ParkingMeter,
+  Map as MapPin,
+  SquarePin
+} from 'lucide-react';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
-import { Compass, Layers, MapIcon, Cloud, CloudRain, CloudSun, ParkingMeter } from 'lucide-react';
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
+import { Toggle } from '@/components/ui/toggle';
 
 interface MapControlsProps {
   onResetView: () => void;
   onStyleChange: (style: string) => void;
   onWeatherToggle: () => void;
-  onParkingToggle?: () => void;
+  onParkingToggle: () => void;
+  onTrailPathsToggle?: () => void;
   weatherEnabled: boolean;
-  parkingEnabled?: boolean;
-  className?: string;
+  parkingEnabled: boolean;
+  trailPathsEnabled?: boolean;
 }
 
 const MapControls: React.FC<MapControlsProps> = ({
@@ -27,68 +33,94 @@ const MapControls: React.FC<MapControlsProps> = ({
   onStyleChange,
   onWeatherToggle,
   onParkingToggle,
+  onTrailPathsToggle,
   weatherEnabled,
-  parkingEnabled = false,
-  className = ''
+  parkingEnabled,
+  trailPathsEnabled
 }) => {
   return (
-    <div className={`flex flex-col gap-2 ${className}`}>
+    <div className="flex flex-col gap-2">
       <Button 
         variant="secondary" 
-        size="sm" 
-        className="bg-white/90 hover:bg-white shadow-md text-black"
+        size="icon" 
         onClick={onResetView}
+        className="bg-white dark:bg-greentrail-800 shadow-md hover:bg-slate-100 dark:hover:bg-greentrail-700"
       >
-        <Compass className="h-4 w-4 mr-1" />
-        <span className="text-xs">Reset View</span>
+        <RefreshCw className="h-4 w-4" />
       </Button>
       
-      <Select onValueChange={onStyleChange} defaultValue="outdoors">
-        <SelectTrigger className="bg-white/90 hover:bg-white shadow-md h-9 text-black">
-          <MapIcon className="h-4 w-4 mr-1" />
-          <SelectValue placeholder="Map Style" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="outdoors">Outdoors</SelectItem>
-          <SelectItem value="satellite">Satellite</SelectItem>
-          <SelectItem value="light">Light</SelectItem>
-          <SelectItem value="dark">Dark</SelectItem>
-        </SelectContent>
-      </Select>
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button 
+            variant="secondary" 
+            size="icon"
+            className="bg-white dark:bg-greentrail-800 shadow-md hover:bg-slate-100 dark:hover:bg-greentrail-700"
+          >
+            <MapPin className="h-4 w-4" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent side="right" className="w-48 p-2">
+          <div className="grid grid-cols-2 gap-1">
+            <Button
+              variant="ghost"
+              className="justify-start"
+              onClick={() => onStyleChange('outdoors')}
+            >
+              <Compass className="mr-2 h-4 w-4" />
+              Outdoors
+            </Button>
+            <Button
+              variant="ghost"
+              className="justify-start"
+              onClick={() => onStyleChange('satellite')}
+            >
+              <MapIcon className="mr-2 h-4 w-4" />
+              Satellite
+            </Button>
+            <Button
+              variant="ghost"
+              className="justify-start"
+              onClick={() => onStyleChange('light')}
+            >
+              <MapPin className="mr-2 h-4 w-4" />
+              Light
+            </Button>
+            <Button
+              variant="ghost"
+              className="justify-start"
+              onClick={() => onStyleChange('dark')}
+            >
+              <MapPin className="mr-2 h-4 w-4" />
+              Dark
+            </Button>
+          </div>
+        </PopoverContent>
+      </Popover>
       
-      <div className="bg-white/90 hover:bg-white shadow-md p-2 rounded flex flex-col gap-1.5">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            <CloudSun className="h-4 w-4 mr-1.5 text-greentrail-600" />
-            <Label htmlFor="weather-toggle" className="text-xs cursor-pointer text-black">Weather</Label>
-          </div>
-          <Switch 
-            id="weather-toggle"
-            checked={weatherEnabled}
-            onCheckedChange={onWeatherToggle}
-            className="data-[state=checked]:bg-greentrail-600"
-          />
-        </div>
-        {weatherEnabled && (
-          <div className="text-xs text-gray-500">
-            Choose layer types in the top-right
-          </div>
-        )}
-      </div>
+      <Toggle 
+        pressed={weatherEnabled} 
+        onPressedChange={onWeatherToggle}
+        className="bg-white dark:bg-greentrail-800 shadow-md hover:bg-slate-100 dark:hover:bg-greentrail-700 data-[state=on]:bg-greentrail-100 dark:data-[state=on]:bg-greentrail-600"
+      >
+        <Cloud className="h-4 w-4" />
+      </Toggle>
       
-      {onParkingToggle && (
-        <div className="bg-white/90 hover:bg-white shadow-md p-2 rounded flex items-center justify-between">
-          <div className="flex items-center">
-            <ParkingMeter className="h-4 w-4 mr-1.5 text-greentrail-600" />
-            <Label htmlFor="parking-toggle" className="text-xs cursor-pointer text-black">Parking</Label>
-          </div>
-          <Switch 
-            id="parking-toggle"
-            checked={parkingEnabled}
-            onCheckedChange={onParkingToggle}
-            className="data-[state=checked]:bg-greentrail-600"
-          />
-        </div>
+      <Toggle 
+        pressed={parkingEnabled} 
+        onPressedChange={onParkingToggle}
+        className="bg-white dark:bg-greentrail-800 shadow-md hover:bg-slate-100 dark:hover:bg-greentrail-700 data-[state=on]:bg-greentrail-100 dark:data-[state=on]:bg-greentrail-600"
+      >
+        <ParkingMeter className="h-4 w-4" />
+      </Toggle>
+      
+      {onTrailPathsToggle && (
+        <Toggle 
+          pressed={trailPathsEnabled} 
+          onPressedChange={onTrailPathsToggle}
+          className="bg-white dark:bg-greentrail-800 shadow-md hover:bg-slate-100 dark:hover:bg-greentrail-700 data-[state=on]:bg-greentrail-100 dark:data-[state=on]:bg-greentrail-600"
+        >
+          <SquarePin className="h-4 w-4" />
+        </Toggle>
       )}
     </div>
   );

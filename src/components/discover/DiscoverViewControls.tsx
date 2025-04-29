@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Compass, Map } from "lucide-react";
+import { Compass, Map, SquarePin } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -9,15 +9,20 @@ import {
   SelectValue
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Toggle } from "@/components/ui/toggle";
 
 interface DiscoverViewControlsProps {
   viewMode: 'list' | 'map';
   onViewModeChange: (value: 'list' | 'map') => void;
+  showTrailPaths?: boolean;
+  onToggleTrailPaths?: () => void;
 }
 
 const DiscoverViewControls: React.FC<DiscoverViewControlsProps> = ({
   viewMode,
-  onViewModeChange
+  onViewModeChange,
+  showTrailPaths,
+  onToggleTrailPaths
 }) => {
   return (
     <div className="flex items-center gap-3">
@@ -37,6 +42,17 @@ const DiscoverViewControls: React.FC<DiscoverViewControlsProps> = ({
           </TabsTrigger>
         </TabsList>
       </Tabs>
+      
+      {viewMode === 'map' && onToggleTrailPaths && (
+        <Toggle 
+          pressed={showTrailPaths} 
+          onPressedChange={onToggleTrailPaths}
+          className="bg-white dark:bg-greentrail-800 border border-input hover:bg-slate-100 dark:hover:bg-greentrail-700 data-[state=on]:bg-greentrail-100 data-[state=on]:text-greentrail-900 dark:data-[state=on]:bg-greentrail-600 dark:data-[state=on]:text-greentrail-100 h-9 px-3"
+        >
+          <SquarePin className="h-4 w-4 mr-1" />
+          <span className="text-xs">Show Paths</span>
+        </Toggle>
+      )}
       
       <Select defaultValue="popular">
         <SelectTrigger className="w-[180px] bg-white dark:bg-greentrail-800 border-greentrail-200 dark:border-greentrail-700">

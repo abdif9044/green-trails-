@@ -1,37 +1,52 @@
 
-import React from 'react';
+import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
-import { Search, Cannabis } from "lucide-react";
-import { Switch } from '@/components/ui/switch';
 import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import {
+  Search,
+  X,
+  SlidersHorizontal,
+  Mountain,
+  Flag,
+  MapPin,
+} from "lucide-react";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
-  SelectValue
+  SelectValue,
 } from "@/components/ui/select";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger
-} from "@/components/ui/accordion";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Link } from 'react-router-dom';
-import { useAuth } from '@/hooks/use-auth';
-import { useToast } from '@/hooks/use-toast';
+import { Badge } from "@/components/ui/badge";
+import { TrailDifficulty } from "@/types/trails";
+import { supabase } from "@/integrations/supabase/client";
 
 interface DiscoverFiltersProps {
   searchQuery: string;
-  setSearchQuery: (value: string) => void;
+  setSearchQuery: (query: string) => void;
   difficultyFilter: string | null;
-  setDifficultyFilter: (value: string | null) => void;
+  setDifficultyFilter: (difficulty: string | null) => void;
   lengthRange: [number, number];
-  setLengthRange: (value: [number, number]) => void;
+  setLengthRange: (range: [number, number]) => void;
   showAgeRestricted: boolean;
-  setShowAgeRestricted: (value: boolean) => void;
+  setShowAgeRestricted: (show: boolean) => void;
+  countryFilter?: string | null;
+  setCountryFilter?: (country: string | null) => void;
+  stateFilter?: string | null;
+  setStateFilter?: (state: string | null) => void;
   onResetFilters: () => void;
 }
 
@@ -44,187 +59,276 @@ const DiscoverFilters: React.FC<DiscoverFiltersProps> = ({
   setLengthRange,
   showAgeRestricted,
   setShowAgeRestricted,
-  onResetFilters
+  countryFilter,
+  setCountryFilter,
+  stateFilter,
+  setStateFilter,
+  onResetFilters,
 }) => {
-  const { user } = useAuth();
-  const { toast } = useToast();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [countries, setCountries] = useState<string[]>([]);
+  const [states, setStates] = useState<string[]>([]);
+  
+  // Fetch available countries and states from the database
+  useEffect(() => {
+    const fetchCountriesAndStates = async () => {
+      try {
+        // Fetch distinct countries
+        const { data: countriesData, error: countriesError } = await supabase
+          .from('trails')
+          .select('country')
+          .not('country', 'is', null)
+          .order('country')
+          .limit(100);
+          
+        if (countriesError) throw countriesError;
+        
+        // Extract unique countries
+        const uniqueCountries = Array.from(
+          new Set(
+            countriesData
+              .map(item => item.country)
+              .filter(Boolean) // Remove null values
+          )
+        );
+        
+        setCountries(uniqueCountries);
+        
+        // Fetch states if a country is selected
+        if (countryFilter) {
+          const { data: statesData, error: statesError } = await supabase
+            .from('trails')
+            .select('state_province')
+            .eq('country', countryFilter)
+            .not('state_province', 'is', null)
+            .order('state_province')
+            .limit(100);
+            
+          if (statesError) throw statesError;
+          
+          // Extract unique states
+          const uniqueStates = Array.from(
+            new Set(
+              statesData
+                .map(item => item.state_province)
+                .filter(Boolean) // Remove null values
+            )
+          );
+          
+          setStates(uniqueStates);
+        } else {
+          setStates([]);
+        }
+      } catch (error) {
+        console.error('Error fetching countries/states:', error);
+      }
+    };
+    
+    fetchCountriesAndStates();
+  }, [countryFilter]);
 
-  const handleAgeRestrictedToggle = () => {
-    if (!user) {
-      toast({
-        title: "Login Required",
-        description: "You must be signed in and age verified to see 21+ content",
-        variant: "destructive"
-      });
-      return;
+  const difficultyOptions: { value: TrailDifficulty; label: string }[] = [
+    { value: "easy", label: "Easy" },
+    { value: "moderate", label: "Moderate" },
+    { value: "hard", label: "Hard" },
+    { value: "expert", label: "Expert" },
+  ];
+
+  const handleDifficultySelect = (value: string) => {
+    setDifficultyFilter(value === "all" ? null : value as TrailDifficulty);
+  };
+  
+  const handleCountrySelect = (value: string) => {
+    if (setCountryFilter) {
+      setCountryFilter(value === "all" ? null : value);
+      // When changing country, reset state
+      if (setStateFilter) {
+        setStateFilter(null);
+      }
     }
-    setShowAgeRestricted(!showAgeRestricted);
+  };
+  
+  const handleStateSelect = (value: string) => {
+    if (setStateFilter) {
+      setStateFilter(value === "all" ? null : value);
+    }
   };
 
   return (
-    <div className="bg-greentrail-50 dark:bg-greentrail-900 p-4 rounded-xl shadow-sm sticky top-20">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="font-semibold text-lg text-greentrail-800 dark:text-greentrail-200">Filters</h2>
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          onClick={onResetFilters}
-          className="text-greentrail-600 hover:text-greentrail-800 dark:text-greentrail-400 dark:hover:text-greentrail-200"
+    <div className="space-y-4">
+      <div className="md:hidden">
+        <Button
+          variant="outline"
+          className="w-full"
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
         >
-          Reset
+          <SlidersHorizontal className="h-4 w-4 mr-2" />
+          Filters
+          {(difficultyFilter || lengthRange[0] > 0 || lengthRange[1] < 10 || showAgeRestricted || countryFilter || stateFilter) && (
+            <Badge variant="secondary" className="ml-2 bg-greentrail-100 text-greentrail-800 dark:bg-greentrail-800 dark:text-greentrail-200">
+              <X className="h-3 w-3 mr-1" onClick={(e) => { 
+                e.stopPropagation();
+                onResetFilters();
+              }} />
+              Reset
+            </Badge>
+          )}
         </Button>
       </div>
-
-      <div className="space-y-6">
-        <div>
-          <label htmlFor="search" className="block text-sm font-medium text-greentrail-700 dark:text-greentrail-300 mb-2">
-            Search
-          </label>
-          <div className="relative">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-greentrail-500 dark:text-greentrail-400" />
-            <Input
-              id="search"
-              placeholder="Trail name, location, or tags"
-              className="pl-9 bg-white dark:bg-greentrail-800 border-greentrail-200 dark:border-greentrail-700"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-        </div>
-
-        <div>
-          <label htmlFor="difficulty" className="block text-sm font-medium text-greentrail-700 dark:text-greentrail-300 mb-2">
-            Difficulty
-          </label>
-          <Select 
-            value={difficultyFilter || "all"} 
-            onValueChange={(value) => setDifficultyFilter(value === "all" ? null : value)}
-          >
-            <SelectTrigger id="difficulty" className="bg-white dark:bg-greentrail-800 border-greentrail-200 dark:border-greentrail-700">
-              <SelectValue placeholder="Any difficulty" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Any difficulty</SelectItem>
-              <SelectItem value="easy">Easy</SelectItem>
-              <SelectItem value="moderate">Moderate</SelectItem>
-              <SelectItem value="hard">Hard</SelectItem>
-              <SelectItem value="expert">Expert</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-greentrail-700 dark:text-greentrail-300 mb-2">
-            Trail Length
-          </label>
-          <div className="px-2">
-            <Slider
-              defaultValue={[0, 10]}
-              min={0}
-              max={10}
-              step={0.5}
-              value={lengthRange}
-              onValueChange={(value) => setLengthRange(value as [number, number])}
-              className="py-4"
-            />
-            <div className="flex justify-between text-xs text-greentrail-600 dark:text-greentrail-400">
-              <span>{lengthRange[0]} miles</span>
-              <span>{lengthRange[1]} miles</span>
+      
+      <div className={`space-y-4 ${isMobileMenuOpen ? "block" : "hidden md:block"}`}>
+        <Card className="border-slate-200 dark:border-greentrail-800">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">Search</CardTitle>
+            <CardDescription>Find trails by name or location</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="relative">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-greentrail-500" />
+              <Input 
+                type="search" 
+                placeholder="Search trails..." 
+                value={searchQuery} 
+                onChange={(e) => setSearchQuery(e.target.value)} 
+                className="pl-9"
+              />
             </div>
-          </div>
-        </div>
-
-        <div className="pt-2 border-t border-greentrail-200 dark:border-greentrail-700">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <Cannabis className="h-4 w-4 text-purple-600" />
-              <label htmlFor="age-restricted" className="text-sm font-medium text-greentrail-700 dark:text-greentrail-300">
-                21+ Content
-              </label>
+          </CardContent>
+        </Card>
+        
+        <Card className="border-slate-200 dark:border-greentrail-800">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">Difficulty</CardTitle>
+            <CardDescription>Filter by trail difficulty</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Select value={difficultyFilter || "all"} onValueChange={handleDifficultySelect}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select difficulty" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Difficulties</SelectItem>
+                {difficultyOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    <div className="flex items-center">
+                      <Mountain className="mr-2 h-4 w-4" />
+                      {option.label}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </CardContent>
+        </Card>
+        
+        {setCountryFilter && (
+          <Card className="border-slate-200 dark:border-greentrail-800">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg">Location</CardTitle>
+              <CardDescription>Filter by country and state</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="country">Country</Label>
+                <Select 
+                  value={countryFilter || "all"} 
+                  onValueChange={handleCountrySelect}
+                >
+                  <SelectTrigger id="country">
+                    <SelectValue placeholder="Select country" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Countries</SelectItem>
+                    {countries.map((country) => (
+                      <SelectItem key={country} value={country}>
+                        <div className="flex items-center">
+                          <Flag className="mr-2 h-4 w-4" />
+                          {country}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              {countryFilter && setStateFilter && (
+                <div className="space-y-2">
+                  <Label htmlFor="state">State/Province</Label>
+                  <Select 
+                    value={stateFilter || "all"} 
+                    onValueChange={handleStateSelect}
+                  >
+                    <SelectTrigger id="state">
+                      <SelectValue placeholder="Select state" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All States</SelectItem>
+                      {states.map((state) => (
+                        <SelectItem key={state} value={state}>
+                          <div className="flex items-center">
+                            <MapPin className="mr-2 h-4 w-4" />
+                            {state}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+        
+        <Card className="border-slate-200 dark:border-greentrail-800">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">Length</CardTitle>
+            <CardDescription>Filter by trail length (miles)</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6 pt-2">
+              <Slider
+                defaultValue={[0, 10]}
+                value={lengthRange}
+                min={0}
+                max={20}
+                step={0.5}
+                minStepsBetweenThumbs={1}
+                onValueChange={(value) => setLengthRange([value[0], value[1]])}
+              />
+              <div className="flex justify-between text-sm text-greentrail-600 dark:text-greentrail-400">
+                <div>{lengthRange[0]} miles</div>
+                <div>{lengthRange[1] === 20 ? '20+ miles' : `${lengthRange[1]} miles`}</div>
+              </div>
             </div>
-            <Switch 
-              id="age-restricted" 
-              checked={showAgeRestricted}
-              onCheckedChange={handleAgeRestrictedToggle}
-              disabled={!user}
-            />
-          </div>
-          {!user && (
-            <p className="text-xs text-muted-foreground mt-1">
-              <Link to="/auth" className="text-greentrail-600 hover:underline">Sign in</Link> to view 21+ content
-            </p>
-          )}
-        </div>
-
-        <Accordion type="single" collapsible className="border-t border-greentrail-200 dark:border-greentrail-700 pt-2">
-          <AccordionItem value="features">
-            <AccordionTrigger className="text-greentrail-700 dark:text-greentrail-300">
-              Features
-            </AccordionTrigger>
-            <AccordionContent>
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2">
-                  <Checkbox id="feature-waterfall" />
-                  <label htmlFor="feature-waterfall" className="text-sm text-greentrail-700 dark:text-greentrail-300">
-                    Waterfall
-                  </label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox id="feature-viewpoint" />
-                  <label htmlFor="feature-viewpoint" className="text-sm text-greentrail-700 dark:text-greentrail-300">
-                    Scenic Viewpoint
-                  </label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox id="feature-forest" />
-                  <label htmlFor="feature-forest" className="text-sm text-greentrail-700 dark:text-greentrail-300">
-                    Forest
-                  </label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox id="feature-river" />
-                  <label htmlFor="feature-river" className="text-sm text-greentrail-700 dark:text-greentrail-300">
-                    River/Creek
-                  </label>
-                </div>
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-
-          <AccordionItem value="tags">
-            <AccordionTrigger className="text-greentrail-700 dark:text-greentrail-300">
-              Tags
-            </AccordionTrigger>
-            <AccordionContent>
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2">
-                  <Checkbox id="tag-dogfriendly" />
-                  <label htmlFor="tag-dogfriendly" className="text-sm text-greentrail-700 dark:text-greentrail-300">
-                    Dog-friendly
-                  </label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox id="tag-kid-friendly" />
-                  <label htmlFor="tag-kid-friendly" className="text-sm text-greentrail-700 dark:text-greentrail-300">
-                    Kid-friendly
-                  </label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox id="tag-accessible" />
-                  <label htmlFor="tag-accessible" className="text-sm text-greentrail-700 dark:text-greentrail-300">
-                    Accessible
-                  </label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox id="tag-camping" />
-                  <label htmlFor="tag-camping" className="text-sm text-greentrail-700 dark:text-greentrail-300">
-                    Camping
-                  </label>
-                </div>
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
+          </CardContent>
+        </Card>
+        
+        <Card className="border-slate-200 dark:border-greentrail-800">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">Options</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="age-restricted" className="text-base font-normal">
+                Show Age Restricted
+              </Label>
+              <Switch
+                id="age-restricted"
+                checked={showAgeRestricted}
+                onCheckedChange={setShowAgeRestricted}
+              />
+            </div>
+          </CardContent>
+          <CardFooter>
+            <Button 
+              variant="outline" 
+              onClick={onResetFilters} 
+              className="w-full"
+            >
+              Reset All Filters
+            </Button>
+          </CardFooter>
+        </Card>
       </div>
     </div>
   );

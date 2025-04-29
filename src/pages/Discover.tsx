@@ -18,6 +18,9 @@ const Discover = () => {
   const [lengthRange, setLengthRange] = useState<[number, number]>([0, 10]);
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
   const [showAgeRestricted, setShowAgeRestricted] = useState(false);
+  const [countryFilter, setCountryFilter] = useState<string | null>(null);
+  const [stateFilter, setStateFilter] = useState<string | null>(null);
+  const [showTrailPaths, setShowTrailPaths] = useState(true);
 
   const navigate = useNavigate();
 
@@ -25,13 +28,18 @@ const Discover = () => {
     searchQuery,
     difficulty: difficultyFilter,
     lengthRange,
-    showAgeRestricted
+    showAgeRestricted,
+    country: countryFilter,
+    stateProvince: stateFilter
   });
 
   const handleResetFilters = () => {
     setSearchQuery('');
     setDifficultyFilter(null);
     setLengthRange([0, 10]);
+    setCountryFilter(null);
+    setStateFilter(null);
+    setShowTrailPaths(true);
   };
 
   const handleTrailClick = (trailId: string) => {
@@ -62,6 +70,10 @@ const Discover = () => {
                 setLengthRange={setLengthRange}
                 showAgeRestricted={showAgeRestricted}
                 setShowAgeRestricted={setShowAgeRestricted}
+                countryFilter={countryFilter}
+                setCountryFilter={setCountryFilter}
+                stateFilter={stateFilter}
+                setStateFilter={setStateFilter}
                 onResetFilters={handleResetFilters}
               />
             </div>
@@ -74,6 +86,8 @@ const Discover = () => {
                 <DiscoverViewControls
                   viewMode={viewMode}
                   onViewModeChange={setViewMode}
+                  showTrailPaths={showTrailPaths}
+                  onToggleTrailPaths={() => setShowTrailPaths(!showTrailPaths)}
                 />
               </div>
               
@@ -91,6 +105,10 @@ const Discover = () => {
                       trails={trails} 
                       onTrailSelect={handleTrailClick}
                       className="h-[600px] w-full"
+                      showTrailPaths={showTrailPaths}
+                      country={countryFilter || undefined}
+                      stateProvince={stateFilter || undefined}
+                      difficulty={difficultyFilter || undefined}
                     />
                   </div>
                   

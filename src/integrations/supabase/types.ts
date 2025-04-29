@@ -247,6 +247,7 @@ export type Database = {
           is_age_verified: boolean | null
           updated_at: string | null
           username: string | null
+          website_url: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -257,6 +258,7 @@ export type Database = {
           is_age_verified?: boolean | null
           updated_at?: string | null
           username?: string | null
+          website_url?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -267,6 +269,7 @@ export type Database = {
           is_age_verified?: boolean | null
           updated_at?: string | null
           username?: string | null
+          website_url?: string | null
         }
         Relationships: []
       }

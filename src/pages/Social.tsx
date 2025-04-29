@@ -43,8 +43,8 @@ const Social = () => {
       album.title?.toLowerCase().includes(query) ||
       album.description?.toLowerCase().includes(query) ||
       album.location?.toLowerCase().includes(query) ||
-      album.profiles?.username?.toLowerCase().includes(query) ||
-      album.profiles?.full_name?.toLowerCase().includes(query)
+      album.user?.email?.toLowerCase().includes(query) ||
+      album.user?.username?.toLowerCase().includes(query)
     );
   });
   

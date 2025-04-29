@@ -21,7 +21,9 @@ const AgeVerificationForm: React.FC<AgeVerificationFormProps> = ({ onVerified, o
   const [error, setError] = useState<string>('');
   const [verifying, setVerifying] = useState(false);
   
+  // Generate data for select fields
   const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: 100 }, (_, i) => currentYear - i);
   const months = [
     "January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December"
@@ -36,7 +38,8 @@ const AgeVerificationForm: React.FC<AgeVerificationFormProps> = ({ onVerified, o
       return;
     }
     
-    const birthDate = new Date(parseInt(year), months.indexOf(month), parseInt(day));
+    const monthIndex = months.indexOf(month);
+    const birthDate = new Date(parseInt(year), monthIndex, parseInt(day));
     const today = new Date();
     
     // Calculate age
@@ -129,18 +132,16 @@ const AgeVerificationForm: React.FC<AgeVerificationFormProps> = ({ onVerified, o
             
             <div className="space-y-2">
               <Label htmlFor="year">Year</Label>
-              <Input 
-                id="year" 
-                placeholder="YYYY"
-                value={year}
-                onChange={(e) => {
-                  const value = e.target.value.replace(/\D/g, '');
-                  if (value === '' || (parseInt(value) >= 1900 && parseInt(value) <= currentYear)) {
-                    setYear(value);
-                  }
-                }}
-                maxLength={4}
-              />
+              <Select value={year} onValueChange={setYear}>
+                <SelectTrigger id="year">
+                  <SelectValue placeholder="Year" />
+                </SelectTrigger>
+                <SelectContent className="h-[200px]">
+                  {years.map((y) => (
+                    <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </div>

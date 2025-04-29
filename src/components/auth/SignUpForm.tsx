@@ -30,6 +30,10 @@ export const SignUpForm = ({ onSuccess }: { onSuccess: () => void }) => {
     "July", "August", "September", "October", "November", "December"
   ];
 
+  // Generate years for selection dropdown instead of free text input
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: 100 }, (_, i) => currentYear - i);
+
   const validateDateOfBirth = (): Date | null => {
     if (!day || !month || !year) {
       setError('Please complete all date fields');
@@ -205,18 +209,16 @@ export const SignUpForm = ({ onSuccess }: { onSuccess: () => void }) => {
             
             <div className="space-y-2">
               <Label htmlFor="year">Year</Label>
-              <Input 
-                id="year" 
-                placeholder="YYYY"
-                value={year}
-                onChange={(e) => {
-                  const value = e.target.value.replace(/\D/g, '');
-                  if (value === '' || (parseInt(value) >= 1900 && parseInt(value) <= new Date().getFullYear())) {
-                    setYear(value);
-                  }
-                }}
-                maxLength={4}
-              />
+              <Select value={year} onValueChange={setYear}>
+                <SelectTrigger id="year">
+                  <SelectValue placeholder="Year" />
+                </SelectTrigger>
+                <SelectContent className="h-[200px]">
+                  {years.map((y) => (
+                    <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </div>

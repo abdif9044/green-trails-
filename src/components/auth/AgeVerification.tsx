@@ -131,7 +131,7 @@ const AgeVerification: React.FC<AgeVerificationProps> = ({ onVerify, className }
                 <SelectTrigger>
                   <SelectValue placeholder="Year" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="h-[200px]">
                   {years.map(year => (
                     <SelectItem key={year.value} value={year.value}>{year.label}</SelectItem>
                   ))}

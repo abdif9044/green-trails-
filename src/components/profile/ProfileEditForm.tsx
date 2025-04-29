@@ -6,14 +6,16 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { AlertCircle, Loader2, Upload } from 'lucide-react';
-import { Profile, useUpdateProfile } from '@/hooks/use-profile';
+import { AlertCircle, Loader2, Upload, Link as LinkIcon } from 'lucide-react';
+import { useUpdateProfile } from '@/hooks/use-profile';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
+import { ProfileWithSocial } from '@/types/profiles';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface ProfileEditFormProps {
-  profile: Profile;
+  profile: ProfileWithSocial;
   onClose: () => void;
   open: boolean;
 }
@@ -22,10 +24,12 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({ profile, onClose, ope
   const [username, setUsername] = useState(profile.username || '');
   const [fullName, setFullName] = useState(profile.full_name || '');
   const [bio, setBio] = useState(profile.bio || '');
+  const [websiteUrl, setWebsiteUrl] = useState(profile.website_url || '');
   const [avatarUrl, setAvatarUrl] = useState(profile.avatar_url || '');
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState('basic');
   
   const updateProfileMutation = useUpdateProfile();
   
@@ -83,6 +87,19 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({ profile, onClose, ope
       setUploadingAvatar(false);
     }
   };
+
+  const validateUrl = (url: string): boolean => {
+    if (!url) return true; // Empty URLs are valid (not required)
+    
+    try {
+      // Check if it has a protocol, if not add https://
+      const urlWithProtocol = url.match(/^https?:\/\//) ? url : `https://${url}`;
+      new URL(urlWithProtocol);
+      return true;
+    } catch (err) {
+      return false;
+    }
+  };
   
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -94,6 +111,17 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({ profile, onClose, ope
         setError('Username can only contain letters, numbers, and underscores.');
         return;
       }
+
+      // Validate URLs
+      if (websiteUrl && !validateUrl(websiteUrl)) {
+        setError('Please enter a valid website URL.');
+        return;
+      }
+      
+      // Format URLs with protocol if needed
+      const formattedWebsiteUrl = websiteUrl ? 
+        (websiteUrl.match(/^https?:\/\//) ? websiteUrl : `https://${websiteUrl}`) : 
+        null;
       
       // Upload avatar if changed
       let newAvatarUrl = profile.avatar_url;
@@ -108,6 +136,7 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({ profile, onClose, ope
         full_name: fullName,
         bio,
         avatar_url: newAvatarUrl,
+        website_url: formattedWebsiteUrl
       });
       
       onClose();
@@ -124,7 +153,7 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({ profile, onClose, ope
           <DialogTitle>Edit Profile</DialogTitle>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-6 py-4">
+        <form onSubmit={handleSubmit} className="space-y-4 py-2">
           {error && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
@@ -132,74 +161,102 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({ profile, onClose, ope
             </Alert>
           )}
           
-          <div className="space-y-4">
-            <div className="flex flex-col items-center gap-4">
-              <Avatar className="h-24 w-24">
-                <AvatarImage src={avatarUrl} alt={username} />
-                <AvatarFallback>
-                  {username?.substring(0, 2).toUpperCase() || 'GT'}
-                </AvatarFallback>
-              </Avatar>
+          <Tabs defaultValue={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="basic">Basic Info</TabsTrigger>
+              <TabsTrigger value="social">Social Links</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="basic" className="space-y-4 pt-4">
+              <div className="flex flex-col items-center gap-4">
+                <Avatar className="h-24 w-24">
+                  <AvatarImage src={avatarUrl} alt={username} />
+                  <AvatarFallback className="bg-greentrail-600 text-white">
+                    {username?.substring(0, 2).toUpperCase() || 'GT'}
+                  </AvatarFallback>
+                </Avatar>
+                
+                <div className="flex items-center gap-2">
+                  <Label 
+                    htmlFor="avatar-upload" 
+                    className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                  >
+                    <Upload className="h-4 w-4" />
+                    Change Avatar
+                  </Label>
+                  <Input 
+                    id="avatar-upload" 
+                    type="file" 
+                    accept="image/*"
+                    onChange={handleAvatarChange}
+                    className="hidden"
+                  />
+                </div>
+              </div>
               
-              <div className="flex items-center gap-2">
-                <Label 
-                  htmlFor="avatar-upload" 
-                  className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium bg-secondary text-secondary-foreground hover:bg-secondary/80"
-                >
-                  <Upload className="h-4 w-4" />
-                  Change Avatar
-                </Label>
-                <Input 
-                  id="avatar-upload" 
-                  type="file" 
-                  accept="image/*"
-                  onChange={handleAvatarChange}
-                  className="hidden"
+              <div className="space-y-2">
+                <Label htmlFor="username">Username</Label>
+                <Input
+                  id="username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  required
+                  minLength={3}
+                  maxLength={30}
+                  placeholder="Your unique username"
                 />
               </div>
-            </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="full-name">Full Name</Label>
+                <Input
+                  id="full-name"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  maxLength={100}
+                  placeholder="Your display name"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="bio">Bio</Label>
+                <Textarea
+                  id="bio"
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                  className="min-h-[100px] resize-y"
+                  maxLength={500}
+                  placeholder="Tell others about yourself"
+                />
+              </div>
+            </TabsContent>
             
-            <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
-              <Input
-                id="username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-                minLength={3}
-                maxLength={30}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="full-name">Full Name</Label>
-              <Input
-                id="full-name"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                maxLength={100}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="bio">Bio</Label>
-              <Textarea
-                id="bio"
-                value={bio}
-                onChange={(e) => setBio(e.target.value)}
-                className="min-h-[100px] resize-y"
-                maxLength={500}
-              />
-            </div>
-          </div>
+            <TabsContent value="social" className="space-y-4 pt-4">
+              <div className="space-y-2">
+                <Label htmlFor="website" className="flex items-center gap-2">
+                  <LinkIcon className="h-4 w-4" /> Website
+                </Label>
+                <Input
+                  id="website"
+                  value={websiteUrl}
+                  onChange={(e) => setWebsiteUrl(e.target.value)}
+                  placeholder="https://yourwebsite.com"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Share your personal website or blog
+                </p>
+              </div>
+            </TabsContent>
+          </Tabs>
           
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-end gap-2 pt-2">
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
             <Button 
               type="submit" 
               disabled={updateProfileMutation.isPending || uploadingAvatar}
+              className="bg-greentrail-600 hover:bg-greentrail-700"
             >
               {(updateProfileMutation.isPending || uploadingAvatar) && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

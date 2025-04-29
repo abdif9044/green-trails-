@@ -23,7 +23,8 @@ export const useTrailImages = (trailId: string) => {
         .from('trail_images')
         .select('*')
         .eq('trail_id', trailId)
-        .order('is_primary', { ascending: false });
+        .order('is_primary', { ascending: false })
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
       return data as TrailImage[];
@@ -55,7 +56,11 @@ export const useUploadTrailImage = (trailId: string) => {
       // Upload file to storage
       const { error: uploadError } = await supabase.storage
         .from('trail_images')
-        .upload(filePath, file);
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false,
+          contentType: file.type
+        });
 
       if (uploadError) throw uploadError;
 
@@ -63,6 +68,17 @@ export const useUploadTrailImage = (trailId: string) => {
       const { data: { publicUrl } } = supabase.storage
         .from('trail_images')
         .getPublicUrl(filePath);
+
+      // If this is set as primary, remove primary status from other images first
+      if (isPrimary) {
+        const { error: updateError } = await supabase
+          .from('trail_images')
+          .update({ is_primary: false })
+          .eq('trail_id', trailId)
+          .eq('is_primary', true);
+        
+        if (updateError) throw updateError;
+      }
 
       // Save image metadata to database
       const { error: dbError } = await supabase
@@ -96,16 +112,55 @@ export const useUploadTrailImage = (trailId: string) => {
   });
 };
 
+export const useSetPrimaryImage = (trailId: string) => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (imageId: string) => {
+      // First, set all images to not primary
+      const { error: updateError } = await supabase
+        .from('trail_images')
+        .update({ is_primary: false })
+        .eq('trail_id', trailId);
+      
+      if (updateError) throw updateError;
+      
+      // Then, set the selected image as primary
+      const { error: setPrimaryError } = await supabase
+        .from('trail_images')
+        .update({ is_primary: true })
+        .eq('id', imageId);
+        
+      if (setPrimaryError) throw setPrimaryError;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['trail-images', trailId] });
+      toast({
+        title: "Success",
+        description: "Primary image updated successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+};
+
 export const useDeleteTrailImage = (trailId: string) => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
   return useMutation({
     mutationFn: async (imageId: string) => {
-      // Get image path first
+      // Get image path and check if it's primary
       const { data: imageData } = await supabase
         .from('trail_images')
-        .select('image_path')
+        .select('image_path, is_primary')
         .eq('id', imageId)
         .single();
 
@@ -125,6 +180,23 @@ export const useDeleteTrailImage = (trailId: string) => {
         .eq('id', imageId);
 
       if (dbError) throw dbError;
+      
+      // If this was primary, try to set another image as primary
+      if (imageData?.is_primary) {
+        const { data: otherImages, error: fetchError } = await supabase
+          .from('trail_images')
+          .select('id')
+          .eq('trail_id', trailId)
+          .neq('id', imageId)
+          .limit(1);
+          
+        if (!fetchError && otherImages && otherImages.length > 0) {
+          await supabase
+            .from('trail_images')
+            .update({ is_primary: true })
+            .eq('id', otherImages[0].id);
+        }
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['trail-images', trailId] });

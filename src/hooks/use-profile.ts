@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './use-auth';
 import { useToast } from './use-toast';
+import { ProfileWithSocial } from '@/types/profiles';
 
 export type Profile = {
   id: string;
@@ -11,6 +12,7 @@ export type Profile = {
   bio: string | null;
   avatar_url: string | null;
   is_age_verified: boolean;
+  website_url?: string | null;
 };
 
 export const useProfile = (userId?: string) => {
@@ -29,7 +31,7 @@ export const useProfile = (userId?: string) => {
         .single();
 
       if (error) throw error;
-      return data as Profile;
+      return data as ProfileWithSocial;
     },
     enabled: !!id,
   });
@@ -41,7 +43,7 @@ export const useUpdateProfile = () => {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async (profile: Partial<Profile>) => {
+    mutationFn: async (profile: Partial<ProfileWithSocial>) => {
       if (!user) throw new Error('Must be logged in to update profile');
 
       const { error } = await supabase

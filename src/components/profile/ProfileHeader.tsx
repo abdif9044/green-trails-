@@ -4,10 +4,11 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { UserRoundCheck } from 'lucide-react';
+import { UserRoundCheck, Link as LinkIcon } from 'lucide-react';
 import { useIsFollowing, useToggleFollow, useFollowCounts } from '@/hooks/use-social-follows';
 import { Profile } from '@/hooks/use-profile';
 import { useAuth } from '@/hooks/use-auth';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface ProfileHeaderProps {
   profile: Profile | null;
@@ -26,6 +27,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   const { mutate: toggleFollow, isPending: isFollowActionPending } = useToggleFollow();
   const { data: isFollowing, isLoading: isFollowCheckLoading } = useIsFollowing(profile?.id || '');
   const { followersCount, followingCount, isLoading: isCountLoading } = useFollowCounts(profile?.id || '');
+  const isMobile = useIsMobile();
   
   if (isLoading) {
     return (
@@ -61,7 +63,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
     <div className="flex flex-col md:flex-row gap-6 items-center md:items-start">
       <Avatar className="h-24 w-24 border-2 border-greentrail-100 shadow-md">
         <AvatarImage src={profile.avatar_url || undefined} alt={profile.username} />
-        <AvatarFallback>
+        <AvatarFallback className="bg-greentrail-600 text-white">
           {profile.username?.substring(0, 2).toUpperCase() || 'GT'}
         </AvatarFallback>
       </Avatar>
@@ -83,7 +85,22 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
         </div>
         
         {profile.bio && (
-          <p className="text-sm">{profile.bio}</p>
+          <p className="text-sm max-w-prose">{profile.bio}</p>
+        )}
+        
+        {/* Social links */}
+        {profile.website_url && (
+          <div className="flex justify-center md:justify-start items-center gap-2 text-sm">
+            <LinkIcon className="h-3.5 w-3.5 text-muted-foreground" />
+            <a 
+              href={profile.website_url} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-greentrail-600 hover:text-greentrail-800 dark:text-greentrail-400 dark:hover:text-greentrail-300 hover:underline"
+            >
+              {profile.website_url.replace(/(^\w+:|^)\/\//, '').replace(/\/$/, '')}
+            </a>
+          </div>
         )}
         
         <div className="flex flex-wrap justify-center md:justify-start gap-6 text-sm">
@@ -101,7 +118,11 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
         
         <div className="pt-2">
           {isCurrentUser ? (
-            <Button onClick={onEditProfile} variant="outline">
+            <Button 
+              onClick={onEditProfile} 
+              variant="outline"
+              className="w-full sm:w-auto"
+            >
               Edit Profile
             </Button>
           ) : user && (
@@ -109,6 +130,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
               onClick={() => toggleFollow(profile.id)}
               disabled={isFollowActionPending || isFollowCheckLoading}
               variant={isFollowing ? "outline" : "default"}
+              className={`w-full sm:w-auto ${!isFollowing ? 'bg-greentrail-600 hover:bg-greentrail-700' : ''}`}
             >
               {isFollowActionPending ? 'Processing...' : isFollowing ? 'Unfollow' : 'Follow'}
             </Button>

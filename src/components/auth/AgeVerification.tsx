@@ -6,6 +6,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface AgeVerificationProps {
   onVerify: (isVerified: boolean) => void;
@@ -47,7 +49,7 @@ const AgeVerification: React.FC<AgeVerificationProps> = ({ onVerify, className }
     label: String(currentYear - i) 
   }));
   
-  const verifyAge = () => {
+  const verifyAge = async () => {
     setError(null);
     
     if (!month || !day || !year) {
@@ -76,10 +78,40 @@ const AgeVerification: React.FC<AgeVerificationProps> = ({ onVerify, className }
       
       // Check if 21 or older
       if (age >= 21) {
+        // Update user metadata with verified status
+        const user = supabase.auth.getUser();
+        if ((await user).data.user) {
+          const { error: updateError } = await supabase.auth.updateUser({
+            data: {
+              date_of_birth: birthDate.toISOString().split('T')[0],
+              age_verified: true
+            }
+          });
+          
+          if (updateError) {
+            console.error('Failed to update user metadata:', updateError);
+            toast({
+              title: "Verification Status Update Failed",
+              description: "Your age was verified, but we couldn't update your profile. Some features may be limited.",
+              variant: "destructive",
+            });
+          } else {
+            toast({
+              title: "Age Verified Successfully",
+              description: "You now have access to all features of GreenTrails.",
+            });
+          }
+        }
+        
         onVerify(true);
       } else {
         setError('You must be 21 or older to use GreenTrails');
         onVerify(false);
+        toast({
+          title: "Age Verification Failed",
+          description: "You must be 21 or older to use GreenTrails.",
+          variant: "destructive",
+        });
       }
     } catch (err) {
       setError('Invalid date. Please check your birth date.');

@@ -12,6 +12,7 @@ interface AuthContextType {
   signUp: (email: string, password: string, dateOfBirth?: Date) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   loading: boolean;
+  updateUserMetadata: (metadata: Record<string, any>) => Promise<{ error: Error | null }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -60,6 +61,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         password,
       });
       
+      if (!error) {
+        // Check if user's session exists after signing in
+        const { data } = await supabase.auth.getSession();
+        if (data.session) {
+          console.log("User signed in successfully with session:", data.session);
+        }
+      }
+      
       return { error };
     } catch (err) {
       console.error('Sign in error:', err);
@@ -73,9 +82,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       if (dateOfBirth) {
         // If date of birth is provided, add it to user metadata
+        const isOver21 = isUserOver21(dateOfBirth);
+        
         userMetadata = {
           date_of_birth: dateOfBirth.toISOString().split('T')[0],
-          age_verified: true
+          age_verified: isOver21
         };
       }
 
@@ -87,6 +98,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           emailRedirectTo: window.location.origin + '/auth'
         }
       });
+      
+      if (!error) {
+        toast({
+          title: "Account created",
+          description: "Your account has been created successfully.",
+        });
+      }
       
       return { error };
     } catch (err) {
@@ -107,9 +125,43 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       });
     }
   };
+  
+  const updateUserMetadata = async (metadata: Record<string, any>) => {
+    try {
+      const { error } = await supabase.auth.updateUser({
+        data: metadata
+      });
+      
+      return { error };
+    } catch (err) {
+      console.error('Update user metadata error:', err);
+      return { error: err as Error };
+    }
+  };
+  
+  // Helper function to check if user is over 21
+  const isUserOver21 = (birthDate: Date): boolean => {
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    
+    return age >= 21;
+  };
 
   return (
-    <AuthContext.Provider value={{ session, user, signIn, signUp, signOut, loading }}>
+    <AuthContext.Provider value={{ 
+      session, 
+      user, 
+      signIn, 
+      signUp, 
+      signOut, 
+      loading,
+      updateUserMetadata 
+    }}>
       {children}
     </AuthContext.Provider>
   );

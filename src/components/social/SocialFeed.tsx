@@ -36,8 +36,8 @@ const SocialFeed = () => {
       album.title?.toLowerCase().includes(query) ||
       album.description?.toLowerCase().includes(query) ||
       album.location?.toLowerCase().includes(query) ||
-      album.user?.email?.toLowerCase().includes(query) ||
-      album.user?.full_name?.toLowerCase().includes(query)
+      album.user?.email?.toLowerCase().includes(query)
+      // Don't filter by full_name since it's not in the user type in the Album interface
     );
   });
   

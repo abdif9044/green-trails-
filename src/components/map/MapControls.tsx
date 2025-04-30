@@ -7,7 +7,7 @@ import {
   RefreshCw,
   ParkingMeter,
   Map as MapPin,
-  SquarePin
+  MapPinned
 } from 'lucide-react';
 import {
   Popover,
@@ -119,7 +119,7 @@ const MapControls: React.FC<MapControlsProps> = ({
           onPressedChange={onTrailPathsToggle}
           className="bg-white dark:bg-greentrail-800 shadow-md hover:bg-slate-100 dark:hover:bg-greentrail-700 data-[state=on]:bg-greentrail-100 dark:data-[state=on]:bg-greentrail-600"
         >
-          <SquarePin className="h-4 w-4" />
+          <MapPinned className="h-4 w-4" />
         </Toggle>
       )}
     </div>

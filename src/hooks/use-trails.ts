@@ -56,8 +56,8 @@ export const useTrails = (filters?: TrailFilters) => {
             .filter(tag => tag.is_strain_tag)
             .map(tag => tag.tag);
             
-          // Use trail image if available, otherwise use fallback
-          let imageUrl = trail.imageUrl || 'https://images.unsplash.com/photo-1501854140801-50d01698950b?q=80&w=1000&auto=format&fit=crop';
+          // Use default image url since imageUrl field doesn't exist in the database
+          const imageUrl = 'https://images.unsplash.com/photo-1501854140801-50d01698950b?q=80&w=1000&auto=format&fit=crop';
           
           // Format GeoJSON if available
           let geoJson = null;
@@ -144,8 +144,8 @@ export const useTrail = (trailId: string | undefined) => {
           .filter(tag => tag.is_strain_tag)
           .map(tag => tag.tag);
           
-        // Use trail image if available, otherwise use fallback
-        let imageUrl = data.imageUrl || 'https://images.unsplash.com/photo-1501854140801-50d01698950b?q=80&w=1000&auto=format&fit=crop';
+        // Use default image url since imageUrl field doesn't exist in the database
+        const imageUrl = 'https://images.unsplash.com/photo-1501854140801-50d01698950b?q=80&w=1000&auto=format&fit=crop';
         
         // Format GeoJSON if available
         let geoJson = null;

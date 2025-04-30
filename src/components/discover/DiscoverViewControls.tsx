@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Compass, Map, SquarePin } from "lucide-react";
+import { Compass, Map, MapPin } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -49,7 +49,7 @@ const DiscoverViewControls: React.FC<DiscoverViewControlsProps> = ({
           onPressedChange={onToggleTrailPaths}
           className="bg-white dark:bg-greentrail-800 border border-input hover:bg-slate-100 dark:hover:bg-greentrail-700 data-[state=on]:bg-greentrail-100 data-[state=on]:text-greentrail-900 dark:data-[state=on]:bg-greentrail-600 dark:data-[state=on]:text-greentrail-100 h-9 px-3"
         >
-          <SquarePin className="h-4 w-4 mr-1" />
+          <MapPin className="h-4 w-4 mr-1" />
           <span className="text-xs">Show Paths</span>
         </Toggle>
       )}

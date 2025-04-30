@@ -2,14 +2,14 @@
 import React, { useState } from 'react';
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import TrailMap from "@/components/map/TrailMap";
 import { useNavigate } from 'react-router-dom';
 import { useTrails } from '@/hooks/use-trails';
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import DiscoverFilters from '@/components/discover/DiscoverFilters';
 import DiscoverHeader from '@/components/discover/DiscoverHeader';
-import DiscoverTrailsList from '@/components/discover/DiscoverTrailsList';
-import DiscoverViewControls from '@/components/discover/DiscoverViewControls';
+import DiscoverTrailsList from '@/features/discover/components/DiscoverTrailsList';
+import DiscoverViewControls from '@/features/discover/components/DiscoverViewControls';
+import TrailMap from '@/features/map/TrailMap';
 import SEOProvider from "@/components/SEOProvider";
 
 const Discover = () => {
@@ -21,6 +21,7 @@ const Discover = () => {
   const [countryFilter, setCountryFilter] = useState<string | null>(null);
   const [stateFilter, setStateFilter] = useState<string | null>(null);
   const [showTrailPaths, setShowTrailPaths] = useState(true);
+  const [sortBy, setSortBy] = useState('popular');
 
   const navigate = useNavigate();
 
@@ -40,6 +41,7 @@ const Discover = () => {
     setCountryFilter(null);
     setStateFilter(null);
     setShowTrailPaths(true);
+    setSortBy('popular');
   };
 
   const handleTrailClick = (trailId: string) => {
@@ -88,6 +90,8 @@ const Discover = () => {
                   onViewModeChange={setViewMode}
                   showTrailPaths={showTrailPaths}
                   onToggleTrailPaths={() => setShowTrailPaths(!showTrailPaths)}
+                  sortBy={sortBy}
+                  onSortChange={setSortBy}
                 />
               </div>
               
@@ -120,7 +124,12 @@ const Discover = () => {
                       <p className="text-greentrail-600 dark:text-greentrail-400 max-w-md mx-auto mb-4">
                         Try adjusting your search criteria or filters to find trails that match your preferences.
                       </p>
-                      <button onClick={handleResetFilters}>Reset Filters</button>
+                      <button 
+                        onClick={handleResetFilters}
+                        className="px-4 py-2 bg-greentrail-600 hover:bg-greentrail-700 text-white font-medium rounded-md"
+                      >
+                        Reset Filters
+                      </button>
                     </div>
                   )}
                 </TabsContent>

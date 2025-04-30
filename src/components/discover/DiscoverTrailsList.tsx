@@ -2,10 +2,9 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Compass } from "lucide-react";
-import TrailCard from "@/components/TrailCard";
+import TrailCard from "@/features/trails/components/TrailCard";
 import { Trail } from '@/types/trails';
 import { Link } from 'react-router-dom';
-import { supabase } from "@/integrations/supabase/client";
 
 interface DiscoverTrailsListProps {
   trails: Trail[];

@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useNavigate } from 'react-router-dom';
-import { useTrails } from '@/hooks/use-trails';
+import { useTrails } from '@/features/trails/hooks/use-trails';
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import DiscoverFilters from '@/components/discover/DiscoverFilters';
 import DiscoverHeader from '@/components/discover/DiscoverHeader';

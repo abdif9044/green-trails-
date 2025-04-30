@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Compass } from "lucide-react";
 import { Link } from "react-router-dom";
-import TrailCardPrefetch from "@/components/TrailCardPrefetch";
+import TrailCardPrefetch from "@/features/trails/components/TrailCardPrefetch";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { TrailDifficulty } from "@/types/trails";

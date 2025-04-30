@@ -4,10 +4,10 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
 import { StrainTag, TrailDifficulty } from '@/types/trails';
-import { TrailDifficultyBadge } from './trails/TrailDifficultyBadge';
-import { TrailCardStats } from './trails/TrailCardStats';
-import { TrailTagsList } from './trails/TrailTagsList';
-import { LazyImage } from './LazyImage';
+import { TrailDifficultyBadge } from './TrailDifficultyBadge';
+import { TrailCardStats } from './TrailCardStats';
+import { TrailTagsList } from './TrailTagsList';
+import { LazyImage } from '@/components/LazyImage';
 
 export interface TrailCardProps {
   id: string;

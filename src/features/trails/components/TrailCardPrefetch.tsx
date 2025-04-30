@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Heart, Mountain, MapPin } from "lucide-react";
 import { usePrefetch } from '@/hooks/use-prefetch';
 import { StrainTag, Trail, TrailDifficulty } from '@/types/trails';
-import { TrailTagsList } from './trails/TrailTagsList';
+import { TrailTagsList } from './TrailTagsList';
 
 type TrailCardPrefetchProps = {
   id: string;

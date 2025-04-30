@@ -35,6 +35,12 @@ export const formatTrailData = (trail: any) => {
     console.error('Error parsing GeoJSON:', e);
   }
 
+  // Ensure coordinates are properly formatted as [number, number] tuple
+  const coordinates: [number, number] | undefined = 
+    trail.longitude !== null && trail.latitude !== null 
+      ? [Number(trail.longitude), Number(trail.latitude)] 
+      : undefined;
+
   return {
     id: trail.id,
     name: trail.name,
@@ -45,7 +51,7 @@ export const formatTrailData = (trail: any) => {
     elevation: trail.elevation,
     tags: tags,
     likes: 0, // We'll implement this later with proper count
-    coordinates: trail.longitude && trail.latitude ? [trail.longitude, trail.latitude] : undefined,
+    coordinates: coordinates,
     strainTags: strainTags,
     isAgeRestricted: trail.is_age_restricted || false,
     description: trail.description,

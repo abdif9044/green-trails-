@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from '@/hooks/use-auth';
 import { useToggleLike, useTrailLikes } from "@/hooks/use-trail-interactions";
 import { getTrailWeather } from "@/services/weather-service";
-import { useTrail } from "@/hooks/use-trails";
+import { useTrail } from "@/features/trails/hooks/use-trail";
 import TrailHeader from "@/components/trails/TrailHeader";
 import TrailContent from "@/components/trails/TrailContent";
 import TrailSidebar from "@/components/trails/TrailSidebar";

@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Compass } from "lucide-react";
-import TrailCard from "@/features/trails/components/TrailCard";
+import { TrailCard } from "@/features/trails";
 import { Trail } from '@/types/trails';
 import { Link } from 'react-router-dom';
 

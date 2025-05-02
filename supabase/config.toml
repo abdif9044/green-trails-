@@ -1,34 +1,41 @@
 
-project_id = "qzcplkyinvndvhnevsbt"
+project_id = "gtroamie"
 
 [api]
-# Disables schema caching, good for development but not for production
-enabled_schemas = ["public", "storage", "graphql_public"]
+enabled = true
 port = 54321
+schemas = ["public", "storage", "graphql_public"]
 
 [db]
 port = 54322
+shadow_port = 54320
+major_version = 15
 
 [studio]
+enabled = true
 port = 54323
+api_url = "http://localhost"
 
 [inbucket]
+enabled = true
 port = 54324
 
-[auth]
-site_url = "http://localhost:5173"
-additional_redirect_urls = ["https://localhost:5173"]
-auto_confirm_new_users = true
+[storage]
+enabled = true
 
-[functions]
-[functions.get-mapbox-token]
-verify_jwt = true
-[functions.get-weather-key]
-verify_jwt = true
-[functions.get-weather]
-verify_jwt = true
+[auth]
+enabled = true
+site_url = "http://localhost:5173"
+
+[auth.email]
+enabled = true
+
 [functions.import-trails]
 verify_jwt = true
+# Increase timeout for large imports
+timeout_seconds = 60
 
-[[transformers]]
-extensions = ["supabase_realtime"]
+[functions.bulk-import-trails]
+verify_jwt = true
+# Longer timeout for bulk operations
+timeout_seconds = 120

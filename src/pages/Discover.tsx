@@ -1,143 +1,106 @@
 
 import React, { useState } from 'react';
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import { useNavigate } from 'react-router-dom';
-import { useTrails } from '@/features/trails/hooks/use-trails';
-import { Tabs, TabsContent } from "@/components/ui/tabs";
-import DiscoverFilters from '@/components/discover/DiscoverFilters';
+import { useSearchParams } from 'react-router-dom';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
 import DiscoverHeader from '@/components/discover/DiscoverHeader';
-import DiscoverTrailsList from '@/features/discover/components/DiscoverTrailsList';
-import DiscoverViewControls from '@/features/discover/components/DiscoverViewControls';
-import TrailMap from '@/features/map/TrailMap';
+import DiscoverFilters from '@/components/discover/DiscoverFilters';
+import DiscoverTrailsList from '@/components/discover/DiscoverTrailsList';
+import DiscoverViewControls from '@/components/discover/DiscoverViewControls';
+import { TrailStatsOverview } from '@/components/discover/TrailStatsOverview';
+import { TrailFilters } from '@/types/trails';
 import SEOProvider from "@/components/SEOProvider";
 
 const Discover = () => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [difficultyFilter, setDifficultyFilter] = useState<string | null>(null);
-  const [lengthRange, setLengthRange] = useState<[number, number]>([0, 10]);
-  const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
-  const [showAgeRestricted, setShowAgeRestricted] = useState(false);
-  const [countryFilter, setCountryFilter] = useState<string | null>(null);
-  const [stateFilter, setStateFilter] = useState<string | null>(null);
-  const [showTrailPaths, setShowTrailPaths] = useState(true);
-  const [sortBy, setSortBy] = useState('popular');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [viewType, setViewType] = useState<'grid' | 'map'>(
+    searchParams.get('view') === 'map' ? 'map' : 'grid'
+  );
 
-  const navigate = useNavigate();
-
-  const { data: trails = [], isLoading } = useTrails({
-    searchQuery,
-    difficulty: difficultyFilter,
-    lengthRange,
-    showAgeRestricted,
-    country: countryFilter,
-    stateProvince: stateFilter
-  });
-
-  const handleResetFilters = () => {
-    setSearchQuery('');
-    setDifficultyFilter(null);
-    setLengthRange([0, 10]);
-    setCountryFilter(null);
-    setStateFilter(null);
-    setShowTrailPaths(true);
-    setSortBy('popular');
+  // Handle filters from URL params or set defaults
+  const initialFilters: TrailFilters = {
+    searchQuery: searchParams.get('q') || undefined,
+    difficulty: searchParams.get('difficulty') || undefined,
+    lengthRange: searchParams.get('length') 
+      ? searchParams.get('length')!.split('-').map(Number) as [number, number]
+      : undefined,
+    tags: searchParams.get('tags')
+      ? searchParams.get('tags')!.split(',')
+      : undefined,
+    country: searchParams.get('country') || undefined,
+    stateProvince: searchParams.get('state') || undefined,
+    showAgeRestricted: searchParams.get('age_restricted') === 'true'
   };
 
-  const handleTrailClick = (trailId: string) => {
-    navigate(`/trail/${trailId}`);
+  const [filters, setFilters] = useState<TrailFilters>(initialFilters);
+
+  const handleFilterChange = (newFilters: TrailFilters) => {
+    setFilters(newFilters);
+    
+    // Update URL params
+    const params = new URLSearchParams();
+    if (newFilters.searchQuery) params.set('q', newFilters.searchQuery);
+    if (newFilters.difficulty) params.set('difficulty', newFilters.difficulty);
+    if (newFilters.lengthRange) params.set('length', newFilters.lengthRange.join('-'));
+    if (newFilters.tags && newFilters.tags.length > 0) params.set('tags', newFilters.tags.join(','));
+    if (newFilters.country) params.set('country', newFilters.country);
+    if (newFilters.stateProvince) params.set('state', newFilters.stateProvince);
+    if (newFilters.showAgeRestricted) params.set('age_restricted', 'true');
+    if (viewType === 'map') params.set('view', 'map');
+    
+    setSearchParams(params);
+  };
+
+  const handleViewChange = (view: 'grid' | 'map') => {
+    setViewType(view);
+    
+    const params = new URLSearchParams(searchParams);
+    if (view === 'map') {
+      params.set('view', 'map');
+    } else {
+      params.delete('view');
+    }
+    
+    setSearchParams(params);
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <SEOProvider
+    <div className="flex flex-col min-h-screen">
+      <SEOProvider 
         title="Discover Trails - GreenTrails"
-        description="Find and explore the best hiking trails for cannabis-friendly adventures. Filter by difficulty, length, and more."
+        description="Explore and discover trails for hiking, biking, and outdoor adventures"
       />
       
       <Navbar />
       
-      <DiscoverHeader trailCount={trails.length} />
-      
-      <div className="flex-grow bg-white dark:bg-greentrail-950 py-8">
-        <div className="container mx-auto px-4">
+      <main className="flex-grow bg-slate-50 dark:bg-greentrail-950">
+        <div className="container mx-auto px-4 py-8">
+          <DiscoverHeader />
+          
+          <TrailStatsOverview />
+          
           <div className="flex flex-col lg:flex-row gap-6">
-            <div className="lg:w-1/4">
-              <DiscoverFilters
-                searchQuery={searchQuery}
-                setSearchQuery={setSearchQuery}
-                difficultyFilter={difficultyFilter}
-                setDifficultyFilter={setDifficultyFilter}
-                lengthRange={lengthRange}
-                setLengthRange={setLengthRange}
-                showAgeRestricted={showAgeRestricted}
-                setShowAgeRestricted={setShowAgeRestricted}
-                countryFilter={countryFilter}
-                setCountryFilter={setCountryFilter}
-                stateFilter={stateFilter}
-                setStateFilter={setStateFilter}
-                onResetFilters={handleResetFilters}
+            <div className="w-full lg:w-64 shrink-0">
+              <DiscoverFilters 
+                filters={filters} 
+                onFilterChange={handleFilterChange} 
               />
             </div>
             
-            <div className="lg:w-3/4">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-semibold text-greentrail-800 dark:text-greentrail-200">
-                  Trails
-                </h2>
-                <DiscoverViewControls
-                  viewMode={viewMode}
-                  onViewModeChange={setViewMode}
-                  showTrailPaths={showTrailPaths}
-                  onToggleTrailPaths={() => setShowTrailPaths(!showTrailPaths)}
-                  sortBy={sortBy}
-                  onSortChange={setSortBy}
-                />
-              </div>
+            <div className="flex-grow">
+              <DiscoverViewControls 
+                viewType={viewType} 
+                onViewChange={handleViewChange}
+              />
               
-              <Tabs value={viewMode} className="mt-6">
-                <TabsContent value="list" className="mt-0">
-                  <DiscoverTrailsList
-                    trails={trails}
-                    onResetFilters={handleResetFilters}
-                  />
-                </TabsContent>
-                
-                <TabsContent value="map" className="mt-0">
-                  <div className="bg-white dark:bg-greentrail-900 rounded-xl shadow-sm overflow-hidden">
-                    <TrailMap 
-                      trails={trails} 
-                      onTrailSelect={handleTrailClick}
-                      className="h-[600px] w-full"
-                      showTrailPaths={showTrailPaths}
-                      country={countryFilter || undefined}
-                      stateProvince={stateFilter || undefined}
-                      difficulty={difficultyFilter || undefined}
-                    />
-                  </div>
-                  
-                  {trails.length === 0 && (
-                    <div className="py-6 text-center mt-4">
-                      <h3 className="text-xl font-semibold text-greentrail-800 dark:text-greentrail-200 mb-2">
-                        No trails found
-                      </h3>
-                      <p className="text-greentrail-600 dark:text-greentrail-400 max-w-md mx-auto mb-4">
-                        Try adjusting your search criteria or filters to find trails that match your preferences.
-                      </p>
-                      <button 
-                        onClick={handleResetFilters}
-                        className="px-4 py-2 bg-greentrail-600 hover:bg-greentrail-700 text-white font-medium rounded-md"
-                      >
-                        Reset Filters
-                      </button>
-                    </div>
-                  )}
-                </TabsContent>
-              </Tabs>
+              <DiscoverTrailsList 
+                filters={filters} 
+                viewType={viewType} 
+              />
             </div>
           </div>
         </div>
-      </div>
+      </main>
       
       <Footer />
     </div>

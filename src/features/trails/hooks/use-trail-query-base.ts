@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { TrailDifficulty } from '@/types/trails';
+import { TrailDifficulty, TrailFilters } from '@/types/trails';
 
 // Helper function to ensure difficulty is a valid TrailDifficulty
 export const validateDifficulty = (difficulty: string): TrailDifficulty => {
@@ -13,17 +13,38 @@ export const validateDifficulty = (difficulty: string): TrailDifficulty => {
 // Create base trail object from Supabase data
 export const formatTrailData = (trail: any) => {
   // Extract regular tags and strain tags
-  const allTags = trail.trail_tags || [];
-  const tags = allTags
-    .filter((tag: any) => !tag.is_strain_tag)
-    .map((tag: any) => tag.tag);
+  const tags = [];
+  const strainTags = [];
   
-  const strainTags = allTags
-    .filter((tag: any) => tag.is_strain_tag)
-    .map((tag: any) => tag.tag);
-    
-  // Use default image url since imageUrl field doesn't exist in the database
-  const imageUrl = 'https://images.unsplash.com/photo-1501854140801-50d01698950b?q=80&w=1000&auto=format&fit=crop';
+  // Handle trail_tags relationship if available
+  if (trail.trail_tags) {
+    for (const tagData of trail.trail_tags) {
+      if (tagData.tag && tagData.tag.name) {
+        if (tagData.is_strain_tag) {
+          strainTags.push({
+            name: tagData.tag.name,
+            type: tagData.tag.details?.type || 'hybrid',
+            effects: tagData.tag.details?.effects || [],
+            description: tagData.tag.details?.description
+          });
+        } else {
+          tags.push(tagData.tag.name);
+        }
+      }
+    }
+  }
+  
+  // Default image selection based on difficulty and type
+  let imageUrl = 'https://images.unsplash.com/photo-1501854140801-50d01698950b?q=80&w=1000&auto=format&fit=crop';
+  
+  // Vary images based on trail characteristics for more variety
+  if (trail.difficulty === 'easy') {
+    imageUrl = 'https://images.unsplash.com/photo-1533240332313-0db49b459ad6?q=80&w=1000&auto=format&fit=crop';
+  } else if (trail.difficulty === 'hard') {
+    imageUrl = 'https://images.unsplash.com/photo-1454982523318-4b6396f39d3a?q=80&w=1000&auto=format&fit=crop';
+  } else if (trail.trail_type === 'loop') {
+    imageUrl = 'https://images.unsplash.com/photo-1551632811-561732d1e306?q=80&w=1000&auto=format&fit=crop';
+  }
   
   // Format GeoJSON if available
   let geoJson = null;
@@ -49,6 +70,7 @@ export const formatTrailData = (trail: any) => {
     difficulty: validateDifficulty(trail.difficulty),
     length: trail.length,
     elevation: trail.elevation,
+    elevation_gain: trail.elevation_gain || 0,
     tags: tags,
     likes: 0, // We'll implement this later with proper count
     coordinates: coordinates,
@@ -66,19 +88,22 @@ export const formatTrailData = (trail: any) => {
 };
 
 // Base query function for trails with filters
-export const queryTrailsWithFilters = async (filters: any = {}) => {
+export const queryTrailsWithFilters = (filters: TrailFilters = {}) => {
   let query = supabase
     .from('trails')
     .select(`
       *,
       trail_tags (
-        id,
-        tag,
-        is_strain_tag
+        is_strain_tag,
+        tag:tag_id (
+          name,
+          details,
+          tag_type
+        )
       )
     `);
     
-  // Apply database-level filters if provided
+  // Apply database-level filters
   if (filters?.country) {
     query = query.eq('country', filters.country);
   }
@@ -86,6 +111,27 @@ export const queryTrailsWithFilters = async (filters: any = {}) => {
   if (filters?.stateProvince) {
     query = query.eq('state_province', filters.stateProvince);
   }
-
+  
+  if (filters?.difficulty) {
+    query = query.eq('difficulty', filters.difficulty);
+  }
+  
+  if (filters?.searchQuery) {
+    query = query.ilike('name', `%${filters.searchQuery}%`);
+  }
+  
+  if (filters?.lengthRange) {
+    const [min, max] = filters.lengthRange;
+    query = query.gte('length', min).lte('length', max);
+  }
+  
+  // Only show age-restricted content if explicitly requested
+  if (!filters?.showAgeRestricted) {
+    query = query.eq('is_age_restricted', false);
+  }
+  
+  // Add pagination and limits for performance
+  query = query.order('name').limit(100);
+  
   return query;
 };

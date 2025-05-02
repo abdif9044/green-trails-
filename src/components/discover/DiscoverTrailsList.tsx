@@ -1,18 +1,103 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Compass } from "lucide-react";
 import { TrailCard } from "@/features/trails";
-import { Trail } from '@/types/trails';
+import { TrailFilters, Trail } from '@/types/trails';
 import { Link } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 
-interface DiscoverTrailsListProps {
-  trails: Trail[];
-  onResetFilters: () => void;
+export interface DiscoverTrailsListProps {
+  currentFilters: TrailFilters;
+  viewMode: 'list' | 'map';
+  onTrailCountChange?: (count: number) => void;
 }
 
-const DiscoverTrailsList: React.FC<DiscoverTrailsListProps> = ({ trails, onResetFilters }) => {
-  // No longer need to get trail image URL since we're using a default now
+const DiscoverTrailsList: React.FC<DiscoverTrailsListProps> = ({ 
+  currentFilters, 
+  viewMode,
+  onTrailCountChange
+}) => {
+  const [trails, setTrails] = useState<Trail[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchTrails = async () => {
+      setLoading(true);
+      
+      try {
+        // Build the query based on filters
+        let query = supabase.from('trails').select('*');
+        
+        if (currentFilters.searchQuery) {
+          query = query.ilike('name', `%${currentFilters.searchQuery}%`);
+        }
+        
+        if (currentFilters.difficulty) {
+          query = query.eq('difficulty', currentFilters.difficulty);
+        }
+        
+        if (currentFilters.lengthRange) {
+          query = query
+            .gte('length', currentFilters.lengthRange[0])
+            .lte('length', currentFilters.lengthRange[1]);
+        }
+        
+        if (currentFilters.country) {
+          query = query.eq('country', currentFilters.country);
+        }
+        
+        if (currentFilters.stateProvince) {
+          query = query.eq('state_province', currentFilters.stateProvince);
+        }
+        
+        if (!currentFilters.showAgeRestricted) {
+          query = query.eq('is_age_restricted', false);
+        }
+        
+        // Execute the query
+        const { data, error } = await query.limit(20);
+        
+        if (error) throw error;
+        
+        // Transform the data to match the Trail type
+        const formattedTrails = data.map(trail => ({
+          id: trail.id,
+          name: trail.name,
+          location: trail.location,
+          imageUrl: null, // Would need to fetch from trail_images
+          difficulty: trail.difficulty,
+          length: trail.length,
+          elevation: trail.elevation,
+          tags: [], // Would need to fetch from trail_tags
+          likes: 0, // Would need to fetch from trail_likes
+          strainTags: [], // Would need to fetch from trail_tags where is_strain_tag is true
+          isAgeRestricted: trail.is_age_restricted || false
+        }));
+        
+        setTrails(formattedTrails);
+        if (onTrailCountChange) {
+          onTrailCountChange(formattedTrails.length);
+        }
+        
+      } catch (error) {
+        console.error('Error fetching trails:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchTrails();
+  }, [currentFilters, onTrailCountChange]);
+
+  const handleResetFilters = () => {
+    // Call the parent component's filter reset function
+  };
+
+  if (loading) {
+    return <div className="py-12 text-center">Loading trails...</div>;
+  }
+
   if (trails.length === 0) {
     return (
       <div className="col-span-full py-12 text-center">
@@ -23,7 +108,7 @@ const DiscoverTrailsList: React.FC<DiscoverTrailsListProps> = ({ trails, onReset
         <p className="text-greentrail-600 dark:text-greentrail-400 max-w-md mx-auto mb-4">
           Try adjusting your search criteria or filters to find trails that match your preferences.
         </p>
-        <Button onClick={onResetFilters}>
+        <Button onClick={handleResetFilters}>
           Reset Filters
         </Button>
       </div>

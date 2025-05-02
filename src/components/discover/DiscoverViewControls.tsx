@@ -11,7 +11,7 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Toggle } from "@/components/ui/toggle";
 
-interface DiscoverViewControlsProps {
+export interface DiscoverViewControlsProps {
   viewMode: 'list' | 'map';
   onViewModeChange: (value: 'list' | 'map') => void;
   showTrailPaths?: boolean;

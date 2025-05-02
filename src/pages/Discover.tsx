@@ -16,6 +16,7 @@ const Discover = () => {
   const [viewType, setViewType] = useState<'grid' | 'map'>(
     searchParams.get('view') === 'map' ? 'map' : 'grid'
   );
+  const [trailCount, setTrailCount] = useState<number>(0);
 
   // Handle filters from URL params or set defaults
   const initialFilters: TrailFilters = {
@@ -63,6 +64,10 @@ const Discover = () => {
     
     setSearchParams(params);
   };
+  
+  const updateTrailCount = (count: number) => {
+    setTrailCount(count);
+  };
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -75,27 +80,28 @@ const Discover = () => {
       
       <main className="flex-grow bg-slate-50 dark:bg-greentrail-950">
         <div className="container mx-auto px-4 py-8">
-          <DiscoverHeader />
+          <DiscoverHeader trailCount={trailCount} />
           
           <TrailStatsOverview />
           
           <div className="flex flex-col lg:flex-row gap-6">
             <div className="w-full lg:w-64 shrink-0">
               <DiscoverFilters 
-                filters={filters} 
+                currentFilters={filters} 
                 onFilterChange={handleFilterChange} 
               />
             </div>
             
             <div className="flex-grow">
               <DiscoverViewControls 
-                viewType={viewType} 
-                onViewChange={handleViewChange}
+                viewMode={viewType} 
+                onViewModeChange={handleViewChange}
               />
               
               <DiscoverTrailsList 
-                filters={filters} 
-                viewType={viewType} 
+                currentFilters={filters} 
+                viewMode={viewType}
+                onTrailCountChange={updateTrailCount}
               />
             </div>
           </div>

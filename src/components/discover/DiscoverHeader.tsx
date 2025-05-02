@@ -2,7 +2,7 @@
 import React from 'react';
 import { Badge } from "@/components/ui/badge";
 
-interface DiscoverHeaderProps {
+export interface DiscoverHeaderProps {
   trailCount: number;
 }
 

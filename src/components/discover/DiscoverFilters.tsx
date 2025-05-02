@@ -1,336 +1,198 @@
 
-import React, { useState, useEffect } from "react";
-import { Input } from "@/components/ui/input";
-import { Slider } from "@/components/ui/slider";
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import {
-  Search,
-  X,
-  SlidersHorizontal,
-  Mountain,
-  Flag,
-  MapPin,
-} from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { Slider } from "@/components/ui/slider";
 import {
   Select,
   SelectContent,
   SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { TrailDifficulty } from "@/types/trails";
-import { supabase } from "@/integrations/supabase/client";
+import { TrailFilters } from "@/types/trails";
+import { Filter, X } from "lucide-react";
 
-interface DiscoverFiltersProps {
-  searchQuery: string;
-  setSearchQuery: (query: string) => void;
-  difficultyFilter: string | null;
-  setDifficultyFilter: (difficulty: string | null) => void;
-  lengthRange: [number, number];
-  setLengthRange: (range: [number, number]) => void;
-  showAgeRestricted: boolean;
-  setShowAgeRestricted: (show: boolean) => void;
-  countryFilter?: string | null;
-  setCountryFilter?: (country: string | null) => void;
-  stateFilter?: string | null;
-  setStateFilter?: (state: string | null) => void;
-  onResetFilters: () => void;
+export interface DiscoverFiltersProps {
+  currentFilters: TrailFilters;
+  onFilterChange: (newFilters: TrailFilters) => void;
 }
 
-const DiscoverFilters: React.FC<DiscoverFiltersProps> = ({
-  searchQuery,
-  setSearchQuery,
-  difficultyFilter,
-  setDifficultyFilter,
-  lengthRange,
-  setLengthRange,
-  showAgeRestricted,
-  setShowAgeRestricted,
-  countryFilter,
-  setCountryFilter,
-  stateFilter,
-  setStateFilter,
-  onResetFilters,
+const DiscoverFilters: React.FC<DiscoverFiltersProps> = ({ 
+  currentFilters, 
+  onFilterChange 
 }) => {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [countries, setCountries] = useState<string[]>([]);
-  const [states, setStates] = useState<string[]>([]);
-  
-  // Fetch available countries and states from the database
-  useEffect(() => {
-    const fetchCountriesAndStates = async () => {
-      try {
-        // Fetch distinct countries
-        const { data: countriesData, error: countriesError } = await supabase
-          .from('trails')
-          .select('country')
-          .not('country', 'is', null)
-          .order('country')
-          .limit(100);
-          
-        if (countriesError) throw countriesError;
-        
-        // Extract unique countries
-        const uniqueCountries = Array.from(
-          new Set(
-            countriesData
-              .map(item => item.country)
-              .filter(Boolean) // Remove null values
-          )
-        );
-        
-        setCountries(uniqueCountries);
-        
-        // Fetch states if a country is selected
-        if (countryFilter) {
-          const { data: statesData, error: statesError } = await supabase
-            .from('trails')
-            .select('state_province')
-            .eq('country', countryFilter)
-            .not('state_province', 'is', null)
-            .order('state_province')
-            .limit(100);
-            
-          if (statesError) throw statesError;
-          
-          // Extract unique states
-          const uniqueStates = Array.from(
-            new Set(
-              statesData
-                .map(item => item.state_province)
-                .filter(Boolean) // Remove null values
-            )
-          );
-          
-          setStates(uniqueStates);
-        } else {
-          setStates([]);
-        }
-      } catch (error) {
-        console.error('Error fetching countries/states:', error);
-      }
+  const [localFilters, setLocalFilters] = useState<TrailFilters>(currentFilters);
+  const [expanded, setExpanded] = useState(false);
+
+  const handleChange = <K extends keyof TrailFilters>(key: K, value: TrailFilters[K]) => {
+    const newFilters = { ...localFilters, [key]: value };
+    setLocalFilters(newFilters);
+    onFilterChange(newFilters);
+  };
+
+  const handleLengthRangeChange = (value: number[]) => {
+    const lengthRange = value.length === 2 ? value as [number, number] : undefined;
+    handleChange('lengthRange', lengthRange);
+  };
+
+  const clearFilters = () => {
+    const emptyFilters: TrailFilters = {
+      searchQuery: undefined,
+      difficulty: undefined,
+      lengthRange: undefined,
+      tags: undefined,
+      country: undefined,
+      stateProvince: undefined,
+      showAgeRestricted: false
     };
-    
-    fetchCountriesAndStates();
-  }, [countryFilter]);
-
-  const difficultyOptions: { value: TrailDifficulty; label: string }[] = [
-    { value: "easy", label: "Easy" },
-    { value: "moderate", label: "Moderate" },
-    { value: "hard", label: "Hard" },
-    { value: "expert", label: "Expert" },
-  ];
-
-  const handleDifficultySelect = (value: string) => {
-    setDifficultyFilter(value === "all" ? null : value as TrailDifficulty);
+    setLocalFilters(emptyFilters);
+    onFilterChange(emptyFilters);
   };
-  
-  const handleCountrySelect = (value: string) => {
-    if (setCountryFilter) {
-      setCountryFilter(value === "all" ? null : value);
-      // When changing country, reset state
-      if (setStateFilter) {
-        setStateFilter(null);
-      }
-    }
-  };
-  
-  const handleStateSelect = (value: string) => {
-    if (setStateFilter) {
-      setStateFilter(value === "all" ? null : value);
-    }
+
+  const toggleExpand = () => {
+    setExpanded(!expanded);
   };
 
   return (
-    <div className="space-y-4">
-      <div className="md:hidden">
-        <Button
-          variant="outline"
-          className="w-full"
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        >
-          <SlidersHorizontal className="h-4 w-4 mr-2" />
-          Filters
-          {(difficultyFilter || lengthRange[0] > 0 || lengthRange[1] < 10 || showAgeRestricted || countryFilter || stateFilter) && (
-            <Badge variant="secondary" className="ml-2 bg-greentrail-100 text-greentrail-800 dark:bg-greentrail-800 dark:text-greentrail-200">
-              <X className="h-3 w-3 mr-1" onClick={(e) => { 
-                e.stopPropagation();
-                onResetFilters();
-              }} />
-              Reset
-            </Badge>
+    <Card className="sticky top-4">
+      <CardContent className="pt-6">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="font-medium flex items-center">
+            <Filter className="h-4 w-4 mr-2" />
+            Filters
+          </h3>
+          {Object.values(localFilters).some(v => v !== undefined && v !== false) && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="h-8 px-2 text-muted-foreground" 
+              onClick={clearFilters}
+            >
+              <X className="h-4 w-4 mr-1" /> Clear
+            </Button>
           )}
-        </Button>
-      </div>
-      
-      <div className={`space-y-4 ${isMobileMenuOpen ? "block" : "hidden md:block"}`}>
-        <Card className="border-slate-200 dark:border-greentrail-800">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg">Search</CardTitle>
-            <CardDescription>Find trails by name or location</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="relative">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-greentrail-500" />
-              <Input 
-                type="search" 
-                placeholder="Search trails..." 
-                value={searchQuery} 
-                onChange={(e) => setSearchQuery(e.target.value)} 
-                className="pl-9"
-              />
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="border-slate-200 dark:border-greentrail-800">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg">Difficulty</CardTitle>
-            <CardDescription>Filter by trail difficulty</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Select value={difficultyFilter || "all"} onValueChange={handleDifficultySelect}>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <Input 
+              placeholder="Search trails..." 
+              value={localFilters.searchQuery || ''}
+              onChange={(e) => handleChange('searchQuery', e.target.value || undefined)}
+              className="mb-4"
+            />
+          </div>
+
+          <div>
+            <Label className="mb-2 block">Difficulty</Label>
+            <Select
+              value={localFilters.difficulty || ''}
+              onValueChange={(value) => handleChange('difficulty', value || undefined)}
+            >
               <SelectTrigger>
-                <SelectValue placeholder="Select difficulty" />
+                <SelectValue placeholder="Any difficulty" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Difficulties</SelectItem>
-                {difficultyOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    <div className="flex items-center">
-                      <Mountain className="mr-2 h-4 w-4" />
-                      {option.label}
-                    </div>
-                  </SelectItem>
-                ))}
+                <SelectItem value="">Any difficulty</SelectItem>
+                <SelectItem value="easy">Easy</SelectItem>
+                <SelectItem value="moderate">Moderate</SelectItem>
+                <SelectItem value="hard">Hard</SelectItem>
               </SelectContent>
             </Select>
-          </CardContent>
-        </Card>
-        
-        {setCountryFilter && (
-          <Card className="border-slate-200 dark:border-greentrail-800">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Location</CardTitle>
-              <CardDescription>Filter by country and state</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="country">Country</Label>
-                <Select 
-                  value={countryFilter || "all"} 
-                  onValueChange={handleCountrySelect}
+          </div>
+
+          <div>
+            <Label className="mb-2 block">Length (miles)</Label>
+            <div className="pt-4 px-2">
+              <Slider 
+                defaultValue={[0, 15]} 
+                min={0} 
+                max={30} 
+                step={0.5}
+                value={localFilters.lengthRange || [0, 15]}
+                onValueChange={handleLengthRangeChange}
+              />
+              <div className="flex justify-between mt-2 text-xs text-muted-foreground">
+                <span>{localFilters.lengthRange ? localFilters.lengthRange[0] : 0} mi</span>
+                <span>{localFilters.lengthRange ? localFilters.lengthRange[1] : 15} mi</span>
+              </div>
+            </div>
+          </div>
+
+          <Separator />
+
+          <div className="flex items-center space-x-2">
+            <Checkbox 
+              id="show-age-restricted"
+              checked={localFilters.showAgeRestricted}
+              onCheckedChange={(checked) => 
+                handleChange('showAgeRestricted', checked === true)
+              }
+            />
+            <Label 
+              htmlFor="show-age-restricted"
+              className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            >
+              Show 21+ Only Trails
+            </Label>
+          </div>
+
+          <Button onClick={toggleExpand} variant="outline" size="sm" className="w-full">
+            {expanded ? "Show Less" : "Show More Filters"}
+          </Button>
+
+          {expanded && (
+            <div className="pt-4 space-y-4">
+              <div>
+                <Label className="mb-2 block">Country</Label>
+                <Select
+                  value={localFilters.country || ''}
+                  onValueChange={(value) => handleChange('country', value || undefined)}
                 >
-                  <SelectTrigger id="country">
+                  <SelectTrigger>
                     <SelectValue placeholder="Select country" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Countries</SelectItem>
-                    {countries.map((country) => (
-                      <SelectItem key={country} value={country}>
-                        <div className="flex items-center">
-                          <Flag className="mr-2 h-4 w-4" />
-                          {country}
-                        </div>
-                      </SelectItem>
-                    ))}
+                    <SelectItem value="">Any country</SelectItem>
+                    <SelectItem value="US">United States</SelectItem>
+                    <SelectItem value="CA">Canada</SelectItem>
+                    <SelectItem value="MX">Mexico</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              
-              {countryFilter && setStateFilter && (
-                <div className="space-y-2">
-                  <Label htmlFor="state">State/Province</Label>
-                  <Select 
-                    value={stateFilter || "all"} 
-                    onValueChange={handleStateSelect}
-                  >
-                    <SelectTrigger id="state">
-                      <SelectValue placeholder="Select state" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All States</SelectItem>
-                      {states.map((state) => (
-                        <SelectItem key={state} value={state}>
-                          <div className="flex items-center">
-                            <MapPin className="mr-2 h-4 w-4" />
-                            {state}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
-        
-        <Card className="border-slate-200 dark:border-greentrail-800">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg">Length</CardTitle>
-            <CardDescription>Filter by trail length (miles)</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-6 pt-2">
-              <Slider
-                defaultValue={[0, 10]}
-                value={lengthRange}
-                min={0}
-                max={20}
-                step={0.5}
-                minStepsBetweenThumbs={1}
-                onValueChange={(value) => setLengthRange([value[0], value[1]])}
-              />
-              <div className="flex justify-between text-sm text-greentrail-600 dark:text-greentrail-400">
-                <div>{lengthRange[0]} miles</div>
-                <div>{lengthRange[1] === 20 ? '20+ miles' : `${lengthRange[1]} miles`}</div>
+
+              <div>
+                <Label className="mb-2 block">State/Province</Label>
+                <Select
+                  value={localFilters.stateProvince || ''}
+                  onValueChange={(value) => handleChange('stateProvince', value || undefined)}
+                  disabled={!localFilters.country}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select state" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectItem value="">Any state</SelectItem>
+                      <SelectItem value="CA">California</SelectItem>
+                      <SelectItem value="CO">Colorado</SelectItem>
+                      <SelectItem value="OR">Oregon</SelectItem>
+                      <SelectItem value="WA">Washington</SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="border-slate-200 dark:border-greentrail-800">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg">Options</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="age-restricted" className="text-base font-normal">
-                Show Age Restricted
-              </Label>
-              <Switch
-                id="age-restricted"
-                checked={showAgeRestricted}
-                onCheckedChange={setShowAgeRestricted}
-              />
-            </div>
-          </CardContent>
-          <CardFooter>
-            <Button 
-              variant="outline" 
-              onClick={onResetFilters} 
-              className="w-full"
-            >
-              Reset All Filters
-            </Button>
-          </CardFooter>
-        </Card>
-      </div>
-    </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

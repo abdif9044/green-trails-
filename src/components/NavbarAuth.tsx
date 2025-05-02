@@ -1,5 +1,5 @@
 
-import { Link } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 export const NavbarAuth = () => {
   const { user, signOut } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleSignOut = async () => {
     try {
@@ -22,6 +23,7 @@ export const NavbarAuth = () => {
         title: "Signed out successfully",
         description: "You have been signed out of your account.",
       });
+      navigate('/auth');
     } catch (error) {
       toast({
         title: "Sign out failed",

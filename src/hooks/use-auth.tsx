@@ -21,7 +21,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
 
   useEffect(() => {
     // Set up auth state listener
@@ -31,15 +30,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setSession(session);
         setUser(session?.user ?? null);
 
+        // Use setTimeout to avoid potential Supabase deadlocks
         if (event === 'SIGNED_IN') {
-          toast({
-            title: "Successfully signed in",
-            description: "Welcome to GreenTrails!",
-          });
-          navigate('/');
-        }
-        if (event === 'SIGNED_OUT') {
-          navigate('/auth');
+          setTimeout(() => {
+            toast({
+              title: "Successfully signed in",
+              description: "Welcome to GreenTrails!",
+            });
+            // Navigate is handled in component, not here
+          }, 0);
         }
       }
     );
@@ -52,7 +51,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate]);
+  }, []);
 
   const signIn = async (email: string, password: string) => {
     try {

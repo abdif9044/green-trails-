@@ -13,8 +13,8 @@ import SEOProvider from "@/components/SEOProvider";
 
 const Discover = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [viewType, setViewType] = useState<'grid' | 'map'>(
-    searchParams.get('view') === 'map' ? 'map' : 'grid'
+  const [viewType, setViewType] = useState<'list' | 'map'>(
+    searchParams.get('view') === 'map' ? 'map' : 'list'
   );
   const [trailCount, setTrailCount] = useState<number>(0);
 
@@ -52,7 +52,7 @@ const Discover = () => {
     setSearchParams(params);
   };
 
-  const handleViewChange = (view: 'grid' | 'map') => {
+  const handleViewChange = (view: 'list' | 'map') => {
     setViewType(view);
     
     const params = new URLSearchParams(searchParams);

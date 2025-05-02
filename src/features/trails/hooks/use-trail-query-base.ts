@@ -1,13 +1,20 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { TrailDifficulty, TrailFilters } from '@/types/trails';
 
 // Helper function to ensure difficulty is a valid TrailDifficulty
 export const validateDifficulty = (difficulty: string): TrailDifficulty => {
-  const validDifficulties: TrailDifficulty[] = ['easy', 'moderate', 'hard', 'expert'];
-  return validDifficulties.includes(difficulty as TrailDifficulty) 
-    ? difficulty as TrailDifficulty 
-    : 'moderate';
+  switch (difficulty.toLowerCase()) {
+    case 'easy':
+      return 'easy';
+    case 'moderate':
+      return 'moderate';
+    case 'hard':
+      return 'hard';
+    case 'expert':
+      return 'expert';
+    default:
+      return 'moderate'; // Default fallback
+  }
 };
 
 // Create base trail object from Supabase data

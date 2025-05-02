@@ -1,198 +1,270 @@
-
-import React, { useState } from 'react';
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
+import React from 'react';
+import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import { Slider } from "@/components/ui/slider";
-import {
+import { 
   Select,
   SelectContent,
   SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from "@/components/ui/select";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Slider } from "@/components/ui/slider";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { X } from "lucide-react";
 import { TrailFilters } from "@/types/trails";
-import { Filter, X } from "lucide-react";
 
 export interface DiscoverFiltersProps {
   currentFilters: TrailFilters;
-  onFilterChange: (newFilters: TrailFilters) => void;
+  onFilterChange: (filters: TrailFilters) => void;
 }
 
-const DiscoverFilters: React.FC<DiscoverFiltersProps> = ({ 
-  currentFilters, 
-  onFilterChange 
-}) => {
-  const [localFilters, setLocalFilters] = useState<TrailFilters>(currentFilters);
-  const [expanded, setExpanded] = useState(false);
+const difficultyOptions = [
+  { value: 'easy', label: 'Easy' },
+  { value: 'moderate', label: 'Moderate' },
+  { value: 'hard', label: 'Hard' },
+  { value: 'expert', label: 'Expert' },
+];
 
-  const handleChange = <K extends keyof TrailFilters>(key: K, value: TrailFilters[K]) => {
-    const newFilters = { ...localFilters, [key]: value };
-    setLocalFilters(newFilters);
-    onFilterChange(newFilters);
+const countryOptions = [
+  { value: 'USA', label: 'United States' },
+  { value: 'Canada', label: 'Canada' },
+  { value: 'Mexico', label: 'Mexico' },
+];
+
+const stateProvinceOptions = {
+  'USA': [
+    { value: 'CA', label: 'California' },
+    { value: 'WA', label: 'Washington' },
+    { value: 'OR', label: 'Oregon' },
+  ],
+  'Canada': [
+    { value: 'BC', label: 'British Columbia' },
+    { value: 'AB', label: 'Alberta' },
+    { value: 'ON', label: 'Ontario' },
+  ],
+  'Mexico': [
+    { value: 'MX', label: 'Mexico' }
+  ]
+};
+
+const DiscoverFilters: React.FC<DiscoverFiltersProps> = ({ currentFilters, onFilterChange }) => {
+  const [searchQuery, setSearchQuery] = React.useState<string>(currentFilters.searchQuery || '');
+  const [difficulty, setDifficulty] = React.useState<string | null>(currentFilters.difficulty || null);
+  const [lengthRange, setLengthRange] = React.useState<number[]>(currentFilters.lengthRange || [0, 20]);
+  const [tags, setTags] = React.useState<string[]>(currentFilters.tags || []);
+  const [showAgeRestricted, setShowAgeRestricted] = React.useState<boolean>(currentFilters.showAgeRestricted || false);
+  const [country, setCountry] = React.useState<string | undefined>(currentFilters.country);
+  const [stateProvince, setStateProvince] = React.useState<string | undefined>(currentFilters.stateProvince);
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
   };
 
-  const handleLengthRangeChange = (value: number[]) => {
-    const lengthRange = value.length === 2 ? value as [number, number] : undefined;
-    handleChange('lengthRange', lengthRange);
+  const handleDifficultyChange = (value: string | undefined) => {
+    setDifficulty(value || null);
   };
 
-  const clearFilters = () => {
-    const emptyFilters: TrailFilters = {
-      searchQuery: undefined,
-      difficulty: undefined,
-      lengthRange: undefined,
-      tags: undefined,
-      country: undefined,
-      stateProvince: undefined,
-      showAgeRestricted: false
+  const handleLengthChange = (value: number[]) => {
+    setLengthRange(value);
+  };
+
+  const handleTagChange = (tag: string) => {
+    if (tags.includes(tag)) {
+      setTags(tags.filter((t) => t !== tag));
+    } else {
+      setTags([...tags, tag]);
+    }
+  };
+
+  const handleAgeRestrictedChange = (checked: boolean) => {
+    setShowAgeRestricted(checked);
+  };
+
+  const handleCountryChange = (value: string | undefined) => {
+    setCountry(value);
+    setStateProvince(undefined); // Reset state/province when country changes
+  };
+
+  const handleStateProvinceChange = (value: string | undefined) => {
+    setStateProvince(value);
+  };
+
+  const applyFilters = () => {
+    const filters: TrailFilters = {
+      searchQuery: searchQuery || undefined,
+      difficulty: difficulty || undefined,
+      lengthRange: lengthRange.length === 2 ? [lengthRange[0], lengthRange[1]] : undefined,
+      tags: tags.length > 0 ? tags : undefined,
+      showAgeRestricted: showAgeRestricted,
+      country: country || undefined,
+      stateProvince: stateProvince || undefined,
     };
-    setLocalFilters(emptyFilters);
-    onFilterChange(emptyFilters);
+    onFilterChange(filters);
   };
 
-  const toggleExpand = () => {
-    setExpanded(!expanded);
+  const resetFilters = () => {
+    setSearchQuery('');
+    setDifficulty(null);
+    setLengthRange([0, 20]);
+    setTags([]);
+    setShowAgeRestricted(false);
+    setCountry(undefined);
+    setStateProvince(undefined);
+    
+    // Apply empty filters to clear all
+    onFilterChange({});
   };
+
+  const availableTags = ['mountain', 'forest', 'lake', 'river', 'desert'];
 
   return (
-    <Card className="sticky top-4">
-      <CardContent className="pt-6">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="font-medium flex items-center">
-            <Filter className="h-4 w-4 mr-2" />
-            Filters
-          </h3>
-          {Object.values(localFilters).some(v => v !== undefined && v !== false) && (
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="h-8 px-2 text-muted-foreground" 
-              onClick={clearFilters}
-            >
-              <X className="h-4 w-4 mr-1" /> Clear
-            </Button>
-          )}
-        </div>
+    <div className="bg-white dark:bg-greentrail-900 rounded-md shadow-sm p-4">
+      <Label htmlFor="search" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed text-greentrail-800 dark:text-greentrail-200">
+        Search
+      </Label>
+      <div className="relative">
+        <Input 
+          id="search"
+          type="search" 
+          placeholder="Search trails..." 
+          className="py-2 pl-9 pr-3 mt-2"
+          value={searchQuery}
+          onChange={handleSearchChange}
+        />
+        <Search className="absolute left-2.5 top-0 bottom-0 m-auto w-4 h-4 text-greentrail-500 dark:text-greentrail-400" />
+      </div>
 
-        <div className="space-y-4">
-          <div>
-            <Input 
-              placeholder="Search trails..." 
-              value={localFilters.searchQuery || ''}
-              onChange={(e) => handleChange('searchQuery', e.target.value || undefined)}
-              className="mb-4"
-            />
-          </div>
-
-          <div>
-            <Label className="mb-2 block">Difficulty</Label>
-            <Select
-              value={localFilters.difficulty || ''}
-              onValueChange={(value) => handleChange('difficulty', value || undefined)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Any difficulty" />
+      <Accordion type="single" collapsible className="mt-4">
+        <AccordionItem value="difficulty">
+          <AccordionTrigger className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed text-greentrail-800 dark:text-greentrail-200">
+            Difficulty
+          </AccordionTrigger>
+          <AccordionContent className="pt-2">
+            <Select value={difficulty || undefined} onValueChange={handleDifficultyChange}>
+              <SelectTrigger className="w-full mt-2">
+                <SelectValue placeholder="Select difficulty" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Any difficulty</SelectItem>
-                <SelectItem value="easy">Easy</SelectItem>
-                <SelectItem value="moderate">Moderate</SelectItem>
-                <SelectItem value="hard">Hard</SelectItem>
+                {difficultyOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
-          </div>
+          </AccordionContent>
+        </AccordionItem>
 
-          <div>
-            <Label className="mb-2 block">Length (miles)</Label>
-            <div className="pt-4 px-2">
-              <Slider 
-                defaultValue={[0, 15]} 
-                min={0} 
-                max={30} 
-                step={0.5}
-                value={localFilters.lengthRange || [0, 15]}
-                onValueChange={handleLengthRangeChange}
-              />
-              <div className="flex justify-between mt-2 text-xs text-muted-foreground">
-                <span>{localFilters.lengthRange ? localFilters.lengthRange[0] : 0} mi</span>
-                <span>{localFilters.lengthRange ? localFilters.lengthRange[1] : 15} mi</span>
-              </div>
+        <AccordionItem value="length">
+          <AccordionTrigger className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed text-greentrail-800 dark:text-greentrail-200">
+            Length (miles)
+          </AccordionTrigger>
+          <AccordionContent className="pt-2">
+            <div className="flex items-center justify-between text-sm text-muted-foreground mt-2">
+              <span>{lengthRange[0]}</span>
+              <span>{lengthRange[1]}</span>
             </div>
-          </div>
-
-          <Separator />
-
-          <div className="flex items-center space-x-2">
-            <Checkbox 
-              id="show-age-restricted"
-              checked={localFilters.showAgeRestricted}
-              onCheckedChange={(checked) => 
-                handleChange('showAgeRestricted', checked === true)
-              }
+            <Slider
+              defaultValue={lengthRange}
+              min={0}
+              max={20}
+              step={1}
+              onValueChange={handleLengthChange}
+              className="mt-2"
             />
-            <Label 
-              htmlFor="show-age-restricted"
-              className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-            >
-              Show 21+ Only Trails
-            </Label>
-          </div>
+          </AccordionContent>
+        </AccordionItem>
 
-          <Button onClick={toggleExpand} variant="outline" size="sm" className="w-full">
-            {expanded ? "Show Less" : "Show More Filters"}
-          </Button>
-
-          {expanded && (
-            <div className="pt-4 space-y-4">
-              <div>
-                <Label className="mb-2 block">Country</Label>
-                <Select
-                  value={localFilters.country || ''}
-                  onValueChange={(value) => handleChange('country', value || undefined)}
+        <AccordionItem value="tags">
+          <AccordionTrigger className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed text-greentrail-800 dark:text-greentrail-200">
+            Tags
+          </AccordionTrigger>
+          <AccordionContent className="pt-2">
+            <div className="flex flex-wrap gap-2 mt-2">
+              {availableTags.map((tag) => (
+                <Badge
+                  key={tag}
+                  variant={tags.includes(tag) ? "default" : "outline"}
+                  className={`cursor-pointer ${tags.includes(tag) ? 'bg-greentrail-600 text-white dark:bg-greentrail-700' : 'text-greentrail-600 dark:text-greentrail-400 border-greentrail-200 dark:border-greentrail-700'}`}
+                  onClick={() => handleTagChange(tag)}
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select country" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">Any country</SelectItem>
-                    <SelectItem value="US">United States</SelectItem>
-                    <SelectItem value="CA">Canada</SelectItem>
-                    <SelectItem value="MX">Mexico</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label className="mb-2 block">State/Province</Label>
-                <Select
-                  value={localFilters.stateProvince || ''}
-                  onValueChange={(value) => handleChange('stateProvince', value || undefined)}
-                  disabled={!localFilters.country}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select state" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectItem value="">Any state</SelectItem>
-                      <SelectItem value="CA">California</SelectItem>
-                      <SelectItem value="CO">Colorado</SelectItem>
-                      <SelectItem value="OR">Oregon</SelectItem>
-                      <SelectItem value="WA">Washington</SelectItem>
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              </div>
+                  {tag}
+                </Badge>
+              ))}
             </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="age">
+          <AccordionTrigger className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed text-greentrail-800 dark:text-greentrail-200">
+            Age Restriction
+          </AccordionTrigger>
+          <AccordionContent className="pt-2">
+            <div className="flex items-center space-x-2 mt-2">
+              <Checkbox 
+                id="ageRestricted"
+                checked={showAgeRestricted}
+                onCheckedChange={handleAgeRestrictedChange}
+              />
+              <Label htmlFor="ageRestricted" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed text-greentrail-800 dark:text-greentrail-200">
+                Show 21+ trails
+              </Label>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="location">
+          <AccordionTrigger className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed text-greentrail-800 dark:text-greentrail-200">
+            Location
+          </AccordionTrigger>
+          <AccordionContent className="pt-2">
+            <Select value={country} onValueChange={handleCountryChange}>
+              <SelectTrigger className="w-full mt-2">
+                <SelectValue placeholder="Select country" />
+              </SelectTrigger>
+              <SelectContent>
+                {countryOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {country && (
+              <Select value={stateProvince} onValueChange={handleStateProvinceChange}>
+                <SelectTrigger className="w-full mt-2">
+                  <SelectValue placeholder="Select state/province" />
+                </SelectTrigger>
+                <SelectContent>
+                  {stateProvinceOptions[country as keyof typeof stateProvinceOptions]?.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
+
+      <div className="mt-6 flex justify-between">
+        <Button variant="outline" size="sm" onClick={resetFilters}>
+          Reset Filters
+          <X className="w-4 h-4 ml-2" />
+        </Button>
+        <Button size="sm" onClick={applyFilters}>
+          Apply Filters
+        </Button>
+      </div>
+    </div>
   );
 };
 

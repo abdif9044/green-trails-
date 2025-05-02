@@ -3,9 +3,10 @@ import React, { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Compass } from "lucide-react";
 import { TrailCard } from "@/features/trails";
-import { TrailFilters, Trail } from '@/types/trails';
+import { TrailDifficulty, TrailFilters, Trail } from '@/types/trails';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { validateDifficulty } from '@/features/trails';
 
 export interface DiscoverTrailsListProps {
   currentFilters: TrailFilters;
@@ -61,12 +62,12 @@ const DiscoverTrailsList: React.FC<DiscoverTrailsListProps> = ({
         if (error) throw error;
         
         // Transform the data to match the Trail type
-        const formattedTrails = data.map(trail => ({
+        const formattedTrails: Trail[] = data.map(trail => ({
           id: trail.id,
           name: trail.name,
           location: trail.location,
           imageUrl: null, // Would need to fetch from trail_images
-          difficulty: trail.difficulty,
+          difficulty: validateDifficulty(trail.difficulty),
           length: trail.length,
           elevation: trail.elevation,
           tags: [], // Would need to fetch from trail_tags

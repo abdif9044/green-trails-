@@ -4,6 +4,7 @@
  * automatically included in the generated types
  */
 import { Database } from '@/integrations/supabase/types';
+import { SupabaseClient } from '@supabase/supabase-js';
 
 // Extend the Database type with additional tables
 export interface ExtendedDatabase extends Database {
@@ -56,10 +57,6 @@ export interface ExtendedDatabase extends Database {
 }
 
 // Create a typed client factory 
-export const createExtendedSupabaseClient = (supabaseClient: any) => {
-  return supabaseClient as ReturnType<typeof supabaseClient> & {
-    from: <T extends keyof ExtendedDatabase['public']['Tables']>(
-      table: T
-    ) => ReturnType<typeof supabaseClient.from<T>>;
-  };
+export const createExtendedSupabaseClient = (supabaseClient: SupabaseClient) => {
+  return supabaseClient as SupabaseClient<ExtendedDatabase>;
 };

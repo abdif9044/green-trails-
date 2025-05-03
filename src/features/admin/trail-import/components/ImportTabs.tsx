@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
 import DataSourcesTab from '@/components/admin/DataSourcesTab';
 import ImportJobsTab from '@/components/admin/ImportJobsTab';
 import BulkImportJobsTab from '@/components/admin/BulkImportJobsTab';

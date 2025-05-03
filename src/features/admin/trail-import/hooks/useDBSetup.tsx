@@ -8,7 +8,7 @@ export function useDBSetup(loadData: () => void) {
   const [dbSetupError, setDbSetupError] = useState(false);
   const { toast } = useToast();
   
-  const { setupBulkImport, checkTablesExist } = useDatabaseSetup();
+  const { setupBulkImport, checkTablesExist, logSecurityEvent } = useDatabaseSetup();
   
   const checkAndSetupDatabase = async () => {
     if (isSettingUpDb || dbSetupError) return;
@@ -19,6 +19,12 @@ export function useDBSetup(loadData: () => void) {
       const tablesExist = await checkTablesExist();
       
       if (!tablesExist) {
+        // Log setup attempt for security auditing
+        await logSecurityEvent('database_setup_attempt', { 
+          action: 'setup_database',
+          timestamp: new Date().toISOString()
+        });
+        
         // Setup tables if they don't exist
         const success = await setupBulkImport();
         if (success) {
@@ -40,6 +46,12 @@ export function useDBSetup(loadData: () => void) {
     setDbSetupError(false);
     setIsSettingUpDb(true);
     try {
+      // Log retry attempt
+      await logSecurityEvent('database_setup_retry', {
+        action: 'retry_setup',
+        timestamp: new Date().toISOString()
+      });
+      
       const success = await setupBulkImport();
       if (success) {
         loadData();

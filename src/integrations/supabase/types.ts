@@ -9,6 +9,30 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      admin_users: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_superadmin: boolean | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_superadmin?: boolean | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_superadmin?: boolean | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       albums: {
         Row: {
           created_at: string | null
@@ -362,6 +386,36 @@ export type Database = {
           updated_at?: string | null
           username?: string | null
           website_url?: string | null
+        }
+        Relationships: []
+      }
+      security_audit_log: {
+        Row: {
+          created_at: string | null
+          event_details: Json | null
+          event_type: string
+          id: string
+          ip_address: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          event_details?: Json | null
+          event_type: string
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          event_details?: Json | null
+          event_type?: string
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -1060,6 +1114,16 @@ export type Database = {
         Args: { "": unknown } | { "": unknown }
         Returns: string
       }
+      create_policy_if_not_exists: {
+        Args: {
+          policy_name: string
+          table_name: string
+          operation: string
+          using_expr?: string
+          with_check_expr?: string
+        }
+        Returns: undefined
+      }
       disablelongtransactions: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -1342,6 +1406,15 @@ export type Database = {
       jsonb: {
         Args: { "": unknown }
         Returns: Json
+      }
+      log_security_event: {
+        Args: {
+          event_type: string
+          event_details?: Json
+          ip_address?: string
+          user_agent?: string
+        }
+        Returns: string
       }
       longtransactionsenabled: {
         Args: Record<PropertyKey, never>

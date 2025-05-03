@@ -1,222 +1,279 @@
 
-import { createContext, useContext, useEffect, useState } from 'react';
-import { Session, User } from '@supabase/supabase-js';
+import React, { createContext, useState, useEffect, useContext } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
-import { toast } from '@/hooks/use-toast';
+import { Session, User } from '@supabase/supabase-js';
+import { useToast } from './use-toast';
+import { DatabaseSetupService } from '@/services/database/setup-service';
 
 interface AuthContextType {
-  session: Session | null;
   user: User | null;
-  signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
-  signUp: (email: string, password: string, dateOfBirth?: Date) => Promise<{ error: Error | null }>;
-  signOut: () => Promise<void>;
+  session: Session | null;
   loading: boolean;
-  updateUserMetadata: (metadata: Record<string, any>) => Promise<{ error: Error | null }>;
+  signIn: (email: string, password: string) => Promise<{ success: boolean; message?: string }>;
+  signUp: (email: string, password: string, metadata?: object) => Promise<{ success: boolean; message?: string }>;
+  signOut: () => Promise<void>;
+  verifyAge: (birthdate: Date) => Promise<boolean>;
+  resetPassword: (email: string) => Promise<{ success: boolean; message?: string }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [session, setSession] = useState<Session | null>(null);
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        console.log("Auth state changed:", event, session);
-        setSession(session);
-        setUser(session?.user ?? null);
+    const getUser = async () => {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      if (error) {
+        console.error('Error fetching session:', error);
+      }
+      
+      setSession(session);
+      setUser(session?.user || null);
+      setLoading(false);
+    };
 
-        // Use setTimeout to avoid potential Supabase deadlocks
-        if (event === 'SIGNED_IN') {
-          setTimeout(() => {
-            toast({
-              title: "Successfully signed in",
-              description: "Welcome to GreenTrails!",
-              variant: "default",
-            });
-            // Navigate is handled in component, not here
-          }, 0);
-        } else if (event === 'SIGNED_OUT') {
-          setTimeout(() => {
-            toast({
-              title: "Signed out",
-              description: "You have been signed out successfully",
-            });
-          }, 0);
+    getUser();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setSession(session);
+        setUser(session?.user || null);
+        setLoading(false);
+        
+        // Log auth state changes for security purposes
+        if (_event && user?.id !== session?.user.id) {
+          DatabaseSetupService.logSecurityEvent('auth_state_change', {
+            event: _event,
+            user_id: session?.user.id,
+            timestamp: new Date().toISOString()
+          });
         }
       }
     );
 
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
-
-  const validateEmail = (email: string): boolean => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
 
   const signIn = async (email: string, password: string) => {
     try {
-      if (!validateEmail(email)) {
-        return { error: new Error('Please enter a valid email address') };
-      }
-
-      if (!password || password.length < 6) {
-        return { error: new Error('Password must be at least 6 characters') };
-      }
-      
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
-      
-      if (!error) {
-        // Check if user's session exists after signing in
-        const { data } = await supabase.auth.getSession();
-        if (data.session) {
-          console.log("User signed in successfully with session:", data.session);
-        }
-      } else {
-        console.error("Sign in error:", error.message);
-        // Provide more user-friendly error messages
-        if (error.message.includes('credentials')) {
-          return { error: new Error('Invalid email or password') };
-        }
+
+      if (error) {
+        console.error('Error signing in:', error);
+        
+        // Log failed sign in attempts for security monitoring
+        await DatabaseSetupService.logSecurityEvent('failed_login_attempt', { 
+          email, 
+          error: error.message, 
+          timestamp: new Date().toISOString() 
+        });
+        
+        toast({
+          title: "Sign in failed",
+          description: error.message,
+          variant: "destructive",
+        });
+        return { success: false, message: error.message };
       }
       
-      return { error };
-    } catch (err) {
-      console.error('Sign in error:', err);
-      return { error: err as Error };
+      // Log successful sign in
+      await DatabaseSetupService.logSecurityEvent('successful_login', { 
+        user_id: data.user?.id,
+        timestamp: new Date().toISOString() 
+      });
+
+      return { success: true };
+    } catch (error) {
+      console.error('Exception during sign in:', error);
+      
+      if (error instanceof Error) {
+        return { success: false, message: error.message };
+      }
+      return { success: false, message: 'An unknown error occurred' };
     }
   };
 
-  const signUp = async (email: string, password: string, dateOfBirth?: Date) => {
+  const signUp = async (email: string, password: string, metadata: object = {}) => {
     try {
-      if (!validateEmail(email)) {
-        return { error: new Error('Please enter a valid email address') };
-      }
-      
-      if (!password || password.length < 6) {
-        return { error: new Error('Password must be at least 6 characters') };
-      }
-      
-      let userMetadata = {};
-      
-      if (dateOfBirth) {
-        // If date of birth is provided, add it to user metadata
-        const isOver21 = isUserOver21(dateOfBirth);
-        
-        userMetadata = {
-          date_of_birth: dateOfBirth.toISOString().split('T')[0],
-          age_verified: isOver21
-        };
-      }
-
-      const { error } = await supabase.auth.signUp({
+      // We require users to be 21+
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          data: userMetadata,
-          emailRedirectTo: window.location.origin + '/auth'
+          data: {
+            ...metadata,
+            signup_timestamp: new Date().toISOString()
+          },
         }
       });
-      
-      if (!error) {
+
+      if (error) {
+        console.error('Error signing up:', error);
         toast({
-          title: "Account created",
-          description: "Check your email to confirm your account before signing in.",
+          title: "Sign up failed",
+          description: error.message,
+          variant: "destructive",
         });
-      } else {
-        console.error("Sign up error:", error.message);
-        
-        // Provide more user-friendly error messages
-        if (error.message.includes('already registered')) {
-          return { error: new Error('This email is already registered. Please sign in instead.') };
-        } else if (error.message.includes('weak')) {
-          return { error: new Error('Password is too weak. Please choose a stronger password.') };
-        } else if (error.message.includes('captcha')) {
-          return { error: new Error('Captcha verification failed. Please try again in a different browser.') };
-        }
+        return { success: false, message: error.message };
       }
+
+      // Log successful registration
+      await DatabaseSetupService.logSecurityEvent('user_registration', { 
+        user_id: data.user?.id,
+        timestamp: new Date().toISOString() 
+      });
+
+      toast({
+        title: "Sign up successful",
+        description: "Please check your email for verification.",
+      });
+
+      return { success: true };
+    } catch (error) {
+      console.error('Exception during sign up:', error);
       
-      return { error };
-    } catch (err) {
-      console.error('Sign up error:', err);
-      return { error: err as Error };
+      if (error instanceof Error) {
+        return { success: false, message: error.message };
+      }
+      return { success: false, message: 'An unknown error occurred' };
     }
   };
 
   const signOut = async () => {
     try {
-      await supabase.auth.signOut();
-    } catch (err) {
-      console.error('Sign out error:', err);
-      toast({
-        title: "Error signing out",
-        description: "Please try again",
-        variant: "destructive",
-      });
-    }
-  };
-  
-  const updateUserMetadata = async (metadata: Record<string, any>) => {
-    try {
-      const { error } = await supabase.auth.updateUser({
-        data: metadata
-      });
-      
-      if (!error) {
-        toast({
-          title: "Profile updated",
-          description: "Your profile information has been updated successfully.",
+      // Log the sign out for security audit
+      if (user) {
+        await DatabaseSetupService.logSecurityEvent('user_signout', { 
+          user_id: user.id,
+          timestamp: new Date().toISOString() 
         });
       }
       
-      return { error };
-    } catch (err) {
-      console.error('Update user metadata error:', err);
-      return { error: err as Error };
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Error signing out:', error);
+        toast({
+          title: "Sign out failed",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Exception during sign out:', error);
     }
-  };
-  
-  // Helper function to check if user is over 21
-  const isUserOver21 = (birthDate: Date): boolean => {
-    const today = new Date();
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const m = today.getMonth() - birthDate.getMonth();
-    
-    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
-    
-    return age >= 21;
   };
 
-  return (
-    <AuthContext.Provider value={{ 
-      session, 
-      user, 
-      signIn, 
-      signUp, 
-      signOut, 
-      loading,
-      updateUserMetadata 
-    }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  const verifyAge = async (birthdate: Date) => {
+    try {
+      const now = new Date();
+      const age = now.getFullYear() - birthdate.getFullYear();
+      
+      // Adjust age if birthday hasn't occurred yet this year
+      if (
+        now.getMonth() < birthdate.getMonth() || 
+        (now.getMonth() === birthdate.getMonth() && now.getDate() < birthdate.getDate())
+      ) {
+        const adjustedAge = age - 1;
+        
+        // Users must be 21+ for GreenTrails
+        if (adjustedAge < 21) {
+          toast({
+            title: "Age verification failed",
+            description: "You must be 21 or older to use GreenTrails.",
+            variant: "destructive",
+          });
+          return false;
+        }
+      }
+      
+      // User is at least 21, update their profile
+      if (user) {
+        const { error } = await supabase
+          .from('profiles')
+          .update({ is_age_verified: true })
+          .eq('id', user.id);
+          
+        if (error) {
+          console.error('Error updating age verification status:', error);
+          return false;
+        }
+        
+        // Log successful age verification
+        await DatabaseSetupService.logSecurityEvent('age_verification', {
+          user_id: user.id,
+          verified: true,
+          timestamp: new Date().toISOString()
+        });
+        
+        toast({
+          title: "Age verification successful",
+          description: "Your account has been verified as 21+.",
+        });
+        
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('Error verifying age:', error);
+      return false;
+    }
+  };
+
+  const resetPassword = async (email: string) => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/update-password`,
+      });
+
+      if (error) {
+        console.error('Error resetting password:', error);
+        toast({
+          title: "Password reset failed",
+          description: error.message,
+          variant: "destructive",
+        });
+        return { success: false, message: error.message };
+      }
+
+      toast({
+        title: "Password reset email sent",
+        description: "Please check your email to reset your password.",
+      });
+
+      return { success: true };
+    } catch (error) {
+      console.error('Exception during password reset:', error);
+      
+      if (error instanceof Error) {
+        return { success: false, message: error.message };
+      }
+      return { success: false, message: 'An unknown error occurred' };
+    }
+  };
+
+  const value = {
+    user,
+    session,
+    loading,
+    signIn,
+    signUp,
+    signOut,
+    verifyAge,
+    resetPassword,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => {

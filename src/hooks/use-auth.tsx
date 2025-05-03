@@ -36,8 +36,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             toast({
               title: "Successfully signed in",
               description: "Welcome to GreenTrails!",
+              variant: "default",
             });
             // Navigate is handled in component, not here
+          }, 0);
+        } else if (event === 'SIGNED_OUT') {
+          setTimeout(() => {
+            toast({
+              title: "Signed out",
+              description: "You have been signed out successfully",
+            });
           }, 0);
         }
       }
@@ -53,8 +61,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
   const signIn = async (email: string, password: string) => {
     try {
+      if (!validateEmail(email)) {
+        return { error: new Error('Please enter a valid email address') };
+      }
+
+      if (!password || password.length < 6) {
+        return { error: new Error('Password must be at least 6 characters') };
+      }
+      
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -68,6 +89,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
       } else {
         console.error("Sign in error:", error.message);
+        // Provide more user-friendly error messages
+        if (error.message.includes('credentials')) {
+          return { error: new Error('Invalid email or password') };
+        }
       }
       
       return { error };
@@ -79,6 +104,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signUp = async (email: string, password: string, dateOfBirth?: Date) => {
     try {
+      if (!validateEmail(email)) {
+        return { error: new Error('Please enter a valid email address') };
+      }
+      
+      if (!password || password.length < 6) {
+        return { error: new Error('Password must be at least 6 characters') };
+      }
+      
       let userMetadata = {};
       
       if (dateOfBirth) {
@@ -89,11 +122,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           date_of_birth: dateOfBirth.toISOString().split('T')[0],
           age_verified: isOver21
         };
-      }
-
-      // Check if email meets validation requirements
-      if (!email.includes('@') || !email.includes('.')) {
-        return { error: new Error('Please enter a valid email address') };
       }
 
       const { error } = await supabase.auth.signUp({
@@ -108,10 +136,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (!error) {
         toast({
           title: "Account created",
-          description: "Your account has been created successfully.",
+          description: "Check your email to confirm your account before signing in.",
         });
       } else {
         console.error("Sign up error:", error.message);
+        
+        // Provide more user-friendly error messages
+        if (error.message.includes('already registered')) {
+          return { error: new Error('This email is already registered. Please sign in instead.') };
+        } else if (error.message.includes('weak')) {
+          return { error: new Error('Password is too weak. Please choose a stronger password.') };
+        } else if (error.message.includes('captcha')) {
+          return { error: new Error('Captcha verification failed. Please try again in a different browser.') };
+        }
       }
       
       return { error };
@@ -139,6 +176,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const { error } = await supabase.auth.updateUser({
         data: metadata
       });
+      
+      if (!error) {
+        toast({
+          title: "Profile updated",
+          description: "Your profile information has been updated successfully.",
+        });
+      }
       
       return { error };
     } catch (err) {

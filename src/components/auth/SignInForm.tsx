@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
@@ -9,7 +10,11 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-export const SignInForm = () => {
+interface SignInFormProps {
+  onForgotPassword: () => void;
+}
+
+export const SignInForm = ({ onForgotPassword }: SignInFormProps) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -101,9 +106,14 @@ export const SignInForm = () => {
       <div className="space-y-2">
         <div className="flex justify-between">
           <Label htmlFor="password-signin">Password</Label>
-          <a href="#" className="text-xs text-greentrail-600 hover:underline">
+          <Button 
+            type="button" 
+            variant="link" 
+            className="h-auto p-0 text-xs text-greentrail-600 hover:text-greentrail-700 dark:text-greentrail-400 dark:hover:text-greentrail-300"
+            onClick={onForgotPassword}
+          >
             Forgot password?
-          </a>
+          </Button>
         </div>
         <Input
           id="password-signin"

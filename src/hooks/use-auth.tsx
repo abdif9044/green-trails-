@@ -14,6 +14,7 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   verifyAge: (birthdate: Date) => Promise<boolean>;
   resetPassword: (email: string) => Promise<{ success: boolean; message?: string }>;
+  updatePassword: (password: string) => Promise<{ success: boolean; message?: string }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -262,6 +263,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const updatePassword = async (password: string) => {
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password,
+      });
+
+      if (error) {
+        console.error('Error updating password:', error);
+        toast({
+          title: "Password update failed",
+          description: error.message,
+          variant: "destructive",
+        });
+        return { success: false, message: error.message };
+      }
+
+      // Log password update for security audit
+      if (user) {
+        await DatabaseSetupService.logSecurityEvent('password_updated', { 
+          user_id: user.id,
+          timestamp: new Date().toISOString() 
+        });
+      }
+
+      toast({
+        title: "Password updated successfully",
+        description: "Your password has been changed.",
+      });
+
+      return { success: true };
+    } catch (error) {
+      console.error('Exception during password update:', error);
+      
+      if (error instanceof Error) {
+        return { success: false, message: error.message };
+      }
+      return { success: false, message: 'An unknown error occurred' };
+    }
+  };
+
   const value = {
     user,
     session,
@@ -271,6 +312,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signOut,
     verifyAge,
     resetPassword,
+    updatePassword,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

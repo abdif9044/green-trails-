@@ -22,6 +22,7 @@ function App() {
         <Route path="/admin" element={<AdminRedirect />} />
         <Route path="/home" element={<Index />} />
         <Route path="/auth" element={<Auth />} />
+        <Route path="/auth/update-password" element={<Auth />} />
         <Route path="/discover" element={<Discover />} />
         <Route path="/trail/:trailId" element={<Trail />} />
         <Route path="/profile/:userId" element={<Profile />} />

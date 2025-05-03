@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { TrailDifficulty, TrailFilters } from '@/types/trails';
 
@@ -26,16 +27,17 @@ export const formatTrailData = (trail: any) => {
   // Handle trail_tags relationship if available
   if (trail.trail_tags) {
     for (const tagData of trail.trail_tags) {
-      if (tagData.tag && tagData.tag.name) {
+      if (tagData.tag) {
+        const tagName = typeof tagData.tag === 'string' ? tagData.tag : tagData.tag.name;
         if (tagData.is_strain_tag) {
           strainTags.push({
-            name: tagData.tag.name,
+            name: tagName,
             type: tagData.tag.details?.type || 'hybrid',
             effects: tagData.tag.details?.effects || [],
             description: tagData.tag.details?.description
           });
         } else {
-          tags.push(tagData.tag.name);
+          tags.push(tagName);
         }
       }
     }
@@ -71,19 +73,19 @@ export const formatTrailData = (trail: any) => {
 
   return {
     id: trail.id,
-    name: trail.name,
-    location: trail.location,
+    name: trail.name || 'Unnamed Trail',
+    location: trail.location || 'Unknown Location',
     imageUrl: imageUrl,
-    difficulty: validateDifficulty(trail.difficulty),
-    length: trail.length,
-    elevation: trail.elevation,
+    difficulty: validateDifficulty(trail.difficulty || 'moderate'),
+    length: trail.length || 0,
+    elevation: trail.elevation || 0,
     elevation_gain: trail.elevation_gain || 0,
     tags: tags,
     likes: 0, // We'll implement this later with proper count
     coordinates: coordinates,
     strainTags: strainTags,
     isAgeRestricted: trail.is_age_restricted || false,
-    description: trail.description,
+    description: trail.description || '',
     country: trail.country,
     state_province: trail.state_province,
     surface: trail.surface,
@@ -96,49 +98,54 @@ export const formatTrailData = (trail: any) => {
 
 // Base query function for trails with filters
 export const queryTrailsWithFilters = (filters: TrailFilters = {}) => {
-  let query = supabase
-    .from('trails')
-    .select(`
-      *,
-      trail_tags (
-        is_strain_tag,
-        tag:tag_id (
-          name,
-          details,
-          tag_type
+  try {
+    let query = supabase
+      .from('trails')
+      .select(`
+        *,
+        trail_tags (
+          is_strain_tag,
+          tag:tag_id (
+            name,
+            details,
+            tag_type
+          )
         )
-      )
-    `);
+      `);
+      
+    // Apply database-level filters
+    if (filters?.country) {
+      query = query.eq('country', filters.country);
+    }
     
-  // Apply database-level filters
-  if (filters?.country) {
-    query = query.eq('country', filters.country);
+    if (filters?.stateProvince) {
+      query = query.eq('state_province', filters.stateProvince);
+    }
+    
+    if (filters?.difficulty) {
+      query = query.eq('difficulty', filters.difficulty);
+    }
+    
+    if (filters?.searchQuery) {
+      query = query.ilike('name', `%${filters.searchQuery}%`);
+    }
+    
+    if (filters?.lengthRange) {
+      const [min, max] = filters.lengthRange;
+      query = query.gte('length', min).lte('length', max);
+    }
+    
+    // Only show age-restricted content if explicitly requested
+    if (!filters?.showAgeRestricted) {
+      query = query.eq('is_age_restricted', false);
+    }
+    
+    // Add pagination and limits for performance
+    query = query.order('name').limit(100);
+    
+    return query;
+  } catch (error) {
+    console.error('Error setting up trail query:', error);
+    throw error;
   }
-  
-  if (filters?.stateProvince) {
-    query = query.eq('state_province', filters.stateProvince);
-  }
-  
-  if (filters?.difficulty) {
-    query = query.eq('difficulty', filters.difficulty);
-  }
-  
-  if (filters?.searchQuery) {
-    query = query.ilike('name', `%${filters.searchQuery}%`);
-  }
-  
-  if (filters?.lengthRange) {
-    const [min, max] = filters.lengthRange;
-    query = query.gte('length', min).lte('length', max);
-  }
-  
-  // Only show age-restricted content if explicitly requested
-  if (!filters?.showAgeRestricted) {
-    query = query.eq('is_age_restricted', false);
-  }
-  
-  // Add pagination and limits for performance
-  query = query.order('name').limit(100);
-  
-  return query;
 };

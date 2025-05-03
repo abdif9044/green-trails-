@@ -66,6 +66,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (data.session) {
           console.log("User signed in successfully with session:", data.session);
         }
+      } else {
+        console.error("Sign in error:", error.message);
       }
       
       return { error };
@@ -89,6 +91,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         };
       }
 
+      // Check if email meets validation requirements
+      if (!email.includes('@') || !email.includes('.')) {
+        return { error: new Error('Please enter a valid email address') };
+      }
+
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -103,6 +110,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           title: "Account created",
           description: "Your account has been created successfully.",
         });
+      } else {
+        console.error("Sign up error:", error.message);
       }
       
       return { error };

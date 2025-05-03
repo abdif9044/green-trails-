@@ -34,6 +34,12 @@ export const SignUpForm = ({ onSuccess }: { onSuccess: () => void }) => {
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 100 }, (_, i) => currentYear - i);
 
+  const validateEmail = (email: string): boolean => {
+    // Use a more reliable email validation regex
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
   const validateDateOfBirth = (): Date | null => {
     if (!day || !month || !year) {
       setError('Please complete all date fields');
@@ -78,6 +84,11 @@ export const SignUpForm = ({ onSuccess }: { onSuccess: () => void }) => {
     
     if (!email || !password) {
       setError('Email and password are required');
+      return;
+    }
+    
+    if (!validateEmail(email)) {
+      setError('Please enter a valid email address');
       return;
     }
     

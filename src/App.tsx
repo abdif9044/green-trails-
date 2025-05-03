@@ -1,3 +1,4 @@
+
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Index from './pages/Index'
 import Auth from './pages/Auth'
@@ -11,12 +12,14 @@ import CreateAlbum from './pages/CreateAlbum'
 import Legal from './pages/Legal'
 import AdminTrailImport from './pages/AdminTrailImport'
 import AdminImportGuidePage from './pages/AdminImportGuidePage'
+import AdminRedirect from './pages/AdminRedirect'
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Index />} />
+        <Route path="/" element={<AdminRedirect />} />
+        <Route path="/home" element={<Index />} />
         <Route path="/auth" element={<Auth />} />
         <Route path="/discover" element={<Discover />} />
         <Route path="/trail/:trailId" element={<Trail />} />

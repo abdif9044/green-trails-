@@ -46,7 +46,7 @@ export function useAutoImport({
         
         toast({
           title: "Starting bulk import",
-          description: `Initiating import of 55,369 trails from ${activeSources.length} sources.`,
+          description: `Initiating import of ${trailCount.toLocaleString()} trails from ${activeSources.length} sources.`,
         });
         
         const success = await handleBulkImport(activeSources, trailCount);

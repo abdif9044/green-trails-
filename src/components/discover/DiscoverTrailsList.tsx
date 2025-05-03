@@ -6,7 +6,7 @@ import { TrailCard } from "@/features/trails";
 import { TrailDifficulty, TrailFilters, Trail } from '@/types/trails';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { validateDifficulty } from '@/features/trails';
+import { formatTrailData } from '@/features/trails';
 
 export interface DiscoverTrailsListProps {
   currentFilters: TrailFilters;
@@ -30,7 +30,22 @@ const DiscoverTrailsList: React.FC<DiscoverTrailsListProps> = ({
         console.log("Fetching trails with filters:", currentFilters);
         
         // Build the query based on filters
-        let query = supabase.from('trails').select('*');
+        let query = supabase
+          .from('trails')
+          .select(`
+            *,
+            trail_tags (
+              is_strain_tag,
+              tag:tag_id (
+                name,
+                details,
+                tag_type
+              )
+            ),
+            trail_likes (
+              id
+            )
+          `);
         
         if (currentFilters.searchQuery) {
           query = query.ilike('name', `%${currentFilters.searchQuery}%`);
@@ -71,27 +86,20 @@ const DiscoverTrailsList: React.FC<DiscoverTrailsListProps> = ({
         if (!data || data.length === 0) {
           // If no trails in database, create sample data for development
           console.log("No trails found, creating sample trails");
-          setTrails(createSampleTrails());
+          const sampleTrails = createSampleTrails();
+          setTrails(sampleTrails);
           if (onTrailCountChange) {
-            onTrailCountChange(5); // Sample count
+            onTrailCountChange(sampleTrails.length);
           }
           return;
         }
         
-        // Transform the data to match the Trail type
-        const formattedTrails: Trail[] = data.map(trail => ({
-          id: trail.id,
-          name: trail.name || 'Unnamed Trail',
-          location: trail.location || 'Unknown Location',
-          imageUrl: "https://images.unsplash.com/photo-1501854140801-50d01698950b?q=80&w=1000&auto=format&fit=crop",
-          difficulty: validateDifficulty(trail.difficulty || 'moderate'),
-          length: trail.length || 0,
-          elevation: trail.elevation || 0,
-          tags: [], // Would need to fetch from trail_tags
-          likes: 0, // Would need to fetch from trail_likes
-          strainTags: [], // Would need to fetch from trail_tags where is_strain_tag is true
-          isAgeRestricted: trail.is_age_restricted || false
-        }));
+        // Transform the data using our common formatter
+        const formattedTrails: Trail[] = data.map(trail => {
+          // Add likes count
+          const likesCount = trail.trail_likes?.length || 0;
+          return formatTrailData({...trail, likes_count: likesCount});
+        });
         
         console.log("Formatted trails:", formattedTrails);
         setTrails(formattedTrails);
@@ -183,7 +191,15 @@ const DiscoverTrailsList: React.FC<DiscoverTrailsListProps> = ({
         elevation: 2100,
         tags: ["mountain", "forest", "challenging"],
         likes: 145,
-        isAgeRestricted: true
+        isAgeRestricted: true,
+        strainTags: [
+          {
+            name: "Blue Dream",
+            type: "hybrid",
+            effects: ["relaxed", "creative", "uplifted"],
+            description: "A popular strain known for its balanced effects"
+          }
+        ]
       }
     ];
   };

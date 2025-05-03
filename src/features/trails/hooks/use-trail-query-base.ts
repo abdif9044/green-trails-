@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { TrailDifficulty, TrailFilters } from '@/types/trails';
+import { TrailDifficulty, TrailFilters, StrainTag } from '@/types/trails';
 
 // Helper function to ensure difficulty is a valid TrailDifficulty
 export const validateDifficulty = (difficulty: string): TrailDifficulty => {
@@ -21,26 +21,25 @@ export const validateDifficulty = (difficulty: string): TrailDifficulty => {
 // Create base trail object from Supabase data
 export const formatTrailData = (trail: any) => {
   // Extract regular tags and strain tags
-  const tags = [];
-  const strainTags = [];
+  const tags: string[] = [];
+  const strainTags: StrainTag[] = [];
   
   // Handle trail_tags relationship if available
   if (trail.trail_tags) {
-    for (const tagData of trail.trail_tags) {
+    trail.trail_tags.forEach((tagData: any) => {
       if (tagData.tag) {
-        const tagName = typeof tagData.tag === 'string' ? tagData.tag : tagData.tag.name;
         if (tagData.is_strain_tag) {
           strainTags.push({
-            name: tagName,
+            name: tagData.tag.name,
             type: tagData.tag.details?.type || 'hybrid',
             effects: tagData.tag.details?.effects || [],
             description: tagData.tag.details?.description
           });
         } else {
-          tags.push(tagName);
+          tags.push(tagData.tag.name);
         }
       }
-    }
+    });
   }
   
   // Default image selection based on difficulty and type
@@ -81,7 +80,7 @@ export const formatTrailData = (trail: any) => {
     elevation: trail.elevation || 0,
     elevation_gain: trail.elevation_gain || 0,
     tags: tags,
-    likes: 0, // We'll implement this later with proper count
+    likes: trail.likes_count || 0,
     coordinates: coordinates,
     strainTags: strainTags,
     isAgeRestricted: trail.is_age_restricted || false,
@@ -110,6 +109,9 @@ export const queryTrailsWithFilters = (filters: TrailFilters = {}) => {
             details,
             tag_type
           )
+        ),
+        trail_likes (
+          id
         )
       `);
       

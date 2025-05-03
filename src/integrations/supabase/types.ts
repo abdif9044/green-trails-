@@ -45,6 +45,48 @@ export type Database = {
         }
         Relationships: []
       }
+      bulk_import_jobs: {
+        Row: {
+          completed_at: string | null
+          id: string
+          last_updated: string | null
+          started_at: string
+          status: string
+          total_sources: number
+          total_trails_requested: number
+          trails_added: number | null
+          trails_failed: number | null
+          trails_processed: number | null
+          trails_updated: number | null
+        }
+        Insert: {
+          completed_at?: string | null
+          id?: string
+          last_updated?: string | null
+          started_at?: string
+          status: string
+          total_sources: number
+          total_trails_requested: number
+          trails_added?: number | null
+          trails_failed?: number | null
+          trails_processed?: number | null
+          trails_updated?: number | null
+        }
+        Update: {
+          completed_at?: string | null
+          id?: string
+          last_updated?: string | null
+          started_at?: string
+          status?: string
+          total_sources?: number
+          total_trails_requested?: number
+          trails_added?: number | null
+          trails_failed?: number | null
+          trails_processed?: number | null
+          trails_updated?: number | null
+        }
+        Relationships: []
+      }
       comments: {
         Row: {
           content: string
@@ -347,6 +389,30 @@ export type Database = {
         }
         Relationships: []
       }
+      tags: {
+        Row: {
+          created_at: string | null
+          details: Json | null
+          id: string
+          name: string
+          tag_type: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          name: string
+          tag_type?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          name?: string
+          tag_type?: string | null
+        }
+        Relationships: []
+      }
       trail_comments: {
         Row: {
           content: string
@@ -473,6 +539,7 @@ export type Database = {
       }
       trail_import_jobs: {
         Row: {
+          bulk_job_id: string | null
           completed_at: string | null
           error_message: string | null
           id: string
@@ -486,6 +553,7 @@ export type Database = {
           trails_updated: number | null
         }
         Insert: {
+          bulk_job_id?: string | null
           completed_at?: string | null
           error_message?: string | null
           id?: string
@@ -499,6 +567,7 @@ export type Database = {
           trails_updated?: number | null
         }
         Update: {
+          bulk_job_id?: string | null
           completed_at?: string | null
           error_message?: string | null
           id?: string
@@ -512,6 +581,13 @@ export type Database = {
           trails_updated?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "trail_import_jobs_bulk_job_id_fkey"
+            columns: ["bulk_job_id"]
+            isOneToOne: false
+            referencedRelation: "bulk_import_jobs"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "trail_import_jobs_source_id_fkey"
             columns: ["source_id"]
@@ -583,6 +659,7 @@ export type Database = {
           id: string
           is_strain_tag: boolean | null
           tag: string
+          tag_id: string | null
           trail_id: string | null
         }
         Insert: {
@@ -590,6 +667,7 @@ export type Database = {
           id?: string
           is_strain_tag?: boolean | null
           tag: string
+          tag_id?: string | null
           trail_id?: string | null
         }
         Update: {
@@ -597,9 +675,17 @@ export type Database = {
           id?: string
           is_strain_tag?: boolean | null
           tag?: string
+          tag_id?: string | null
           trail_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "trail_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "trail_tags_trail_id_fkey"
             columns: ["trail_id"]

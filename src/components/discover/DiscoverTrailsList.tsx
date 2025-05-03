@@ -1,12 +1,9 @@
 
-import React, { useEffect, useState } from 'react';
-import { Button } from "@/components/ui/button";
-import { Compass } from "lucide-react";
-import { TrailCard } from "@/features/trails";
-import { TrailDifficulty, TrailFilters, Trail } from '@/types/trails';
-import { Link } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
-import { formatTrailData } from '@/features/trails';
+import React from 'react';
+import { useTrailsQuery } from "@/features/trails/hooks/use-trails-query";
+import { TrailFilters } from '@/types/trails';
+import NoTrailsFound from './NoTrailsFound';
+import TrailsGrid from './TrailsGrid';
 
 export interface DiscoverTrailsListProps {
   currentFilters: TrailFilters;
@@ -19,189 +16,10 @@ const DiscoverTrailsList: React.FC<DiscoverTrailsListProps> = ({
   viewMode,
   onTrailCountChange
 }) => {
-  const [trails, setTrails] = useState<Trail[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchTrails = async () => {
-      setLoading(true);
-      
-      try {
-        console.log("Fetching trails with filters:", currentFilters);
-        
-        // Build the query based on filters
-        let query = supabase
-          .from('trails')
-          .select(`
-            *,
-            trail_tags (
-              is_strain_tag,
-              tag:tag_id (
-                name,
-                details,
-                tag_type
-              )
-            ),
-            trail_likes (
-              id
-            )
-          `);
-        
-        if (currentFilters.searchQuery) {
-          query = query.ilike('name', `%${currentFilters.searchQuery}%`);
-        }
-        
-        if (currentFilters.difficulty) {
-          query = query.eq('difficulty', currentFilters.difficulty);
-        }
-        
-        if (currentFilters.lengthRange) {
-          query = query
-            .gte('length', currentFilters.lengthRange[0])
-            .lte('length', currentFilters.lengthRange[1]);
-        }
-        
-        if (currentFilters.country) {
-          query = query.eq('country', currentFilters.country);
-        }
-        
-        if (currentFilters.stateProvince) {
-          query = query.eq('state_province', currentFilters.stateProvince);
-        }
-        
-        if (!currentFilters.showAgeRestricted) {
-          query = query.eq('is_age_restricted', false);
-        }
-        
-        // Execute the query
-        const { data, error } = await query.limit(20);
-        
-        if (error) {
-          console.error('Error fetching trails:', error);
-          throw error;
-        }
-        
-        console.log("Raw trails data:", data);
-        
-        if (!data || data.length === 0) {
-          // If no trails in database, create sample data for development
-          console.log("No trails found, creating sample trails");
-          const sampleTrails = createSampleTrails();
-          setTrails(sampleTrails);
-          if (onTrailCountChange) {
-            onTrailCountChange(sampleTrails.length);
-          }
-          return;
-        }
-        
-        // Transform the data using our common formatter
-        const formattedTrails: Trail[] = data.map(trail => {
-          // Add likes count
-          const likesCount = trail.trail_likes?.length || 0;
-          return formatTrailData({...trail, likes_count: likesCount});
-        });
-        
-        console.log("Formatted trails:", formattedTrails);
-        setTrails(formattedTrails);
-        
-        if (onTrailCountChange) {
-          onTrailCountChange(formattedTrails.length);
-        }
-        
-      } catch (error) {
-        console.error('Error fetching trails:', error);
-        
-        // Fallback to sample data if fetching fails
-        const sampleTrails = createSampleTrails();
-        setTrails(sampleTrails);
-        
-        if (onTrailCountChange) {
-          onTrailCountChange(sampleTrails.length);
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchTrails();
-  }, [currentFilters, onTrailCountChange]);
+  const { trails, loading } = useTrailsQuery(currentFilters, onTrailCountChange);
 
   const handleResetFilters = () => {
     // This would be handled by the parent component
-  };
-
-  // Create sample trails data for development/fallback
-  const createSampleTrails = (): Trail[] => {
-    return [
-      {
-        id: "1",
-        name: "Emerald Forest Trail",
-        location: "Washington, USA",
-        imageUrl: "https://images.unsplash.com/photo-1533240332313-0db49b459ad6?q=80&w=1000&auto=format&fit=crop",
-        difficulty: "easy",
-        length: 3.5,
-        elevation: 250,
-        tags: ["forest", "waterfall", "family-friendly"],
-        likes: 124,
-        isAgeRestricted: false
-      },
-      {
-        id: "2",
-        name: "Mountain Ridge Path",
-        location: "Colorado, USA",
-        imageUrl: "https://images.unsplash.com/photo-1454982523318-4b6396f39d3a?q=80&w=1000&auto=format&fit=crop",
-        difficulty: "hard",
-        length: 8.2,
-        elevation: 1200,
-        tags: ["mountain", "views", "challenging"],
-        likes: 87,
-        isAgeRestricted: false
-      },
-      {
-        id: "3",
-        name: "Cedar Loop",
-        location: "Oregon, USA",
-        imageUrl: "https://images.unsplash.com/photo-1551632811-561732d1e306?q=80&w=1000&auto=format&fit=crop",
-        difficulty: "moderate",
-        length: 4.7,
-        elevation: 450,
-        tags: ["forest", "loop", "scenic"],
-        likes: 56,
-        isAgeRestricted: false
-      },
-      {
-        id: "4",
-        name: "Sunset Canyon",
-        location: "Arizona, USA",
-        imageUrl: "https://images.unsplash.com/photo-1500964757637-c85e8a162699?q=80&w=1000&auto=format&fit=crop",
-        difficulty: "moderate",
-        length: 6.3,
-        elevation: 820,
-        tags: ["desert", "canyon", "sunset-views"],
-        likes: 93,
-        isAgeRestricted: false
-      },
-      {
-        id: "5",
-        name: "Green Valley Trek",
-        location: "California, USA",
-        imageUrl: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=1000&auto=format&fit=crop",
-        difficulty: "expert",
-        length: 12.5,
-        elevation: 2100,
-        tags: ["mountain", "forest", "challenging"],
-        likes: 145,
-        isAgeRestricted: true,
-        strainTags: [
-          {
-            name: "Blue Dream",
-            type: "hybrid",
-            effects: ["relaxed", "creative", "uplifted"],
-            description: "A popular strain known for its balanced effects"
-          }
-        ]
-      }
-    ];
   };
 
   if (loading) {
@@ -209,43 +27,10 @@ const DiscoverTrailsList: React.FC<DiscoverTrailsListProps> = ({
   }
 
   if (trails.length === 0) {
-    return (
-      <div className="col-span-full py-12 text-center">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-greentrail-100 dark:bg-greentrail-800 text-greentrail-600 dark:text-greentrail-400 mb-4">
-          <Compass size={32} />
-        </div>
-        <h3 className="text-xl font-semibold text-greentrail-800 dark:text-greentrail-200 mb-2">No trails found</h3>
-        <p className="text-greentrail-600 dark:text-greentrail-400 max-w-md mx-auto mb-4">
-          Try adjusting your search criteria or filters to find trails that match your preferences.
-        </p>
-        <Button onClick={handleResetFilters}>
-          Reset Filters
-        </Button>
-      </div>
-    );
+    return <NoTrailsFound onResetFilters={handleResetFilters} />;
   }
 
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-      {trails.map((trail) => (
-        <Link to={`/trail/${trail.id}`} key={trail.id}>
-          <TrailCard 
-            id={trail.id}
-            name={trail.name}
-            location={trail.location}
-            imageUrl={trail.imageUrl}
-            difficulty={trail.difficulty}
-            length={trail.length}
-            elevation={trail.elevation}
-            tags={trail.tags}
-            likes={trail.likes}
-            strainTags={trail.strainTags}
-            isAgeRestricted={trail.isAgeRestricted}
-          />
-        </Link>
-      ))}
-    </div>
-  );
+  return <TrailsGrid trails={trails} />;
 };
 
 export default DiscoverTrailsList;

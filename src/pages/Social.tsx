@@ -26,7 +26,7 @@ const Social = () => {
             setSearchQuery={setSearchQuery}
           />
           
-          <SocialFeed />
+          <SocialFeed searchQuery={searchQuery} onClearSearch={() => setSearchQuery('')} />
         </div>
       </main>
       

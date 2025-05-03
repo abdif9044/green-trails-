@@ -8,9 +8,13 @@ import SocialTabs from './SocialTabs';
 import { TabsContent } from "@/components/ui/tabs";
 import SignInRequired from './SignInRequired';
 
-const SocialFeed = () => {
+interface SocialFeedProps {
+  searchQuery: string;
+  onClearSearch: () => void;
+}
+
+const SocialFeed = ({ searchQuery, onClearSearch }: SocialFeedProps) => {
   const [currentTab, setCurrentTab] = useState<'feed' | 'following'>('feed');
-  const [searchQuery, setSearchQuery] = useState('');
   const { session } = useAuth();
   const { data: albums, isLoading } = useAlbums(currentTab === 'following' ? 'following' : 'feed');
 
@@ -37,7 +41,6 @@ const SocialFeed = () => {
       album.description?.toLowerCase().includes(query) ||
       album.location?.toLowerCase().includes(query) ||
       album.user?.email?.toLowerCase().includes(query)
-      // Don't filter by full_name since it's not in the user type in the Album interface
     );
   });
   
@@ -49,7 +52,7 @@ const SocialFeed = () => {
           isLoading={isLoading}
           searchQuery={searchQuery}
           currentTab={currentTab}
-          onClearSearch={() => setSearchQuery('')}
+          onClearSearch={onClearSearch}
         />
       </TabsContent>
       
@@ -62,7 +65,7 @@ const SocialFeed = () => {
             isLoading={isLoading}
             searchQuery={searchQuery}
             currentTab={currentTab}
-            onClearSearch={() => setSearchQuery('')}
+            onClearSearch={onClearSearch}
           />
         )}
       </TabsContent>

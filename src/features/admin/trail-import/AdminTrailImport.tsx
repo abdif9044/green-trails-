@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
@@ -8,12 +7,11 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import SEOProvider from "@/components/SEOProvider";
 import BulkImportProgressCard from "@/components/admin/BulkImportProgressCard";
-import { Button } from "@/components/ui/button";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Loader2 } from "lucide-react";
 import { useAutoImport } from "./hooks/useAutoImport";
 import { useSourceSelection } from "./hooks/useSourceSelection";
-import { useSetupBulkImport } from "./utils/setupBulkImport";
+import { useDatabaseSetup } from "@/services/database-setup-service";
 import ImportHeader from "./components/ImportHeader";
 import ImportTabs from "./components/ImportTabs";
 
@@ -27,7 +25,7 @@ const AdminTrailImport = () => {
   const [isSettingUpDb, setIsSettingUpDb] = useState(false);
   const [dbSetupError, setDbSetupError] = useState(false);
   
-  const { runSetup } = useSetupBulkImport();
+  const { setupBulkImport, checkTablesExist } = useDatabaseSetup();
   
   const {
     dataSources,
@@ -78,33 +76,38 @@ const AdminTrailImport = () => {
     loadData();
   }, [user, navigate, toast, loadData]);
   
-  // Check if we have bulk import jobs table
+  // Check if database tables exist and set them up if needed
   useEffect(() => {
-    // If we don't have any bulk import jobs and we're not loading,
-    // check if we need to set up the database tables
-    if (!loading && bulkImportJobs === undefined && !isSettingUpDb && !dbSetupError) {
-      const setupDatabase = async () => {
+    const checkAndSetupDatabase = async () => {
+      if (!loading && bulkImportJobs === undefined && !isSettingUpDb && !dbSetupError) {
         setIsSettingUpDb(true);
         try {
-          const success = await runSetup();
-          if (success) {
-            // Reload the data after setup
-            loadData();
-          } else {
-            setDbSetupError(true);
+          // First check if tables exist
+          const tablesExist = await checkTablesExist();
+          
+          if (!tablesExist) {
+            // Setup tables if they don't exist
+            const success = await setupBulkImport();
+            if (success) {
+              // Reload data after successful setup
+              loadData();
+            } else {
+              setDbSetupError(true);
+            }
           }
         } catch (error) {
-          console.error("Error setting up database:", error);
+          console.error("Error checking database status:", error);
           setDbSetupError(true);
         } finally {
           setIsSettingUpDb(false);
         }
-      };
-      
-      setupDatabase();
-    }
-  }, [loading, bulkImportJobs, isSettingUpDb, dbSetupError, loadData, runSetup]);
+      }
+    };
+    
+    checkAndSetupDatabase();
+  }, [loading, bulkImportJobs, isSettingUpDb, dbSetupError, checkTablesExist, setupBulkImport, loadData]);
 
+  // Function to handle bulk import
   const onBulkImport = async () => {
     // If no sources are selected, select all active sources
     const sourcesToUse = selectedSources.length > 0 
@@ -125,6 +128,25 @@ const AdminTrailImport = () => {
     if (success) {
       setBulkImportOpen(false);
       setActiveTab('bulk'); // Switch to bulk tab to show progress
+    }
+  };
+
+  // Retry database setup if it failed
+  const retryDatabaseSetup = async () => {
+    setDbSetupError(false);
+    setIsSettingUpDb(true);
+    try {
+      const success = await setupBulkImport();
+      if (success) {
+        loadData();
+      } else {
+        setDbSetupError(true);
+      }
+    } catch (error) {
+      console.error("Error during database setup retry:", error);
+      setDbSetupError(true);
+    } finally {
+      setIsSettingUpDb(false);
     }
   };
 
@@ -156,16 +178,12 @@ const AdminTrailImport = () => {
               <AlertTitle>Database setup failed</AlertTitle>
               <AlertDescription className="flex justify-between items-center">
                 <span>Could not create required database tables for bulk importing. Please check console for details.</span>
-                <Button size="sm" onClick={() => {
-                  setDbSetupError(false);
-                  setIsSettingUpDb(true);
-                  runSetup().then(success => {
-                    setIsSettingUpDb(false);
-                    if (success) loadData();
-                  });
-                }}>
+                <button 
+                  onClick={retryDatabaseSetup}
+                  className="px-3 py-1 text-sm bg-white text-red-600 hover:bg-red-50 rounded"
+                >
                   Try Again
-                </Button>
+                </button>
               </AlertDescription>
             </Alert>
           )}

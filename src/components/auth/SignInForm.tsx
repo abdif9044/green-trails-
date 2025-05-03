@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
@@ -49,12 +48,15 @@ export const SignInForm = () => {
     }
     
     try {
-      const { error } = await signIn(email, password);
-      if (error) throw error;
+      const { success, message } = await signIn(email, password);
+      if (!success) {
+        console.error('Sign in error:', message);
+        setError(message || 'Failed to sign in');
+      }
       
       // Navigate is handled by the AuthProvider's onAuthStateChange
     } catch (err: any) {
-      console.error('Sign in error:', err);
+      console.error('Exception during sign in:', err);
       setError(err.message || 'Failed to sign in');
     } finally {
       setLoading(false);

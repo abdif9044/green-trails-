@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
@@ -180,16 +179,18 @@ export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
     setLoading(true);
     
     try {
-      const { error } = await signUp(email, password, dateOfBirth);
+      const { success, message } = await signUp(email, password, {
+        birthdate: dateOfBirth.toISOString()
+      });
       
-      if (error) {
-        console.error('Signup error details:', error);
-        if (error.message.includes('captcha')) {
+      if (!success) {
+        console.error('Signup error details:', message);
+        if (message?.includes('captcha')) {
           setError('Captcha verification failed. Please try again with a different browser or contact support.');
-        } else if (error.message.includes('already registered')) {
+        } else if (message?.includes('already registered')) {
           setError('This email is already registered. Please sign in instead.');
         } else {
-          setError(error.message || 'Failed to create account');
+          setError(message || 'Failed to create account');
         }
         return;
       }

@@ -57,6 +57,7 @@ export const UpdatePasswordForm = () => {
       
       if (!success) {
         setError(message || 'Failed to update password');
+        setLoading(false);
         return;
       }
       
@@ -70,7 +71,6 @@ export const UpdatePasswordForm = () => {
     } catch (err: any) {
       console.error('Update password error:', err);
       setError(err.message || 'Failed to update password');
-    } finally {
       setLoading(false);
     }
   };

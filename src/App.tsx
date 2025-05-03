@@ -18,7 +18,8 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<AdminRedirect />} />
+        <Route path="/" element={<Index />} />
+        <Route path="/admin" element={<AdminRedirect />} />
         <Route path="/home" element={<Index />} />
         <Route path="/auth" element={<Auth />} />
         <Route path="/discover" element={<Discover />} />

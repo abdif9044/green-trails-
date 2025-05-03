@@ -22,10 +22,11 @@ const AdminTrailImport = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = React.useState("sources");
+  const [activeTab, setActiveTab] = React.useState("bulk");
   const [bulkImportOpen, setBulkImportOpen] = React.useState(false);
   const [selectedSources, setSelectedSources] = React.useState<string[]>([]);
   const [trailCount, setTrailCount] = React.useState(55369); // Default to 55369 as requested
+  const [autoImportTriggered, setAutoImportTriggered] = React.useState(false);
   
   const {
     dataSources,
@@ -56,6 +57,45 @@ const AdminTrailImport = () => {
     
     loadData();
   }, [user, navigate, toast, loadData]);
+
+  // New effect to automatically trigger bulk import once data is loaded
+  useEffect(() => {
+    const triggerAutoImport = async () => {
+      if (!autoImportTriggered && !loading && dataSources.length > 0 && !bulkImportLoading && !activeBulkJobId) {
+        setAutoImportTriggered(true);
+        
+        // Get all active data sources
+        const activeSources = dataSources
+          .filter(s => s.is_active)
+          .map(s => s.id);
+        
+        if (activeSources.length === 0) {
+          toast({
+            title: "No active data sources found",
+            description: "Please activate at least one data source before importing.",
+            variant: "destructive"
+          });
+          return;
+        }
+        
+        toast({
+          title: "Starting bulk import",
+          description: `Initiating import of 55,369 trails from ${activeSources.length} sources.`,
+        });
+        
+        const success = await handleBulkImport(activeSources, trailCount);
+        if (success) {
+          setActiveTab('bulk');
+          toast({
+            title: "Bulk import started",
+            description: "The import process is now running in the background.",
+          });
+        }
+      }
+    };
+    
+    triggerAutoImport();
+  }, [dataSources, loading, bulkImportLoading, autoImportTriggered, activeBulkJobId, handleBulkImport, toast, trailCount]);
 
   const onBulkImport = async () => {
     // If no sources are selected, select all active sources
@@ -153,7 +193,7 @@ const AdminTrailImport = () => {
             />
           )}
           
-          <Tabs defaultValue="sources" className="mt-6" value={activeTab} onValueChange={setActiveTab}>
+          <Tabs defaultValue="bulk" className="mt-6" value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="grid grid-cols-3 w-full max-w-md">
               <TabsTrigger value="sources">Data Sources</TabsTrigger>
               <TabsTrigger value="jobs">Import Jobs</TabsTrigger>

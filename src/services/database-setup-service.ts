@@ -87,7 +87,7 @@ export class DatabaseSetupService {
             SELECT FROM information_schema.tables 
             WHERE table_schema = 'public'
             AND table_name = 'bulk_import_jobs'
-          ) as exists;
+          ) as "exists";
         `
       });
 
@@ -96,7 +96,8 @@ export class DatabaseSetupService {
         return false;
       }
       
-      return data && data.length > 0 && data[0].exists;
+      // Fixed: properly check the 'exists' property in the returned data
+      return data && data.length > 0 && data[0].exists === true;
     } catch (error) {
       console.error('Exception when checking if bulk import tables exist:', error);
       return false;
@@ -116,21 +117,42 @@ export class DatabaseSetupService {
         { name: 'CBD', details: { effects: ['non-psychoactive', 'therapeutic'] } }
       ];
       
-      // Insert default strain tags if they don't exist
-      const { error } = await supabase
-        .from('tags')
-        .upsert(
-          defaultStrains.map(strain => ({
-            name: strain.name,
-            tag_type: 'strain',
-            details: strain.details
-          })),
-          { onConflict: 'name' }
-        );
-        
-      if (error) {
-        console.error('Error creating default strain tags:', error);
-        return { success: false, error };
+      // First, we need to run a raw SQL query to create the tags table if it doesn't exist
+      // instead of trying to insert directly to a table that might not exist yet
+      
+      // Check if the tags table exists
+      const { data: tableExists, error: checkError } = await supabase.rpc('execute_sql', {
+        sql_query: `
+          SELECT EXISTS (
+            SELECT FROM information_schema.tables 
+            WHERE table_schema = 'public'
+            AND table_name = 'tags'
+          ) as "exists";
+        `
+      });
+      
+      if (checkError) {
+        console.error('Error checking if tags table exists:', checkError);
+        return { success: false, error: checkError };
+      }
+      
+      // If tags table exists, insert default strains
+      if (tableExists && tableExists.length > 0 && tableExists[0].exists === true) {
+        // Insert default strain tags if they don't exist
+        for (const strain of defaultStrains) {
+          const { error } = await supabase.rpc('execute_sql', {
+            sql_query: `
+              INSERT INTO tags (name, tag_type, details)
+              VALUES ('${strain.name}', 'strain', '${JSON.stringify(strain.details)}')
+              ON CONFLICT (name) DO NOTHING;
+            `
+          });
+          
+          if (error) {
+            console.error(`Error inserting strain tag ${strain.name}:`, error);
+            return { success: false, error };
+          }
+        }
       }
       
       return { success: true };

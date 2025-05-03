@@ -1,7 +1,8 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowDownUp } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { ArrowDownUp, HelpCircle } from 'lucide-react';
 import BulkImportDialog from '@/components/admin/BulkImportDialog';
 import { TrailDataSource } from '@/hooks/useTrailImport';
 
@@ -42,6 +43,13 @@ const ImportHeader: React.FC<ImportHeaderProps> = ({
       </div>
       
       <div className="flex items-center mt-4 lg:mt-0 space-x-4">
+        <Link to="/admin/trails/import/guide">
+          <Button variant="outline" size="sm" className="gap-2">
+            <HelpCircle className="h-4 w-4" />
+            Import Guide
+          </Button>
+        </Link>
+        
         <BulkImportDialog
           open={bulkImportOpen}
           onOpenChange={setBulkImportOpen}

@@ -1,4 +1,3 @@
-
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Index from './pages/Index'
 import Auth from './pages/Auth'
@@ -11,6 +10,7 @@ import AlbumDetail from './pages/AlbumDetail'
 import CreateAlbum from './pages/CreateAlbum'
 import Legal from './pages/Legal'
 import AdminTrailImport from './pages/AdminTrailImport'
+import AdminImportGuidePage from './pages/AdminImportGuidePage'
 
 function App() {
   return (
@@ -26,6 +26,7 @@ function App() {
         <Route path="/create-album" element={<CreateAlbum />} />
         <Route path="/legal/:contentId" element={<Legal />} />
         <Route path="/admin/trails/import" element={<AdminTrailImport />} />
+        <Route path="/admin/trails/import/guide" element={<AdminImportGuidePage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>

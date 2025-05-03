@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
@@ -6,13 +7,15 @@ import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import SEOProvider from "@/components/SEOProvider";
-import BulkImportProgressCard from "@/components/admin/BulkImportProgressCard";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { Loader2 } from "lucide-react";
+
+// Import refactored components
+import { useDBSetup } from "./hooks/useDBSetup";
+import { useBulkImport } from "./hooks/useBulkImport";
 import { useAutoImport } from "./hooks/useAutoImport";
 import { useSourceSelection } from "./hooks/useSourceSelection";
-import { useDatabaseSetup } from "@/services/database-setup-service";
+import DatabaseSetupAlerts from "./components/DatabaseSetupAlerts";
 import ImportHeader from "./components/ImportHeader";
+import ImportProgress from "./components/ImportProgress";
 import ImportTabs from "./components/ImportTabs";
 
 const AdminTrailImport = () => {
@@ -20,12 +23,6 @@ const AdminTrailImport = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("bulk");
-  const [bulkImportOpen, setBulkImportOpen] = useState(false);
-  const [trailCount, setTrailCount] = useState(55369); // Default to 55369 as requested
-  const [isSettingUpDb, setIsSettingUpDb] = useState(false);
-  const [dbSetupError, setDbSetupError] = useState(false);
-  
-  const { setupBulkImport, checkTablesExist } = useDatabaseSetup();
   
   const {
     dataSources,
@@ -43,6 +40,16 @@ const AdminTrailImport = () => {
   } = useTrailImport();
 
   // Use our custom hooks
+  const { isSettingUpDb, dbSetupError, checkAndSetupDatabase, retryDatabaseSetup } = useDBSetup(loadData);
+  
+  const { 
+    bulkImportOpen, 
+    setBulkImportOpen, 
+    trailCount, 
+    setTrailCount, 
+    onBulkImport 
+  } = useBulkImport(handleBulkImport);
+  
   const { 
     selectedSources, 
     handleSourceSelect, 
@@ -78,75 +85,16 @@ const AdminTrailImport = () => {
   
   // Check if database tables exist and set them up if needed
   useEffect(() => {
-    const checkAndSetupDatabase = async () => {
-      if (!loading && bulkImportJobs === undefined && !isSettingUpDb && !dbSetupError) {
-        setIsSettingUpDb(true);
-        try {
-          // First check if tables exist
-          const tablesExist = await checkTablesExist();
-          
-          if (!tablesExist) {
-            // Setup tables if they don't exist
-            const success = await setupBulkImport();
-            if (success) {
-              // Reload data after successful setup
-              loadData();
-            } else {
-              setDbSetupError(true);
-            }
-          }
-        } catch (error) {
-          console.error("Error checking database status:", error);
-          setDbSetupError(true);
-        } finally {
-          setIsSettingUpDb(false);
-        }
-      }
-    };
-    
-    checkAndSetupDatabase();
-  }, [loading, bulkImportJobs, isSettingUpDb, dbSetupError, checkTablesExist, setupBulkImport, loadData]);
-
-  // Function to handle bulk import
-  const onBulkImport = async () => {
-    // If no sources are selected, select all active sources
-    const sourcesToUse = selectedSources.length > 0 
-      ? selectedSources 
-      : dataSources.filter(s => s.is_active).map(s => s.id);
-    
-    // Make sure we have sources
-    if (sourcesToUse.length === 0) {
-      toast({
-        title: "No sources selected",
-        description: "Please select at least one data source.",
-        variant: "destructive"
-      });
-      return;
+    if (!loading && bulkImportJobs === undefined && !isSettingUpDb && !dbSetupError) {
+      checkAndSetupDatabase();
     }
-    
-    const success = await handleBulkImport(sourcesToUse, trailCount);
+  }, [loading, bulkImportJobs, isSettingUpDb, dbSetupError, checkAndSetupDatabase]);
+
+  // Function to handle the bulk import
+  const handleBulkImportClick = async () => {
+    const success = await onBulkImport(selectedSources, dataSources);
     if (success) {
-      setBulkImportOpen(false);
       setActiveTab('bulk'); // Switch to bulk tab to show progress
-    }
-  };
-
-  // Retry database setup if it failed
-  const retryDatabaseSetup = async () => {
-    setDbSetupError(false);
-    setIsSettingUpDb(true);
-    try {
-      const success = await setupBulkImport();
-      if (success) {
-        loadData();
-      } else {
-        setDbSetupError(true);
-      }
-    } catch (error) {
-      console.error("Error during database setup retry:", error);
-      setDbSetupError(true);
-    } finally {
-      setIsSettingUpDb(false);
     }
   };
 
@@ -161,32 +109,11 @@ const AdminTrailImport = () => {
       
       <div className="flex-grow bg-slate-50 dark:bg-greentrail-950 py-8">
         <div className="container mx-auto px-4">
-          {isSettingUpDb && (
-            <Alert className="mb-6 bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800">
-              <AlertTitle className="flex items-center gap-2">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Setting up bulk import database
-              </AlertTitle>
-              <AlertDescription>
-                This is a one-time setup to create necessary database tables for bulk importing trails.
-              </AlertDescription>
-            </Alert>
-          )}
-          
-          {dbSetupError && (
-            <Alert variant="destructive" className="mb-6">
-              <AlertTitle>Database setup failed</AlertTitle>
-              <AlertDescription className="flex justify-between items-center">
-                <span>Could not create required database tables for bulk importing. Please check console for details.</span>
-                <button 
-                  onClick={retryDatabaseSetup}
-                  className="px-3 py-1 text-sm bg-white text-red-600 hover:bg-red-50 rounded"
-                >
-                  Try Again
-                </button>
-              </AlertDescription>
-            </Alert>
-          )}
+          <DatabaseSetupAlerts 
+            isSettingUpDb={isSettingUpDb}
+            dbSetupError={dbSetupError}
+            retryDatabaseSetup={retryDatabaseSetup}
+          />
         
           <ImportHeader
             bulkImportOpen={bulkImportOpen}
@@ -195,17 +122,16 @@ const AdminTrailImport = () => {
             onSourceSelect={handleSourceSelect}
             trailCount={trailCount}
             onTrailCountChange={setTrailCount}
-            onBulkImport={onBulkImport}
+            onBulkImport={handleBulkImportClick}
             bulkImportLoading={bulkImportLoading || isSettingUpDb}
             dataSources={dataSources}
             loadData={loadData}
           />
           
-          {activeBulkJobId && (
-            <BulkImportProgressCard 
-              progress={bulkProgress} 
-            />
-          )}
+          <ImportProgress 
+            activeBulkJobId={activeBulkJobId}
+            bulkProgress={bulkProgress}
+          />
           
           <ImportTabs
             activeTab={activeTab}

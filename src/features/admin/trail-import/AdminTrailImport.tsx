@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
 import { useTrailImport } from "@/hooks/useTrailImport";
@@ -22,7 +22,7 @@ const AdminTrailImport = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState("bulk");
+  const [activeTab, setActiveTab] = React.useState("bulk");
   
   const {
     dataSources,

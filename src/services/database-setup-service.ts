@@ -96,10 +96,10 @@ export class DatabaseSetupService {
         return false;
       }
       
-      // Fix the type issue by properly handling the returned data
+      // Properly handle the returned data by using type assertions
       if (data && Array.isArray(data) && data.length > 0) {
-        // The SQL query returns a boolean value as 'exists' field
-        return data[0]?.exists === true;
+        const result = data[0] as Record<string, unknown>;
+        return result.exists === true;
       }
       
       return false;
@@ -141,11 +141,13 @@ export class DatabaseSetupService {
         return { success: false, error: checkError };
       }
       
-      // Fix the type issue by properly handling the returned data
-      const tagsTableExists = tableExists && 
-        Array.isArray(tableExists) && 
-        tableExists.length > 0 && 
-        tableExists[0]?.exists === true;
+      // Properly handle the returned data using type assertions
+      let tagsTableExists = false;
+      
+      if (tableExists && Array.isArray(tableExists) && tableExists.length > 0) {
+        const result = tableExists[0] as Record<string, unknown>;
+        tagsTableExists = result.exists === true;
+      }
       
       // If tags table exists, insert default strains
       if (tagsTableExists) {

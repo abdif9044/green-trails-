@@ -37,7 +37,7 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
     
     // Parse request
-    const { sourceIds, totalTrails, batchSize = 500, concurrency = 3 } = await req.json() as BulkImportRequest;
+    const { sourceIds, totalTrails, batchSize = 1000, concurrency = 3 } = await req.json() as BulkImportRequest;
     
     if (!sourceIds || sourceIds.length === 0) {
       return new Response(
@@ -152,7 +152,7 @@ serve(async (req) => {
             }
             
             // Simple backoff to avoid overwhelming the database
-            await new Promise(r => setTimeout(r, 500));
+            await new Promise(r => setTimeout(r, 300));
           }
           
           // Aggregate results for this source

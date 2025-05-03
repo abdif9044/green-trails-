@@ -25,7 +25,7 @@ const AdminTrailImport = () => {
   const [activeTab, setActiveTab] = React.useState("sources");
   const [bulkImportOpen, setBulkImportOpen] = React.useState(false);
   const [selectedSources, setSelectedSources] = React.useState<string[]>([]);
-  const [trailCount, setTrailCount] = React.useState(1000);
+  const [trailCount, setTrailCount] = React.useState(55369); // Default to 55369 as requested
   
   const {
     dataSources,
@@ -58,9 +58,25 @@ const AdminTrailImport = () => {
   }, [user, navigate, toast, loadData]);
 
   const onBulkImport = async () => {
-    const success = await handleBulkImport(selectedSources, trailCount);
+    // If no sources are selected, select all active sources
+    const sourcesToUse = selectedSources.length > 0 
+      ? selectedSources 
+      : dataSources.filter(s => s.is_active).map(s => s.id);
+    
+    // Make sure we have sources
+    if (sourcesToUse.length === 0) {
+      toast({
+        title: "No sources selected",
+        description: "Please select at least one data source.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    const success = await handleBulkImport(sourcesToUse, trailCount);
     if (success) {
       setBulkImportOpen(false);
+      setActiveTab('bulk'); // Switch to bulk tab to show progress
     }
   };
 
@@ -75,6 +91,15 @@ const AdminTrailImport = () => {
   const getSourceNameById = (sourceId: string): string => {
     const source = dataSources.find(src => src.id === sourceId);
     return source ? source.name : 'Unknown Source';
+  };
+
+  const selectAllSources = () => {
+    const activeSources = dataSources.filter(s => s.is_active).map(s => s.id);
+    setSelectedSources(activeSources);
+  };
+
+  const deselectAllSources = () => {
+    setSelectedSources([]);
   };
 
   return (
@@ -136,6 +161,22 @@ const AdminTrailImport = () => {
             </TabsList>
             
             <TabsContent value="sources" className="mt-4">
+              <div className="mb-4 flex justify-end space-x-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={selectAllSources}
+                >
+                  Select All Sources
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={deselectAllSources}
+                >
+                  Deselect All
+                </Button>
+              </div>
               <DataSourcesTab 
                 dataSources={dataSources}
                 loading={loading}

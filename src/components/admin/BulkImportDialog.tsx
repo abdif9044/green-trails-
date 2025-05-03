@@ -80,15 +80,15 @@ const BulkImportDialog: React.FC<BulkImportDialogProps> = ({
             <Slider
               value={[trailCount]}
               min={100}
-              max={50000}
+              max={60000}
               step={100}
               onValueChange={(value) => onTrailCountChange(value[0])}
               className="mt-2"
             />
             <div className="flex justify-between text-xs text-muted-foreground">
               <span>100</span>
-              <span>25,000</span>
-              <span>50,000</span>
+              <span>30,000</span>
+              <span>60,000</span>
             </div>
           </div>
         </div>

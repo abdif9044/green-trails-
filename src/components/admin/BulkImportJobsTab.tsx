@@ -37,6 +37,12 @@ const BulkImportJobsTab: React.FC<BulkImportJobsTabProps> = ({
       return 'Invalid date';
     }
   };
+  
+  // Calculate completion percentage for each job
+  const getCompletionPercentage = (job: BulkImportJob): number => {
+    if (job.total_trails_requested === 0) return 0;
+    return Math.round((job.trails_processed / job.total_trails_requested) * 100);
+  };
 
   return (
     <Card>
@@ -62,7 +68,7 @@ const BulkImportJobsTab: React.FC<BulkImportJobsTabProps> = ({
                   <TableHead className="text-right">Sources</TableHead>
                   <TableHead className="text-right">Processed</TableHead>
                   <TableHead className="text-right">Added</TableHead>
-                  <TableHead className="text-right">Updated</TableHead>
+                  <TableHead className="text-right">%</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -94,11 +100,13 @@ const BulkImportJobsTab: React.FC<BulkImportJobsTabProps> = ({
                           </Badge>
                         )}
                       </TableCell>
-                      <TableCell className="text-right">{job.total_trails_requested.toLocaleString()}</TableCell>
+                      <TableCell className="text-right font-mono">{job.total_trails_requested.toLocaleString()}</TableCell>
                       <TableCell className="text-right">{job.total_sources}</TableCell>
-                      <TableCell className="text-right">{job.trails_processed.toLocaleString()}</TableCell>
-                      <TableCell className="text-right">{job.trails_added.toLocaleString()}</TableCell>
-                      <TableCell className="text-right">{job.trails_updated.toLocaleString()}</TableCell>
+                      <TableCell className="text-right font-mono">{job.trails_processed.toLocaleString()}</TableCell>
+                      <TableCell className="text-right font-mono">{job.trails_added.toLocaleString()}</TableCell>
+                      <TableCell className="text-right font-medium">
+                        {getCompletionPercentage(job)}%
+                      </TableCell>
                     </TableRow>
                   ))
                 )}

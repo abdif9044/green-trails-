@@ -24,8 +24,13 @@ const BulkImportProgressCard: React.FC<BulkImportProgressCardProps> = ({
             </Badge>
           </div>
           <Progress value={progress} className="h-2" />
-          <div className="text-sm text-muted-foreground text-right">
-            {progress}% complete
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">
+              This may take some time for large imports
+            </span>
+            <span className="font-medium">
+              {progress}% complete
+            </span>
           </div>
         </div>
       </CardContent>

@@ -93,6 +93,15 @@ export function useTrailImport() {
       setDataSources(sources || []);
       setImportJobs(jobs || []);
       setBulkImportJobs(bulkJobs || []);
+      
+      // Check if there's an active bulk job
+      const activeJob = bulkJobs?.find(job => job.status === 'processing');
+      if (activeJob) {
+        setActiveBulkJobId(activeJob.id);
+        const progress = Math.round((activeJob.trails_processed / activeJob.total_trails_requested) * 100);
+        setBulkProgress(progress);
+      }
+      
     } catch (error) {
       console.error('Error loading data:', error);
       toast({
@@ -139,7 +148,7 @@ export function useTrailImport() {
 
   // Function to start a bulk import
   const handleBulkImport = async (sourceIds: string[], trailCount: number) => {
-    if (bulkImportLoading || sourceIds.length === 0) return;
+    if (bulkImportLoading || sourceIds.length === 0) return false;
     
     setBulkImportLoading(true);
     try {
@@ -147,7 +156,9 @@ export function useTrailImport() {
       const response = await supabase.functions.invoke('bulk-import-trails', {
         body: { 
           sourceIds, 
-          totalTrails: trailCount 
+          totalTrails: trailCount,
+          batchSize: 1000,  // Larger batch size for efficiency
+          concurrency: 3    // Process multiple sources concurrently
         }
       });
       
@@ -158,7 +169,7 @@ export function useTrailImport() {
       
       toast({
         title: "Bulk import started",
-        description: `Starting import of approximately ${trailCount} trails from ${sourceIds.length} sources.`,
+        description: `Starting import of approximately ${trailCount.toLocaleString()} trails from ${sourceIds.length} sources.`,
       });
       
       return true;
@@ -200,7 +211,7 @@ export function useTrailImport() {
           
           toast({
             title: data.status === "completed" ? "Bulk import completed" : "Bulk import error",
-            description: `Processed ${data.trails_processed} trails: ${data.trails_added} added, ${data.trails_updated} updated, ${data.trails_failed} failed`,
+            description: `Processed ${data.trails_processed.toLocaleString()} trails: ${data.trails_added.toLocaleString()} added, ${data.trails_updated.toLocaleString()} updated, ${data.trails_failed.toLocaleString()} failed`,
             variant: data.status === "completed" ? "default" : "destructive",
           });
         } else {

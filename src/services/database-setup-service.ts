@@ -87,7 +87,7 @@ export class DatabaseSetupService {
             SELECT FROM information_schema.tables 
             WHERE table_schema = 'public'
             AND table_name = 'bulk_import_jobs'
-          ) as "exists";
+          ) as exists;
         `
       });
 
@@ -96,8 +96,13 @@ export class DatabaseSetupService {
         return false;
       }
       
-      // Fixed: properly check the 'exists' property in the returned data
-      return data && data.length > 0 && data[0].exists === true;
+      // Fix the type issue by properly handling the returned data
+      if (data && Array.isArray(data) && data.length > 0) {
+        // The SQL query returns a boolean value as 'exists' field
+        return data[0]?.exists === true;
+      }
+      
+      return false;
     } catch (error) {
       console.error('Exception when checking if bulk import tables exist:', error);
       return false;
@@ -127,7 +132,7 @@ export class DatabaseSetupService {
             SELECT FROM information_schema.tables 
             WHERE table_schema = 'public'
             AND table_name = 'tags'
-          ) as "exists";
+          ) as exists;
         `
       });
       
@@ -136,8 +141,14 @@ export class DatabaseSetupService {
         return { success: false, error: checkError };
       }
       
+      // Fix the type issue by properly handling the returned data
+      const tagsTableExists = tableExists && 
+        Array.isArray(tableExists) && 
+        tableExists.length > 0 && 
+        tableExists[0]?.exists === true;
+      
       // If tags table exists, insert default strains
-      if (tableExists && tableExists.length > 0 && tableExists[0].exists === true) {
+      if (tagsTableExists) {
         // Insert default strain tags if they don't exist
         for (const strain of defaultStrains) {
           const { error } = await supabase.rpc('execute_sql', {

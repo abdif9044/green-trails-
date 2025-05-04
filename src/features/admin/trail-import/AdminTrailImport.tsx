@@ -138,7 +138,7 @@ const AdminTrailImport = () => {
             onTrailCountChange={setTrailCount}
             onBulkImport={handleBulkImportClick}
             bulkImportLoading={bulkImportLoading}
-            activeBulkJobId={activeBulkJobId}
+            activeBulkJobId={activeBulkJobId || null}
             bulkProgress={bulkProgress}
           />
           

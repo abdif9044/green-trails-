@@ -1,11 +1,11 @@
 
-import React from 'react';
-import 'mapbox-gl/dist/mapbox-gl.css';
+import React, { useRef } from 'react';
+import { MapProvider } from './MapContext';
+import MapContent from './MapContent';
 import { Trail } from '@/types/trails';
-import MapContainer from '../map/components/MapContainer';
-import { MapProvider } from './context/MapContext';
+import { mapStyles } from './mapStyles';
 
-interface TrailMapProps {
+interface MapContainerProps {
   trails?: Trail[];
   onTrailSelect?: (trailId: string) => void;
   center?: [number, number];
@@ -18,13 +18,12 @@ interface TrailMapProps {
   difficulty?: string;
 }
 
-const TrailMap: React.FC<TrailMapProps> = (props) => {
+const MapContainer: React.FC<MapContainerProps> = (props) => {
   return (
     <MapProvider>
-      <MapContainer {...props} />
+      <MapContent {...props} />
     </MapProvider>
   );
 };
 
-export default TrailMap;
-export * from './context/MapContext';
+export default MapContainer;

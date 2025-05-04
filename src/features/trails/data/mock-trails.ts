@@ -1,3 +1,4 @@
+
 import { Trail } from "@/types/trails";
 
 export const mockTrails: Trail[] = [
@@ -10,6 +11,7 @@ export const mockTrails: Trail[] = [
     difficulty: "moderate",
     length: 4.5,
     elevation: 320,
+    elevation_gain: 200,
     tags: ["quarry", "woodland", "scenic"],
     strainTags: ["Blue Dream", "Northern Lights"],
     isAgeRestricted: true,
@@ -25,6 +27,7 @@ export const mockTrails: Trail[] = [
     difficulty: "easy",
     length: 3.2,
     elevation: 150,
+    elevation_gain: 80,
     tags: ["lake", "family-friendly", "wildlife"],
     likes: 189,
     isAgeRestricted: false,
@@ -39,6 +42,7 @@ export const mockTrails: Trail[] = [
     difficulty: "easy",
     length: 2.1,
     elevation: 50,
+    elevation_gain: 30,
     tags: ["urban", "lake", "paved"],
     likes: 312,
     isAgeRestricted: false,
@@ -53,6 +57,7 @@ export const mockTrails: Trail[] = [
     difficulty: "easy",
     length: 2.8,
     elevation: 80,
+    elevation_gain: 40,
     tags: ["lake", "accessible", "birding"],
     strainTags: ["Granddaddy Purple"],
     isAgeRestricted: true,
@@ -68,6 +73,7 @@ export const mockTrails: Trail[] = [
     difficulty: "easy",
     length: 6.5,
     elevation: 120,
+    elevation_gain: 75,
     tags: ["creek", "urban", "paved"],
     likes: 205,
     isAgeRestricted: false,
@@ -82,6 +88,7 @@ export const mockTrails: Trail[] = [
     difficulty: "hard",
     length: 8.4,
     elevation: 580,
+    elevation_gain: 350,
     tags: ["wilderness", "lake", "remote"],
     strainTags: ["Durban Poison", "Sour Diesel"],
     isAgeRestricted: true,

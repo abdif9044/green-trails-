@@ -18,6 +18,7 @@ import Legal from '@/pages/Legal';
 import AdminTrailImport from '@/features/admin/trail-import/AdminTrailImport';
 import AdminImportGuidePage from '@/pages/AdminImportGuidePage';
 import AdminRedirect from '@/pages/AdminRedirect';
+import AutoImport from '@/pages/AutoImport';
 
 // Components
 import AssistantBubble from '@/components/assistant/AssistantBubble';
@@ -44,6 +45,7 @@ const App = () => {
             <Route path="/admin" element={<AdminRedirect />} />
             <Route path="/admin/trails/import" element={<AdminTrailImport />} />
             <Route path="/admin/trails/import/guide" element={<AdminImportGuidePage />} />
+            <Route path="/auto-import" element={<AutoImport />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           

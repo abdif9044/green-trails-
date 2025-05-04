@@ -1,12 +1,12 @@
 
 import { useState, useEffect } from 'react';
 import { useMap } from '../context/MapContext';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { 
   getOwmLayerType,
   addWeatherLegend
 } from '../utils/weather-utils';
+import { fetchWeatherApiKey, buildWeatherTileUrl } from '@/services/weather-layer-service';
 
 export type WeatherLayerType = 'temperature' | 'precipitation' | 'clouds' | 'wind';
 
@@ -14,34 +14,6 @@ interface UseWeatherLayerProps {
   enabled: boolean;
   initialType?: WeatherLayerType;
 }
-
-/**
- * Fetches the OpenWeather API key from Supabase
- * @returns Promise with the API key
- */
-const fetchWeatherApiKey = async (): Promise<string> => {
-  try {
-    const { data: { apiKey }, error } = await supabase.functions.invoke('get-weather-key');
-    
-    if (error) {
-      throw new Error(`Failed to get weather API key: ${error.message}`);
-    }
-    
-    if (!apiKey) {
-      throw new Error('Weather API key is not configured');
-    }
-    
-    return apiKey;
-  } catch (error) {
-    console.error('Error fetching weather API key:', error);
-    toast({
-      title: "Weather layer error",
-      description: "Unable to load weather data layer. Please try again later.",
-      variant: "destructive",
-    });
-    throw error;
-  }
-};
 
 /**
  * Hook for managing weather layer on the map
@@ -89,13 +61,12 @@ export const useWeatherLayer = ({ enabled, initialType = 'temperature' }: UseWea
       
       const apiKey = await fetchWeatherApiKey();
       const owmLayer = getOwmLayerType(layerType);
+      const tileUrl = buildWeatherTileUrl(owmLayer, apiKey);
 
       if (!map.getSource('weather-layer')) {
         map.addSource('weather-layer', {
           type: 'raster',
-          tiles: [
-            `https://tile.openweathermap.org/map/${owmLayer}/{z}/{x}/{y}.png?appid=${apiKey}`
-          ],
+          tiles: [tileUrl],
           tileSize: 256,
           attribution: '© OpenWeather'
         });

@@ -2,7 +2,7 @@
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { StrainTag } from "@/types/trails";
-import MarkdownFormatter from "@/utils/markdown-formatter";
+import { MarkdownFormatter } from "@/utils/markdown-formatter";
 import StrainPairingSystem from "./StrainPairingSystem";
 
 interface TrailDetailsProps {

@@ -1,17 +1,16 @@
 
-import React, { useRef } from 'react';
-import { useMapInitialization } from '@/hooks/use-map-initialization';
-import { useMapLayers } from '@/hooks/use-map-layers';
-import { Trail } from '@/types/trails';
-import { useParkingSpots } from '@/hooks/use-parking-spots';
+import React, { useEffect, useRef, useState } from 'react';
+import mapboxgl from 'mapbox-gl';
+import 'mapbox-gl/dist/mapbox-gl.css';
 import { useMap } from '../context/MapContext';
-import MapControls from './MapControls';
 import MapLoadingState from './MapLoadingState';
-import MapTrailMarkers from './MapTrailMarkers';
+import MapControls from './MapControls';
 import MapParkingMarkers from './MapParkingMarkers';
+import MapTrailMarkers from './MapTrailMarkers';
 import MapTrailPaths from './MapTrailPaths';
-import MapWeatherLayer from './MapWeatherLayer';
-import { mapStyles } from '../utils/mapStyles';
+import { supabase } from '@/integrations/supabase/client';
+import { Trail } from '@/types/trails';
+import { fetchWeatherApiKey, buildWeatherTileUrl } from '@/services/weather-layer-service';
 
 interface MapContentProps {
   trails?: Trail[];
@@ -31,100 +30,156 @@ interface MapContentProps {
 const MapContent: React.FC<MapContentProps> = ({
   trails = [],
   onTrailSelect,
-  center = [-92.4631, 44.0553],
-  zoom = 10,
-  className = 'h-[500px] w-full',
-  showParking = true,
+  center = [-100, 40],
+  zoom = 3,
+  className = "h-96",
+  showParking = false,
   showTrailPaths = false,
   showWeatherLayer = false,
-  weatherLayerType = 'temperature'
+  weatherLayerType = 'temperature',
+  country,
+  stateProvince,
+  difficulty,
 }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
-  const { map } = useMap();
+  const { map, setMap } = useMap();
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const weatherSourceId = 'weather-layer';
+  const weatherLayerId = 'weather-layer-tiles';
   
-  const {
-    weatherLayer,
-    setWeatherLayer,
-    parkingLayer,
-    setParkingLayer,
-    trailPathsLayer,
-    setTrailPathsLayer,
-    currentMapStyle,
-    handleStyleChange,
-    handleResetView
-  } = useMapLayers(showParking, showTrailPaths, showWeatherLayer);
-
-  const { isLoading } = useMapInitialization({
-    mapContainer,
-    center,
-    zoom,
-    style: mapStyles[currentMapStyle as keyof typeof mapStyles]
-  });
+  // Initialize map
+  useEffect(() => {
+    const initializeMap = async () => {
+      if (!mapContainer.current) return;
+      if (map) return; // Don't initialize if already exists
+      
+      try {
+        // Get Mapbox token from Supabase Edge Function
+        const { data: { mapboxToken }, error } = await supabase.functions.invoke('get-mapbox-token');
+        
+        if (error || !mapboxToken) {
+          throw new Error('Failed to retrieve Mapbox API key');
+        }
+        
+        // Initialize Mapbox
+        mapboxgl.accessToken = mapboxToken;
+        
+        const newMap = new mapboxgl.Map({
+          container: mapContainer.current,
+          style: 'mapbox://styles/mapbox/outdoors-v12',
+          center,
+          zoom,
+          pitch: 0,
+          attributionControl: true,
+        });
+        
+        newMap.on('load', () => {
+          setIsLoaded(true);
+          setMap(newMap);
+        });
+        
+        newMap.on('error', (e) => {
+          setError(`Map error: ${e.error?.message || 'Unknown error'}`);
+        });
+        
+        // Add controls
+        newMap.addControl(new mapboxgl.NavigationControl(), 'top-right');
+        newMap.addControl(new mapboxgl.ScaleControl(), 'bottom-right');
+        newMap.addControl(new mapboxgl.GeolocateControl({
+          positionOptions: { enableHighAccuracy: true },
+          trackUserLocation: true
+        }), 'top-right');
+      } catch (err) {
+        console.error('Error initializing map:', err);
+        setError('Failed to initialize map. Please try again later.');
+      }
+    };
+    
+    initializeMap();
+    
+    // Cleanup
+    return () => {
+      if (map) {
+        map.remove();
+        setMap(null);
+      }
+    };
+  }, []);
   
-  // Initialize weather layer if explicitly requested
-  React.useEffect(() => {
-    if (showWeatherLayer !== undefined) {
-      setWeatherLayer(showWeatherLayer);
+  // Handle weather layer
+  useEffect(() => {
+    if (!map || !isLoaded || !showWeatherLayer) return;
+    
+    const addWeatherLayer = async () => {
+      try {
+        // Remove existing weather layer if it exists
+        if (map.getSource(weatherSourceId)) {
+          map.removeLayer(weatherLayerId);
+          map.removeSource(weatherSourceId);
+        }
+        
+        const weatherApiKey = await fetchWeatherApiKey();
+        const tileUrl = buildWeatherTileUrl(weatherLayerType, weatherApiKey);
+        
+        map.addSource(weatherSourceId, {
+          type: 'raster',
+          tiles: [tileUrl],
+          tileSize: 256,
+          attribution: '© OpenWeatherMap'
+        });
+        
+        map.addLayer({
+          id: weatherLayerId,
+          type: 'raster',
+          source: weatherSourceId,
+          paint: {
+            'raster-opacity': 0.6
+          }
+        });
+      } catch (error) {
+        console.error('Error adding weather layer:', error);
+      }
+    };
+    
+    if (showWeatherLayer) {
+      addWeatherLayer();
     }
-  }, [showWeatherLayer, setWeatherLayer]);
+    
+  }, [map, isLoaded, showWeatherLayer, weatherLayerType]);
   
-  // Get all trail IDs to fetch parking spots
-  const trailIds = trails.map(trail => trail.id);
-  const { data: parkingSpots = [] } = useParkingSpots();
+  // Update map center and zoom when props change
+  useEffect(() => {
+    if (!map || !isLoaded) return;
+    
+    map.flyTo({
+      center,
+      zoom,
+      essential: true
+    });
+  }, [map, isLoaded, center, zoom]);
   
-  // Filter parking spots to only show ones for the visible trails
-  const relevantParkingSpots = parkingSpots.filter(
-    spot => trailIds.includes(spot.trail_id)
-  );
-
   return (
-    <div className={`relative rounded-lg overflow-hidden ${className}`}>
-      <div ref={mapContainer} className="absolute inset-0" />
+    <div className={`relative overflow-hidden rounded-lg ${className}`}>
+      {!isLoaded && <MapLoadingState />}
+      {error && <div className="absolute inset-0 bg-destructive/10 flex items-center justify-center text-destructive">{error}</div>}
+      <div ref={mapContainer} className="w-full h-full" />
       
-      <div className="absolute top-2 left-2 z-10">
-        <MapControls
-          onResetView={() => handleResetView(map, center, zoom)}
-          onStyleChange={handleStyleChange}
-          onWeatherToggle={() => setWeatherLayer(!weatherLayer)}
-          onParkingToggle={() => setParkingLayer(!parkingLayer)}
-          onTrailPathsToggle={() => setTrailPathsLayer(!trailPathsLayer)}
-          weatherEnabled={weatherLayer}
-          parkingEnabled={parkingLayer}
-          trailPathsEnabled={trailPathsLayer}
-        />
-      </div>
-      
-      {map && (
+      {map && isLoaded && (
         <>
-          <MapTrailMarkers
-            trails={trails}
-            map={map}
-            onTrailSelect={onTrailSelect}
+          <MapControls />
+          
+          {showTrailPaths && <MapTrailPaths map={map} trails={trails} />}
+          
+          <MapTrailMarkers 
+            map={map} 
+            trails={trails} 
+            onTrailSelect={onTrailSelect} 
           />
           
-          {parkingLayer && (
-            <MapParkingMarkers
-              parkingSpots={relevantParkingSpots}
-              map={map}
-            />
-          )}
-          
-          {trailPathsLayer && (
-            <MapTrailPaths
-              trails={trails.filter(trail => trail.geojson)}
-              map={map}
-              onTrailSelect={onTrailSelect}
-            />
-          )}
+          {showParking && <MapParkingMarkers map={map} trails={trails} />}
         </>
       )}
-
-      <MapWeatherLayer 
-        enabled={weatherLayer} 
-        type={weatherLayerType} 
-      />
-      
-      {isLoading && <MapLoadingState />}
     </div>
   );
 };

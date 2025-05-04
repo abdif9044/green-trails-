@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -24,7 +25,7 @@ const Trail: React.FC = () => {
   const { user } = useAuth();
   const { data: trail, isLoading, error } = useTrail(trailId);
   const [weatherData, setWeatherData] = useState(null);
-  const [isWeatherLoading, setIsWeatherLoading] = useState(false);
+  const [isLocalWeatherLoading, setIsLocalWeatherLoading] = useState(false);
   
   // Use our enhanced weather hook
   const { data: detailedWeatherData, isLoading: isWeatherLoading } = useDetailedWeather(
@@ -35,14 +36,14 @@ const Trail: React.FC = () => {
   useEffect(() => {
     const fetchWeatherData = async () => {
       if (trail?.id && trail?.coordinates) {
-        setIsWeatherLoading(true);
+        setIsLocalWeatherLoading(true);
         try {
           const data = await getTrailWeather(trail.id, trail.coordinates);
           setWeatherData(data);
         } catch (error) {
           console.error('Error fetching weather data:', error);
         } finally {
-          setIsWeatherLoading(false);
+          setIsLocalWeatherLoading(false);
         }
       }
     };

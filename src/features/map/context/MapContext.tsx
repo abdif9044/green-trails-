@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 
-interface MapContextType {
+export interface MapContextType {
   map: mapboxgl.Map | null;
   setMap: (map: mapboxgl.Map | null) => void;
 }

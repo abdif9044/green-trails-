@@ -1,7 +1,13 @@
 
 import { useQuery } from '@tanstack/react-query';
-import { getDetailedTrailWeather, DetailedWeatherData } from '@/services/weather/weather-service';
+import { getDetailedTrailWeather } from '@/features/weather/services/weather-service';
+import { DetailedWeatherData } from '@/features/weather/types/weather-types';
 
+/**
+ * Hook to fetch detailed weather information for a trail
+ * @param trailId - The ID of the trail
+ * @param coordinates - The geographical coordinates of the trail [longitude, latitude]
+ */
 export function useDetailedWeather(trailId: string | undefined, coordinates?: [number, number]) {
   return useQuery({
     queryKey: ['trail-detailed-weather', trailId],

@@ -4,7 +4,7 @@ import { Cloud, ParkingMeter } from "lucide-react";
 import WeatherForecast from "./WeatherForecast";
 import SimilarTrails from "./SimilarTrails";
 import ParkingInfo from "./ParkingInfo";
-import { DetailedWeatherData } from "@/services/weather/weather-service";
+import { DetailedWeatherData } from "@/features/weather/types/weather-types";
 
 interface TrailSidebarProps {
   trailId: string;

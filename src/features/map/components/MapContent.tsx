@@ -4,7 +4,7 @@ import { useMapInitialization } from '@/hooks/use-map-initialization';
 import { useMapLayers } from '@/hooks/use-map-layers';
 import { Trail } from '@/types/trails';
 import { useParkingSpots } from '@/hooks/use-parking-spots';
-import { useMap } from './MapContext';
+import { useMap } from '@/features/map/context/MapContext';
 import MapControls from './MapControls';
 import MapLoadingState from '@/features/map/components/MapLoadingState';
 import MapTrailMarkers from '@/features/map/components/MapTrailMarkers';

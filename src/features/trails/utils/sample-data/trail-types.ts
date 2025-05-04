@@ -9,7 +9,7 @@ export const createBaseTrail = (
   imageUrl: string,
   difficulty: Trail['difficulty'],
   coordinates: [number, number]
-): Partial<Trail> => {
+): Trail => {
   return {
     id,
     name,
@@ -19,6 +19,13 @@ export const createBaseTrail = (
     coordinates,
     likes: Math.floor(Math.random() * 200) + 20,
     isAgeRestricted: Math.random() > 0.7, // ~30% of trails are age restricted
+    tags: [],
+    rating: 0,
+    ratingCount: 0,
+    length: 0,
+    elevation: 0,
+    elevation_gain: 0,
+    description: '',
   };
 };
 

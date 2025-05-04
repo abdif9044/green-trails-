@@ -2,6 +2,7 @@
 import { useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Trail } from '@/types/trails';
+import { DetailedWeatherData } from '@/features/weather/types/weather-types';
 
 /**
  * Hook to prefetch data for trails to improve perceived performance
@@ -69,9 +70,9 @@ export const usePrefetch = () => {
    */
   const prefetchWeatherData = useCallback(
     async (trailId: string, coordinates: [number, number]) => {
-      if (!queryClient.getQueryData(['trail-weather', trailId])) {
+      if (!queryClient.getQueryData(['trail-detailed-weather', trailId])) {
         await queryClient.prefetchQuery({
-          queryKey: ['trail-weather', trailId],
+          queryKey: ['trail-detailed-weather', trailId],
           queryFn: async () => {
             try {
               // Direct query to fetch weather data
@@ -79,7 +80,7 @@ export const usePrefetch = () => {
               if (!result.ok) {
                 return null;
               }
-              return await result.json();
+              return await result.json() as DetailedWeatherData;
             } catch (error) {
               console.error("Error prefetching weather data:", error);
               return null;

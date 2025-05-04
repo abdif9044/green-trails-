@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -6,7 +5,7 @@ import Footer from "@/components/Footer";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from '@/hooks/use-auth';
 import { useToggleLike, useTrailLikes } from "@/hooks/use-trail-interactions";
-import { getTrailWeather } from "@/services/weather-service";
+import { getTrailWeather } from "@/features/weather/services/weather-service";
 import { useTrail } from "@/features/trails/hooks/use-trail";
 import TrailHeader from "@/components/trails/TrailHeader";
 import TrailContent from "@/components/trails/TrailContent";
@@ -14,7 +13,7 @@ import TrailSidebar from "@/components/trails/TrailSidebar";
 import TrailStats from "@/components/trails/TrailStats";
 import SEOProvider from "@/components/SEOProvider";
 import { LazyImage } from "@/components/LazyImage";
-import { useDetailedWeather } from '@/hooks/use-detailed-weather';
+import { useDetailedWeather } from '@/features/weather/hooks/use-detailed-weather';
 
 interface Params extends Readonly<Record<string, string | undefined>> {
   trailId?: string;

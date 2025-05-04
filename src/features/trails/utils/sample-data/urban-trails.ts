@@ -1,58 +1,52 @@
 
 import { Trail } from '@/types/trails';
-import { createBaseTrail, createGeoJsonLineString } from './trail-types';
+import { createBaseTrail } from './trail-types';
 
-// Urban and city trails
+// Sample urban trails data
 export const urbanTrails: Trail[] = [
   {
     ...createBaseTrail(
-      "3",
-      "Silver Lake Loop",
-      "Rochester, MN",
-      "https://images.unsplash.com/photo-1472396961693-142e6e269027",
-      "easy",
-      [-92.4570, 44.0241]
+      'urban-1',
+      'Central Park Loop',
+      'New York City, NY',
+      'https://images.unsplash.com/photo-1507992781348-310259076fe0?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80',
+      'easy',
+      [-73.9665, 40.7812]
     ),
-    length: 2.1,
-    elevation: 50,
-    elevation_gain: 30,
-    tags: ["urban", "lake", "paved"],
-    description: "This paved urban trail loops around Silver Lake, offering views of the Rochester skyline and abundant waterfowl. Perfect for casual walks, jogging, or cycling."
+    length: 6.1,
+    elevation: 150,
+    elevation_gain: 80,
+    tags: ['urban', 'park', 'iconic', 'city'],
+    description: 'A classic urban hike through Central Park. The loop passes by famous landmarks including Bethesda Fountain, The Mall, and Strawberry Fields.',
   },
   {
     ...createBaseTrail(
-      "5",
-      "Bear Creek Trail",
-      "Rochester, MN",
-      "https://images.unsplash.com/photo-1448375240586-882707db888b?q=80&w=1000&auto=format&fit=crop",
-      "easy",
-      [-92.4628, 44.0220]
+      'urban-2',
+      'Golden Gate Park Trail',
+      'San Francisco, CA',
+      'https://images.unsplash.com/photo-1568393691622-c7ba131d63b4?ixlib=rb-1.2.1&auto=format&fit=crop&w=1489&q=80',
+      'easy',
+      [-122.4836, 37.7692]
     ),
-    length: 6.5,
-    elevation: 120,
-    elevation_gain: 75,
-    tags: ["creek", "urban", "paved"],
-    description: "The Bear Creek Trail connects several Rochester neighborhoods, following the creek through urban green spaces. It's perfect for cycling, jogging, or leisurely walks close to the city center."
+    length: 4.5,
+    elevation: 200,
+    elevation_gain: 120,
+    tags: ['urban', 'park', 'gardens', 'museums'],
+    description: 'Explore the cultural and natural attractions of Golden Gate Park. The trail passes by the Conservatory of Flowers, Japanese Tea Garden, and California Academy of Sciences.',
   },
   {
     ...createBaseTrail(
-      "6",
-      "Coastal Bluff Trail",
-      "California, USA",
-      "https://images.unsplash.com/photo-1522057384400-681b421cfebc?q=80&w=1000&auto=format&fit=crop",
-      "moderate",
-      [-122.4194, 37.7749]
+      'urban-3',
+      'Highline Elevated Park',
+      'New York City, NY',
+      'https://images.unsplash.com/photo-1518235506717-e1ed3306a89b?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80',
+      'easy',
+      [-74.0048, 40.7480]
     ),
-    length: 5.4,
-    elevation: 320,
-    elevation_gain: 180,
-    tags: ["coastal", "views", "ocean"],
-    geojson: createGeoJsonLineString([
-      [-122.4194, 37.7749],
-      [-122.4214, 37.7769],
-      [-122.4234, 37.7789],
-      [-122.4254, 37.7809]
-    ]),
-    description: "Stunning coastal views along the California shoreline with spectacular ocean panoramas."
+    length: 1.45,
+    elevation: 30,
+    elevation_gain: 10,
+    tags: ['urban', 'elevated', 'art', 'accessible'],
+    description: 'A unique urban walking experience on a former elevated rail line. The Highline features gardens, art installations, and great views of the city.',
   }
 ];

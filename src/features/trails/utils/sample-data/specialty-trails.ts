@@ -2,59 +2,76 @@
 import { Trail } from '@/types/trails';
 import { createBaseTrail } from './trail-types';
 
-// Specialty trails (desert, age-restricted, etc.)
+// Sample specialty trails data
 export const specialtyTrails: Trail[] = [
   {
     ...createBaseTrail(
-      "4",
-      "Sunset Canyon",
-      "Arizona, USA",
-      "https://images.unsplash.com/photo-1500964757637-c85e8a162699?q=80&w=1000&auto=format&fit=crop",
-      "moderate",
-      [-111.7988, 33.6897]
+      'specialty-1',
+      'Desert Bloom Trail',
+      'Arizona, USA',
+      'https://images.unsplash.com/photo-1587223075055-82e9a937ddff?ixlib=rb-1.2.1&auto=format&fit=crop&w=1353&q=80',
+      'moderate',
+      [-111.0937, 32.2226]
     ),
-    length: 6.3,
-    elevation: 820,
-    elevation_gain: 420,
-    tags: ["desert", "canyon", "sunset-views"],
-    description: "Experience the magical colors of the desert at sunset in this moderately challenging canyon hike."
+    length: 5.6,
+    elevation: 650,
+    elevation_gain: 280,
+    tags: ['desert', 'cactus', 'wildflowers', 'sunrise'],
+    description: 'Experience the magical desert bloom in spring. This trail winds through saguaro cacti and is best hiked early morning to avoid the heat.',
+    isAgeRestricted: false,
   },
   {
     ...createBaseTrail(
-      "8",
-      "Alpine Meadow Trail",
-      "Washington, USA",
-      "https://images.unsplash.com/photo-1520962922320-2038eebab146?q=80&w=1000&auto=format&fit=crop",
-      "moderate",
-      [-121.6423, 46.7865]
+      'specialty-2',
+      'Cannabis Farm Tour Trail',
+      'Humboldt County, CA',
+      'https://images.unsplash.com/photo-1536282915566-c0e101d5bbc4?ixlib=rb-1.2.1&auto=format&fit=crop&w=1347&q=80',
+      'easy',
+      [-123.7639, 40.7450]
     ),
-    length: 7.1,
-    elevation: 980,
-    elevation_gain: 580,
-    tags: ["alpine", "meadow", "wildflowers"],
-    description: "Wander through beautiful alpine meadows filled with wildflowers during the summer months."
-  },
-  {
-    ...createBaseTrail(
-      "9",
-      "Desert Oasis Loop",
-      "Nevada, USA",
-      "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=1000&auto=format&fit=crop",
-      "hard",
-      [-115.1398, 36.1699]
-    ),
-    length: 9.3,
-    elevation: 1450,
-    elevation_gain: 890,
-    tags: ["desert", "oasis", "hot"],
+    length: 2.3,
+    elevation: 150,
+    elevation_gain: 80,
+    tags: ['cannabis', 'farm', 'educational', 'tours'],
     strainTags: [
       {
-        name: "OG Kush",
-        type: "indica",
-        effects: ["relaxed", "sleepy", "euphoric"],
-        description: "Perfect for desert evening hikes when the temperature drops"
+        name: 'Humboldt Dream',
+        type: 'hybrid',
+        effects: ['relaxing', 'euphoric', 'creative'],
+        description: 'A local favorite strain that enhances the natural beauty of the redwoods.'
+      },
+      {
+        name: 'Farm Fresh',
+        type: 'hybrid',
+        effects: ['uplifting', 'focused', 'energetic'],
+        description: 'Perfect for an educational farm tour experience.'
       }
     ],
-    description: "A challenging desert hike leading to a hidden oasis - best attempted in cooler months."
+    description: 'An educational trail that goes through sustainable cannabis farms. Learn about cultivation practices and the history of cannabis farming in Humboldt County.',
+    isAgeRestricted: true,
+  },
+  {
+    ...createBaseTrail(
+      'specialty-3',
+      'Coastal Meditation Path',
+      'Big Sur, CA',
+      'https://images.unsplash.com/photo-1506953823976-52e1fdc0149a?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80',
+      'easy',
+      [-121.8369, 36.2704]
+    ),
+    length: 1.8,
+    elevation: 100,
+    elevation_gain: 50,
+    tags: ['coastal', 'meditation', 'wellness', 'zen'],
+    strainTags: [
+      {
+        name: 'Ocean Breeze',
+        type: 'hybrid',
+        effects: ['relaxing', 'calming', 'creative'],
+        description: 'Enhances the meditative experience with coastal views.'
+      }
+    ],
+    description: 'A peaceful trail designed for meditation and mindfulness. Features several seating areas overlooking the Pacific Ocean.',
+    isAgeRestricted: true,
   }
 ];

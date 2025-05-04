@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
-import { useSocialFollows, SocialUser } from '@/hooks/social/use-social-follows';
+import { useSocialFollows, SocialUser } from '@/hooks/use-social-follows';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
@@ -75,8 +75,8 @@ const FriendTagging: React.FC<FriendTaggingProps> = ({
 
   // Load initial tagged users
   React.useEffect(() => {
-    if (initialTagged?.length && followingUsers.length) {
-      const users = followingUsers
+    if (initialTagged?.length && following.length) {
+      const users = following
         .filter(u => initialTagged.includes(u.id))
         .map(u => ({
           id: u.id,
@@ -86,7 +86,7 @@ const FriendTagging: React.FC<FriendTaggingProps> = ({
         }));
       setTaggedUsers(users);
     }
-  }, [initialTagged, followingUsers]);
+  }, [initialTagged, following]);
 
   if (!user) {
     return null;

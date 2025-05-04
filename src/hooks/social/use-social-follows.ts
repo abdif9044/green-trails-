@@ -21,60 +21,94 @@ export const useSocialFollows = (userId: string) => {
   useEffect(() => {
     const fetchFollowing = async () => {
       setIsLoading(true);
-      const { data, error } = await supabase
-        .from('follows')
-        .select(`
-          following_id,
-          profiles!following_id(id, username, full_name, avatar_url)
-        `)
-        .eq('follower_id', userId);
-
-      if (!error && data) {
-        setFollowing(data.map(item => ({
-          id: item.profiles?.id || '',
-          username: item.profiles?.username || '',
-          full_name: item.profiles?.full_name || '',
-          avatar_url: item.profiles?.avatar_url || ''
-        })).filter(item => item.id !== ''));
+      
+      if (!userId) {
+        setFollowing([]);
+        setIsLoading(false);
+        return;
       }
-      setIsLoading(false);
+      
+      try {
+        const { data, error } = await supabase
+          .from('follows')
+          .select(`
+            following_id,
+            profiles!following_id(id, username, full_name, avatar_url)
+          `)
+          .eq('follower_id', userId);
+
+        if (error) {
+          console.error("Error fetching following:", error);
+          setFollowing([]);
+        } else if (data) {
+          const followingUsers = data
+            .filter(item => item.profiles) // Filter out null profiles
+            .map(item => ({
+              id: item.profiles?.id || '',
+              username: item.profiles?.username || '',
+              full_name: item.profiles?.full_name || '',
+              avatar_url: item.profiles?.avatar_url || ''
+            }))
+            .filter(item => item.id !== '');
+          
+          setFollowing(followingUsers);
+        }
+      } catch (err) {
+        console.error("Exception in fetchFollowing:", err);
+        setFollowing([]);
+      } finally {
+        setIsLoading(false);
+      }
     };
     
-    if (userId) {
-      fetchFollowing();
-    } else {
-      setIsLoading(false);
-    }
+    fetchFollowing();
   }, [userId]);
 
   // Fetch followers
   useEffect(() => {
     const fetchFollowers = async () => {
       setIsLoading(true);
-      const { data, error } = await supabase
-        .from('follows')
-        .select(`
-          follower_id,
-          profiles!follower_id(id, username, full_name, avatar_url)
-        `)
-        .eq('following_id', userId);
-
-      if (!error && data) {
-        setFollowers(data.map(item => ({
-          id: item.profiles?.id || '',
-          username: item.profiles?.username || '',
-          full_name: item.profiles?.full_name || '',
-          avatar_url: item.profiles?.avatar_url || ''
-        })).filter(item => item.id !== ''));
+      
+      if (!userId) {
+        setFollowers([]);
+        setIsLoading(false);
+        return;
       }
-      setIsLoading(false);
+      
+      try {
+        const { data, error } = await supabase
+          .from('follows')
+          .select(`
+            follower_id,
+            profiles!follower_id(id, username, full_name, avatar_url)
+          `)
+          .eq('following_id', userId);
+
+        if (error) {
+          console.error("Error fetching followers:", error);
+          setFollowers([]);
+        } else if (data) {
+          const followerUsers = data
+            .filter(item => item.profiles) // Filter out null profiles
+            .map(item => ({
+              id: item.profiles?.id || '',
+              username: item.profiles?.username || '',
+              full_name: item.profiles?.full_name || '',
+              avatar_url: item.profiles?.avatar_url || ''
+            }))
+            .filter(item => item.id !== '');
+          
+          setFollowers(followerUsers);
+        }
+      } catch (err) {
+        console.error("Exception in fetchFollowers:", err);
+        setFollowers([]);
+      } finally {
+        setIsLoading(false);
+      }
     };
     
-    if (userId) {
-      fetchFollowers();
-    } else {
-      setIsLoading(false);
-    }
+    fetchFollowers();
   }, [userId]);
 
   return {

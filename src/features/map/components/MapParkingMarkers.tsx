@@ -10,7 +10,7 @@ interface MapParkingMarkersProps {
   trails?: Trail[];
 }
 
-const MapParkingMarkers: React.FC<MapParkingMarkersProps> = ({ parkingSpots, map, trails }) => {
+const MapParkingMarkers: React.FC<MapParkingMarkersProps> = ({ parkingSpots, map }) => {
   return (
     <>
       {parkingSpots.map(spot => (

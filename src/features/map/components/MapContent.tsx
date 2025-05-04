@@ -48,6 +48,12 @@ const MapContent: React.FC<MapContentProps> = ({
   const weatherSourceId = 'weather-layer';
   const weatherLayerId = 'weather-layer-tiles';
   
+  // State for map controls
+  const [mapStyle, setMapStyle] = useState('outdoors');
+  const [weatherEnabled, setWeatherEnabled] = useState(showWeatherLayer);
+  const [parkingEnabled, setParkingEnabled] = useState(showParking);
+  const [trailPathsEnabled, setTrailPathsEnabled] = useState(showTrailPaths);
+  
   // Initialize map
   useEffect(() => {
     const initializeMap = async () => {
@@ -109,7 +115,7 @@ const MapContent: React.FC<MapContentProps> = ({
   
   // Handle weather layer
   useEffect(() => {
-    if (!map || !isLoaded || !showWeatherLayer) return;
+    if (!map || !isLoaded || !weatherEnabled) return;
     
     const addWeatherLayer = async () => {
       try {
@@ -142,11 +148,11 @@ const MapContent: React.FC<MapContentProps> = ({
       }
     };
     
-    if (showWeatherLayer) {
+    if (weatherEnabled) {
       addWeatherLayer();
     }
     
-  }, [map, isLoaded, showWeatherLayer, weatherLayerType]);
+  }, [map, isLoaded, weatherEnabled, weatherLayerType]);
   
   // Update map center and zoom when props change
   useEffect(() => {
@@ -158,6 +164,40 @@ const MapContent: React.FC<MapContentProps> = ({
       essential: true
     });
   }, [map, isLoaded, center, zoom]);
+
+  // Handle map style changes
+  const handleStyleChange = (style: string) => {
+    if (!map) return;
+    
+    const styleUrl = 'mapbox://styles/mapbox/';
+    switch (style) {
+      case 'outdoors':
+        map.setStyle(styleUrl + 'outdoors-v12');
+        break;
+      case 'satellite':
+        map.setStyle(styleUrl + 'satellite-streets-v12');
+        break;
+      case 'light':
+        map.setStyle(styleUrl + 'light-v11');
+        break;
+      case 'dark':
+        map.setStyle(styleUrl + 'dark-v11');
+        break;
+      default:
+        map.setStyle(styleUrl + 'outdoors-v12');
+    }
+    setMapStyle(style);
+  };
+
+  // Reset map view
+  const handleResetView = () => {
+    if (!map) return;
+    map.flyTo({
+      center,
+      zoom,
+      essential: true
+    });
+  };
   
   return (
     <div className={`relative overflow-hidden rounded-lg ${className}`}>
@@ -167,9 +207,18 @@ const MapContent: React.FC<MapContentProps> = ({
       
       {map && isLoaded && (
         <>
-          <MapControls />
+          <MapControls 
+            onResetView={handleResetView}
+            onStyleChange={handleStyleChange}
+            onWeatherToggle={() => setWeatherEnabled(!weatherEnabled)}
+            onParkingToggle={() => setParkingEnabled(!parkingEnabled)}
+            onTrailPathsToggle={() => setTrailPathsEnabled(!trailPathsEnabled)}
+            weatherEnabled={weatherEnabled}
+            parkingEnabled={parkingEnabled}
+            trailPathsEnabled={trailPathsEnabled}
+          />
           
-          {showTrailPaths && <MapTrailPaths map={map} trails={trails} />}
+          {trailPathsEnabled && <MapTrailPaths map={map} trails={trails} onTrailSelect={onTrailSelect} />}
           
           <MapTrailMarkers 
             map={map} 
@@ -177,7 +226,7 @@ const MapContent: React.FC<MapContentProps> = ({
             onTrailSelect={onTrailSelect} 
           />
           
-          {showParking && <MapParkingMarkers map={map} trails={trails} />}
+          {parkingEnabled && <MapParkingMarkers map={map} trails={trails} />}
         </>
       )}
     </div>

@@ -16,7 +16,7 @@ export interface Trail {
   difficulty: TrailDifficulty;
   length: number;
   elevation: number;
-  elevation_gain?: number; // Added this property
+  elevation_gain: number; // Making this required
   tags: string[];
   likes: number;
   coordinates?: [number, number]; // [longitude, latitude]

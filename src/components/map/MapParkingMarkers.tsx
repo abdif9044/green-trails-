@@ -1,7 +1,9 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import ParkingMarker from './ParkingMarker';
+import { Trail } from '@/types/trails';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ParkingSpot {
   id: string;
@@ -16,11 +18,38 @@ interface ParkingSpot {
 }
 
 interface MapParkingMarkersProps {
-  parkingSpots: ParkingSpot[];
+  parkingSpots?: ParkingSpot[];
+  trails?: Trail[];
   map: mapboxgl.Map;
 }
 
-const MapParkingMarkers: React.FC<MapParkingMarkersProps> = ({ parkingSpots, map }) => {
+const MapParkingMarkers: React.FC<MapParkingMarkersProps> = ({ 
+  parkingSpots: providedParkingSpots,
+  trails = [],
+  map 
+}) => {
+  const [parkingSpots, setParkingSpots] = useState<ParkingSpot[]>(providedParkingSpots || []);
+  
+  // If parking spots weren't provided, fetch them based on trail IDs
+  useEffect(() => {
+    const fetchParkingSpots = async () => {
+      if (providedParkingSpots || trails.length === 0) return;
+      
+      const trailIds = trails.map(trail => trail.id);
+      
+      const { data, error } = await supabase
+        .from('parking_spots')
+        .select('*')
+        .in('trail_id', trailIds);
+        
+      if (!error && data) {
+        setParkingSpots(data);
+      }
+    };
+    
+    fetchParkingSpots();
+  }, [trails, providedParkingSpots]);
+
   return (
     <>
       {parkingSpots.map(parkingSpot => (

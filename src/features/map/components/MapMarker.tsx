@@ -1,7 +1,8 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import mapboxgl from 'mapbox-gl';
 import { Trail } from '@/types/trails';
+import { getTrailColor } from '../utils/mapUtils';
 
 interface MapMarkerProps {
   trail: Trail;
@@ -10,7 +11,9 @@ interface MapMarkerProps {
 }
 
 const MapMarker: React.FC<MapMarkerProps> = ({ trail, map, onSelect }) => {
-  React.useEffect(() => {
+  useEffect(() => {
+    if (!trail.coordinates) return;
+    
     const element = document.createElement('div');
     
     const markerStyle = {
@@ -20,11 +23,7 @@ const MapMarker: React.FC<MapMarkerProps> = ({ trail, map, onSelect }) => {
       cursor: 'pointer',
       border: '2px solid white',
       boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-      backgroundColor: 
-        trail.difficulty === 'easy' ? '#4ade80' :
-        trail.difficulty === 'moderate' ? '#fbbf24' :
-        trail.difficulty === 'hard' ? '#f87171' :
-        '#000000'
+      backgroundColor: getTrailColor(trail.difficulty)
     };
     
     Object.assign(element.style, markerStyle);
@@ -42,7 +41,7 @@ const MapMarker: React.FC<MapMarkerProps> = ({ trail, map, onSelect }) => {
     `);
     
     const marker = new mapboxgl.Marker(element)
-      .setLngLat(trail.coordinates || [0, 0])
+      .setLngLat(trail.coordinates)
       .setPopup(popup)
       .addTo(map);
       

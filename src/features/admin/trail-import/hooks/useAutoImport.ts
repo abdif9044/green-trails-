@@ -1,5 +1,5 @@
 
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { TrailDataSource } from '@/hooks/useTrailImport';
 import { useToast } from '@/hooks/use-toast';
 
@@ -74,6 +74,3 @@ export function useAutoImport({
   
   return { autoImportTriggered };
 }
-
-// Add missing useState import
-import { useState } from 'react';

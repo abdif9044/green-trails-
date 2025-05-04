@@ -9,7 +9,7 @@ export const useAssistantChat = (initialTrailContext?: TrailContext | null) => {
   const [isLoading, setIsLoading] = useState(false);
   const [trailContext, setTrailContext] = useState<TrailContext | null>(initialTrailContext || null);
   const { user } = useAuth();
-  const { position } = useGeolocation();
+  const { location } = useGeolocation();
   
   // Function to send a message to the assistant
   const sendMessage = useCallback(async (content: string) => {
@@ -30,11 +30,11 @@ export const useAssistantChat = (initialTrailContext?: TrailContext | null) => {
     try {
       // Get user location if available
       let userLocation: UserLocation | null = null;
-      if (position) {
+      if (location && location.coords) {
         userLocation = {
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-          accuracy: position.coords.accuracy
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+          accuracy: location.coords.accuracy
         };
       }
       
@@ -53,7 +53,7 @@ export const useAssistantChat = (initialTrailContext?: TrailContext | null) => {
     } finally {
       setIsLoading(false);
     }
-  }, [messages, trailContext, position]);
+  }, [messages, trailContext, location]);
   
   // Function to clear chat history
   const clearChat = useCallback(() => {

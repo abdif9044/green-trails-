@@ -1,9 +1,9 @@
 
+import React from 'react'
 import { createRoot } from 'react-dom/client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { HelmetProvider } from 'react-helmet-async'
 import { AuthProvider } from './hooks/use-auth'
-import { ToastProvider } from './components/ToastProvider'
 import App from './App.tsx'
 import './index.css'
 
@@ -30,13 +30,15 @@ if ('serviceWorker' in navigator) {
   });
 }
 
+// Make sure we explicitly use React here to fix the useState issue
 createRoot(document.getElementById("root")!).render(
-  <HelmetProvider>
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <App />
-        <ToastProvider />
-      </AuthProvider>
-    </QueryClientProvider>
-  </HelmetProvider>
+  <React.StrictMode>
+    <HelmetProvider>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <App />
+        </AuthProvider>
+      </QueryClientProvider>
+    </HelmetProvider>
+  </React.StrictMode>
 );

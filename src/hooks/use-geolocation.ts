@@ -1,62 +1,61 @@
 
 import { useState, useEffect } from 'react';
 
-interface GeolocationState {
-  coordinates: [number, number] | null;
-  error: string | null;
+export interface GeolocationState {
+  location: GeolocationPosition | null;
+  error: GeolocationPositionError | null;
   loading: boolean;
 }
 
-export const useGeolocation = () => {
+export const useGeolocation = (options?: PositionOptions): GeolocationState => {
   const [state, setState] = useState<GeolocationState>({
-    coordinates: null,
+    location: null,
     error: null,
-    loading: true
+    loading: true,
   });
 
   useEffect(() => {
     if (!navigator.geolocation) {
-      setState({
-        coordinates: null,
-        error: "Geolocation is not supported by your browser",
-        loading: false
-      });
+      setState(prev => ({
+        ...prev,
+        error: new GeolocationPositionError(),
+        loading: false,
+      }));
       return;
     }
 
-    const handleSuccess = (position: GeolocationPosition) => {
-      const { longitude, latitude } = position.coords;
+    const onSuccess = (position: GeolocationPosition) => {
       setState({
-        coordinates: [longitude, latitude],
+        location: position,
         error: null,
-        loading: false
+        loading: false,
       });
     };
 
-    const handleError = (error: GeolocationPositionError) => {
+    const onError = (error: GeolocationPositionError) => {
       setState({
-        coordinates: null,
-        error: error.message,
-        loading: false
+        location: null,
+        error,
+        loading: false,
       });
     };
 
-    const options: PositionOptions = {
-      enableHighAccuracy: true,
+    const defaultOptions = {
+      enableHighAccuracy: false,
       timeout: 10000,
-      maximumAge: 0
+      maximumAge: 0,
     };
 
     const watchId = navigator.geolocation.watchPosition(
-      handleSuccess,
-      handleError,
-      options
+      onSuccess, 
+      onError, 
+      options || defaultOptions
     );
 
     return () => {
       navigator.geolocation.clearWatch(watchId);
     };
-  }, []);
+  }, [options]);
 
   return state;
 };

@@ -1,10 +1,10 @@
-
 /**
  * Enhanced markdown formatter for legal content
  * Converts markdown syntax to HTML with GreenTrails styling
  */
 export { MarkdownFormatter } from './markdown-formatter.tsx';
 
+// Keep legacy formatter for backward compatibility
 export const formatMarkdown = (content: string): string => {
   if (!content) return '';
   

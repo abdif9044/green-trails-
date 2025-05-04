@@ -1,38 +1,75 @@
 
-import { useFollowersList } from './use-followers';
-import { useFollowingList } from './use-following';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useState, useEffect } from 'react';
 
-// Type definitions for profile data
-interface ProfileData {
+// Type for following/follower user data
+export interface SocialUser {
   id: string;
   username: string;
   full_name: string;
   avatar_url: string;
 }
 
-// The combined hook for social follows
-export const useSocialFollows = (userId?: string) => {
-  const { data: followers = [], isLoading: isFollowersLoading } = useFollowersList(userId || '');
-  const { data: following = [], isLoading: isFollowingLoading } = useFollowingList(userId || '');
-
-  // Transform data to a more usable format
-  const followingUsers = following.map(f => ({
-    id: f.following_id,
-    username: f.profiles?.username || '',
-    full_name: f.profiles?.full_name || '',
-    avatar_url: f.profiles?.avatar_url || ''
-  }));
+// Primary hook for accessing social follows data
+export const useSocialFollows = (userId: string) => {
+  const [following, setFollowing] = useState<SocialUser[]>([]);
+  const [followers, setFollowers] = useState<SocialUser[]>([]);
   
-  const followerUsers = followers.map(f => ({
-    id: f.follower_id,
-    username: f.profiles?.username || '',
-    full_name: f.profiles?.full_name || '',
-    avatar_url: f.profiles?.avatar_url || ''
-  }));
+  // Fetch following users
+  useEffect(() => {
+    const fetchFollowing = async () => {
+      const { data, error } = await supabase
+        .from('follows')
+        .select(`
+          following_id,
+          profiles!following_id(id, username, full_name, avatar_url)
+        `)
+        .eq('follower_id', userId);
+
+      if (!error && data) {
+        setFollowing(data.map(item => ({
+          id: item.profiles?.id || '',
+          username: item.profiles?.username || '',
+          full_name: item.profiles?.full_name || '',
+          avatar_url: item.profiles?.avatar_url || ''
+        })));
+      }
+    };
+    
+    if (userId) {
+      fetchFollowing();
+    }
+  }, [userId]);
+
+  // Fetch followers
+  useEffect(() => {
+    const fetchFollowers = async () => {
+      const { data, error } = await supabase
+        .from('follows')
+        .select(`
+          follower_id,
+          profiles!follower_id(id, username, full_name, avatar_url)
+        `)
+        .eq('following_id', userId);
+
+      if (!error && data) {
+        setFollowers(data.map(item => ({
+          id: item.profiles?.id || '',
+          username: item.profiles?.username || '',
+          full_name: item.profiles?.full_name || '',
+          avatar_url: item.profiles?.avatar_url || ''
+        })));
+      }
+    };
+    
+    if (userId) {
+      fetchFollowers();
+    }
+  }, [userId]);
 
   return {
-    followingUsers,
-    followerUsers,
-    isLoading: isFollowersLoading || isFollowingLoading
+    following,
+    followers
   };
 };

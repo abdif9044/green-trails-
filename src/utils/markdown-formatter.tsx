@@ -3,14 +3,22 @@ import React from 'react';
 import Markdown from 'markdown-to-jsx';
 
 interface MarkdownFormatterProps {
-  markdown: string;
+  markdown?: string;
+  content?: string;
   className?: string;
 }
 
-export const MarkdownFormatter: React.FC<MarkdownFormatterProps> = ({ markdown, className }) => {
+export const MarkdownFormatter: React.FC<MarkdownFormatterProps> = ({ 
+  markdown, 
+  content,
+  className 
+}) => {
+  // Use content prop if provided, otherwise fall back to markdown prop
+  const textToRender = content || markdown || '';
+  
   return (
     <div className={className}>
-      <Markdown>{markdown}</Markdown>
+      <Markdown>{textToRender}</Markdown>
     </div>
   );
 };

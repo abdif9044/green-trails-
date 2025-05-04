@@ -5,7 +5,7 @@ import ParkingMarker from './ParkingMarker';
 import { Trail } from '@/types/trails';
 import { supabase } from '@/integrations/supabase/client';
 
-interface ParkingSpot {
+export interface ParkingSpot {
   id: string;
   name: string;
   description: string | null;
@@ -18,9 +18,9 @@ interface ParkingSpot {
 }
 
 interface MapParkingMarkersProps {
-  parkingSpots?: ParkingSpot[];
-  trails?: Trail[];
+  parkingSpots: ParkingSpot[];
   map: mapboxgl.Map;
+  trails?: Trail[];
 }
 
 const MapParkingMarkers: React.FC<MapParkingMarkersProps> = ({ 

@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 
 interface AssistantChatProps {
   trailContext?: TrailContext | null;
+  onClose?: () => void; // Added onClose prop
 }
 
 const WELCOME_MESSAGE: ChatMessage = {
@@ -20,7 +21,7 @@ const WELCOME_MESSAGE: ChatMessage = {
   timestamp: new Date().toISOString()
 };
 
-const AssistantChat: React.FC<AssistantChatProps> = ({ trailContext }) => {
+const AssistantChat: React.FC<AssistantChatProps> = ({ trailContext, onClose }) => {
   const [input, setInput] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);

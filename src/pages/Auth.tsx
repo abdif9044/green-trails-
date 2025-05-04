@@ -11,10 +11,13 @@ import UpdatePasswordForm from '@/components/auth/UpdatePasswordForm';
 import { useAuth } from '@/hooks/use-auth';
 import SEOProvider from '@/components/SEOProvider';
 import AgeVerification from '@/components/auth/AgeVerification';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertCircle } from 'lucide-react';
 
 const Auth = () => {
   const [activeTab, setActiveTab] = useState('signin');
   const [showPasswordReset, setShowPasswordReset] = useState(false);
+  const [signupSuccess, setSignupSuccess] = useState(false);
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -36,7 +39,11 @@ const Auth = () => {
   }, [user, loading, navigate]);
 
   const handleSignUpSuccess = () => {
-    setActiveTab('signin');
+    setSignupSuccess(true);
+    // Switch to sign-in tab after a successful signup
+    setTimeout(() => {
+      setActiveTab('signin');
+    }, 1500);
   };
 
   if (loading) {
@@ -55,7 +62,7 @@ const Auth = () => {
         <Card className="w-full max-w-md">
           <CardHeader className="space-y-1">
             <div className="flex justify-center mb-2">
-              <img src="/logo.svg" alt="GreenTrails Logo" className="h-12 w-auto" />
+              <img src="/lovable-uploads/0c2a9cc4-4fdb-4d4a-965c-47b406e4ec4e.png" alt="GreenTrails Logo" className="h-12 w-auto" />
             </div>
             <CardTitle className="text-2xl text-center">Reset Password</CardTitle>
             <CardDescription className="text-center">
@@ -76,7 +83,7 @@ const Auth = () => {
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <div className="flex justify-center mb-2">
-            <img src="/logo.svg" alt="GreenTrails Logo" className="h-12 w-auto" />
+            <img src="/lovable-uploads/0c2a9cc4-4fdb-4d4a-965c-47b406e4ec4e.png" alt="GreenTrails Logo" className="h-12 w-auto" />
           </div>
           
           <motion.div
@@ -114,6 +121,15 @@ const Auth = () => {
         </CardHeader>
         
         <CardContent>
+          {signupSuccess && (
+            <Alert className="mb-4 bg-green-50 text-green-800 dark:bg-green-900/50 dark:text-green-300">
+              <AlertCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
+              <AlertDescription>
+                Account created successfully! You can now sign in.
+              </AlertDescription>
+            </Alert>
+          )}
+          
           {showPasswordReset ? (
             <PasswordResetForm onBack={() => setShowPasswordReset(false)} />
           ) : (

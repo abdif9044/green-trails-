@@ -14,20 +14,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { toast } = useToast();
 
   useEffect(() => {
-    const getUser = async () => {
-      const { data: { session }, error } = await supabase.auth.getSession();
-      
-      if (error) {
-        console.error('Error fetching session:', error);
-      }
-      
-      setSession(session);
-      setUser(session?.user || null);
-      setLoading(false);
-    };
-
-    getUser();
-
+    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setSession(session);
@@ -35,15 +22,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setLoading(false);
         
         // Log auth state changes for security purposes
-        if (_event && user?.id !== session?.user.id) {
+        if (_event && user?.id !== session?.user?.id) {
           DatabaseSetupService.logSecurityEvent('auth_state_change', {
             event: _event,
-            user_id: session?.user.id,
+            user_id: session?.user?.id,
             timestamp: new Date().toISOString()
           });
         }
       }
     );
+
+    // THEN check for existing session
+    const getInitialSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setSession(session);
+      setUser(session?.user || null);
+      setLoading(false);
+    };
+
+    getInitialSession();
 
     return () => {
       subscription.unsubscribe();
@@ -51,32 +48,59 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const result = await AuthService.signIn(email, password);
-    if (!result.success) {
+    try {
+      const result = await AuthService.signIn(email, password);
+      if (!result.success) {
+        toast({
+          title: "Sign in failed",
+          description: result.message || "An error occurred during sign in",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Sign in successful",
+          description: "Welcome back to GreenTrails!",
+        });
+      }
+      return result;
+    } catch (error) {
+      console.error('Exception during sign in:', error);
+      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
       toast({
         title: "Sign in failed",
-        description: result.message || "An error occurred during sign in",
+        description: errorMessage,
         variant: "destructive",
       });
+      return { success: false, message: errorMessage };
     }
-    return result;
   };
 
   const signUp = async (email: string, password: string, metadata: object = {}) => {
-    const result = await AuthService.signUp(email, password, metadata);
-    if (result.success) {
-      toast({
-        title: "Sign up successful",
-        description: "Please check your email for verification.",
-      });
-    } else {
+    try {
+      const result = await AuthService.signUp(email, password, metadata);
+      if (result.success) {
+        toast({
+          title: "Account created successfully",
+          description: "You can now sign in with your credentials",
+        });
+      } else {
+        toast({
+          title: "Sign up failed",
+          description: result.message || "An error occurred during sign up",
+          variant: "destructive",
+        });
+      }
+      return result;
+    } catch (error) {
+      console.error('Exception during sign up:', error);
+      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
       toast({
         title: "Sign up failed",
-        description: result.message || "An error occurred during sign up",
+        description: errorMessage,
         variant: "destructive",
       });
+      return { success: false, message: errorMessage };
     }
-    return result;
   };
 
   const signOut = async () => {
@@ -91,6 +115,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (error) {
       console.error('Exception during sign out:', error);
+      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+      toast({
+        title: "Sign out failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
     }
   };
 

@@ -1,19 +1,7 @@
 
 import React from 'react';
 import mapboxgl from 'mapbox-gl';
-import ParkingMarker from './ParkingMarker';
-
-interface ParkingSpot {
-  id: string;
-  trail_id: string;
-  name: string;
-  is_free: boolean;
-  latitude: number;
-  longitude: number;
-  description?: string;
-  capacity?: number | null;
-  notes?: string | null;
-}
+import ParkingMarker, { ParkingSpot } from './ParkingMarker';
 
 interface MapParkingMarkersProps {
   parkingSpots: ParkingSpot[];

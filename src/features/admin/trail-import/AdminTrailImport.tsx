@@ -92,7 +92,11 @@ const AdminTrailImport = () => {
 
   // Function to handle the bulk import
   const handleBulkImportClick = async () => {
-    return await onBulkImport(selectedSources, dataSources);
+    const success = await onBulkImport(selectedSources, dataSources);
+    if (success) {
+      setActiveTab('bulk'); // Switch to bulk tab to show progress
+    }
+    return success;
   };
 
   return (

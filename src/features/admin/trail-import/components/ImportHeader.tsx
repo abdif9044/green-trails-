@@ -13,7 +13,7 @@ interface ImportHeaderProps {
   onSourceSelect: (sourceId: string) => void;
   trailCount: number;
   onTrailCountChange: (count: number) => void;
-  onBulkImport: () => Promise<void>;
+  onBulkImport: () => Promise<boolean>;
   bulkImportLoading: boolean;
   dataSources: TrailDataSource[];
   loadData: () => void;

@@ -23,7 +23,7 @@ interface BulkImportDialogProps {
   onSourceSelect: (sourceId: string) => void;
   trailCount: number;
   onTrailCountChange: (count: number) => void;
-  onBulkImport: () => void;
+  onBulkImport: () => Promise<boolean>;
   loading: boolean;
 }
 

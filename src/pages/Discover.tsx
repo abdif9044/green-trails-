@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import React, { useState, useCallback } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import DiscoverHeader from '@/components/discover/DiscoverHeader';
@@ -10,11 +10,19 @@ import DiscoverViewControls from '@/components/discover/DiscoverViewControls';
 import { TrailStatsOverview } from '@/components/discover/TrailStatsOverview';
 import { TrailFilters } from '@/types/trails';
 import SEOProvider from "@/components/SEOProvider";
+import { toast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const Discover = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const isMobile = useIsMobile();
+  
   const [viewType, setViewType] = useState<'list' | 'map'>(
     searchParams.get('view') === 'map' ? 'map' : 'list'
+  );
+  const [showTrailPaths, setShowTrailPaths] = useState<boolean>(
+    searchParams.get('paths') === 'true'
   );
   const [trailCount, setTrailCount] = useState<number>(0);
 
@@ -48,6 +56,7 @@ const Discover = () => {
     if (newFilters.stateProvince) params.set('state', newFilters.stateProvince);
     if (newFilters.showAgeRestricted) params.set('age_restricted', 'true');
     if (viewType === 'map') params.set('view', 'map');
+    if (showTrailPaths) params.set('paths', 'true');
     
     setSearchParams(params);
   };
@@ -63,11 +72,35 @@ const Discover = () => {
     }
     
     setSearchParams(params);
+
+    // Show toast to confirm view change
+    toast({
+      title: `${view === 'list' ? 'List' : 'Map'} view activated`,
+      duration: 2000,
+    });
+  };
+  
+  const handleToggleTrailPaths = () => {
+    const newState = !showTrailPaths;
+    setShowTrailPaths(newState);
+    
+    const params = new URLSearchParams(searchParams);
+    if (newState) {
+      params.set('paths', 'true');
+    } else {
+      params.delete('paths');
+    }
+    
+    setSearchParams(params);
   };
   
   const updateTrailCount = (count: number) => {
     setTrailCount(count);
   };
+
+  const handleTrailSelect = useCallback((trailId: string) => {
+    navigate(`/trail/${trailId}`);
+  }, [navigate]);
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -85,24 +118,39 @@ const Discover = () => {
           <TrailStatsOverview />
           
           <div className="flex flex-col lg:flex-row gap-6">
-            <div className="w-full lg:w-64 shrink-0">
-              <DiscoverFilters 
-                currentFilters={filters} 
-                onFilterChange={handleFilterChange} 
-              />
+            <div className={`${viewType === 'map' && !isMobile ? 'lg:w-64 shrink-0' : 'w-full'}`}>
+              {isMobile || viewType === 'list' ? (
+                <DiscoverFilters 
+                  currentFilters={filters} 
+                  onFilterChange={handleFilterChange} 
+                />
+              ) : (
+                <div className="sticky top-20">
+                  <DiscoverFilters 
+                    currentFilters={filters} 
+                    onFilterChange={handleFilterChange} 
+                  />
+                </div>
+              )}
             </div>
             
             <div className="flex-grow">
               <DiscoverViewControls 
                 viewMode={viewType} 
                 onViewModeChange={handleViewChange}
+                showTrailPaths={showTrailPaths}
+                onToggleTrailPaths={handleToggleTrailPaths}
               />
               
-              <DiscoverTrailsList 
-                currentFilters={filters} 
-                viewMode={viewType}
-                onTrailCountChange={updateTrailCount}
-              />
+              <div className="mt-4">
+                <DiscoverTrailsList 
+                  currentFilters={filters} 
+                  viewMode={viewType}
+                  showTrailPaths={showTrailPaths}
+                  onTrailCountChange={updateTrailCount}
+                  onTrailSelect={handleTrailSelect}
+                />
+              </div>
             </div>
           </div>
         </div>

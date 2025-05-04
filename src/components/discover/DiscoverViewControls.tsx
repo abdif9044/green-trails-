@@ -25,7 +25,7 @@ const DiscoverViewControls: React.FC<DiscoverViewControlsProps> = ({
   onToggleTrailPaths
 }) => {
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex flex-wrap items-center gap-3">
       <Tabs 
         value={viewMode} 
         onValueChange={(value) => onViewModeChange(value as 'list' | 'map')}
@@ -54,17 +54,19 @@ const DiscoverViewControls: React.FC<DiscoverViewControlsProps> = ({
         </Toggle>
       )}
       
-      <Select defaultValue="popular">
-        <SelectTrigger className="w-[180px] bg-white dark:bg-greentrail-800 border-greentrail-200 dark:border-greentrail-700">
-          <SelectValue placeholder="Sort by" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="popular">Most Popular</SelectItem>
-          <SelectItem value="recent">Recently Added</SelectItem>
-          <SelectItem value="length-asc">Length (Shortest)</SelectItem>
-          <SelectItem value="length-desc">Length (Longest)</SelectItem>
-        </SelectContent>
-      </Select>
+      <div className="ml-auto">
+        <Select defaultValue="popular">
+          <SelectTrigger className="w-[180px] bg-white dark:bg-greentrail-800 border-greentrail-200 dark:border-greentrail-700">
+            <SelectValue placeholder="Sort by" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="popular">Most Popular</SelectItem>
+            <SelectItem value="recent">Recently Added</SelectItem>
+            <SelectItem value="length-asc">Length (Shortest)</SelectItem>
+            <SelectItem value="length-desc">Length (Longest)</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
     </div>
   );
 };

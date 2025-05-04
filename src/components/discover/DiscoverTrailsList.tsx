@@ -4,17 +4,23 @@ import { useTrailsQuery } from "@/features/trails/hooks/use-trails-query";
 import { TrailFilters } from '@/types/trails';
 import NoTrailsFound from './NoTrailsFound';
 import TrailsGrid from './TrailsGrid';
+import TrailMap from '@/components/map/TrailMap';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export interface DiscoverTrailsListProps {
   currentFilters: TrailFilters;
   viewMode: 'list' | 'map';
+  showTrailPaths?: boolean;
   onTrailCountChange?: (count: number) => void;
+  onTrailSelect?: (trailId: string) => void;
 }
 
 const DiscoverTrailsList: React.FC<DiscoverTrailsListProps> = ({ 
   currentFilters, 
   viewMode,
-  onTrailCountChange
+  showTrailPaths = false,
+  onTrailCountChange,
+  onTrailSelect
 }) => {
   const { trails, loading } = useTrailsQuery(currentFilters, onTrailCountChange);
 
@@ -23,14 +29,43 @@ const DiscoverTrailsList: React.FC<DiscoverTrailsListProps> = ({
   };
 
   if (loading) {
-    return <div className="py-12 text-center">Loading trails...</div>;
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="rounded-lg overflow-hidden">
+            <Skeleton className="h-48 w-full" />
+            <div className="p-4 space-y-2">
+              <Skeleton className="h-6 w-3/4" />
+              <Skeleton className="h-4 w-1/2" />
+              <div className="flex justify-between pt-2">
+                <Skeleton className="h-4 w-1/4" />
+                <Skeleton className="h-4 w-1/4" />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
   }
 
   if (trails.length === 0) {
     return <NoTrailsFound onResetFilters={handleResetFilters} />;
   }
 
-  return <TrailsGrid trails={trails} />;
+  return viewMode === 'list' ? (
+    <TrailsGrid trails={trails} />
+  ) : (
+    <div className="h-[600px] lg:h-[700px]">
+      <TrailMap 
+        trails={trails} 
+        showTrailPaths={showTrailPaths}
+        onTrailSelect={onTrailSelect}
+        country={currentFilters.country}
+        stateProvince={currentFilters.stateProvince}
+        difficulty={currentFilters.difficulty}
+      />
+    </div>
+  );
 };
 
 export default DiscoverTrailsList;

@@ -40,4 +40,6 @@ export interface TrailFilters {
   showAgeRestricted?: boolean;
   country?: string;
   stateProvince?: string;
+  nearbyCoordinates?: [number, number]; // [longitude, latitude]
+  radius?: number; // Search radius in miles
 }

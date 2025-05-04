@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import { TrailFilters } from "@/types/trails";
+import NearbyTrailsButton from './NearbyTrailsButton';
 
 export interface DiscoverFiltersProps {
   currentFilters: TrailFilters;
@@ -95,6 +96,19 @@ const DiscoverFilters: React.FC<DiscoverFiltersProps> = ({ currentFilters, onFil
     setStateProvince(value);
   };
 
+  const handleNearbyTrailsFound = (longitude: number, latitude: number) => {
+    // When location is found, we'll update filters to show trails near the user
+    // For now, we'll just set a filter that would be handled in the TrailsQuery component
+    const updatedFilters: TrailFilters = {
+      ...currentFilters,
+      nearbyCoordinates: [longitude, latitude],
+      // Clear any existing location filters to avoid conflicts
+      country: undefined,
+      stateProvince: undefined
+    };
+    onFilterChange(updatedFilters);
+  };
+
   const applyFilters = () => {
     const filters: TrailFilters = {
       searchQuery: searchQuery || undefined,
@@ -121,7 +135,7 @@ const DiscoverFilters: React.FC<DiscoverFiltersProps> = ({ currentFilters, onFil
     onFilterChange({});
   };
 
-  const availableTags = ['mountain', 'forest', 'lake', 'river', 'desert'];
+  const availableTags = ['mountain', 'forest', 'lake', 'river', 'desert', 'coastal', 'waterfall', 'scenic', 'loop', 'challenging'];
 
   return (
     <div className="bg-white dark:bg-greentrail-900 rounded-md shadow-sm p-4">
@@ -140,7 +154,9 @@ const DiscoverFilters: React.FC<DiscoverFiltersProps> = ({ currentFilters, onFil
         <Search className="absolute left-2.5 top-0 bottom-0 m-auto w-4 h-4 text-greentrail-500 dark:text-greentrail-400" />
       </div>
 
-      <Accordion type="single" collapsible className="mt-4">
+      <NearbyTrailsButton onLocationFound={handleNearbyTrailsFound} />
+
+      <Accordion type="single" collapsible className="mt-4" defaultValue="difficulty">
         <AccordionItem value="difficulty">
           <AccordionTrigger className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed text-greentrail-800 dark:text-greentrail-200">
             Difficulty

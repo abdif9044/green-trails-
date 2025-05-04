@@ -2,6 +2,25 @@
 import { useMemo } from 'react';
 import { Trail, TrailFilters } from '@/types/trails';
 
+// Calculate distance between two coordinates using Haversine formula
+export const getDistanceFromCoordinates = (
+  lon1: number,
+  lat1: number,
+  lon2: number,
+  lat2: number
+): number => {
+  const R = 3963.19; // Earth radius in miles
+  const dLat = (lat2 - lat1) * Math.PI / 180; 
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+    Math.sin(dLon/2) * Math.sin(dLon/2); 
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+  const distance = R * c; // Distance in miles
+  return distance;
+};
+
 export const useTrailFilters = (trails: Trail[] = [], filters?: TrailFilters) => {
   return useMemo(() => {
     if (!filters || trails.length === 0) {
@@ -17,6 +36,22 @@ export const useTrailFilters = (trails: Trail[] = [], filters?: TrailFilters) =>
         const descriptionMatch = trail.description?.toLowerCase().includes(search);
         
         if (!(nameMatch || locationMatch || descriptionMatch)) {
+          return false;
+        }
+      }
+      
+      // Filter by nearby location if coordinates are provided
+      if (filters.nearbyCoordinates && trail.coordinates) {
+        const [filterLon, filterLat] = filters.nearbyCoordinates;
+        const [trailLon, trailLat] = trail.coordinates;
+        const radius = filters.radius || 50; // Default 50 mile radius
+        
+        const distance = getDistanceFromCoordinates(
+          filterLon, filterLat, 
+          trailLon, trailLat
+        );
+        
+        if (distance > radius) {
           return false;
         }
       }
@@ -63,6 +98,16 @@ export const useTrailFilters = (trails: Trail[] = [], filters?: TrailFilters) =>
         if (!hasMatchingStrainType) {
           return false;
         }
+      }
+      
+      // Filter by country
+      if (filters.country && trail.country && trail.country !== filters.country) {
+        return false;
+      }
+      
+      // Filter by state/province
+      if (filters.stateProvince && trail.state_province && trail.state_province !== filters.stateProvince) {
+        return false;
       }
       
       // Filter by age restriction

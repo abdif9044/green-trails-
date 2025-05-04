@@ -15,10 +15,12 @@ export interface SocialUser {
 export const useSocialFollows = (userId: string) => {
   const [following, setFollowing] = useState<SocialUser[]>([]);
   const [followers, setFollowers] = useState<SocialUser[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   
   // Fetch following users
   useEffect(() => {
     const fetchFollowing = async () => {
+      setIsLoading(true);
       const { data, error } = await supabase
         .from('follows')
         .select(`
@@ -33,18 +35,22 @@ export const useSocialFollows = (userId: string) => {
           username: item.profiles?.username || '',
           full_name: item.profiles?.full_name || '',
           avatar_url: item.profiles?.avatar_url || ''
-        })));
+        })).filter(item => item.id !== ''));
       }
+      setIsLoading(false);
     };
     
     if (userId) {
       fetchFollowing();
+    } else {
+      setIsLoading(false);
     }
   }, [userId]);
 
   // Fetch followers
   useEffect(() => {
     const fetchFollowers = async () => {
+      setIsLoading(true);
       const { data, error } = await supabase
         .from('follows')
         .select(`
@@ -59,17 +65,21 @@ export const useSocialFollows = (userId: string) => {
           username: item.profiles?.username || '',
           full_name: item.profiles?.full_name || '',
           avatar_url: item.profiles?.avatar_url || ''
-        })));
+        })).filter(item => item.id !== ''));
       }
+      setIsLoading(false);
     };
     
     if (userId) {
       fetchFollowers();
+    } else {
+      setIsLoading(false);
     }
   }, [userId]);
 
   return {
     following,
-    followers
+    followers,
+    isLoading
   };
 };

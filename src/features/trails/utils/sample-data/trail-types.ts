@@ -20,8 +20,6 @@ export const createBaseTrail = (
     likes: Math.floor(Math.random() * 200) + 20,
     isAgeRestricted: Math.random() > 0.7, // ~30% of trails are age restricted
     tags: [],
-    rating: 0,
-    ratingCount: 0,
     length: 0,
     elevation: 0,
     elevation_gain: 0,

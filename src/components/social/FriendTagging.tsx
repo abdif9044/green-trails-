@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
-import { useSocialFollows } from '@/hooks/use-social-follows';
+import { useSocialFollows, SocialUser } from '@/hooks/social/use-social-follows';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
@@ -35,10 +35,10 @@ const FriendTagging: React.FC<FriendTaggingProps> = ({
   const [taggedUsers, setTaggedUsers] = useState<UserOption[]>([]);
 
   // Get user's friends (followers/following)
-  const { followingUsers = [], isLoading } = useSocialFollows(user?.id);
+  const { following = [], isLoading } = useSocialFollows(user?.id || '');
   
   // Filter users based on search
-  const filteredUsers = followingUsers
+  const filteredUsers = following
     .filter(u => 
       !taggedUsers.some(t => t.id === u.id) && 
       (u.username?.toLowerCase().includes(search.toLowerCase()) ||

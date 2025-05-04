@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
-import { HourlyForecast, DailyForecast } from "@/services/weather/weather-service";
+import { HourlyForecast, DailyForecast } from "@/features/weather/types/weather-types";
 import { Cloud, CloudDrizzle, CloudRain, CloudSnow, CloudLightning, Sun, SunDim } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import WeatherInfo from "./WeatherInfo";

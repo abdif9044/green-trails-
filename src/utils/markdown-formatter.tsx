@@ -11,7 +11,7 @@ interface MarkdownFormatterProps {
 export const MarkdownFormatter: React.FC<MarkdownFormatterProps> = ({ 
   markdown, 
   content,
-  className 
+  className = "prose prose-green dark:prose-invert"
 }) => {
   // Use content prop if provided, otherwise fall back to markdown prop
   const textToRender = content || markdown || '';
@@ -21,10 +21,4 @@ export const MarkdownFormatter: React.FC<MarkdownFormatterProps> = ({
       <Markdown>{textToRender}</Markdown>
     </div>
   );
-};
-
-// Helper function to format markdown text
-export const formatMarkdown = (text: string): string => {
-  // Basic markdown formatting
-  return text || '';
 };

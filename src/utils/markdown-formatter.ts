@@ -4,6 +4,7 @@
  * Converts markdown syntax to HTML with GreenTrails styling
  */
 export { MarkdownFormatter } from './markdown-formatter.tsx';
+
 export const formatMarkdown = (content: string): string => {
   if (!content) return '';
   

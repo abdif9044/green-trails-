@@ -11,6 +11,14 @@ export interface SocialUser {
   avatar_url: string;
 }
 
+// Profile type for ensuring type safety
+interface Profile {
+  id?: string;
+  username?: string;
+  full_name?: string;
+  avatar_url?: string;
+}
+
 // Primary hook for accessing social follows data
 export const useSocialFollows = (userId: string) => {
   const [following, setFollowing] = useState<SocialUser[]>([]);
@@ -44,8 +52,8 @@ export const useSocialFollows = (userId: string) => {
           const followingUsers = data
             .filter(item => item.profiles !== null) // Filter out null profiles
             .map(item => {
-              // Safely access profile properties with fallback values
-              const profile = item.profiles || {};
+              // Safely access profile properties with proper typing
+              const profile = item.profiles as Profile || {};
               return {
                 id: profile.id || '',
                 username: profile.username || '',
@@ -95,8 +103,8 @@ export const useSocialFollows = (userId: string) => {
           const followerUsers = data
             .filter(item => item.profiles !== null) // Filter out null profiles
             .map(item => {
-              // Safely access profile properties with fallback values
-              const profile = item.profiles || {};
+              // Safely access profile properties with proper typing
+              const profile = item.profiles as Profile || {};
               return {
                 id: profile.id || '',
                 username: profile.username || '',

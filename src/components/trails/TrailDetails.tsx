@@ -1,46 +1,56 @@
 
 import React from "react";
-import { Separator } from "@/components/ui/separator";
+import { Card, CardContent } from "@/components/ui/card";
 import { StrainTag } from "@/types/trails";
-import StrainTagBadge from "./StrainTagBadge";
+import MarkdownFormatter from "@/utils/markdown-formatter";
+import StrainPairingSystem from "./StrainPairingSystem";
 
 interface TrailDetailsProps {
-  description: string | undefined;
-  strainTags: string[] | StrainTag[] | undefined;
+  description?: string;
+  strainTags?: StrainTag[] | string[];
+  difficulty?: string;
+  length?: number;
 }
 
-const TrailDetails: React.FC<TrailDetailsProps> = ({ description, strainTags }) => {
+const TrailDetails: React.FC<TrailDetailsProps> = ({ 
+  description, 
+  strainTags = [],
+  difficulty = 'moderate',
+  length = 0
+}) => {
+  // Transform string[] to StrainTag[] if needed
+  const formattedStrainTags: StrainTag[] = strainTags.map(tag => {
+    if (typeof tag === 'string') {
+      return {
+        name: tag,
+        type: 'hybrid',
+        effects: []
+      };
+    }
+    return tag;
+  });
+
   return (
-    <div className="space-y-4">
-      <div className="space-y-2">
-        <h3 className="text-xl font-semibold text-greentrail-800 dark:text-greentrail-200">
-          Trail Description
-        </h3>
-        <Separator className="bg-greentrail-200 dark:bg-greentrail-700" />
-        <p className="text-greentrail-700 dark:text-greentrail-300">
-          {description || 'No description available.'}
-        </p>
-      </div>
-      
-      {strainTags && strainTags.length > 0 && (
-        <div className="space-y-2">
-          <h3 className="text-xl font-semibold text-greentrail-800 dark:text-greentrail-200">
-            Strain Tags
-          </h3>
-          <Separator className="bg-greentrail-200 dark:bg-greentrail-700" />
-          <div className="flex flex-wrap gap-2">
-            {strainTags.map((strainTag) => {
-              const strain: StrainTag = {
-                name: typeof strainTag === 'string' ? strainTag : strainTag.name,
-                type: 'hybrid',
-                effects: []
-              };
-              return (
-                <StrainTagBadge key={typeof strainTag === 'string' ? strainTag : strainTag.name} strain={strain} />
-              );
-            })}
+    <div className="space-y-6">
+      <Card>
+        <CardContent className="p-6">
+          <h3 className="text-lg font-semibold mb-2">Trail Description</h3>
+          <div className="prose max-w-none dark:prose-invert">
+            {description ? (
+              <MarkdownFormatter content={description} />
+            ) : (
+              <p className="text-muted-foreground">No detailed description available for this trail.</p>
+            )}
           </div>
-        </div>
+        </CardContent>
+      </Card>
+      
+      {formattedStrainTags.length > 0 && (
+        <StrainPairingSystem 
+          strainTags={formattedStrainTags}
+          trailDifficulty={difficulty}
+          trailLength={length}
+        />
       )}
     </div>
   );

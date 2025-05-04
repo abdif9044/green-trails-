@@ -8,6 +8,8 @@ import TrailDetails from "./TrailDetails";
 import TrailComments from "./TrailComments";
 import TrailAlbums from "./TrailAlbums";
 import AgeRestrictedContent from "./AgeRestrictedContent";
+import TrailElevationProfile from "./TrailElevationProfile";
+import GroupHikeScheduler from "../community/GroupHikeScheduler";
 
 interface TrailContentProps {
   trail: Trail;
@@ -16,9 +18,10 @@ interface TrailContentProps {
 const TrailContent: React.FC<TrailContentProps> = ({ trail }) => {
   return (
     <Tabs defaultValue="details" className="w-full">
-      <TabsList className="grid w-full grid-cols-4">
+      <TabsList className="grid w-full grid-cols-5">
         <TabsTrigger value="details">Details</TabsTrigger>
         <TabsTrigger value="map">Map</TabsTrigger>
+        <TabsTrigger value="group-hikes">Group Hikes</TabsTrigger>
         <TabsTrigger value="albums">Albums</TabsTrigger>
         <TabsTrigger value="comments">Comments</TabsTrigger>
       </TabsList>
@@ -26,7 +29,16 @@ const TrailContent: React.FC<TrailContentProps> = ({ trail }) => {
       <TabsContent value="details" className="mt-6 space-y-4">
         <TrailDetails 
           description={trail.description} 
-          strainTags={trail.strainTags} 
+          strainTags={trail.strainTags}
+          difficulty={trail.difficulty}
+          length={trail.length}
+        />
+        
+        <TrailElevationProfile
+          trailId={trail.id}
+          geojson={trail.geojson}
+          elevation={trail.elevation}
+          elevationGain={trail.elevation_gain}
         />
       </TabsContent>
       
@@ -34,25 +46,20 @@ const TrailContent: React.FC<TrailContentProps> = ({ trail }) => {
         <Card>
           <CardContent className="p-0">
             <TrailMap
-              trails={[{
-                id: trail.id,
-                name: trail.name,
-                location: trail.location,
-                coordinates: trail.coordinates,
-                difficulty: trail.difficulty,
-                imageUrl: trail.imageUrl,
-                length: trail.length,
-                elevation: trail.elevation,
-                tags: trail.tags,
-                likes: trail.likes,
-                isAgeRestricted: trail.isAgeRestricted
-              }]}
+              trails={[trail]}
               center={trail.coordinates}
               zoom={12}
               className="h-[400px] w-full"
+              showTrailPaths={true}
             />
           </CardContent>
         </Card>
+      </TabsContent>
+      
+      <TabsContent value="group-hikes" className="mt-6">
+        <AgeRestrictedContent isAgeRestricted={trail.isAgeRestricted}>
+          <GroupHikeScheduler trailId={trail.id} trailName={trail.name} />
+        </AgeRestrictedContent>
       </TabsContent>
       
       <TabsContent value="albums" className="mt-6">

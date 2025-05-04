@@ -21,6 +21,8 @@ interface MapContentProps {
   className?: string;
   showParking?: boolean;
   showTrailPaths?: boolean;
+  showWeatherLayer?: boolean;
+  weatherLayerType?: 'temperature' | 'precipitation' | 'clouds' | 'wind';
   country?: string;
   stateProvince?: string;
   difficulty?: string;
@@ -33,7 +35,9 @@ const MapContent: React.FC<MapContentProps> = ({
   zoom = 10,
   className = 'h-[500px] w-full',
   showParking = true,
-  showTrailPaths = false
+  showTrailPaths = false,
+  showWeatherLayer = false,
+  weatherLayerType = 'temperature'
 }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const { map } = useMap();
@@ -48,7 +52,7 @@ const MapContent: React.FC<MapContentProps> = ({
     currentMapStyle,
     handleStyleChange,
     handleResetView
-  } = useMapLayers(showParking, showTrailPaths);
+  } = useMapLayers(showParking, showTrailPaths, showWeatherLayer);
 
   const { isLoading } = useMapInitialization({
     mapContainer,
@@ -56,6 +60,13 @@ const MapContent: React.FC<MapContentProps> = ({
     zoom,
     style: mapStyles[currentMapStyle as keyof typeof mapStyles]
   });
+  
+  // Initialize weather layer if explicitly requested
+  React.useEffect(() => {
+    if (showWeatherLayer !== undefined) {
+      setWeatherLayer(showWeatherLayer);
+    }
+  }, [showWeatherLayer, setWeatherLayer]);
   
   // Get all trail IDs to fetch parking spots
   const trailIds = trails.map(trail => trail.id);
@@ -108,7 +119,10 @@ const MapContent: React.FC<MapContentProps> = ({
         </>
       )}
 
-      <MapWeatherLayer enabled={weatherLayer} />
+      <MapWeatherLayer 
+        enabled={weatherLayer} 
+        type={weatherLayerType} 
+      />
       
       {isLoading && <MapLoadingState />}
     </div>

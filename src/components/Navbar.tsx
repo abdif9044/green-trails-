@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -11,13 +10,14 @@ import {
   Menu, 
   X 
 } from 'lucide-react';
+import ThemeToggle from './ThemeToggle';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
 
   return (
-    <nav className="sticky top-0 z-50 w-full glass-effect border-b border-greentrail-200 dark:border-greentrail-900">
+    <header className="bg-white dark:bg-gray-950 border-b border-gray-200 dark:border-gray-800">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
         <div 
           className="flex items-center space-x-2 cursor-pointer" 
@@ -56,6 +56,10 @@ const Navbar = () => {
             <span>Profile</span>
           </div>
           <NavbarAuth />
+        </div>
+
+        <div className="flex items-center gap-4">
+          <ThemeToggle />
         </div>
 
         <button 
@@ -105,7 +109,7 @@ const Navbar = () => {
           </div>
         </div>
       )}
-    </nav>
+    </header>
   );
 };
 

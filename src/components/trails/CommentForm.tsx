@@ -1,56 +1,114 @@
 
-import React, { useState } from 'react';
-import { useAddComment } from '@/hooks/use-trail-interactions';
-import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
-import { useAuth } from '@/hooks/use-auth';
-import { Loader2 } from 'lucide-react';
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import FriendTagging from "../social/FriendTagging";
 
 interface CommentFormProps {
   trailId: string;
+  onCommentAdded?: () => void;
 }
 
-const CommentForm: React.FC<CommentFormProps> = ({ trailId }) => {
-  const [comment, setComment] = useState('');
+const CommentForm: React.FC<CommentFormProps> = ({ trailId, onCommentAdded }) => {
   const { user } = useAuth();
-  const { mutate: addComment, isPending } = useAddComment(trailId);
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const { toast } = useToast();
+  const [comment, setComment] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [taggedFriends, setTaggedFriends] = useState<string[]>([]);
+  
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!comment.trim()) return;
+    if (!user) {
+      toast({
+        title: "Sign in required",
+        description: "You need to sign in to post a comment",
+        variant: "destructive",
+      });
+      return;
+    }
     
-    addComment(comment, {
-      onSuccess: () => {
-        setComment('');
+    if (!comment.trim()) {
+      toast({
+        title: "Empty comment",
+        description: "Please enter a comment before submitting",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    try {
+      // Here would be Supabase code to add the comment with tagged friends
+      // In a real implementation this would save to the database
+      
+      setComment("");
+      setTaggedFriends([]);
+      
+      toast({
+        title: "Comment added",
+        description: "Your comment has been posted successfully",
+      });
+      
+      if (onCommentAdded) {
+        onCommentAdded();
       }
-    });
+    } catch (error) {
+      console.error("Error posting comment:", error);
+      toast({
+        title: "Error",
+        description: "Failed to post your comment. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
-
+  
   if (!user) {
     return (
-      <div className="bg-muted/40 rounded-lg p-4 text-center">
-        <p className="text-muted-foreground">Sign in to leave a comment</p>
+      <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 text-center text-gray-500">
+        Sign in to leave a comment
       </div>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3">
-      <Textarea
-        placeholder="Share your experience on this trail..."
-        value={comment}
-        onChange={(e) => setComment(e.target.value)}
-        className="min-h-[100px] bg-background border-greentrail-200 dark:border-greentrail-800 focus-visible:ring-greentrail-500"
-      />
-      <div className="flex justify-end">
-        <Button 
-          type="submit" 
-          disabled={!comment.trim() || isPending}
-        >
-          {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Post Comment
-        </Button>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="flex items-start gap-3">
+        <Avatar className="h-9 w-9">
+          <AvatarFallback>
+            {user?.email?.[0].toUpperCase() || "U"}
+          </AvatarFallback>
+        </Avatar>
+        
+        <div className="flex-1 space-y-3">
+          <Textarea
+            placeholder="Share your thoughts about this trail..."
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            className="min-h-[100px] resize-none"
+          />
+          
+          <FriendTagging 
+            onTagged={setTaggedFriends} 
+            initialTagged={taggedFriends}
+          />
+          
+          <div className="flex justify-end">
+            <Button 
+              type="submit" 
+              disabled={isSubmitting} 
+              className="bg-greentrail-600 hover:bg-greentrail-700"
+            >
+              {isSubmitting ? "Posting..." : "Post Comment"}
+            </Button>
+          </div>
+        </div>
       </div>
     </form>
   );

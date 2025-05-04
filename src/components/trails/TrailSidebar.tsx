@@ -1,14 +1,14 @@
 
 import React from "react";
 import { Cloud, ParkingMeter } from "lucide-react";
-import WeatherInfo from "./WeatherInfo";
+import WeatherForecast from "./WeatherForecast";
 import SimilarTrails from "./SimilarTrails";
 import ParkingInfo from "./ParkingInfo";
-import { WeatherData } from "@/services/weather-service";
+import { DetailedWeatherData } from "@/services/weather/weather-service";
 
 interface TrailSidebarProps {
   trailId: string;
-  weatherData: WeatherData | null;
+  weatherData: DetailedWeatherData | null;
   isWeatherLoading: boolean;
 }
 
@@ -22,9 +22,9 @@ const TrailSidebar: React.FC<TrailSidebarProps> = ({
       <div className="space-y-3">
         <h3 className="flex items-center gap-2 font-semibold">
           <Cloud className="h-4 w-4 text-greentrail-600" />
-          Current Weather
+          Weather Forecast
         </h3>
-        <WeatherInfo 
+        <WeatherForecast 
           temperature={weatherData?.temperature}
           condition={weatherData?.condition}
           high={weatherData?.high}
@@ -34,6 +34,8 @@ const TrailSidebar: React.FC<TrailSidebarProps> = ({
           sunset={weatherData?.sunset}
           windSpeed={weatherData?.windSpeed}
           windDirection={weatherData?.windDirection}
+          hourlyForecast={weatherData?.hourlyForecast}
+          dailyForecast={weatherData?.dailyForecast}
           isLoading={isWeatherLoading}
         />
       </div>

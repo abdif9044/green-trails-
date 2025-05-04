@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { NavbarAuth } from './NavbarAuth';
 import { 
@@ -14,11 +14,15 @@ import {
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const navigate = useNavigate();
 
   return (
     <nav className="sticky top-0 z-50 w-full glass-effect border-b border-greentrail-200 dark:border-greentrail-900">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-        <Link to="/" className="flex items-center space-x-2">
+        <div 
+          className="flex items-center space-x-2 cursor-pointer" 
+          onClick={() => navigate('/')}
+        >
           <img 
             src="/lovable-uploads/0c2a9cc4-4fdb-4d4a-965c-47b406e4ec4e.png" 
             alt="GreenTrails Logo" 
@@ -27,21 +31,30 @@ const Navbar = () => {
           <span className="font-bold text-2xl text-greentrail-800 dark:text-greentrail-300">
             GreenTrails
           </span>
-        </Link>
+        </div>
 
         <div className="hidden md:flex items-center space-x-6">
-          <Link to="/discover" className="flex items-center space-x-1 text-greentrail-700 hover:text-greentrail-900 dark:text-greentrail-300 dark:hover:text-white transition-colors">
+          <div 
+            className="flex items-center space-x-1 text-greentrail-700 hover:text-greentrail-900 dark:text-greentrail-300 dark:hover:text-white transition-colors cursor-pointer"
+            onClick={() => navigate('/discover')}
+          >
             <Compass size={18} />
             <span>Discover</span>
-          </Link>
-          <Link to="/social" className="flex items-center space-x-1 text-greentrail-700 hover:text-greentrail-900 dark:text-greentrail-300 dark:hover:text-white transition-colors">
+          </div>
+          <div 
+            className="flex items-center space-x-1 text-greentrail-700 hover:text-greentrail-900 dark:text-greentrail-300 dark:hover:text-white transition-colors cursor-pointer"
+            onClick={() => navigate('/social')}
+          >
             <Users size={18} />
             <span>Social</span>
-          </Link>
-          <Link to="/profile" className="flex items-center space-x-1 text-greentrail-700 hover:text-greentrail-900 dark:text-greentrail-300 dark:hover:text-white transition-colors">
+          </div>
+          <div 
+            className="flex items-center space-x-1 text-greentrail-700 hover:text-greentrail-900 dark:text-greentrail-300 dark:hover:text-white transition-colors cursor-pointer"
+            onClick={() => navigate('/profile')}
+          >
             <User size={18} />
             <span>Profile</span>
-          </Link>
+          </div>
           <NavbarAuth />
         </div>
 
@@ -56,30 +69,36 @@ const Navbar = () => {
       {isMenuOpen && (
         <div className="md:hidden absolute top-16 inset-x-0 bg-white dark:bg-greentrail-950 shadow-lg border-b border-greentrail-200 dark:border-greentrail-800 z-50">
           <div className="container mx-auto px-4 py-4 flex flex-col space-y-4">
-            <Link 
-              to="/discover" 
-              className="flex items-center space-x-2 p-2 rounded-lg hover:bg-greentrail-100 dark:hover:bg-greentrail-900 text-greentrail-700 dark:text-greentrail-300"
-              onClick={() => setIsMenuOpen(false)}
+            <div 
+              className="flex items-center space-x-2 p-2 rounded-lg hover:bg-greentrail-100 dark:hover:bg-greentrail-900 text-greentrail-700 dark:text-greentrail-300 cursor-pointer"
+              onClick={() => {
+                navigate('/discover');
+                setIsMenuOpen(false);
+              }}
             >
               <Compass size={20} />
               <span>Discover Trails</span>
-            </Link>
-            <Link 
-              to="/social" 
-              className="flex items-center space-x-2 p-2 rounded-lg hover:bg-greentrail-100 dark:hover:bg-greentrail-900 text-greentrail-700 dark:text-greentrail-300"
-              onClick={() => setIsMenuOpen(false)}
+            </div>
+            <div 
+              className="flex items-center space-x-2 p-2 rounded-lg hover:bg-greentrail-100 dark:hover:bg-greentrail-900 text-greentrail-700 dark:text-greentrail-300 cursor-pointer"
+              onClick={() => {
+                navigate('/social');
+                setIsMenuOpen(false);
+              }}
             >
               <Users size={20} />
               <span>Social</span>
-            </Link>
-            <Link 
-              to="/profile" 
-              className="flex items-center space-x-2 p-2 rounded-lg hover:bg-greentrail-100 dark:hover:bg-greentrail-900 text-greentrail-700 dark:text-greentrail-300"
-              onClick={() => setIsMenuOpen(false)}
+            </div>
+            <div 
+              className="flex items-center space-x-2 p-2 rounded-lg hover:bg-greentrail-100 dark:hover:bg-greentrail-900 text-greentrail-700 dark:text-greentrail-300 cursor-pointer"
+              onClick={() => {
+                navigate('/profile');
+                setIsMenuOpen(false);
+              }}
             >
               <User size={20} />
               <span>Profile</span>
-            </Link>
+            </div>
             <div className="pt-2">
               <NavbarAuth />
             </div>

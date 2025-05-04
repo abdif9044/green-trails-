@@ -1,3 +1,4 @@
+
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { ThemeProvider } from 'next-themes';
 import ErrorBoundary from '@/components/ErrorBoundary';
@@ -32,11 +33,13 @@ const App = () => {
             <Route path="/" element={<Index />} />
             <Route path="/discover" element={<Discover />} />
             <Route path="/trails/:trailId" element={<Trail />} />
+            <Route path="/profile" element={<Profile />} />
             <Route path="/profile/:userId" element={<Profile />} />
             <Route path="/social" element={<Social />} />
             <Route path="/albums/:albumId" element={<AlbumDetail />} />
             <Route path="/create-album" element={<CreateAlbum />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/auth/update-password" element={<Auth />} />
             <Route path="/legal/:policyType" element={<Legal />} />
             <Route path="/admin" element={<AdminRedirect />} />
             <Route path="/admin/trails/import" element={<AdminTrailImport />} />

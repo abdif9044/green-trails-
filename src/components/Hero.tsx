@@ -21,7 +21,7 @@ const Hero = () => {
           </div>
           
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-heading font-bold text-greentrail-900 dark:text-greentrail-100 mb-6">
-            Discover Your Path<br />
+            Blaze Your Path<br />
             <span className="text-greentrail-600">Find Your Peace</span>
           </h1>
           

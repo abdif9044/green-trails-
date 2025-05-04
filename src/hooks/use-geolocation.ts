@@ -5,6 +5,7 @@ export interface GeolocationState {
   location: GeolocationPosition | null;
   error: GeolocationPositionError | null;
   loading: boolean;
+  coordinates?: [number, number] | null; // Added for compatibility
 }
 
 export const useGeolocation = (options?: PositionOptions): GeolocationState => {
@@ -12,6 +13,7 @@ export const useGeolocation = (options?: PositionOptions): GeolocationState => {
     location: null,
     error: null,
     loading: true,
+    coordinates: null,
   });
 
   useEffect(() => {
@@ -25,10 +27,17 @@ export const useGeolocation = (options?: PositionOptions): GeolocationState => {
     }
 
     const onSuccess = (position: GeolocationPosition) => {
+      // Create coordinates array for easy access
+      const coordinates: [number, number] = [
+        position.coords.longitude, 
+        position.coords.latitude
+      ];
+      
       setState({
         location: position,
         error: null,
         loading: false,
+        coordinates: coordinates,
       });
     };
 
@@ -37,6 +46,7 @@ export const useGeolocation = (options?: PositionOptions): GeolocationState => {
         location: null,
         error,
         loading: false,
+        coordinates: null,
       });
     };
 

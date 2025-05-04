@@ -23,7 +23,7 @@ const AssistantBubble: React.FC<AssistantBubbleProps> = ({
   const [apiKeyChecked, setApiKeyChecked] = useState(false);
   
   // If we have a trail ID, fetch the trail data for context
-  const { data: trail } = useTrail(trailId, {
+  const { data: trail } = useTrail(trailId || "", {
     enabled: !!trailId,
   });
   
@@ -75,6 +75,7 @@ const AssistantBubble: React.FC<AssistantBubbleProps> = ({
   const handleApiKeySuccess = () => {
     // API key has been set successfully
     setApiKeyChecked(true);
+    setShowApiKeyModal(false);
   };
   
   return (

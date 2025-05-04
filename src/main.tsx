@@ -30,8 +30,17 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-// Make sure we explicitly use React here to fix the useState issue
-createRoot(document.getElementById("root")!).render(
+const container = document.getElementById('root');
+// Make sure we have a valid DOM element
+if (!container) {
+  throw new Error('Root element not found');
+}
+
+// Create root with explicit React import
+const root = createRoot(container);
+
+// Render with strict mode to ensure proper React context
+root.render(
   <React.StrictMode>
     <HelmetProvider>
       <QueryClientProvider client={queryClient}>

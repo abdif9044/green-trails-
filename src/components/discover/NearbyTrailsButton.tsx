@@ -3,19 +3,20 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { MapPin, Loader2 } from "lucide-react";
 import { useGeolocation } from '@/hooks/use-geolocation';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 interface NearbyTrailsButtonProps {
   onLocationFound: (longitude: number, latitude: number) => void;
 }
 
 const NearbyTrailsButton: React.FC<NearbyTrailsButtonProps> = ({ onLocationFound }) => {
-  const { coordinates, error, loading } = useGeolocation();
+  const { location, error, loading, coordinates } = useGeolocation();
+  const { toast } = useToast();
 
   const handleClick = () => {
-    if (coordinates) {
-      const [longitude, latitude] = coordinates;
-      onLocationFound(longitude, latitude);
+    if (location && location.coords) {
+      // Use location.coords rather than coordinates
+      onLocationFound(location.coords.longitude, location.coords.latitude);
       toast({
         title: "Location found",
         description: "Showing trails near your location",
@@ -23,7 +24,7 @@ const NearbyTrailsButton: React.FC<NearbyTrailsButtonProps> = ({ onLocationFound
     } else if (error) {
       toast({
         title: "Location error",
-        description: error,
+        description: error.message || "Unable to access location",
         variant: "destructive",
       });
     }

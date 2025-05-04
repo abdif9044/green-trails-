@@ -42,13 +42,17 @@ export const useSocialFollows = (userId: string) => {
           setFollowing([]);
         } else if (data) {
           const followingUsers = data
-            .filter(item => item.profiles) // Filter out null profiles
-            .map(item => ({
-              id: item.profiles?.id || '',
-              username: item.profiles?.username || '',
-              full_name: item.profiles?.full_name || '',
-              avatar_url: item.profiles?.avatar_url || ''
-            }))
+            .filter(item => item.profiles !== null) // Filter out null profiles
+            .map(item => {
+              // Safely access profile properties with fallback values
+              const profile = item.profiles || {};
+              return {
+                id: profile.id || '',
+                username: profile.username || '',
+                full_name: profile.full_name || '',
+                avatar_url: profile.avatar_url || ''
+              };
+            })
             .filter(item => item.id !== '');
           
           setFollowing(followingUsers);
@@ -89,13 +93,17 @@ export const useSocialFollows = (userId: string) => {
           setFollowers([]);
         } else if (data) {
           const followerUsers = data
-            .filter(item => item.profiles) // Filter out null profiles
-            .map(item => ({
-              id: item.profiles?.id || '',
-              username: item.profiles?.username || '',
-              full_name: item.profiles?.full_name || '',
-              avatar_url: item.profiles?.avatar_url || ''
-            }))
+            .filter(item => item.profiles !== null) // Filter out null profiles
+            .map(item => {
+              // Safely access profile properties with fallback values
+              const profile = item.profiles || {};
+              return {
+                id: profile.id || '',
+                username: profile.username || '',
+                full_name: profile.full_name || '',
+                avatar_url: profile.avatar_url || ''
+              };
+            })
             .filter(item => item.id !== '');
           
           setFollowers(followerUsers);

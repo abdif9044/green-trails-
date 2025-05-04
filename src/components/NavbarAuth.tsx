@@ -36,16 +36,19 @@ export const NavbarAuth = () => {
   if (!user) {
     return (
       <div className="flex items-center gap-4">
-        <Link to="/auth">
-          <Button variant="outline" className="border-greentrail-500 text-greentrail-700 hover:bg-greentrail-100 hover:text-greentrail-800 dark:border-greentrail-400 dark:text-greentrail-200 dark:hover:bg-greentrail-800 dark:hover:text-greentrail-100">
-            Sign In
-          </Button>
-        </Link>
-        <Link to="/auth?signup=true">
-          <Button className="bg-greentrail-600 hover:bg-greentrail-700 text-white">
-            Join Now
-          </Button>
-        </Link>
+        <Button 
+          variant="outline" 
+          className="border-greentrail-500 text-greentrail-700 hover:bg-greentrail-100 hover:text-greentrail-800 dark:border-greentrail-400 dark:text-greentrail-200 dark:hover:bg-greentrail-800 dark:hover:text-greentrail-100"
+          onClick={() => navigate('/auth')}
+        >
+          Sign In
+        </Button>
+        <Button 
+          className="bg-greentrail-600 hover:bg-greentrail-700 text-white"
+          onClick={() => navigate('/auth?signup=true')}
+        >
+          Join Now
+        </Button>
       </div>
     );
   }
@@ -70,16 +73,12 @@ export const NavbarAuth = () => {
             {user.email}
           </div>
         </DropdownMenuItem>
-        <Link to="/profile">
-          <DropdownMenuItem>
-            Profile
-          </DropdownMenuItem>
-        </Link>
-        <Link to="/social">
-          <DropdownMenuItem>
-            Social Feed
-          </DropdownMenuItem>
-        </Link>
+        <DropdownMenuItem onClick={() => navigate('/profile')}>
+          Profile
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => navigate('/social')}>
+          Social Feed
+        </DropdownMenuItem>
         <DropdownMenuItem onClick={handleSignOut}>
           Sign out
         </DropdownMenuItem>

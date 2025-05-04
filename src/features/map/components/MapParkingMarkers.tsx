@@ -11,6 +11,8 @@ interface ParkingSpot {
   latitude: number;
   longitude: number;
   description?: string;
+  capacity?: number | null;
+  notes?: string | null;
 }
 
 interface MapParkingMarkersProps {

@@ -1,9 +1,8 @@
 
-import React, { useRef } from 'react';
+import React from 'react';
 import { MapProvider } from './MapContext';
 import MapContent from './MapContent';
 import { Trail } from '@/types/trails';
-import { mapStyles } from './mapStyles';
 
 interface MapContainerProps {
   trails?: Trail[];

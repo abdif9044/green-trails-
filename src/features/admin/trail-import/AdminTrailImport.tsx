@@ -112,8 +112,8 @@ const AdminTrailImport = () => {
         <div className="container mx-auto px-4">
           <DatabaseSetupAlerts 
             isSettingUpDb={isSettingUpDb}
-            dbSetupError={dbSetupError}
-            retryDatabaseSetup={retryDatabaseSetup}
+            dbSetupError={dbSetupError !== null}
+            retryDatabaseSetup={async () => await checkAndSetupDatabase()}
           />
         
           <ImportHeader

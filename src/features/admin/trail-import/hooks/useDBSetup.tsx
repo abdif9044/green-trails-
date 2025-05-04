@@ -51,8 +51,8 @@ export function useDBSetup(onSetupComplete: () => void) {
     }
   };
   
-  const retryDatabaseSetup = () => {
-    checkAndSetupDatabase();
+  const retryDatabaseSetup = async () => {
+    await checkAndSetupDatabase();
   };
   
   return {

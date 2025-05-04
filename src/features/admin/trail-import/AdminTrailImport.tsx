@@ -15,7 +15,7 @@ import { useAutoImport } from "./hooks/useAutoImport";
 import { useSourceSelection } from "./hooks/useSourceSelection";
 import DatabaseSetupAlerts from "./components/DatabaseSetupAlerts";
 import ImportHeader from "./components/ImportHeader";
-import ImportProgress from "./components/ImportProgress";
+import BulkImportSection from "./components/BulkImportSection";
 import ImportTabs from "./components/ImportTabs";
 
 const AdminTrailImport = () => {
@@ -128,7 +128,16 @@ const AdminTrailImport = () => {
             loadData={loadData}
           />
           
-          <ImportProgress 
+          <BulkImportSection 
+            bulkImportOpen={bulkImportOpen}
+            setBulkImportOpen={setBulkImportOpen}
+            selectedSources={selectedSources}
+            dataSources={dataSources}
+            onSourceSelect={handleSourceSelect}
+            trailCount={trailCount}
+            onTrailCountChange={setTrailCount}
+            onBulkImport={handleBulkImportClick}
+            bulkImportLoading={bulkImportLoading}
             activeBulkJobId={activeBulkJobId}
             bulkProgress={bulkProgress}
           />

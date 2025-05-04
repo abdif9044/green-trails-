@@ -1,69 +1,58 @@
 
-import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
-import { useDatabaseSetup } from "@/services/database-setup-service";
+import { useState } from 'react';
+import { useToast } from '@/hooks/use-toast';
+import { DatabaseSetupService } from '@/services/database/setup-service';
 
-export function useDBSetup(loadData: () => void) {
+export function useDBSetup(onSetupComplete: () => void) {
   const [isSettingUpDb, setIsSettingUpDb] = useState(false);
-  const [dbSetupError, setDbSetupError] = useState(false);
+  const [dbSetupError, setDbSetupError] = useState<string | null>(null);
   const { toast } = useToast();
   
-  const { setupBulkImport, checkTablesExist, logSecurityEvent } = useDatabaseSetup();
-  
   const checkAndSetupDatabase = async () => {
-    if (isSettingUpDb || dbSetupError) return;
-    
     setIsSettingUpDb(true);
+    setDbSetupError(null);
+    
     try {
-      // First check if tables exist
-      const tablesExist = await checkTablesExist();
+      const tablesExist = await DatabaseSetupService.checkBulkImportTablesExist();
       
       if (!tablesExist) {
-        // Log setup attempt for security auditing
-        await logSecurityEvent('database_setup_attempt', { 
-          action: 'setup_database',
-          timestamp: new Date().toISOString()
+        toast({
+          title: "Setting up database",
+          description: "Creating necessary tables for bulk import...",
         });
         
-        // Setup tables if they don't exist
-        const success = await setupBulkImport();
-        if (success) {
-          // Reload data after successful setup
-          loadData();
+        const result = await DatabaseSetupService.setupBulkImportTables();
+        
+        if (!result.success) {
+          setDbSetupError("Failed to set up database tables. See console for details.");
+          toast({
+            title: "Database setup failed",
+            description: "Failed to create necessary tables for bulk import.",
+            variant: "destructive",
+          });
         } else {
-          setDbSetupError(true);
+          toast({
+            title: "Database setup complete",
+            description: "Successfully created bulk import tables.",
+          });
+          onSetupComplete();
         }
       }
     } catch (error) {
-      console.error("Error checking database status:", error);
-      setDbSetupError(true);
+      console.error('Error checking/setting up database:', error);
+      setDbSetupError("An unexpected error occurred while checking database setup.");
+      toast({
+        title: "Database check failed",
+        description: "Failed to check database setup status.",
+        variant: "destructive",
+      });
     } finally {
       setIsSettingUpDb(false);
     }
   };
   
-  const retryDatabaseSetup = async () => {
-    setDbSetupError(false);
-    setIsSettingUpDb(true);
-    try {
-      // Log retry attempt
-      await logSecurityEvent('database_setup_retry', {
-        action: 'retry_setup',
-        timestamp: new Date().toISOString()
-      });
-      
-      const success = await setupBulkImport();
-      if (success) {
-        loadData();
-      } else {
-        setDbSetupError(true);
-      }
-    } catch (error) {
-      console.error("Error during database setup retry:", error);
-      setDbSetupError(true);
-    } finally {
-      setIsSettingUpDb(false);
-    }
+  const retryDatabaseSetup = () => {
+    checkAndSetupDatabase();
   };
   
   return {

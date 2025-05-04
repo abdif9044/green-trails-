@@ -1,4 +1,3 @@
-
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { ThemeProvider } from 'next-themes';
 import ErrorBoundary from '@/components/ErrorBoundary';
@@ -15,7 +14,7 @@ import Social from '@/pages/Social';
 import AlbumDetail from '@/pages/AlbumDetail';
 import CreateAlbum from '@/pages/CreateAlbum';
 import Legal from '@/pages/Legal';
-import AdminTrailImport from '@/pages/AdminTrailImport';
+import AdminTrailImport from '@/features/admin/trail-import/AdminTrailImport';
 import AdminImportGuidePage from '@/pages/AdminImportGuidePage';
 import AdminRedirect from '@/pages/AdminRedirect';
 
@@ -24,7 +23,7 @@ import AssistantBubble from '@/components/assistant/AssistantBubble';
 
 import './App.css';
 
-function App() {
+const App = () => {
   return (
     <ErrorBoundary>
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
@@ -54,6 +53,6 @@ function App() {
       </ThemeProvider>
     </ErrorBoundary>
   );
-}
+};
 
 export default App;

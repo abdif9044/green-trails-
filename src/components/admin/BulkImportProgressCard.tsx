@@ -1,38 +1,28 @@
 
 import React from 'react';
-import { Card, CardContent } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
-import { Clock } from "lucide-react";
+import { Card, CardContent } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
 
 interface BulkImportProgressCardProps {
   progress: number;
 }
 
-const BulkImportProgressCard: React.FC<BulkImportProgressCardProps> = ({ 
-  progress 
-}) => {
+const BulkImportProgressCard: React.FC<BulkImportProgressCardProps> = ({ progress }) => {
   return (
-    <Card className="mb-6">
-      <CardContent className="pt-6">
-        <div className="flex flex-col space-y-2">
-          <div className="flex justify-between items-center mb-2">
-            <span className="font-medium">Bulk Import in Progress</span>
-            <Badge variant="outline" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 gap-1">
-              <Clock className="w-3 h-3" />
-              Processing
-            </Badge>
-          </div>
-          <Progress value={progress} className="h-2" />
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">
-              This may take some time for large imports
-            </span>
-            <span className="font-medium">
-              {progress}% complete
-            </span>
-          </div>
+    <Card className="bg-white dark:bg-greentrail-800 border border-greentrail-200 dark:border-greentrail-700 mb-4">
+      <CardContent className="pt-4">
+        <div className="flex justify-between mb-2">
+          <span className="text-sm font-medium">
+            Bulk Import in Progress
+          </span>
+          <span className="text-sm font-medium">
+            {progress}%
+          </span>
         </div>
+        <Progress value={progress} className="h-2" />
+        <p className="text-xs text-muted-foreground mt-2">
+          Importing trails in background. You can continue using the application.
+        </p>
       </CardContent>
     </Card>
   );

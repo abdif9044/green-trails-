@@ -1,7 +1,7 @@
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { TrailDataSource } from '@/hooks/useTrailImport';
-import { useToast } from '@/hooks/use-toast';
+import { useLocation } from 'react-router-dom';
 
 interface UseAutoImportProps {
   dataSources: TrailDataSource[];
@@ -14,63 +14,40 @@ interface UseAutoImportProps {
 }
 
 export function useAutoImport({
-  dataSources, 
-  loading, 
-  bulkImportLoading, 
+  dataSources,
+  loading,
+  bulkImportLoading,
   activeBulkJobId,
   handleBulkImport,
   trailCount,
   setActiveTab
 }: UseAutoImportProps) {
-  const { toast } = useToast();
   const [autoImportTriggered, setAutoImportTriggered] = useState(false);
+  const location = useLocation();
   
-  // Auto-import trails when the component loads if no active bulk job is running
-  // and there are active data sources available
+  // Check for auto import parameter in URL
   useEffect(() => {
-    const triggerBulkImport = async () => {
-      if (autoImportTriggered) return;
-      
-      // Wait for data sources to load
-      if (loading) return;
-      
-      // Don't trigger if already importing
-      if (bulkImportLoading || activeBulkJobId) return;
-      
-      // Check if we have active data sources
-      const activeSources = dataSources.filter(s => s.is_active);
-      if (activeSources.length === 0) return;
-      
-      // Mark as triggered to prevent multiple attempts
+    const params = new URLSearchParams(location.search);
+    const autoImport = params.get('autoImport') === 'true';
+    
+    if (autoImport && !autoImportTriggered && !loading && !bulkImportLoading && !activeBulkJobId && dataSources.length > 0) {
       setAutoImportTriggered(true);
       
-      // Show toast notification
-      toast({
-        title: "Starting Trail Import",
-        description: `Importing approximately ${trailCount.toLocaleString()} trails from ${activeSources.length} sources.`,
-      });
+      // Filter active sources
+      const activeSources = dataSources
+        .filter(source => source.is_active)
+        .map(source => source.id);
       
-      // Switch to bulk tab to show progress
-      setActiveTab('bulk');
-      
-      // Start bulk import with all active sources
-      const sourceIds = activeSources.map(s => s.id);
-      await handleBulkImport(sourceIds, trailCount);
-    };
-    
-    // Try to trigger bulk import
-    triggerBulkImport();
-  }, [
-    loading, 
-    dataSources, 
-    activeBulkJobId, 
-    bulkImportLoading, 
-    handleBulkImport, 
-    trailCount, 
-    autoImportTriggered, 
-    toast,
-    setActiveTab
-  ]);
+      if (activeSources.length > 0) {
+        // Auto start a bulk import with all active sources
+        handleBulkImport(activeSources, trailCount).then(success => {
+          if (success) {
+            setActiveTab('bulk');
+          }
+        });
+      }
+    }
+  }, [dataSources, loading, location.search, autoImportTriggered, bulkImportLoading, activeBulkJobId, handleBulkImport, trailCount, setActiveTab]);
   
   return { autoImportTriggered };
 }

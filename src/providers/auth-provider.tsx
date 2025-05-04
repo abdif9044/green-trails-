@@ -4,8 +4,7 @@ import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { AuthContext } from '@/contexts/auth-context';
-import { AuthService } from '@/services/auth-service';
-import { AgeVerificationService } from '@/services/age-verification-service';
+import { AuthService } from '@/services/auth';
 import { DatabaseSetupService } from '@/services/database/setup-service';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -96,7 +95,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const verifyAge = async (birthdate: Date) => {
-    const result = await AgeVerificationService.verifyAge(birthdate, user?.id);
+    const result = await AuthService.verifyAge(birthdate, user?.id);
     
     if (result) {
       toast({

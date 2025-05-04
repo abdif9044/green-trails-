@@ -4,7 +4,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { BadgeAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
-import { verifyUserAge } from '@/services/age-verification-service';
+import { verifyUserAge } from '@/services/auth/age-verification-service';
 import AgeVerification from '../auth/AgeVerification';
 
 interface AgeRestrictionWarningProps {

@@ -92,10 +92,7 @@ const AdminTrailImport = () => {
 
   // Function to handle the bulk import
   const handleBulkImportClick = async () => {
-    const success = await onBulkImport(selectedSources, dataSources);
-    if (success) {
-      setActiveTab('bulk'); // Switch to bulk tab to show progress
-    }
+    return await onBulkImport(selectedSources, dataSources);
   };
 
   return (
@@ -138,7 +135,7 @@ const AdminTrailImport = () => {
             onTrailCountChange={setTrailCount}
             onBulkImport={handleBulkImportClick}
             bulkImportLoading={bulkImportLoading}
-            activeBulkJobId={activeBulkJobId || null}
+            activeBulkJobId={activeBulkJobId}
             bulkProgress={bulkProgress}
           />
           

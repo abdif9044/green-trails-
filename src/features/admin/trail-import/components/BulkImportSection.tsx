@@ -11,7 +11,7 @@ interface BulkImportSectionProps {
   onSourceSelect: (sourceId: string) => void;
   trailCount: number;
   onTrailCountChange: (count: number) => void;
-  onBulkImport: () => Promise<void>;
+  onBulkImport: () => Promise<boolean>;
   bulkImportLoading: boolean;
   activeBulkJobId: string | null;
   bulkProgress: number;

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { ArrowDownUp, HelpCircle } from 'lucide-react';
 import BulkImportDialog from '@/components/admin/BulkImportDialog';
 import { TrailDataSource } from '@/hooks/useTrailImport';
@@ -31,6 +31,13 @@ const ImportHeader: React.FC<ImportHeaderProps> = ({
   dataSources,
   loadData,
 }) => {
+  const navigate = useNavigate();
+  
+  // Use navigate instead of Link for route navigation
+  const goToImportGuide = () => {
+    navigate('/admin/trails/import/guide');
+  };
+  
   return (
     <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6">
       <div>
@@ -43,12 +50,15 @@ const ImportHeader: React.FC<ImportHeaderProps> = ({
       </div>
       
       <div className="flex items-center mt-4 lg:mt-0 space-x-4">
-        <Link to="/admin/trails/import/guide">
-          <Button variant="outline" size="sm" className="gap-2">
-            <HelpCircle className="h-4 w-4" />
-            Import Guide
-          </Button>
-        </Link>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="gap-2"
+          onClick={goToImportGuide}
+        >
+          <HelpCircle className="h-4 w-4" />
+          Import Guide
+        </Button>
         
         <BulkImportDialog
           open={bulkImportOpen}

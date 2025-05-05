@@ -2,7 +2,15 @@
 import { supabase } from '@/integrations/supabase/client';
 import { DatabaseSetupService } from '@/services/database/setup-service';
 
+/**
+ * Service for handling password operations
+ */
 export const PasswordService = {
+  /**
+   * Send a password reset email to a user
+   * @param email The user's email address
+   * @returns Promise with result object containing success status and optional error message
+   */
   resetPassword: async (email: string) => {
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -25,6 +33,12 @@ export const PasswordService = {
     }
   },
 
+  /**
+   * Update a user's password
+   * @param password The new password
+   * @param userId The user's ID
+   * @returns Promise with result object containing success status and optional error message
+   */
   updatePassword: async (password: string, userId?: string) => {
     try {
       const { error } = await supabase.auth.updateUser({

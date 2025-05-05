@@ -2,7 +2,15 @@
 import { supabase } from '@/integrations/supabase/client';
 import { DatabaseSetupService } from '@/services/database/setup-service';
 
+/**
+ * Service for handling sign-out operations
+ */
 export const SignOutService = {
+  /**
+   * Sign out the current user
+   * @param userId Optional user ID for logging purposes
+   * @returns Promise with result object containing success status and optional error message
+   */
   signOut: async (userId?: string) => {
     try {
       // Log the sign out for security audit

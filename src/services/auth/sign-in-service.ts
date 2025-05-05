@@ -2,7 +2,16 @@
 import { supabase } from '@/integrations/supabase/client';
 import { DatabaseSetupService } from '@/services/database/setup-service';
 
+/**
+ * Service for handling sign-in operations
+ */
 export const SignInService = {
+  /**
+   * Sign in a user with email and password
+   * @param email The user's email
+   * @param password The user's password
+   * @returns Promise with result object containing success status and optional error message
+   */
   signIn: async (email: string, password: string) => {
     try {
       const { data, error } = await supabase.auth.signInWithPassword({

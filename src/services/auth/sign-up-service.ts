@@ -2,7 +2,17 @@
 import { supabase } from '@/integrations/supabase/client';
 import { DatabaseSetupService } from '@/services/database/setup-service';
 
+/**
+ * Service for handling sign-up operations
+ */
 export const SignUpService = {
+  /**
+   * Register a new user
+   * @param email The user's email
+   * @param password The user's password
+   * @param metadata Additional user metadata
+   * @returns Promise with result object containing success status and optional message
+   */
   signUp: async (email: string, password: string, metadata: object = {}) => {
     try {
       console.log('Starting signup process for:', email);

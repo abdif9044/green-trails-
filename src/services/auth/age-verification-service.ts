@@ -2,7 +2,16 @@
 import { supabase } from '@/integrations/supabase/client';
 import { DatabaseSetupService } from '@/services/database/setup-service';
 
+/**
+ * Service for handling age verification functionality
+ */
 export const AgeVerificationService = {
+  /**
+   * Verify a user's age based on their birthdate
+   * @param birthdate Date object representing the user's birthdate
+   * @param userId The user's ID
+   * @returns Promise resolving to boolean indicating if user is verified (21+)
+   */
   verifyAge: async (birthdate: Date, userId: string | undefined): Promise<boolean> => {
     try {
       if (!userId) return false;
@@ -48,7 +57,11 @@ export const AgeVerificationService = {
     }
   },
 
-  // Add this function to fix the reference in AgeRestrictionWarning component
+  /**
+   * Check if a user is already age verified
+   * @param userId The user's ID
+   * @returns Promise resolving to boolean indicating if user is already verified
+   */
   verifyUserAge: async (userId: string): Promise<boolean> => {
     try {
       if (!userId) return false;

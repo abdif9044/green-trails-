@@ -1,6 +1,9 @@
 
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { BulkImportJob } from '@/hooks/useTrailImport';
+import { createExtendedSupabaseClient } from '@/types/supabase-extensions';
 
 export function useBulkImportStatus(reloadData: () => void) {
   const [activeBulkJobId, setActiveBulkJobId] = useState<string | null>(null);
@@ -15,8 +18,6 @@ export function useBulkImportStatus(reloadData: () => void) {
     const interval = setInterval(async () => {
       try {
         // Create an extended client with the additional types
-        const { createExtendedSupabaseClient } = await import('@/types/supabase-extensions');
-        const { supabase } = await import('@/integrations/supabase/client');
         const extendedSupabase = createExtendedSupabaseClient(supabase);
         
         const { data, error } = await extendedSupabase
@@ -55,7 +56,7 @@ export function useBulkImportStatus(reloadData: () => void) {
   }, [activeBulkJobId, toast, reloadData]);
 
   // Check if there's an active bulk job when jobs are loaded
-  const checkForActiveBulkJob = (bulkImportJobs: any[]) => {
+  const checkForActiveBulkJob = (bulkImportJobs: BulkImportJob[] | undefined) => {
     const activeJob = bulkImportJobs?.find(job => job.status === 'processing');
     if (activeJob) {
       setActiveBulkJobId(activeJob.id);

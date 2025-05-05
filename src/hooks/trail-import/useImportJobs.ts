@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { ImportJob, BulkImportJob } from '../useTrailImport';
+import { createExtendedSupabaseClient } from '@/types/supabase-extensions';
 
 export function useImportJobs() {
   const [importJobs, setImportJobs] = useState<ImportJob[]>([]);
@@ -15,10 +16,9 @@ export function useImportJobs() {
     setLoading(true);
     try {
       // Create an extended client with the additional types
-      const { createExtendedSupabaseClient } = await import('@/types/supabase-extensions');
       const extendedSupabase = createExtendedSupabaseClient(supabase);
       
-      // Fetch recent import jobs
+      // Fetch recent import jobs using standard supabase client
       const { data: jobs, error: jobsError } = await supabase
         .from("trail_import_jobs")
         .select("*")

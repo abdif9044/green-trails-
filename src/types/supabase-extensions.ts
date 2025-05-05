@@ -1,6 +1,11 @@
 
-import { SupabaseClient, PostgrestResponse } from '@supabase/supabase-js';
+import { SupabaseClient, PostgrestResponse, PostgrestSingleResponse, PostgrestFilterBuilder } from '@supabase/supabase-js';
 import { BulkImportJob, ImportJob } from '@/hooks/useTrailImport';
+
+// Define a generic type for the extended filter builder
+interface ExtendedPostgrestFilterBuilder<T> extends PostgrestFilterBuilder<any, any, T[]> {
+  then: (onFulfilled?: ((value: PostgrestResponse<T[]>) => any)) => Promise<any>;
+}
 
 export function createExtendedSupabaseClient(supabase: SupabaseClient) {
   return {
@@ -12,13 +17,13 @@ export function createExtendedSupabaseClient(supabase: SupabaseClient) {
         return {
           ...originalFrom,
           select: (...args: any[]) => {
-            const query = originalFrom.select(...args);
+            const query = originalFrom.select(...args) as PostgrestFilterBuilder<any, any, BulkImportJob[]>;
             return {
               ...query,
               then: (onFulfilled?: ((value: PostgrestResponse<BulkImportJob[]>) => any)) => {
-                return query.then(onFulfilled);
+                return query.then(onFulfilled as any);
               }
-            };
+            } as ExtendedPostgrestFilterBuilder<BulkImportJob>;
           }
         };
       }
@@ -27,13 +32,13 @@ export function createExtendedSupabaseClient(supabase: SupabaseClient) {
         return {
           ...originalFrom,
           select: (...args: any[]) => {
-            const query = originalFrom.select(...args);
+            const query = originalFrom.select(...args) as PostgrestFilterBuilder<any, any, ImportJob[]>;
             return {
               ...query,
               then: (onFulfilled?: ((value: PostgrestResponse<ImportJob[]>) => any)) => {
-                return query.then(onFulfilled);
+                return query.then(onFulfilled as any);
               }
-            };
+            } as ExtendedPostgrestFilterBuilder<ImportJob>;
           }
         };
       }

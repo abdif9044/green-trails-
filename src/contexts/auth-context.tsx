@@ -8,7 +8,7 @@ export interface AuthContextType {
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ success: boolean; message?: string }>;
   signUp: (email: string, password: string, metadata?: object) => Promise<{ success: boolean; message?: string }>;
-  signOut: () => Promise<void>;
+  signOut: () => Promise<{ success: boolean; message?: string }>;
   verifyAge: (birthdate: Date) => Promise<boolean>;
   resetPassword: (email: string) => Promise<{ success: boolean; message?: string }>;
   updatePassword: (password: string) => Promise<{ success: boolean; message?: string }>;

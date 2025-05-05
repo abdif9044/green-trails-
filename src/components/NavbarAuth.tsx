@@ -18,12 +18,20 @@ export const NavbarAuth = () => {
 
   const handleSignOut = async () => {
     try {
-      await signOut();
-      toast({
-        title: "Signed out successfully",
-        description: "You have been signed out of your account.",
-      });
-      navigate('/auth');
+      const result = await signOut();
+      if (result.success) {
+        toast({
+          title: "Signed out successfully",
+          description: "You have been signed out of your account.",
+        });
+        navigate('/auth');
+      } else {
+        toast({
+          title: "Sign out failed",
+          description: result.message || "There was an error signing out. Please try again.",
+          variant: "destructive",
+        });
+      }
     } catch (error) {
       toast({
         title: "Sign out failed",

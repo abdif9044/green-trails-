@@ -1,14 +1,21 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle, Loader2 } from 'lucide-react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import { FormField } from '@/components/auth/FormField';
+import { DateOfBirthForm } from '@/components/auth/DateOfBirthForm';
+import {
+  validateEmail,
+  validatePassword,
+  passwordsMatch,
+  validateYear,
+  calculateAge,
+} from '@/utils/form-validators';
 
 interface SignUpFormProps {
   onSuccess: () => void;
@@ -38,41 +45,16 @@ export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
   const { signUp } = useAuth();
   const { toast } = useToast();
 
-  const months = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
-  ];
-
-  const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: 100 }, (_, i) => currentYear - i);
-
-  // Days in month array
-  const getDaysInMonth = (month: string, year: string): number[] => {
-    if (!month || !year) return Array.from({ length: 31 }, (_, i) => i + 1);
-    
-    const monthIndex = months.indexOf(month);
-    const daysInMonth = new Date(parseInt(year), monthIndex + 1, 0).getDate();
-    return Array.from({ length: daysInMonth }, (_, i) => i + 1);
+  const handleFieldChange = () => {
+    if (!formTouched) setFormTouched(true);
+    if (error) setError('');
   };
 
-  const days = getDaysInMonth(month, year);
-
-  // Reset day if it's greater than the days in the current month
-  useEffect(() => {
-    if (day && month && year) {
-      const maxDay = getDaysInMonth(month, year).length;
-      if (parseInt(day) > maxDay) {
-        setDay(maxDay.toString());
-      }
-    }
-  }, [month, year]);
-
-  const validateEmail = (email: string): boolean => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!email) {
+  const validateEmailField = (emailValue: string): boolean => {
+    if (!emailValue) {
       setEmailError('Email is required');
       return false;
-    } else if (!emailRegex.test(email)) {
+    } else if (!validateEmail(emailValue)) {
       setEmailError('Please enter a valid email address');
       return false;
     }
@@ -80,11 +62,11 @@ export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
     return true;
   };
 
-  const validatePassword = (password: string): boolean => {
-    if (!password) {
+  const validatePasswordField = (passwordValue: string): boolean => {
+    if (!passwordValue) {
       setPasswordError('Password is required');
       return false;
-    } else if (password.length < 6) {
+    } else if (!validatePassword(passwordValue)) {
       setPasswordError('Password must be at least 6 characters');
       return false;
     }
@@ -92,27 +74,16 @@ export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
     return true;
   };
 
-  const validateConfirmPassword = (password: string, confirmPassword: string): boolean => {
+  const validateConfirmPasswordField = (password: string, confirmPassword: string): boolean => {
     if (!confirmPassword) {
       setConfirmPasswordError('Please confirm your password');
       return false;
-    } else if (password !== confirmPassword) {
+    } else if (!passwordsMatch(password, confirmPassword)) {
       setConfirmPasswordError('Passwords do not match');
       return false;
     }
     setConfirmPasswordError('');
     return true;
-  };
-
-  const validateYear = (yearValue: string): boolean => {
-    if (!yearValue) {
-      return false;
-    }
-    
-    const yearNum = parseInt(yearValue);
-    const minYear = currentYear - 120; // Reasonable lower bound for birth year
-    
-    return !isNaN(yearNum) && yearNum >= minYear && yearNum <= currentYear;
   };
 
   const validateDateOfBirth = (): Date | null => {
@@ -126,16 +97,16 @@ export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
       return null;
     }
     
+    const months = [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
+    ];
     const monthIndex = months.indexOf(month);
     const birthDate = new Date(parseInt(year), monthIndex, parseInt(day));
     const today = new Date();
     
     // Calculate age
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const m = today.getMonth() - birthDate.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
+    const age = calculateAge(birthDate);
     
     // Check if birthdate is valid
     if (isNaN(birthDate.getTime())) {
@@ -159,15 +130,10 @@ export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
     return birthDate;
   };
 
-  const handleFieldChange = () => {
-    if (!formTouched) setFormTouched(true);
-    if (error) setError('');
-  };
-
   const validateForm = (): boolean => {
-    const isEmailValid = validateEmail(email);
-    const isPasswordValid = validatePassword(password);
-    const isConfirmPasswordValid = validateConfirmPassword(password, confirmPassword);
+    const isEmailValid = validateEmailField(email);
+    const isPasswordValid = validatePasswordField(password);
+    const isConfirmPasswordValid = validateConfirmPasswordField(password, confirmPassword);
     
     if (!showDobFields) {
       return isEmailValid && isPasswordValid && isConfirmPasswordValid;
@@ -226,18 +192,6 @@ export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
     }
   };
 
-  // Handle year input change
-  const handleYearChange = (value: string) => {
-    // Only allow numeric input
-    const numericValue = value.replace(/[^0-9]/g, '');
-    
-    // Limit to 4 digits
-    if (numericValue.length <= 4) {
-      setYear(numericValue);
-      handleFieldChange();
-    }
-  };
-
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {error && (
@@ -247,8 +201,7 @@ export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
         </Alert>
       )}
       
-      <div className="space-y-2">
-        <Label htmlFor="email-signup">Email</Label>
+      <FormField id="email-signup" label="Email" error={emailError} showError={formTouched}>
         <Input
           id="email-signup"
           type="email"
@@ -258,19 +211,15 @@ export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
             setEmail(e.target.value);
             handleFieldChange();
           }}
-          onBlur={() => validateEmail(email)}
+          onBlur={() => validateEmailField(email)}
           className={cn(
             formTouched && emailError ? "border-red-500 focus-visible:ring-red-500" : ""
           )}
           required
         />
-        {formTouched && emailError && (
-          <p className="text-xs text-red-500 mt-1">{emailError}</p>
-        )}
-      </div>
+      </FormField>
       
-      <div className="space-y-2">
-        <Label htmlFor="password-signup">Password</Label>
+      <FormField id="password-signup" label="Password" error={passwordError} showError={formTouched}>
         <Input
           id="password-signup"
           type="password"
@@ -280,19 +229,15 @@ export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
             setPassword(e.target.value);
             handleFieldChange();
           }}
-          onBlur={() => validatePassword(password)}
+          onBlur={() => validatePasswordField(password)}
           className={cn(
             formTouched && passwordError ? "border-red-500 focus-visible:ring-red-500" : ""
           )}
           required
         />
-        {formTouched && passwordError && (
-          <p className="text-xs text-red-500 mt-1">{passwordError}</p>
-        )}
-      </div>
+      </FormField>
       
-      <div className="space-y-2">
-        <Label htmlFor="confirm-password">Confirm Password</Label>
+      <FormField id="confirm-password" label="Confirm Password" error={confirmPasswordError} showError={formTouched}>
         <Input
           id="confirm-password"
           type="password"
@@ -302,79 +247,26 @@ export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
             setConfirmPassword(e.target.value);
             handleFieldChange();
           }}
-          onBlur={() => validateConfirmPassword(password, confirmPassword)}
+          onBlur={() => validateConfirmPasswordField(password, confirmPassword)}
           className={cn(
             formTouched && confirmPasswordError ? "border-red-500 focus-visible:ring-red-500" : ""
           )}
           required
         />
-        {formTouched && confirmPasswordError && (
-          <p className="text-xs text-red-500 mt-1">{confirmPasswordError}</p>
-        )}
-      </div>
+      </FormField>
       
       {showDobFields && (
-        <div className="space-y-4">
-          <div className="text-sm font-medium">Date of Birth (must be 21+)</div>
-          <div className="grid grid-cols-3 gap-3">
-            <div className="space-y-2">
-              <Label htmlFor="day">Day</Label>
-              <Select value={day} onValueChange={(value) => {
-                setDay(value);
-                handleFieldChange();
-              }}>
-                <SelectTrigger id="day" className={cn(
-                  formTouched && dobError && !day ? "border-red-500 focus-visible:ring-red-500" : ""
-                )}>
-                  <SelectValue placeholder="Day" />
-                </SelectTrigger>
-                <SelectContent className="max-h-[200px]">
-                  {days.map((d) => (
-                    <SelectItem key={d} value={d.toString()}>{d}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="month">Month</Label>
-              <Select value={month} onValueChange={(value) => {
-                setMonth(value);
-                handleFieldChange();
-              }}>
-                <SelectTrigger id="month" className={cn(
-                  formTouched && dobError && !month ? "border-red-500 focus-visible:ring-red-500" : ""
-                )}>
-                  <SelectValue placeholder="Month" />
-                </SelectTrigger>
-                <SelectContent className="max-h-[200px]">
-                  {months.map((m) => (
-                    <SelectItem key={m} value={m}>{m}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="year">Year</Label>
-              <Input
-                id="year"
-                type="text"
-                placeholder="YYYY"
-                value={year}
-                onChange={(e) => handleYearChange(e.target.value)}
-                maxLength={4}
-                inputMode="numeric"
-                className={cn(
-                  formTouched && dobError && !validateYear(year) ? "border-red-500 focus-visible:ring-red-500" : ""
-                )}
-              />
-            </div>
-          </div>
-          {formTouched && dobError && (
-            <p className="text-xs text-red-500 mt-1">{dobError}</p>
-          )}
-        </div>
+        <DateOfBirthForm
+          day={day}
+          month={month}
+          year={year}
+          setDay={setDay}
+          setMonth={setMonth}
+          setYear={setYear}
+          dobError={dobError}
+          formTouched={formTouched}
+          onFieldChange={handleFieldChange}
+        />
       )}
       
       <div className="text-xs text-muted-foreground">

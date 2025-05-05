@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import { AuthProvider } from '@/providers/auth-provider';
 import { ThemeProvider } from '@/providers/theme-provider';
 import { Layout } from '@/components/layout/layout';
@@ -11,11 +12,10 @@ import HomePage from '@/pages/HomePage';
 import NotFound from '@/pages/NotFound';
 import AdminTrailImport from '@/pages/AdminTrailImport';
 import AutoImportPage from '@/pages/AutoImportPage';
+import AdminRedirect from '@/pages/AdminRedirect';
 
 function App() {
   const [isMounted, setIsMounted] = useState(false);
-  const navigate = useNavigate();
-  const location = useLocation();
 
   useEffect(() => {
     setIsMounted(true);
@@ -33,20 +33,19 @@ function App() {
       enableSystem
       disableTransitionOnChange
     >
-      <AuthProvider>
-        <Layout>
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/discover" element={<Discover />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/admin/trail-import" element={<AdminTrailImport />} />
-            <Route path="/auto-import" element={<AutoImportPage />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-          <Toaster />
-        </Layout>
-      </AuthProvider>
+      <Layout>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/discover" element={<Discover />} />
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/admin" element={<AdminRedirect />} />
+          <Route path="/admin/trails/import" element={<AdminTrailImport />} />
+          <Route path="/auto-import" element={<AutoImportPage />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+        <Toaster />
+      </Layout>
     </ThemeProvider>
   );
 }

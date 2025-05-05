@@ -3,6 +3,7 @@ import React from 'react'
 import { createRoot } from 'react-dom/client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { HelmetProvider } from 'react-helmet-async'
+import { BrowserRouter } from 'react-router-dom'
 import { AuthProvider } from '@/providers/auth-provider'
 import App from './App.tsx'
 import './index.css'
@@ -42,12 +43,14 @@ const root = createRoot(container);
 // Render with strict mode to ensure proper React context
 root.render(
   <React.StrictMode>
-    <HelmetProvider>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <App />
-        </AuthProvider>
-      </QueryClientProvider>
-    </HelmetProvider>
+    <BrowserRouter>
+      <HelmetProvider>
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <App />
+          </AuthProvider>
+        </QueryClientProvider>
+      </HelmetProvider>
+    </BrowserRouter>
   </React.StrictMode>
 );

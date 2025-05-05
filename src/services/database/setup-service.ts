@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
@@ -8,6 +7,57 @@ import { BulkImportService } from './bulk-import';
  * Service responsible for database setup and verification
  */
 export class DatabaseSetupService {
+  /**
+   * Log security-related events
+   */
+  static async logSecurityEvent(eventType: string, metadata: any) {
+    try {
+      const { error } = await supabase
+        .from('security_audit_log')
+        .insert([{
+          event_type: eventType,
+          metadata,
+          created_at: new Date().toISOString()
+        }]);
+
+      if (error) throw error;
+      return { success: true };
+    } catch (error) {
+      console.error('Error logging security event:', error);
+      return { success: false, error };
+    }
+  }
+
+  /**
+   * Ensure media bucket exists
+   */
+  static async ensureMediaBucketExists() {
+    try {
+      const { data: bucket, error } = await supabase
+        .storage
+        .getBucket('media');
+
+      if (error && error.message.includes('not found')) {
+        const { error: createError } = await supabase
+          .storage
+          .createBucket('media', {
+            public: false,
+            allowedMimeTypes: ['image/*', 'video/*'],
+            fileSizeLimit: 52428800 // 50MB
+          });
+
+        if (createError) throw createError;
+      } else if (error) {
+        throw error;
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error('Error ensuring media bucket exists:', error);
+      return { success: false, error };
+    }
+  }
+
   /**
    * Check if the bulk import tables exist in the database
    * @returns Promise resolving to boolean indicating if tables exist

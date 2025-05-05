@@ -1,5 +1,5 @@
 
-import { SupabaseClient } from '@supabase/supabase-js';
+import { SupabaseClient, PostgrestResponse } from '@supabase/supabase-js';
 import { BulkImportJob, ImportJob } from '@/hooks/useTrailImport';
 
 export function createExtendedSupabaseClient(supabase: SupabaseClient) {
@@ -13,10 +13,9 @@ export function createExtendedSupabaseClient(supabase: SupabaseClient) {
           ...originalFrom,
           select: (...args: any[]) => {
             const query = originalFrom.select(...args);
-            
             return {
               ...query,
-              then: (onFulfilled?: ((value: { data: BulkImportJob[] | null, error: any }) => any)) => {
+              then: (onFulfilled?: ((value: PostgrestResponse<BulkImportJob[]>) => any)) => {
                 return query.then(onFulfilled);
               }
             };
@@ -29,10 +28,9 @@ export function createExtendedSupabaseClient(supabase: SupabaseClient) {
           ...originalFrom,
           select: (...args: any[]) => {
             const query = originalFrom.select(...args);
-            
             return {
               ...query,
-              then: (onFulfilled?: ((value: { data: ImportJob[] | null, error: any }) => any)) => {
+              then: (onFulfilled?: ((value: PostgrestResponse<ImportJob[]>) => any)) => {
                 return query.then(onFulfilled);
               }
             };

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
@@ -103,9 +104,25 @@ export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
     return true;
   };
 
+  const validateYear = (yearValue: string): boolean => {
+    if (!yearValue) {
+      return false;
+    }
+    
+    const yearNum = parseInt(yearValue);
+    const minYear = currentYear - 120; // Reasonable lower bound for birth year
+    
+    return !isNaN(yearNum) && yearNum >= minYear && yearNum <= currentYear;
+  };
+
   const validateDateOfBirth = (): Date | null => {
     if (!day || !month || !year) {
       setDobError('Please complete all date fields');
+      return null;
+    }
+    
+    if (!validateYear(year)) {
+      setDobError('Please enter a valid year');
       return null;
     }
     
@@ -206,6 +223,18 @@ export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
       setError(err.message || 'Failed to create account');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Handle year input change
+  const handleYearChange = (value: string) => {
+    // Only allow numeric input
+    const numericValue = value.replace(/[^0-9]/g, '');
+    
+    // Limit to 4 digits
+    if (numericValue.length <= 4) {
+      setYear(numericValue);
+      handleFieldChange();
     }
   };
 
@@ -328,21 +357,18 @@ export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
             
             <div className="space-y-2">
               <Label htmlFor="year">Year</Label>
-              <Select value={year} onValueChange={(value) => {
-                setYear(value);
-                handleFieldChange();
-              }}>
-                <SelectTrigger id="year" className={cn(
-                  formTouched && dobError && !year ? "border-red-500 focus-visible:ring-red-500" : ""
-                )}>
-                  <SelectValue placeholder="Year" />
-                </SelectTrigger>
-                <SelectContent className="h-[200px]">
-                  {years.map((y) => (
-                    <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Input
+                id="year"
+                type="text"
+                placeholder="YYYY"
+                value={year}
+                onChange={(e) => handleYearChange(e.target.value)}
+                maxLength={4}
+                inputMode="numeric"
+                className={cn(
+                  formTouched && dobError && !validateYear(year) ? "border-red-500 focus-visible:ring-red-500" : ""
+                )}
+              />
             </div>
           </div>
           {formTouched && dobError && (

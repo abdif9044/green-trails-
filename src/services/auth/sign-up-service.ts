@@ -16,6 +16,23 @@ export const SignUpService = {
   signUp: async (email: string, password: string, metadata: object = {}) => {
     try {
       console.log('Starting signup process for:', email);
+
+      // Validate inputs before attempting signup
+      if (!email || !password) {
+        return { success: false, message: "Email and password are required" };
+      }
+      
+      if (password.length < 6) {
+        return { success: false, message: "Password must be at least 6 characters long" };
+      }
+      
+      // Check if metadata contains birthdate for age verification
+      if (!metadata.hasOwnProperty('birthdate')) {
+        console.warn('Signup attempt without birthdate. Age verification is required.');
+        return { success: false, message: "Date of birth is required for age verification" };
+      }
+      
+      console.log('Inputs validated, attempting signup with Supabase...');
       
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -39,16 +56,22 @@ export const SignUpService = {
         return { success: false, message: 'Account creation failed - no user data returned' };
       }
 
-      console.log('Signup successful, user data:', data.user.id);
-
-      // Log successful registration
-      await DatabaseSetupService.logSecurityEvent('user_registration', { 
-        user_id: data.user.id,
-        timestamp: new Date().toISOString() 
-      }).catch(e => console.error('Failed to log security event:', e));
+      console.log('Signup successful, user ID:', data.user.id);
+      
+      try {
+        // Log successful registration
+        await DatabaseSetupService.logSecurityEvent('user_registration', { 
+          user_id: data.user.id,
+          timestamp: new Date().toISOString() 
+        });
+      } catch (logError) {
+        // Non-critical error, just log it
+        console.warn('Failed to log security event for registration (non-critical):', logError);
+      }
 
       // If email confirmation is enabled in Supabase, let the user know
       if (data.session === null) {
+        console.log('Email confirmation required for:', email);
         return { 
           success: true, 
           message: "Account created successfully. Please check your email for confirmation." 
@@ -56,7 +79,8 @@ export const SignUpService = {
       }
 
       return { 
-        success: true, 
+        success: true,
+        user_id: data.user.id, 
         message: "Account created successfully. You can now sign in." 
       };
     } catch (error) {

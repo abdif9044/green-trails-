@@ -14,28 +14,54 @@ export const AgeVerificationService = {
    */
   verifyAge: async (birthdate: Date, userId: string | undefined): Promise<boolean> => {
     try {
-      if (!userId) return false;
+      if (!userId) {
+        console.error('Cannot verify age: No user ID provided');
+        return false;
+      }
+      
+      if (!(birthdate instanceof Date) || isNaN(birthdate.getTime())) {
+        console.error('Cannot verify age: Invalid birthdate provided');
+        return false;
+      }
       
       const now = new Date();
-      const age = now.getFullYear() - birthdate.getFullYear();
+      let age = now.getFullYear() - birthdate.getFullYear();
       
       // Adjust age if birthday hasn't occurred yet this year
       if (
         now.getMonth() < birthdate.getMonth() || 
         (now.getMonth() === birthdate.getMonth() && now.getDate() < birthdate.getDate())
       ) {
-        const adjustedAge = age - 1;
+        age = age - 1;
+      }
+      
+      console.log(`User age calculated: ${age} years`);
+      
+      // Users must be 21+ for GreenTrails
+      if (age < 21) {
+        console.warn(`Age verification failed: User is ${age} years old (minimum 21 required)`);
         
-        // Users must be 21+ for GreenTrails
-        if (adjustedAge < 21) {
-          return false;
+        try {
+          // Log failed verification attempt
+          await DatabaseSetupService.logSecurityEvent('age_verification_failed', {
+            user_id: userId,
+            age: age,
+            timestamp: new Date().toISOString()
+          });
+        } catch (logError) {
+          console.warn('Failed to log age verification failure (non-critical):', logError);
         }
+        
+        return false;
       }
       
       // User is at least 21, update their profile
       const { error } = await supabase
         .from('profiles')
-        .update({ is_age_verified: true })
+        .update({ 
+          is_age_verified: true,
+          age_verified_at: new Date().toISOString() 
+        })
         .eq('id', userId);
         
       if (error) {
@@ -43,12 +69,19 @@ export const AgeVerificationService = {
         return false;
       }
       
-      // Log successful age verification
-      await DatabaseSetupService.logSecurityEvent('age_verification', {
-        user_id: userId,
-        verified: true,
-        timestamp: new Date().toISOString()
-      });
+      console.log('Age verification successful for user:', userId);
+      
+      try {
+        // Log successful age verification
+        await DatabaseSetupService.logSecurityEvent('age_verification', {
+          user_id: userId,
+          verified: true,
+          age: age,
+          timestamp: new Date().toISOString()
+        });
+      } catch (logError) {
+        console.warn('Failed to log age verification success (non-critical):', logError);
+      }
       
       return true;
     } catch (error) {
@@ -64,18 +97,27 @@ export const AgeVerificationService = {
    */
   verifyUserAge: async (userId: string): Promise<boolean> => {
     try {
-      if (!userId) return false;
+      if (!userId) {
+        console.warn('Cannot check age verification status: No user ID provided');
+        return false;
+      }
 
       // Check if user is already verified in their profile
       const { data, error } = await supabase
         .from('profiles')
-        .select('is_age_verified')
+        .select('is_age_verified, age_verified_at')
         .eq('id', userId)
         .single();
 
       if (error) {
         console.error('Error checking age verification status:', error);
         return false;
+      }
+      
+      if (data?.is_age_verified) {
+        console.log('User is already age verified:', userId);
+      } else {
+        console.log('User is not age verified yet:', userId);
       }
 
       return !!data?.is_age_verified;

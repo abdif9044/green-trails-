@@ -129,14 +129,18 @@ export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
       
       if (!success) {
         console.error('Signup error details:', message);
+        
+        // Handle specific error messages
         if (message?.includes('User already registered')) {
           setError('This email is already registered. Please sign in instead.');
-        } else if (message?.includes('email')) {
+        } else if (message?.toLowerCase().includes('email')) {
           setError('Please provide a valid email address.');
-        } else if (message?.includes('password')) {
+        } else if (message?.toLowerCase().includes('password')) {
           setError('Password must be at least 6 characters long.');
+        } else if (message?.includes('pattern')) {
+          setError('One or more fields contain invalid characters.');
         } else {
-          setError(message || 'Failed to create account');
+          setError(message || 'Failed to create account. Please try again.');
         }
         return;
       }

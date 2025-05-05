@@ -5,6 +5,8 @@
  * @returns True if email is valid
  */
 export const validateEmail = (email: string): boolean => {
+  // Using a more permissive email regex that matches most valid emails
+  // without being overly restrictive
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return !!email && emailRegex.test(email);
 };

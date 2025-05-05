@@ -32,57 +32,68 @@ export const SignUpService = {
         return { success: false, message: "Date of birth is required for age verification" };
       }
       
+      // Clean up email - trim whitespace
+      const cleanEmail = email.trim();
+      
       console.log('Inputs validated, attempting signup with Supabase...');
       
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            ...metadata,
-            signup_timestamp: new Date().toISOString()
-          },
-        }
-      });
-
-      if (error) {
-        console.error('Supabase signUp error:', error);
-        return { success: false, message: error.message };
-      }
-
-      // Make sure we have user data before proceeding
-      if (!data.user) {
-        console.error('No user data returned from signUp');
-        return { success: false, message: 'Account creation failed - no user data returned' };
-      }
-
-      console.log('Signup successful, user ID:', data.user.id);
-      
       try {
-        // Log successful registration
-        await DatabaseSetupService.logSecurityEvent('user_registration', { 
-          user_id: data.user.id,
-          timestamp: new Date().toISOString() 
+        const { data, error } = await supabase.auth.signUp({
+          email: cleanEmail,
+          password,
+          options: {
+            data: {
+              ...metadata,
+              signup_timestamp: new Date().toISOString()
+            },
+          }
         });
-      } catch (logError) {
-        // Non-critical error, just log it
-        console.warn('Failed to log security event for registration (non-critical):', logError);
-      }
-
-      // If email confirmation is enabled in Supabase, let the user know
-      if (data.session === null) {
-        console.log('Email confirmation required for:', email);
+  
+        if (error) {
+          console.error('Supabase signUp error:', error);
+          return { success: false, message: error.message };
+        }
+  
+        // Make sure we have user data before proceeding
+        if (!data.user) {
+          console.error('No user data returned from signUp');
+          return { success: false, message: 'Account creation failed - no user data returned' };
+        }
+  
+        console.log('Signup successful, user ID:', data.user.id);
+        
+        try {
+          // Log successful registration
+          await DatabaseSetupService.logSecurityEvent('user_registration', { 
+            user_id: data.user.id,
+            timestamp: new Date().toISOString() 
+          });
+        } catch (logError) {
+          // Non-critical error, just log it
+          console.warn('Failed to log security event for registration (non-critical):', logError);
+        }
+  
+        // If email confirmation is enabled in Supabase, let the user know
+        if (data.session === null) {
+          console.log('Email confirmation required for:', email);
+          return { 
+            success: true, 
+            message: "Account created successfully. Please check your email for confirmation." 
+          };
+        }
+  
         return { 
-          success: true, 
-          message: "Account created successfully. Please check your email for confirmation." 
+          success: true,
+          user_id: data.user.id, 
+          message: "Account created successfully. You can now sign in." 
         };
+      } catch (supabaseError) {
+        console.error('Supabase API error:', supabaseError);
+        if (supabaseError instanceof Error) {
+          return { success: false, message: supabaseError.message };
+        }
+        return { success: false, message: 'Error communicating with authentication service.' };
       }
-
-      return { 
-        success: true,
-        user_id: data.user.id, 
-        message: "Account created successfully. You can now sign in." 
-      };
     } catch (error) {
       console.error('Exception during sign up:', error);
       

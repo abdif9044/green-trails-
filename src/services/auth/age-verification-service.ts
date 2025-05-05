@@ -60,7 +60,9 @@ export const AgeVerificationService = {
         .from('profiles')
         .update({ 
           is_age_verified: true,
-          age_verified_at: new Date().toISOString() 
+          // Only include age_verified_at if the column exists in your schema
+          // If this field doesn't exist, comment out this line
+          // age_verified_at: new Date().toISOString() 
         })
         .eq('id', userId);
         
@@ -105,7 +107,7 @@ export const AgeVerificationService = {
       // Check if user is already verified in their profile
       const { data, error } = await supabase
         .from('profiles')
-        .select('is_age_verified, age_verified_at')
+        .select('is_age_verified')
         .eq('id', userId)
         .single();
 
@@ -114,13 +116,15 @@ export const AgeVerificationService = {
         return false;
       }
       
-      if (data?.is_age_verified) {
+      const isVerified = !!data?.is_age_verified;
+      
+      if (isVerified) {
         console.log('User is already age verified:', userId);
       } else {
         console.log('User is not age verified yet:', userId);
       }
 
-      return !!data?.is_age_verified;
+      return isVerified;
     } catch (error) {
       console.error('Error in verifyUserAge:', error);
       return false;

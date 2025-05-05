@@ -1,71 +1,110 @@
 
+import { useState } from 'react';
 import { User } from '@supabase/supabase-js';
-import { useToast } from '@/hooks/use-toast';
 import { AuthService } from '@/services/auth';
+import { useToast } from '@/hooks/use-toast';
 
-export const useUserManagement = (user: User | null) => {
+export const useUserManagement = (currentUser: User | null) => {
+  const [resettingPassword, setResettingPassword] = useState(false);
+  const [updatingPassword, setUpdatingPassword] = useState(false);
+  const [verifyingAge, setVerifyingAge] = useState(false);
   const { toast } = useToast();
 
-  const verifyAge = async (birthdate: Date) => {
-    const result = await AuthService.verifyAge(birthdate, user?.id);
-    
-    if (result) {
-      toast({
-        title: "Age verification successful",
-        description: "Your account has been verified as 21+.",
-      });
-    } else {
-      toast({
-        title: "Age verification failed",
-        description: "You must be 21 or older to use GreenTrails.",
-        variant: "destructive",
-      });
-    }
-    
-    return result;
-  };
-
   const resetPassword = async (email: string) => {
-    const result = await AuthService.resetPassword(email);
-    
-    if (result.success) {
-      toast({
-        title: "Password reset email sent",
-        description: "Please check your email to reset your password.",
-      });
-    } else {
-      toast({
-        title: "Password reset failed",
-        description: result.message || "An error occurred during password reset",
-        variant: "destructive",
-      });
+    setResettingPassword(true);
+    try {
+      const result = await AuthService.resetPassword(email);
+      
+      if (!result.success) {
+        console.error('Password reset error:', result.message);
+      }
+      
+      return result;
+    } catch (error) {
+      console.error('Exception during password reset:', error);
+      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+      
+      return { 
+        success: false, 
+        message: errorMessage
+      };
+    } finally {
+      setResettingPassword(false);
     }
-    
-    return result;
   };
 
   const updatePassword = async (password: string) => {
-    const result = await AuthService.updatePassword(password, user?.id);
-    
-    if (result.success) {
+    setUpdatingPassword(true);
+    try {
+      const result = await AuthService.updatePassword(password);
+      
+      if (!result.success) {
+        console.error('Password update error:', result.message);
+      }
+      
+      return result;
+    } catch (error) {
+      console.error('Exception during password update:', error);
+      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+      
+      return { 
+        success: false, 
+        message: errorMessage
+      };
+    } finally {
+      setUpdatingPassword(false);
+    }
+  };
+
+  // Updated to properly handle the birthdate
+  const verifyAge = async (birthdate: Date) => {
+    if (!currentUser) {
+      console.error('Cannot verify age: No user is logged in');
       toast({
-        title: "Password updated successfully",
-        description: "Your password has been changed.",
-      });
-    } else {
-      toast({
-        title: "Password update failed",
-        description: result.message || "An error occurred during password update",
+        title: "Authentication required",
+        description: "You must be signed in to verify your age",
         variant: "destructive",
       });
+      return false;
     }
     
-    return result;
+    setVerifyingAge(true);
+    
+    try {
+      console.log(`Verifying age for user ${currentUser.id} with birthdate:`, birthdate);
+      const result = await AuthService.verifyAge(birthdate, currentUser.id);
+      
+      if (!result) {
+        console.error('Age verification failed for user:', currentUser.id);
+        toast({
+          title: "Age verification failed",
+          description: "You must be 21 or older to use GreenTrails",
+          variant: "destructive",
+        });
+      } else {
+        console.log('Age verification successful for user:', currentUser.id);
+      }
+      
+      return result;
+    } catch (error) {
+      console.error('Exception during age verification:', error);
+      toast({
+        title: "Age verification error",
+        description: "An error occurred while verifying your age",
+        variant: "destructive",
+      });
+      return false;
+    } finally {
+      setVerifyingAge(false);
+    }
   };
 
   return {
-    verifyAge,
     resetPassword,
     updatePassword,
+    verifyAge,
+    resettingPassword,
+    updatingPassword,
+    verifyingAge
   };
 };

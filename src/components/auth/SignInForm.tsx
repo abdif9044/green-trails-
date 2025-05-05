@@ -1,13 +1,12 @@
 
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
-import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { FormField } from '@/components/auth/FormField';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle, Loader2 } from 'lucide-react';
+import { validateEmail } from '@/utils/form-validators';
 import { cn } from '@/lib/utils';
 
 interface SignInFormProps {
@@ -20,56 +19,61 @@ export const SignInForm = ({ onForgotPassword }: SignInFormProps) => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [formTouched, setFormTouched] = useState(false);
+  const [emailError, setEmailError] = useState('');
   
   const { signIn } = useAuth();
-  const { toast } = useToast();
-  const navigate = useNavigate();
-
-  const validateEmail = (email: string): boolean => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
 
   const handleFieldChange = () => {
     if (!formTouched) setFormTouched(true);
     if (error) setError('');
   };
 
+  const validateEmailField = (emailValue: string): boolean => {
+    if (!emailValue) {
+      setEmailError('Email is required');
+      return false;
+    } else if (!validateEmail(emailValue)) {
+      setEmailError('Please enter a valid email address');
+      return false;
+    }
+    setEmailError('');
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    
+    if (!validateEmailField(email)) {
+      return;
+    }
+    
+    if (!password) {
+      setError('Password is required');
+      return;
+    }
+    
     setLoading(true);
-    
-    if (!email || !password) {
-      setError('Email and password are required');
-      setLoading(false);
-      return;
-    }
-    
-    if (!validateEmail(email)) {
-      setError('Please enter a valid email address');
-      setLoading(false);
-      return;
-    }
+    setError('');
     
     try {
       const { success, message } = await signIn(email, password);
-      if (!success) {
-        console.error('Sign in error:', message);
-        setError(message || 'Failed to sign in');
-      }
       
-      // Navigate is handled by the AuthProvider's onAuthStateChange
+      if (!success) {
+        console.error('Sign in failed:', message);
+        if (message?.includes('Invalid login credentials')) {
+          setError('Invalid email or password. Please try again.');
+        } else if (message?.includes('Email not confirmed')) {
+          setError('Please confirm your email before signing in.');
+        } else {
+          setError(message || 'An error occurred during sign in');
+        }
+      }
     } catch (err: any) {
-      console.error('Exception during sign in:', err);
-      setError(err.message || 'Failed to sign in');
+      console.error('Sign in error:', err);
+      setError(err.message || 'An error occurred');
     } finally {
       setLoading(false);
     }
-  };
-
-  const isFormValid = () => {
-    return email && password && validateEmail(email);
   };
 
   return (
@@ -81,10 +85,9 @@ export const SignInForm = ({ onForgotPassword }: SignInFormProps) => {
         </Alert>
       )}
       
-      <div className="space-y-2">
-        <Label htmlFor="email-signin">Email</Label>
+      <FormField id="email" label="Email" error={emailError} showError={formTouched}>
         <Input
-          id="email-signin"
+          id="email"
           type="email"
           placeholder="Enter your email"
           value={email}
@@ -92,31 +95,17 @@ export const SignInForm = ({ onForgotPassword }: SignInFormProps) => {
             setEmail(e.target.value);
             handleFieldChange();
           }}
+          onBlur={() => validateEmailField(email)}
           className={cn(
-            formTouched && !validateEmail(email) && email ? "border-red-500 focus-visible:ring-red-500" : ""
+            formTouched && emailError ? "border-red-500 focus-visible:ring-red-500" : ""
           )}
-          autoComplete="email"
           required
         />
-        {formTouched && !validateEmail(email) && email && (
-          <p className="text-xs text-red-500 mt-1">Please enter a valid email</p>
-        )}
-      </div>
+      </FormField>
       
-      <div className="space-y-2">
-        <div className="flex justify-between">
-          <Label htmlFor="password-signin">Password</Label>
-          <Button 
-            type="button" 
-            variant="link" 
-            className="h-auto p-0 text-xs text-greentrail-600 hover:text-greentrail-700 dark:text-greentrail-400 dark:hover:text-greentrail-300"
-            onClick={onForgotPassword}
-          >
-            Forgot password?
-          </Button>
-        </div>
+      <FormField id="password" label="Password" error="">
         <Input
-          id="password-signin"
+          id="password"
           type="password"
           placeholder="Enter your password"
           value={password}
@@ -124,22 +113,22 @@ export const SignInForm = ({ onForgotPassword }: SignInFormProps) => {
             setPassword(e.target.value);
             handleFieldChange();
           }}
-          className={cn(
-            formTouched && !password ? "border-red-500 focus-visible:ring-red-500" : ""
-          )}
-          autoComplete="current-password"
           required
         />
-        {formTouched && !password && (
-          <p className="text-xs text-red-500 mt-1">Password is required</p>
-        )}
+      </FormField>
+      
+      <div className="flex justify-end">
+        <Button 
+          type="button" 
+          variant="link" 
+          className="text-greentrail-600 p-0 h-auto font-normal"
+          onClick={onForgotPassword}
+        >
+          Forgot password?
+        </Button>
       </div>
       
-      <Button 
-        type="submit" 
-        className="w-full"
-        disabled={loading || (!isFormValid() && formTouched)}
-      >
+      <Button type="submit" className="w-full" disabled={loading}>
         {loading ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />

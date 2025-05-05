@@ -129,10 +129,12 @@ export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
       
       if (!success) {
         console.error('Signup error details:', message);
-        if (message?.includes('captcha')) {
-          setError('Captcha verification failed. Please try again with a different browser or contact support.');
-        } else if (message?.includes('already registered')) {
+        if (message?.includes('User already registered')) {
           setError('This email is already registered. Please sign in instead.');
+        } else if (message?.includes('email')) {
+          setError('Please provide a valid email address.');
+        } else if (message?.includes('password')) {
+          setError('Password must be at least 6 characters long.');
         } else {
           setError(message || 'Failed to create account');
         }
@@ -141,7 +143,7 @@ export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
       
       toast({
         title: "Account created!",
-        description: "Check your email to confirm your account. You can now sign in.",
+        description: "You can now sign in with your account.",
       });
       
       onSuccess();

@@ -4,7 +4,7 @@ import { AuthContext } from '@/contexts/auth-context';
 import { useAuthState } from '@/hooks/auth/use-auth-state';
 import { useAuthMethods } from '@/hooks/auth/use-auth-methods';
 import { useUserManagement } from '@/hooks/auth/use-user-management';
-import { initializeAuthState, setupAuthStateListener } from '@/utils/auth-utils';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 interface AuthProviderProps {
@@ -19,38 +19,69 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   useEffect(() => {
     console.log('AuthProvider initializing...');
+    let subscription: { unsubscribe: () => void };
     
     // Set up auth state listener FIRST
-    const subscription = setupAuthStateListener(
-      { setUser, setSession, setLoading },
-      user?.id
-    );
-
-    // THEN check for existing session
-    initializeAuthState({ setUser, setSession, setLoading })
-      .then(result => {
-        if (result.success) {
-          console.log('Auth state initialized successfully', result.data);
-          if (result.data?.user) {
+    const setupAuthListener = () => {
+      const { data } = supabase.auth.onAuthStateChange(
+        (event, currentSession) => {
+          console.log(`Auth state change: ${event}`, currentSession?.user?.email || 'No user');
+          
+          setSession(currentSession);
+          setUser(currentSession?.user || null);
+          setLoading(false);
+          
+          // Handle specific auth events with user-friendly notifications
+          if (event === 'SIGNED_IN') {
             toast({
               title: "Welcome back!",
-              description: `Signed in as ${result.data.user.email}`,
+              description: `Signed in as ${currentSession?.user?.email}`,
             });
-          }
-        } else {
-          console.warn('Auth state initialization issues:', result.message);
-          if (result.message?.includes('network')) {
+          } else if (event === 'SIGNED_OUT') {
             toast({
-              title: "Connection issue",
-              description: "Can't connect to authentication service. Check your internet connection.",
-              variant: "destructive",
+              title: "Signed out",
+              description: "You have been signed out successfully",
             });
           }
         }
-      })
-      .catch(error => {
-        console.error('Failed to initialize auth state:', error);
-      });
+      );
+      
+      return data.subscription;
+    };
+
+    // Initialize auth and check for existing session
+    const initializeAuth = async () => {
+      try {
+        setLoading(true);
+        // Check for existing session
+        const { data: { session: existingSession }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Error getting session:', error);
+          toast({
+            title: "Authentication Error",
+            description: "There was a problem connecting to the authentication service",
+            variant: "destructive",
+          });
+        } else if (existingSession) {
+          console.log('Existing session found for:', existingSession.user?.email);
+          setSession(existingSession);
+          setUser(existingSession.user || null);
+        } else {
+          console.log('No active session found');
+          setSession(null);
+          setUser(null);
+        }
+      } catch (error) {
+        console.error('Exception during auth initialization:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    // Setup auth listener first, then initialize
+    subscription = setupAuthListener();
+    initializeAuth();
 
     return () => {
       console.log('AuthProvider cleanup: unsubscribing from auth changes');

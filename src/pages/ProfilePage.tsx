@@ -1,18 +1,29 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import ProfileHeader from '@/components/profile/ProfileHeader';
 import ProfileEditForm from '@/components/profile/ProfileEditForm';
 import SignInRequired from '@/components/social/SignInRequired';
 
+// Define the profile type
+interface UserProfile {
+  id: string;
+  username: string;
+  full_name: string;
+  bio: string;
+  avatar_url: string | null;
+  is_age_verified: boolean;
+  website_url: string | null;
+}
+
 const ProfilePage = () => {
   const { user } = useAuth();
   const [showEditProfile, setShowEditProfile] = useState(false);
-  const [profile, setProfile] = useState(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   // Simulate profile loading for now (would be replaced with real data fetching)
-  React.useEffect(() => {
+  useEffect(() => {
     if (user) {
       // Simulate loading profile data
       setTimeout(() => {
@@ -38,12 +49,15 @@ const ProfilePage = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <ProfileHeader 
-        profile={profile} 
-        isLoading={isLoading} 
-        isCurrentUser={true}
-        onEditProfile={() => setShowEditProfile(true)}
-      />
+      {profile && (
+        <ProfileHeader 
+          profile={profile} 
+          isLoading={isLoading} 
+          isCurrentUser={true}
+          onEditProfile={() => setShowEditProfile(true)}
+        />
+      )}
+      
       {profile && showEditProfile && (
         <ProfileEditForm 
           profile={profile}

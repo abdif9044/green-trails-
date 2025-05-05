@@ -18,7 +18,7 @@ export function useImportJobs() {
       // Create an extended client with the additional types
       const extendedSupabase = createExtendedSupabaseClient(supabase);
       
-      // Fetch recent import jobs using standard supabase client
+      // Fetch recent import jobs
       const { data: jobs, error: jobsError } = await supabase
         .from("trail_import_jobs")
         .select("*")
@@ -27,8 +27,8 @@ export function useImportJobs() {
         
       if (jobsError) throw jobsError;
       
-      // Fetch bulk import jobs using the extended client
-      const { data: bulkJobs, error: bulkJobsError } = await extendedSupabase
+      // Fetch bulk import jobs
+      const { data: bulkJobs, error: bulkJobsError } = await supabase
         .from("bulk_import_jobs")
         .select("*")
         .order("started_at", { ascending: false })

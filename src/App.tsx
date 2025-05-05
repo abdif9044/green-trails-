@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
-import { AuthProvider } from '@/providers/auth-provider';
 import { ThemeProvider } from '@/providers/theme-provider';
 import { Layout } from '@/components/layout/layout';
 import { Toaster } from '@/components/ui/toaster';

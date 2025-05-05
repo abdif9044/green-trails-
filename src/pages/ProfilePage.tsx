@@ -63,10 +63,6 @@ const ProfilePage = () => {
           profile={profile}
           open={showEditProfile}
           onClose={() => setShowEditProfile(false)}
-          onSave={() => {
-            setShowEditProfile(false);
-            // This would typically save the profile changes
-          }}
         />
       )}
     </div>

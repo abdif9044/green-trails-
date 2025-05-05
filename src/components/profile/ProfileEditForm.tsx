@@ -18,9 +18,10 @@ interface ProfileEditFormProps {
   profile: ProfileWithSocial;
   onClose: () => void;
   open: boolean;
+  onSave?: () => void;
 }
 
-const ProfileEditForm: React.FC<ProfileEditFormProps> = ({ profile, onClose, open }) => {
+const ProfileEditForm: React.FC<ProfileEditFormProps> = ({ profile, onClose, open, onSave }) => {
   const [username, setUsername] = useState(profile.username || '');
   const [fullName, setFullName] = useState(profile.full_name || '');
   const [bio, setBio] = useState(profile.bio || '');
@@ -139,7 +140,12 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({ profile, onClose, ope
         website_url: formattedWebsiteUrl
       });
       
-      onClose();
+      // Call onSave if provided
+      if (onSave) {
+        onSave();
+      } else {
+        onClose();
+      }
     } catch (err) {
       console.error('Error updating profile:', err);
       setError(err instanceof Error ? err.message : 'Failed to update profile');

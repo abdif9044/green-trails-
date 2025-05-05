@@ -33,11 +33,13 @@ const AutoImportPage: React.FC = () => {
         description="Automatically importing trail data for your hiking adventures"
       />
       
+      <Toaster />
+      
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader>
           <CardTitle className="text-2xl flex items-center">
             <img 
-              src="/lovable-uploads/0c2a9cc4-4fdb-4d4a-965c-47b406e4ec4e.png" 
+              src="/logo.png" 
               alt="GreenTrails Logo" 
               className="h-8 w-auto mr-2"
             />
@@ -65,84 +67,56 @@ const AutoImportPage: React.FC = () => {
             
             {/* Import status */}
             <div className="flex items-center">
-              {isImportTriggered && activeBulkJobId ? (
-                <Loader2 className="h-5 w-5 animate-spin text-greentrail-600 mr-2" />
-              ) : isImportTriggered ? (
-                <CheckCircle2 className="h-5 w-5 text-green-600 mr-2" />
-              ) : loading ? (
-                <Loader2 className="h-5 w-5 animate-spin text-greentrail-600 mr-2" />
+              {!isImportTriggered ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin text-greentrail-600 mr-2" />
+                  <span>Preparing trail import...</span>
+                </>
+              ) : isImportComplete ? (
+                <>
+                  <CheckCircle2 className="h-5 w-5 text-green-600 mr-2" />
+                  <span className="text-green-700">Trail import complete</span>
+                </>
               ) : (
-                <>{error ? <AlertTriangle className="h-5 w-5 text-red-500 mr-2" /> : null}</>
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin text-greentrail-600 mr-2" />
+                  <span>Importing trail data...</span>
+                </>
               )}
-              <span>
-                {isImportTriggered && activeBulkJobId 
-                  ? "Import in progress..." 
-                  : isImportTriggered 
-                  ? "Import complete!" 
-                  : loading 
-                  ? "Preparing import..." 
-                  : error 
-                  ? "Import failed" 
-                  : "Waiting to start..."}
-              </span>
             </div>
             
-            {/* Progress bar for import */}
-            {isImportTriggered && activeBulkJobId && (
+            {/* Progress bar */}
+            {(isImportTriggered && !isImportComplete) && (
               <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>Import progress</span>
-                  <span>{bulkProgress}%</span>
-                </div>
                 <Progress value={bulkProgress} className="h-2" />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Importing trail data... this may take several minutes
-                </p>
+                <p className="text-sm text-center text-greentrail-700">{bulkProgress}% complete</p>
               </div>
             )}
             
             {/* Error message */}
             {error && (
-              <div className="bg-red-50 border-l-4 border-red-500 p-4 dark:bg-red-900/20 dark:border-red-800">
-                <p className="text-red-800 dark:text-red-200">{error}</p>
-              </div>
-            )}
-            
-            {/* Success message */}
-            {isImportComplete && (
-              <div className="bg-green-50 border-l-4 border-green-500 p-4 dark:bg-green-900/20 dark:border-green-800">
-                <p className="text-green-800 dark:text-green-200">
-                  Import completed successfully! Redirecting to discover page...
-                </p>
+              <div className="flex items-center text-red-500">
+                <AlertTriangle className="h-5 w-5 mr-2" />
+                <span>{error}</span>
               </div>
             )}
           </div>
         </CardContent>
         
-        <CardFooter>
-          <div className="flex justify-between w-full">
-            {error && (
-              <Button 
-                onClick={initializeAutoImport}
-                disabled={loading || isSettingUpDb || isImportTriggered}
-              >
-                Retry Import
+        <CardFooter className="flex justify-center">
+          {isImportComplete ? (
+            <Link to="/discover">
+              <Button className="bg-greentrail-600 hover:bg-greentrail-700">
+                Start Exploring Trails
               </Button>
-            )}
-            <Button 
-              variant="outline" 
-              asChild 
-              className="ml-auto"
-            >
-              <Link to="/discover">
-                Go to Discover
-              </Link>
-            </Button>
-          </div>
+            </Link>
+          ) : (
+            <p className="text-sm text-gray-500">
+              {loading ? "Loading..." : "This might take several minutes. Please don't close this page."}
+            </p>
+          )}
         </CardFooter>
       </Card>
-      
-      <Toaster />
     </div>
   );
 };

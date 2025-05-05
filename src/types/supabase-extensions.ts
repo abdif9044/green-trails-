@@ -1,62 +1,46 @@
 
-/**
- * Extends the Supabase database types with additional tables that aren't
- * automatically included in the generated types
- */
-import { Database } from '@/integrations/supabase/types';
 import { SupabaseClient } from '@supabase/supabase-js';
+import { BulkImportJob, ImportJob } from '@/hooks/useTrailImport';
 
-// Extend the Database type with additional tables
-export interface ExtendedDatabase extends Database {
-  public: Database['public'] & {
-    Tables: Database['public']['Tables'] & {
-      bulk_import_jobs: {
-        Row: {
-          id: string;
-          status: string;
-          started_at: string;
-          completed_at: string | null;
-          total_trails_requested: number;
-          total_sources: number;
-          trails_processed: number;
-          trails_added: number;
-          trails_updated: number;
-          trails_failed: number;
-          last_updated?: string;
+export function createExtendedSupabaseClient(supabase: SupabaseClient) {
+  return {
+    ...supabase,
+    from: (table: string) => {
+      const originalFrom = supabase.from(table);
+      
+      if (table === 'bulk_import_jobs') {
+        return {
+          ...originalFrom,
+          select: (...args: any[]) => {
+            const query = originalFrom.select(...args);
+            
+            return {
+              ...query,
+              then: (onFulfilled?: ((value: { data: BulkImportJob[] | null, error: any }) => any)) => {
+                return query.then(onFulfilled);
+              }
+            };
+          }
         };
-        Insert: {
-          id?: string;
-          status: string;
-          started_at?: string;
-          completed_at?: string | null;
-          total_trails_requested: number;
-          total_sources: number;
-          trails_processed?: number;
-          trails_added?: number;
-          trails_updated?: number;
-          trails_failed?: number;
-          last_updated?: string;
-        };
-        Update: {
-          id?: string;
-          status?: string;
-          started_at?: string;
-          completed_at?: string | null;
-          total_trails_requested?: number;
-          total_sources?: number;
-          trails_processed?: number;
-          trails_added?: number;
-          trails_updated?: number;
-          trails_failed?: number;
-          last_updated?: string;
-        };
-        Relationships: [];
       }
+      
+      if (table === 'trail_import_jobs') {
+        return {
+          ...originalFrom,
+          select: (...args: any[]) => {
+            const query = originalFrom.select(...args);
+            
+            return {
+              ...query,
+              then: (onFulfilled?: ((value: { data: ImportJob[] | null, error: any }) => any)) => {
+                return query.then(onFulfilled);
+              }
+            };
+          }
+        };
+      }
+      
+      return originalFrom;
     }
-  }
+  };
 }
-
-// Create a typed client factory 
-export const createExtendedSupabaseClient = (supabaseClient: SupabaseClient) => {
-  return supabaseClient as SupabaseClient<ExtendedDatabase>;
-};

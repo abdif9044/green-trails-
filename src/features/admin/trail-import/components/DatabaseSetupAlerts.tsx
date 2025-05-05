@@ -1,8 +1,8 @@
 
 import React from 'react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertTriangle, Database, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Loader2, AlertTriangle } from "lucide-react";
 
 interface DatabaseSetupAlertsProps {
   isSettingUpDb: boolean;
@@ -15,39 +15,41 @@ const DatabaseSetupAlerts: React.FC<DatabaseSetupAlertsProps> = ({
   dbSetupError,
   retryDatabaseSetup
 }) => {
-  if (!isSettingUpDb && !dbSetupError) return null;
+  if (isSettingUpDb) {
+    return (
+      <Alert className="mb-4 bg-blue-50 border-blue-200">
+        <Database className="h-4 w-4 text-blue-600" />
+        <AlertTitle className="text-blue-700 flex items-center">
+          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          Setting up database
+        </AlertTitle>
+        <AlertDescription className="text-blue-600">
+          Creating required tables for trail import. This may take a moment...
+        </AlertDescription>
+      </Alert>
+    );
+  }
   
-  return (
-    <div className="mb-6">
-      {isSettingUpDb && (
-        <Alert className="bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800">
-          <Loader2 className="h-4 w-4 animate-spin mr-2" />
-          <AlertTitle>Setting up database</AlertTitle>
-          <AlertDescription>
-            Creating required database tables for trail imports. This may take a moment...
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {dbSetupError && (
-        <Alert variant="destructive">
-          <AlertTriangle className="h-4 w-4 mr-2" />
-          <AlertTitle>Database setup error</AlertTitle>
-          <AlertDescription className="flex flex-col space-y-2">
-            <span>Failed to set up required database tables. This may happen if there was a database error.</span>
-            <Button 
-              variant="destructive" 
-              size="sm" 
-              className="w-fit"
-              onClick={retryDatabaseSetup}
-            >
-              Retry Setup
-            </Button>
-          </AlertDescription>
-        </Alert>
-      )}
-    </div>
-  );
+  if (dbSetupError) {
+    return (
+      <Alert className="mb-4 bg-red-50 border-red-200">
+        <AlertTriangle className="h-4 w-4 text-red-600" />
+        <AlertTitle className="text-red-700">Database setup failed</AlertTitle>
+        <AlertDescription className="text-red-600 flex flex-col space-y-2">
+          <span>There was a problem setting up the database for trail imports.</span>
+          <Button 
+            onClick={retryDatabaseSetup} 
+            variant="outline" 
+            className="self-start mt-2 bg-white border-red-300 text-red-600 hover:bg-red-50"
+          >
+            Try Again
+          </Button>
+        </AlertDescription>
+      </Alert>
+    );
+  }
+  
+  return null;
 };
 
 export default DatabaseSetupAlerts;

@@ -4,6 +4,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import { validateYear } from '@/utils/form-validators';
 
 interface DateOfBirthFormProps {
   day: string;
@@ -39,7 +40,12 @@ export const DateOfBirthForm = ({
     if (!month || !year) return Array.from({ length: 31 }, (_, i) => i + 1);
     
     const monthIndex = months.indexOf(month);
-    const daysInMonth = new Date(parseInt(year), monthIndex + 1, 0).getDate();
+    if (monthIndex === -1) return Array.from({ length: 31 }, (_, i) => i + 1);
+    
+    const yearNum = parseInt(year);
+    if (isNaN(yearNum)) return Array.from({ length: 31 }, (_, i) => i + 1);
+    
+    const daysInMonth = new Date(yearNum, monthIndex + 1, 0).getDate();
     return Array.from({ length: daysInMonth }, (_, i) => i + 1);
   };
 
@@ -65,17 +71,6 @@ export const DateOfBirthForm = ({
       setYear(numericValue);
       onFieldChange();
     }
-  };
-
-  const validateYear = (yearValue: string): boolean => {
-    if (!yearValue) {
-      return false;
-    }
-    
-    const yearNum = parseInt(yearValue);
-    const minYear = currentYear - 120; // Reasonable lower bound for birth year
-    
-    return !isNaN(yearNum) && yearNum >= minYear && yearNum <= currentYear;
   };
 
   return (

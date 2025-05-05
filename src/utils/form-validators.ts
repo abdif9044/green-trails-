@@ -59,3 +59,64 @@ export const calculateAge = (birthDate: Date): number => {
   }
   return age;
 };
+
+/**
+ * Validates if a date of birth makes the user at least 21 years old
+ * @param day Day of birth
+ * @param month Month name (e.g., "January")
+ * @param year Year of birth
+ * @returns Object containing validity and the Date object if valid
+ */
+export const validateDateOfBirth = (day: string, month: string, year: string): { isValid: boolean; birthDate: Date | null; message?: string } => {
+  // Check if all fields are provided
+  if (!day || !month || !year) {
+    return { isValid: false, birthDate: null, message: 'Please complete all date fields' };
+  }
+  
+  // Validate year
+  if (!validateYear(year)) {
+    return { isValid: false, birthDate: null, message: 'Please enter a valid year' };
+  }
+  
+  // Convert month name to index (0-11)
+  const months = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+  const monthIndex = months.indexOf(month);
+  
+  if (monthIndex === -1) {
+    return { isValid: false, birthDate: null, message: 'Invalid month' };
+  }
+  
+  const birthDate = new Date(parseInt(year), monthIndex, parseInt(day));
+  const today = new Date();
+  
+  // Check if valid date (e.g., not February 30)
+  if (
+    birthDate.getFullYear() !== parseInt(year) ||
+    birthDate.getMonth() !== monthIndex ||
+    birthDate.getDate() !== parseInt(day)
+  ) {
+    return { isValid: false, birthDate: null, message: 'Invalid date. Please check day, month, and year' };
+  }
+  
+  // Check if date is in the future
+  if (birthDate > today) {
+    return { isValid: false, birthDate: null, message: 'Date cannot be in the future' };
+  }
+  
+  // Calculate age
+  const age = calculateAge(birthDate);
+  
+  // Check if user is 21 or older
+  if (age < 21) {
+    return { 
+      isValid: false, 
+      birthDate, 
+      message: 'You must be 21 or older to use this app' 
+    };
+  }
+  
+  return { isValid: true, birthDate };
+};

@@ -13,8 +13,7 @@ import {
   validateEmail,
   validatePassword,
   passwordsMatch,
-  validateYear,
-  calculateAge,
+  validateDateOfBirth
 } from '@/utils/form-validators';
 
 interface SignUpFormProps {
@@ -86,50 +85,6 @@ export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
     return true;
   };
 
-  const validateDateOfBirth = (): Date | null => {
-    if (!day || !month || !year) {
-      setDobError('Please complete all date fields');
-      return null;
-    }
-    
-    if (!validateYear(year)) {
-      setDobError('Please enter a valid year');
-      return null;
-    }
-    
-    const months = [
-      "January", "February", "March", "April", "May", "June",
-      "July", "August", "September", "October", "November", "December"
-    ];
-    const monthIndex = months.indexOf(month);
-    const birthDate = new Date(parseInt(year), monthIndex, parseInt(day));
-    const today = new Date();
-    
-    // Calculate age
-    const age = calculateAge(birthDate);
-    
-    // Check if birthdate is valid
-    if (isNaN(birthDate.getTime())) {
-      setDobError('Please enter a valid date');
-      return null;
-    }
-    
-    // Check if date is in the future
-    if (birthDate > today) {
-      setDobError('Date cannot be in the future');
-      return null;
-    }
-    
-    // Check if user is 21 or older
-    if (age < 21) {
-      setDobError('You must be 21 or older to use this app');
-      return null;
-    }
-    
-    setDobError('');
-    return birthDate;
-  };
-
   const validateForm = (): boolean => {
     const isEmailValid = validateEmailField(email);
     const isPasswordValid = validatePasswordField(password);
@@ -139,8 +94,9 @@ export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
       return isEmailValid && isPasswordValid && isConfirmPasswordValid;
     }
     
-    const isDateValid = validateDateOfBirth() !== null;
-    return isEmailValid && isPasswordValid && isConfirmPasswordValid && isDateValid;
+    const dobValidation = validateDateOfBirth(day, month, year);
+    setDobError(dobValidation.message || '');
+    return isEmailValid && isPasswordValid && isConfirmPasswordValid && dobValidation.isValid;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -156,14 +112,19 @@ export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
       return;
     }
     
-    const dateOfBirth = validateDateOfBirth();
-    if (!dateOfBirth) return;
+    const dobValidation = validateDateOfBirth(day, month, year);
+    if (!dobValidation.isValid || !dobValidation.birthDate) {
+      setDobError(dobValidation.message || 'Invalid date of birth');
+      return;
+    }
     
     setLoading(true);
     
     try {
+      console.log('Submitting signup with DOB:', dobValidation.birthDate);
+      
       const { success, message } = await signUp(email, password, {
-        birthdate: dateOfBirth.toISOString()
+        birthdate: dobValidation.birthDate.toISOString()
       });
       
       if (!success) {

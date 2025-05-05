@@ -1,14 +1,13 @@
 
-import { SupabaseClient, PostgrestResponse, PostgrestFilterBuilder } from '@supabase/supabase-js';
+import { SupabaseClient, PostgrestResponse } from '@supabase/supabase-js';
 import { BulkImportJob, ImportJob } from '@/hooks/useTrailImport';
 
-// Define a more specific interface for our extended query builders
-interface ExtendedQueryResult<T> extends PostgrestFilterBuilder<any, any, T[]> {
+interface ExtendedQueryResult<T> {
   select: (...args: any[]) => ExtendedQueryResult<T>;
   eq: (column: string, value: any) => ExtendedQueryResult<T>;
   order: (column: string, options?: { ascending?: boolean }) => ExtendedQueryResult<T>;
   limit: (count: number) => ExtendedQueryResult<T>;
-  single: () => ExtendedQueryResult<T>;
+  single: () => Promise<PostgrestResponse<T>>;
 }
 
 export function createExtendedSupabaseClient(supabase: SupabaseClient) {

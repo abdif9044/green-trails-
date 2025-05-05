@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, ReactNode } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -7,7 +7,11 @@ import { AuthContext } from '@/contexts/auth-context';
 import { AuthService } from '@/services/auth';
 import { DatabaseSetupService } from '@/services/database/setup-service';
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
@@ -16,28 +20,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setSession(session);
-        setUser(session?.user || null);
+      (_event, currentSession) => {
+        setSession(currentSession);
+        setUser(currentSession?.user || null);
         setLoading(false);
         
         // Log auth state changes for security purposes
-        if (_event && user?.id !== session?.user?.id) {
+        if (_event && user?.id !== currentSession?.user?.id) {
           DatabaseSetupService.logSecurityEvent('auth_state_change', {
             event: _event,
-            user_id: session?.user?.id,
+            user_id: currentSession?.user?.id,
             timestamp: new Date().toISOString()
-          });
+          }).catch(console.error);
         }
       }
     );
 
     // THEN check for existing session
     const getInitialSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setSession(session);
-      setUser(session?.user || null);
-      setLoading(false);
+      try {
+        const { data: { session: initialSession } } = await supabase.auth.getSession();
+        setSession(initialSession);
+        setUser(initialSession?.user || null);
+      } catch (error) {
+        console.error('Error getting initial session:', error);
+      } finally {
+        setLoading(false);
+      }
     };
 
     getInitialSession();
@@ -113,6 +122,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           variant: "destructive",
         });
       }
+      return result;
     } catch (error) {
       console.error('Exception during sign out:', error);
       const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
@@ -121,6 +131,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         description: errorMessage,
         variant: "destructive",
       });
+      return { success: false, message: errorMessage };
     }
   };
 

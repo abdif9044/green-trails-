@@ -23,14 +23,26 @@ export const SignUpService = {
         return { success: false, message: error.message };
       }
 
-      console.log('Signup successful, user data:', data.user?.id);
+      // Make sure we have user data before proceeding
+      if (!data.user) {
+        console.error('No user data returned from signUp');
+        return { success: false, message: 'Account creation failed - no user data returned' };
+      }
+
+      console.log('Signup successful, user data:', data.user.id);
 
       // Log successful registration
-      if (data.user) {
-        await DatabaseSetupService.logSecurityEvent('user_registration', { 
-          user_id: data.user.id,
-          timestamp: new Date().toISOString() 
-        });
+      await DatabaseSetupService.logSecurityEvent('user_registration', { 
+        user_id: data.user.id,
+        timestamp: new Date().toISOString() 
+      }).catch(e => console.error('Failed to log security event:', e));
+
+      // If email confirmation is enabled in Supabase, let the user know
+      if (data.session === null) {
+        return { 
+          success: true, 
+          message: "Account created successfully. Please check your email for confirmation." 
+        };
       }
 
       return { 

@@ -13,7 +13,8 @@ export function DemoAccountCreator() {
     error, 
     demoCredentials, 
     createDemoAccount, 
-    signInWithDemoAccount 
+    signInWithDemoAccount,
+    clearError
   } = useDemoAccount();
 
   return (
@@ -26,7 +27,7 @@ export function DemoAccountCreator() {
       </CardHeader>
       
       <CardContent>
-        {error && <DemoAccountError error={error} />}
+        {error && <DemoAccountError error={error} onDismiss={clearError} />}
         
         {demoCredentials ? (
           <div className="space-y-4">

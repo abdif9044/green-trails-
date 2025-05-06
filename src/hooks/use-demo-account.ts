@@ -32,10 +32,10 @@ export function useDemoAccount() {
           description: "You can now sign in with the demo credentials.",
         });
       } else {
-        setError(result.message);
+        setError(result.message || 'Unknown error occurred');
         toast({
           title: "Failed to create demo account",
-          description: result.message,
+          description: result.message || 'Unknown error occurred',
           variant: "destructive",
         });
       }
@@ -56,6 +56,8 @@ export function useDemoAccount() {
     if (!demoCredentials) return;
     
     setLoading(true);
+    setError(null);
+    
     try {
       const result = await signIn(demoCredentials.email, demoCredentials.password);
       
@@ -66,7 +68,7 @@ export function useDemoAccount() {
         });
         navigate('/discover');
       } else {
-        setError(result.message);
+        setError(result.message || 'Failed to sign in with demo account');
         toast({
           title: "Sign in failed",
           description: result.message || "Failed to sign in with demo account",
@@ -76,9 +78,19 @@ export function useDemoAccount() {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
       setError(errorMessage);
+      toast({
+        title: "Sign in error",
+        description: errorMessage,
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
+  };
+
+  // Reset error state
+  const clearError = () => {
+    setError(null);
   };
 
   return {
@@ -87,6 +99,7 @@ export function useDemoAccount() {
     demoCredentials,
     createDemoAccount,
     signInWithDemoAccount,
-    setError
+    setError,
+    clearError
   };
 }

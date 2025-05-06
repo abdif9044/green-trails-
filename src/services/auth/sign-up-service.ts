@@ -102,5 +102,56 @@ export const SignUpService = {
       }
       return { success: false, message: 'An unknown error occurred' };
     }
+  },
+
+  /**
+   * Creates a demo test account with predefined credentials
+   * @returns Promise with result object containing success status and credentials
+   */
+  createDemoAccount: async () => {
+    try {
+      console.log('Creating demo test account...');
+      
+      // Generate a unique demo email to avoid conflicts
+      const timestamp = new Date().getTime();
+      const demoEmail = `demo_user_${timestamp}@greentrails.test`;
+      const demoPassword = 'test1234';
+      
+      // Create a birthdate that makes the user over 21 (requirement for GreenTrails)
+      const birthDate = new Date();
+      birthDate.setFullYear(birthDate.getFullYear() - 25); // 25 years old
+      
+      const result = await SignUpService.signUp(demoEmail, demoPassword, {
+        birthdate: birthDate.toISOString(),
+        is_demo_account: true,
+        full_name: 'Demo User',
+        favorite_trails: [],
+        last_login: new Date().toISOString()
+      });
+      
+      if (result.success) {
+        console.log('Demo account created successfully');
+        return { 
+          success: true, 
+          message: 'Demo account created successfully',
+          credentials: {
+            email: demoEmail,
+            password: demoPassword
+          }
+        };
+      } else {
+        console.error('Failed to create demo account:', result.message);
+        return { 
+          success: false, 
+          message: `Failed to create demo account: ${result.message}`
+        };
+      }
+    } catch (error) {
+      console.error('Exception during demo account creation:', error);
+      if (error instanceof Error) {
+        return { success: false, message: error.message };
+      }
+      return { success: false, message: 'An unknown error occurred while creating the demo account' };
+    }
   }
 };

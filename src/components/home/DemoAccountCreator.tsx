@@ -18,7 +18,7 @@ export function DemoAccountCreator() {
   } = useDemoAccount();
 
   return (
-    <Card className="w-full max-w-md mx-auto border-greentrail-200 dark:border-greentrail-800">
+    <Card className="w-full max-w-md mx-auto border-greentrail-200 dark:border-greentrail-800 shadow-md">
       <CardHeader>
         <CardTitle className="text-xl text-greentrail-700 dark:text-greentrail-300">Quick Demo Account</CardTitle>
         <CardDescription>
@@ -39,7 +39,7 @@ export function DemoAccountCreator() {
         ) : (
           <div className="text-center py-2">
             <p className="text-sm text-muted-foreground mb-4">
-              This will create a test account with random credentials that you can use for testing the app's features.
+              Try GreenTrails instantly with a demo account that includes pre-filled trails, photos, and comments.
             </p>
           </div>
         )}
@@ -50,7 +50,7 @@ export function DemoAccountCreator() {
           <Button 
             onClick={signInWithDemoAccount} 
             disabled={loading}
-            className="w-full bg-greentrail-600 hover:bg-greentrail-700"
+            className="w-full bg-greentrail-600 hover:bg-greentrail-700 text-white font-medium"
           >
             {loading ? (
               <>
@@ -65,15 +65,15 @@ export function DemoAccountCreator() {
           <Button 
             onClick={createDemoAccount} 
             disabled={loading}
-            className="w-full bg-greentrail-600 hover:bg-greentrail-700"
+            className="w-full bg-greentrail-600 hover:bg-greentrail-700 text-white font-medium"
           >
             {loading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Creating...
+                Creating demo account...
               </>
             ) : (
-              'Create Demo Account'
+              'Try GreenTrails Now'
             )}
           </Button>
         )}

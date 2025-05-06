@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { DatabaseSetupService } from '@/services/database/setup-service';
 
@@ -113,14 +114,14 @@ export const SignUpService = {
       
       // Generate a unique demo email with a valid domain
       const timestamp = new Date().getTime();
-      const demoEmail = `demo_user_${timestamp}@gmail.com`; // Using a valid domain
-      const demoPassword = 'test1234';
+      const randomString = Math.random().toString(36).substring(2, 8);
+      const demoEmail = `demo_${randomString}_${timestamp}@example.com`;
+      const demoPassword = 'Demo1234!'; // Stronger password
       
       // Create a birthdate that makes the user over 21 (requirement for GreenTrails)
       const birthDate = new Date();
       birthDate.setFullYear(birthDate.getFullYear() - 25); // 25 years old
       
-      // Try direct signup with Supabase instead of using the SignUp method
       console.log(`Attempting direct Supabase signup for demo account: ${demoEmail}`);
       
       const { data, error } = await supabase.auth.signUp({
@@ -131,14 +132,17 @@ export const SignUpService = {
             birthdate: birthDate.toISOString(),
             is_demo_account: true,
             full_name: 'Demo User',
+            role: 'demo',
             favorite_trails: [],
             last_login: new Date().toISOString()
-          }
+          },
+          // Skip email confirmation for demo accounts
+          emailRedirectTo: `${window.location.origin}/`
         }
       });
       
       if (error) {
-        console.error('Supabase demo account creation error:', error);
+        console.error('Demo account creation failed:', error);
         return { 
           success: false, 
           message: `Failed to create demo account: ${error.message}`
@@ -166,10 +170,29 @@ export const SignUpService = {
         // Non-critical error, just log warning
         console.warn('Failed to log demo account creation (non-critical):', logError);
       }
+
+      // Immediately sign in with the demo account
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: demoEmail,
+        password: demoPassword
+      });
+
+      if (signInError) {
+        console.error('Failed to sign in with demo account:', signInError);
+        // We still return success since the account was created
+        return { 
+          success: true, 
+          message: 'Demo account created, but auto-login failed. Please sign in manually.',
+          credentials: {
+            email: demoEmail,
+            password: demoPassword
+          }
+        };
+      }
       
       return { 
         success: true, 
-        message: 'Demo account created successfully',
+        message: 'Demo account created and signed in successfully',
         credentials: {
           email: demoEmail,
           password: demoPassword

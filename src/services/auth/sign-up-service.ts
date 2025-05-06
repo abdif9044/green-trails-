@@ -114,7 +114,7 @@ export const SignUpService = {
       
       // Generate a unique demo email with a valid domain
       const timestamp = new Date().getTime();
-      const demoEmail = `demo_user_${timestamp}@example.com`;
+      const demoEmail = `demo_user_${timestamp}@gmail.com`; // Using a valid domain
       const demoPassword = 'test1234';
       
       // Create a birthdate that makes the user over 21 (requirement for GreenTrails)

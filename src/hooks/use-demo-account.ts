@@ -23,6 +23,7 @@ export function useDemoAccount() {
     setError(null);
     
     try {
+      console.log('Attempting to create demo account...');
       const result = await SignUpService.createDemoAccount();
       
       if (result.success && result.credentials) {

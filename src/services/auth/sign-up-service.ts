@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { DatabaseSetupService } from '@/services/database/setup-service';
 
@@ -121,31 +120,61 @@ export const SignUpService = {
       const birthDate = new Date();
       birthDate.setFullYear(birthDate.getFullYear() - 25); // 25 years old
       
-      const result = await SignUpService.signUp(demoEmail, demoPassword, {
-        birthdate: birthDate.toISOString(),
-        is_demo_account: true,
-        full_name: 'Demo User',
-        favorite_trails: [],
-        last_login: new Date().toISOString()
+      // Try direct signup with Supabase instead of using the SignUp method
+      console.log(`Attempting direct Supabase signup for demo account: ${demoEmail}`);
+      
+      const { data, error } = await supabase.auth.signUp({
+        email: demoEmail,
+        password: demoPassword,
+        options: {
+          data: {
+            birthdate: birthDate.toISOString(),
+            is_demo_account: true,
+            full_name: 'Demo User',
+            favorite_trails: [],
+            last_login: new Date().toISOString()
+          }
+        }
       });
       
-      if (result.success) {
-        console.log('Demo account created successfully');
-        return { 
-          success: true, 
-          message: 'Demo account created successfully',
-          credentials: {
-            email: demoEmail,
-            password: demoPassword
-          }
-        };
-      } else {
-        console.error('Failed to create demo account:', result.message);
+      if (error) {
+        console.error('Supabase demo account creation error:', error);
         return { 
           success: false, 
-          message: `Failed to create demo account: ${result.message}`
+          message: `Failed to create demo account: ${error.message}`
         };
       }
+      
+      if (!data.user) {
+        console.error('No user data returned from demo account creation');
+        return {
+          success: false,
+          message: 'Demo account creation failed - no user data returned'
+        };
+      }
+      
+      console.log('Demo account created successfully with ID:', data.user.id);
+      
+      // Log success
+      try {
+        await DatabaseSetupService.logSecurityEvent('demo_account_created', {
+          user_id: data.user.id,
+          email: demoEmail,
+          timestamp: new Date().toISOString()
+        });
+      } catch (logError) {
+        // Non-critical error, just log warning
+        console.warn('Failed to log demo account creation (non-critical):', logError);
+      }
+      
+      return { 
+        success: true, 
+        message: 'Demo account created successfully',
+        credentials: {
+          email: demoEmail,
+          password: demoPassword
+        }
+      };
     } catch (error) {
       console.error('Exception during demo account creation:', error);
       if (error instanceof Error) {

@@ -32,6 +32,9 @@ export function DemoAccountCreator() {
         {demoCredentials ? (
           <div className="space-y-4">
             <DemoCredentialsDisplay credentials={demoCredentials} />
+            <p className="text-sm text-center text-muted-foreground">
+              These credentials are temporary and will only work for this session.
+            </p>
           </div>
         ) : (
           <div className="text-center py-2">

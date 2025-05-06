@@ -25,12 +25,13 @@ export function useDemoAccount() {
     try {
       console.log('Attempting to create demo account...');
       const result = await SignUpService.createDemoAccount();
+      console.log('Demo account creation result:', result);
       
       if (result.success && result.credentials) {
         setDemoCredentials(result.credentials);
         toast({
           title: "Demo account created!",
-          description: "You can now sign in with the demo credentials.",
+          description: `Email: ${result.credentials.email}`,
         });
       } else {
         setError(result.message || 'Unknown error occurred');
@@ -41,6 +42,7 @@ export function useDemoAccount() {
         });
       }
     } catch (err) {
+      console.error('Exception in createDemoAccount hook:', err);
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
       setError(errorMessage);
       toast({
@@ -54,13 +56,18 @@ export function useDemoAccount() {
   };
   
   const signInWithDemoAccount = async () => {
-    if (!demoCredentials) return;
+    if (!demoCredentials) {
+      setError('No demo credentials available');
+      return;
+    }
     
     setLoading(true);
     setError(null);
     
     try {
+      console.log(`Attempting to sign in with demo account: ${demoCredentials.email}`);
       const result = await signIn(demoCredentials.email, demoCredentials.password);
+      console.log('Demo sign in result:', result);
       
       if (result.success) {
         toast({
@@ -77,6 +84,7 @@ export function useDemoAccount() {
         });
       }
     } catch (err) {
+      console.error('Exception in signInWithDemoAccount hook:', err);
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
       setError(errorMessage);
       toast({

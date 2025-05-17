@@ -23,6 +23,8 @@ export interface TrailCardProps {
   isAgeRestricted?: boolean;
 }
 
+const DEFAULT_TRAIL_IMAGE = "https://images.unsplash.com/photo-1469474968028-56623f02e42e";
+
 const TrailCard = ({
   id,
   name,
@@ -41,9 +43,10 @@ const TrailCard = ({
       <Link to={`/trail/${id}`}>
         <div className="relative h-48 overflow-hidden">
           <LazyImage 
-            src={imageUrl} 
+            src={imageUrl || DEFAULT_TRAIL_IMAGE} 
             alt={name} 
-            className="w-full h-full object-cover transition-transform hover:scale-105 duration-500"
+            className="w-full h-full transition-transform hover:scale-105 duration-500"
+            fallbackImage={DEFAULT_TRAIL_IMAGE}
           />
           <div className="absolute top-2 right-2 flex flex-col gap-2">
             <TrailDifficultyBadge difficulty={difficulty} />

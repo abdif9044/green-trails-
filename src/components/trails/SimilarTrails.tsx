@@ -5,10 +5,13 @@ import { useSimilarTrails } from "@/hooks/use-similar-trails";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { LazyImage } from "@/components/LazyImage";
 
 interface SimilarTrailsProps {
   trailId: string;
 }
+
+const DEFAULT_TRAIL_IMAGE = "https://images.unsplash.com/photo-1469474968028-56623f02e42e";
 
 const SimilarTrails: React.FC<SimilarTrailsProps> = ({ trailId }) => {
   const { data: similarTrails, isLoading } = useSimilarTrails(trailId);
@@ -32,11 +35,14 @@ const SimilarTrails: React.FC<SimilarTrailsProps> = ({ trailId }) => {
               className="block group"
             >
               <div className="flex items-center gap-3">
-                <img
-                  src={trail.imageUrl}
-                  alt={trail.name}
-                  className="h-16 w-16 object-cover rounded"
-                />
+                <div className="h-16 w-16 rounded overflow-hidden">
+                  <LazyImage
+                    src={trail.imageUrl || DEFAULT_TRAIL_IMAGE}
+                    alt={trail.name}
+                    className="h-16 w-16 object-cover"
+                    fallbackImage={DEFAULT_TRAIL_IMAGE}
+                  />
+                </div>
                 <div>
                   <h4 className="font-medium text-greentrail-700 group-hover:text-greentrail-600 dark:text-greentrail-300">
                     {trail.name}

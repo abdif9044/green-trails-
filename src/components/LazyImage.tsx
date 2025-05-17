@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ImageIcon } from "lucide-react";
 
 interface LazyImageProps {
   src: string;
@@ -10,6 +11,7 @@ interface LazyImageProps {
   height?: string | number;
   placeholderSrc?: string;
   onLoad?: () => void;
+  fallbackImage?: string;
 }
 
 export const LazyImage: React.FC<LazyImageProps> = ({
@@ -20,10 +22,18 @@ export const LazyImage: React.FC<LazyImageProps> = ({
   height,
   placeholderSrc = "/placeholder.svg",
   onLoad,
+  fallbackImage = "https://images.unsplash.com/photo-1469474968028-56623f02e42e",
 }) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isInView, setIsInView] = useState(false);
+  const [hasError, setHasError] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
+
+  // Reset states when src changes
+  useEffect(() => {
+    setIsLoaded(false);
+    setHasError(false);
+  }, [src]);
 
   // Set up the intersection observer
   useEffect(() => {
@@ -58,6 +68,12 @@ export const LazyImage: React.FC<LazyImageProps> = ({
     if (onLoad) onLoad();
   };
 
+  // Handle image error
+  const handleError = () => {
+    setHasError(true);
+    console.warn(`Image failed to load: ${src}`);
+  };
+
   // Style for the container to prevent layout shifts
   const containerStyle: React.CSSProperties = {
     position: "relative",
@@ -86,34 +102,37 @@ export const LazyImage: React.FC<LazyImageProps> = ({
     checkWebPSupport();
   }, []);
 
-  // Function to get the right image source based on WebP support
+  // Get actual image source to display
   const getImageSource = () => {
-    if (supportsWebP === null) return src; // Still checking
-    if (supportsWebP && src.endsWith('.jpg') || src.endsWith('.jpeg') || src.endsWith('.png')) {
-      // Only try to convert standard image formats to WebP
-      const webPSrc = src.replace(/\.(jpg|jpeg|png)$/, '.webp');
-      return webPSrc;
-    }
+    if (hasError) return fallbackImage;
+    if (!isInView) return placeholderSrc;
     return src;
   };
 
   return (
     <div style={containerStyle} ref={imgRef}>
-      {!isLoaded && <Skeleton className="absolute inset-0" />}
+      {!isLoaded && !hasError && <Skeleton className="absolute inset-0" />}
+      
+      {hasError && !isLoaded && (
+        <div className="absolute inset-0 flex items-center justify-center bg-muted">
+          <ImageIcon className="h-8 w-8 text-muted-foreground" />
+        </div>
+      )}
       
       {isInView && (
         <picture>
-          {supportsWebP && (
+          {supportsWebP && !hasError && (
             <source 
-              srcSet={getImageSource()} 
+              srcSet={src.replace(/\.(jpg|jpeg|png)$/, '.webp')} 
               type="image/webp" 
             />
           )}
           <img
-            src={isInView ? src : placeholderSrc}
+            src={getImageSource()}
             alt={alt}
-            className={`${className} ${isLoaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300`}
+            className={`${className} ${isLoaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300 object-cover`}
             onLoad={handleLoad}
+            onError={handleError}
             loading="lazy"
             width={width}
             height={height}

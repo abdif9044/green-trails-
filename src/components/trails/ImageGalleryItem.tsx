@@ -1,11 +1,12 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { 
   Trash2, 
   Loader2,
   StarIcon,
-  MoreVertical
+  MoreVertical,
+  ImageIcon
 } from 'lucide-react';
 import { TrailImage } from '@/hooks/use-trail-images';
 import { supabase } from '@/integrations/supabase/client';
@@ -28,6 +29,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from '@/components/ui/badge';
+import { LazyImage } from '@/components/LazyImage';
 
 interface ImageGalleryItemProps {
   image: TrailImage;
@@ -38,6 +40,8 @@ interface ImageGalleryItemProps {
   isDeleting: boolean;
   isSettingPrimary?: boolean;
 }
+
+const DEFAULT_TRAIL_IMAGE = "https://images.unsplash.com/photo-1469474968028-56623f02e42e";
 
 const ImageGalleryItem: React.FC<ImageGalleryItemProps> = ({ 
   image, 
@@ -55,11 +59,11 @@ const ImageGalleryItem: React.FC<ImageGalleryItemProps> = ({
     
   return (
     <div className="relative group rounded-lg overflow-hidden">
-      <img
+      <LazyImage
         src={imageUrl}
         alt={image.caption || 'Trail image'}
         className="w-full h-48 object-cover"
-        loading="lazy"
+        fallbackImage={DEFAULT_TRAIL_IMAGE}
       />
       
       {image.is_primary && (

@@ -7,6 +7,7 @@ import { Heart, Mountain, MapPin } from "lucide-react";
 import { usePrefetch } from '@/hooks/use-prefetch';
 import { StrainTag, Trail, TrailDifficulty } from '@/types/trails';
 import { TrailTagsList } from './TrailTagsList';
+import { LazyImage } from '@/components/LazyImage';
 
 type TrailCardPrefetchProps = {
   id: string;
@@ -23,6 +24,8 @@ type TrailCardPrefetchProps = {
   isAgeRestricted: boolean;
   description?: string;
 };
+
+const DEFAULT_TRAIL_IMAGE = "https://images.unsplash.com/photo-1469474968028-56623f02e42e";
 
 // Helper function to get badge color based on difficulty
 const getDifficultyColor = (difficulty: TrailDifficulty) => {
@@ -71,11 +74,12 @@ const TrailCardPrefetch: React.FC<TrailCardPrefetchProps> = ({
       onMouseEnter={handleMouseEnter}
     >
       <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300 h-full flex flex-col">
-        <div className="relative">
-          <img 
-            src={imageUrl} 
+        <div className="relative h-48">
+          <LazyImage 
+            src={imageUrl || DEFAULT_TRAIL_IMAGE} 
             alt={name}
-            className="w-full h-48 object-cover"
+            className="w-full h-full"
+            fallbackImage={DEFAULT_TRAIL_IMAGE}
           />
           <div className="absolute top-2 right-2 flex gap-1">
             {isAgeRestricted && (

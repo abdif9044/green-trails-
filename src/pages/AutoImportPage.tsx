@@ -1,7 +1,7 @@
 
 import React, { useEffect } from 'react';
 import { Progress } from '@/components/ui/progress';
-import { Loader2, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { Loader2, CheckCircle2, AlertTriangle, Database } from 'lucide-react';
 import { Toaster } from '@/components/ui/toaster';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import SEOProvider from '@/components/SEOProvider';
@@ -39,7 +39,7 @@ const AutoImportPage: React.FC = () => {
         <CardHeader>
           <CardTitle className="text-2xl flex items-center">
             <img 
-              src="/logo.png" 
+              src="/lovable-uploads/0c2a9cc4-4fdb-4d4a-965c-47b406e4ec4e.png" 
               alt="GreenTrails Logo" 
               className="h-8 w-auto mr-2"
             />
@@ -62,6 +62,22 @@ const AutoImportPage: React.FC = () => {
               )}
               <span className={isSettingUpDb ? "text-greentrail-800" : "text-green-700"}>
                 Database setup {isSettingUpDb ? "in progress..." : "complete"}
+              </span>
+            </div>
+            
+            {/* Data sources status */}
+            <div className="flex items-center">
+              {loading ? (
+                <Loader2 className="h-5 w-5 animate-spin text-greentrail-600 mr-2" />
+              ) : error && error.includes("data sources") ? (
+                <AlertTriangle className="h-5 w-5 text-amber-500 mr-2" />
+              ) : (
+                <Database className="h-5 w-5 text-green-600 mr-2" />
+              )}
+              <span className={loading ? "text-greentrail-800" : error && error.includes("data sources") ? "text-amber-500" : "text-green-700"}>
+                {loading ? "Loading data sources..." : 
+                  error && error.includes("data sources") ? error : 
+                  "Data sources loaded"}
               </span>
             </div>
             
@@ -94,7 +110,7 @@ const AutoImportPage: React.FC = () => {
             )}
             
             {/* Error message */}
-            {error && (
+            {error && !error.includes("data sources") && (
               <div className="flex items-center text-red-500">
                 <AlertTriangle className="h-5 w-5 mr-2" />
                 <span>{error}</span>
@@ -110,6 +126,13 @@ const AutoImportPage: React.FC = () => {
                 Start Exploring Trails
               </Button>
             </Link>
+          ) : error ? (
+            <Button 
+              className="bg-greentrail-600 hover:bg-greentrail-700" 
+              onClick={() => initializeAutoImport()}
+            >
+              Try Again
+            </Button>
           ) : (
             <p className="text-sm text-gray-500">
               {loading ? "Loading..." : "This might take several minutes. Please don't close this page."}

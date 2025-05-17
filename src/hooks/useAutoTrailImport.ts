@@ -7,6 +7,7 @@ import { useTrailImport } from './useTrailImport';
 import { useTrailDataSources } from './trail-import/useTrailDataSources';
 import { useBulkImportHandler } from './trail-import/useBulkImportHandler';
 import { useBulkImportStatus } from './trail-import/useBulkImportStatus';
+import { supabase } from '@/integrations/supabase/client';
 
 export function useAutoTrailImport() {
   const navigate = useNavigate();
@@ -20,7 +21,7 @@ export function useAutoTrailImport() {
   const DEFAULT_TRAIL_COUNT = 5000;
   
   // Hooks for trail data operations
-  const { loadDataSources, dataSources } = useTrailDataSources();
+  const { loadDataSources, dataSources, createDefaultDataSources } = useTrailDataSources();
   const { activeBulkJobId, setActiveBulkJobId, bulkProgress, setBulkImportLoading } = useBulkImportStatus(refreshData);
   const { handleBulkImport } = useBulkImportHandler(setActiveBulkJobId, setBulkImportLoading);
   
@@ -108,7 +109,14 @@ export function useAutoTrailImport() {
   // Helper to load data sources
   const loadAllDataSources = async () => {
     try {
-      await loadDataSources();
+      const sources = await loadDataSources();
+      
+      // If no data sources exist, create default ones
+      if (!sources || sources.length === 0) {
+        console.log('No data sources found, creating defaults');
+        await createDefaultDataSources();
+        await loadDataSources(); // Reload after creating
+      }
     } catch (error) {
       console.error('Error loading data sources:', error);
       setError("Failed to load trail data sources");

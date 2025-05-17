@@ -2,7 +2,11 @@
 import React from 'react';
 import { Loader2 } from 'lucide-react';
 
-const LoadingFallback: React.FC = () => {
+interface LoadingFallbackProps {
+  message?: string;
+}
+
+const LoadingFallback: React.FC<LoadingFallbackProps> = ({ message = "Loading GreenTrails..." }) => {
   return (
     <div className="min-h-screen flex items-center justify-center flex-col">
       <img 
@@ -11,7 +15,7 @@ const LoadingFallback: React.FC = () => {
         className="h-16 w-auto mb-6"
       />
       <Loader2 className="h-8 w-8 animate-spin text-greentrail-600" />
-      <p className="mt-4 text-gray-600 dark:text-gray-400">Loading GreenTrails...</p>
+      <p className="mt-4 text-gray-600 dark:text-gray-400">{message}</p>
     </div>
   );
 };

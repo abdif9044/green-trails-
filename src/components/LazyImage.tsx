@@ -14,6 +14,8 @@ interface LazyImageProps {
   fallbackImage?: string;
 }
 
+const DEFAULT_TRAIL_IMAGE = "https://images.unsplash.com/photo-1469474968028-56623f02e42e";
+
 export const LazyImage: React.FC<LazyImageProps> = ({
   src,
   alt,
@@ -22,7 +24,7 @@ export const LazyImage: React.FC<LazyImageProps> = ({
   height,
   placeholderSrc = "/placeholder.svg",
   onLoad,
-  fallbackImage = "https://images.unsplash.com/photo-1469474968028-56623f02e42e",
+  fallbackImage = DEFAULT_TRAIL_IMAGE,
 }) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isInView, setIsInView] = useState(false);
@@ -102,11 +104,24 @@ export const LazyImage: React.FC<LazyImageProps> = ({
     checkWebPSupport();
   }, []);
 
+  // Check if source is a valid URL or path
+  const isValidSource = (source: string): boolean => {
+    if (!source) return false;
+    
+    // Check if it's a URL or storage path
+    return source.startsWith('http') || source.includes('/');
+  };
+
   // Get actual image source to display
   const getImageSource = () => {
+    // If we've already detected an error, use fallback
     if (hasError) return fallbackImage;
+    
+    // If not in view yet, use placeholder
     if (!isInView) return placeholderSrc;
-    return src;
+    
+    // Validate source
+    return isValidSource(src) ? src : fallbackImage;
   };
 
   return (
@@ -121,7 +136,7 @@ export const LazyImage: React.FC<LazyImageProps> = ({
       
       {isInView && (
         <picture>
-          {supportsWebP && !hasError && (
+          {supportsWebP && !hasError && isValidSource(src) && (
             <source 
               srcSet={src.replace(/\.(jpg|jpeg|png)$/, '.webp')} 
               type="image/webp" 

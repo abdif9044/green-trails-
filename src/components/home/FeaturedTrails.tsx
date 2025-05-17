@@ -7,6 +7,8 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { TrailDifficulty } from "@/types/trails";
 
+const DEFAULT_TRAIL_IMAGE = "https://images.unsplash.com/photo-1469474968028-56623f02e42e";
+
 const useFeaturedTrails = () => {
   return useQuery({
     queryKey: ['featured-trails'],
@@ -49,17 +51,28 @@ const useFeaturedTrails = () => {
         // Ensure the difficulty is cast to a valid TrailDifficulty type
         const difficulty = validateDifficulty(trail.difficulty);
         
+        // Get primary image if exists
+        const primaryImage = trail.trail_images?.find(img => img.is_primary);
+        // If no primary image, get first image
+        const firstImage = trail.trail_images?.[0];
+        // Get image path
+        const imagePath = primaryImage?.image_path || firstImage?.image_path;
+        
+        // Get image URL
+        let imageUrl = DEFAULT_TRAIL_IMAGE;
+        if (imagePath) {
+          imageUrl = supabase.storage
+            .from('trail_images')
+            .getPublicUrl(imagePath)
+            .data.publicUrl;
+        }
+        
         return {
           id: trail.id,
           name: trail.name,
           location: trail.location,
           coordinates: [trail.longitude, trail.latitude] as [number, number],
-          imageUrl: trail.trail_images?.[0]?.image_path 
-            ? supabase.storage
-                .from('trail_images')
-                .getPublicUrl(trail.trail_images[0].image_path)
-                .data.publicUrl
-            : "https://images.unsplash.com/photo-1469474968028-56623f02e42e",
+          imageUrl: imageUrl,
           difficulty: difficulty,
           length: trail.length,
           elevation: trail.elevation,

@@ -38,12 +38,15 @@ const TrailCard = ({
   strainTags = [],
   isAgeRestricted = false
 }: TrailCardProps) => {
+  // Ensure we have a valid image URL or use default
+  const safeImageUrl = imageUrl || DEFAULT_TRAIL_IMAGE;
+  
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-all duration-200 trail-card-shadow border-greentrail-200 dark:border-greentrail-800">
       <Link to={`/trail/${id}`}>
         <div className="relative h-48 overflow-hidden">
           <LazyImage 
-            src={imageUrl || DEFAULT_TRAIL_IMAGE} 
+            src={safeImageUrl} 
             alt={name} 
             className="w-full h-full transition-transform hover:scale-105 duration-500"
             fallbackImage={DEFAULT_TRAIL_IMAGE}

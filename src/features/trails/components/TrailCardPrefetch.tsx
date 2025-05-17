@@ -68,6 +68,9 @@ const TrailCardPrefetch: React.FC<TrailCardPrefetchProps> = ({
     }
   };
   
+  // Ensure we have a valid image URL or use default
+  const safeImageUrl = imageUrl || DEFAULT_TRAIL_IMAGE;
+  
   return (
     <Link 
       to={`/trail/${id}`}
@@ -76,7 +79,7 @@ const TrailCardPrefetch: React.FC<TrailCardPrefetchProps> = ({
       <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300 h-full flex flex-col">
         <div className="relative h-48">
           <LazyImage 
-            src={imageUrl || DEFAULT_TRAIL_IMAGE} 
+            src={safeImageUrl} 
             alt={name}
             className="w-full h-full"
             fallbackImage={DEFAULT_TRAIL_IMAGE}

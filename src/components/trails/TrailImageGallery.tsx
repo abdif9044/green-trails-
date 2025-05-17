@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useTrailImages, useDeleteTrailImage, useSetPrimaryImage } from '@/hooks/trail-images';
-import { Loader2, Plus } from 'lucide-react';
+import { Loader2, Plus, Image } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import ImageGalleryItem from './ImageGalleryItem';
 import { Button } from '@/components/ui/button';
@@ -22,7 +22,7 @@ interface TrailImageGalleryProps {
 
 const TrailImageGallery = ({ trailId, userId }: TrailImageGalleryProps) => {
   const [uploadOpen, setUploadOpen] = useState(false);
-  const { data: images, isLoading } = useTrailImages(trailId);
+  const { data: images, isLoading, isError } = useTrailImages(trailId);
   const { mutate: deleteImage, isPending: isDeleting } = useDeleteTrailImage(trailId);
   const { mutate: setPrimary, isPending: isSettingPrimary } = useSetPrimaryImage(trailId);
   const { user } = useAuth();
@@ -34,6 +34,17 @@ const TrailImageGallery = ({ trailId, userId }: TrailImageGalleryProps) => {
     return (
       <div className="flex justify-center items-center h-48">
         <Loader2 className="h-8 w-8 animate-spin text-greentrail-600" />
+      </div>
+    );
+  }
+  
+  if (isError) {
+    return (
+      <div className="flex flex-col justify-center items-center h-48 gap-4 text-center">
+        <Image className="h-12 w-12 text-muted-foreground" />
+        <p className="text-muted-foreground">
+          There was an error loading trail images. Please try again later.
+        </p>
       </div>
     );
   }

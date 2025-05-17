@@ -1,12 +1,11 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Button } from "@/components/ui/button";
 import { 
   Trash2, 
   Loader2,
   StarIcon,
   MoreVertical,
-  ImageIcon
 } from 'lucide-react';
 import { TrailImage } from '@/hooks/trail-images/types';
 import { supabase } from '@/integrations/supabase/client';
@@ -52,10 +51,17 @@ const ImageGalleryItem: React.FC<ImageGalleryItemProps> = ({
   isDeleting,
   isSettingPrimary = false
 }) => {
-  // Get image URL from Supabase storage
-  const imageUrl = supabase.storage
-    .from('trail_images')
-    .getPublicUrl(image.image_path).data.publicUrl;
+  // Get image URL from Supabase storage - safely
+  let imageUrl = DEFAULT_TRAIL_IMAGE;
+  try {
+    if (image.image_path) {
+      imageUrl = supabase.storage
+        .from('trail_images')
+        .getPublicUrl(image.image_path).data.publicUrl;
+    }
+  } catch (e) {
+    console.error('Error getting image URL:', e);
+  }
     
   return (
     <div className="relative group rounded-lg overflow-hidden">

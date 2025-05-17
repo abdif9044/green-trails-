@@ -6,7 +6,7 @@ import { Layout } from '@/components/layout/layout';
 import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/providers/auth-provider';
 import { useAuth } from '@/hooks/use-auth';
-import { LoadingFallback } from '@/components/LoadingFallback';
+import LoadingFallback from '@/components/LoadingFallback';
 
 // Lazy loaded components
 const Discover = lazy(() => import('@/pages/Discover'));

@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useTrailImages, useDeleteTrailImage, useSetPrimaryImage } from '@/hooks/use-trail-images';
+import { useTrailImages, useDeleteTrailImage, useSetPrimaryImage } from '@/hooks/trail-images';
 import { Loader2, Plus } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import ImageGalleryItem from './ImageGalleryItem';

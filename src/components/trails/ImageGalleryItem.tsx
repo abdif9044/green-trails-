@@ -8,7 +8,7 @@ import {
   MoreVertical,
   ImageIcon
 } from 'lucide-react';
-import { TrailImage } from '@/hooks/use-trail-images';
+import { TrailImage } from '@/hooks/trail-images/types';
 import { supabase } from '@/integrations/supabase/client';
 import {
   AlertDialog,

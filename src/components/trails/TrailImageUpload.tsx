@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Camera, Image, Loader2, UploadCloud } from 'lucide-react';
-import { useUploadTrailImage } from '@/hooks/use-trail-images';
+import { useUploadTrailImage } from '@/hooks/trail-images';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';

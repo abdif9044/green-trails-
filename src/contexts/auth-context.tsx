@@ -6,6 +6,7 @@ export interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  isInitialized: boolean;
   signIn: (email: string, password: string) => Promise<{ success: boolean; message?: string }>;
   signUp: (email: string, password: string, metadata?: object) => Promise<{ success: boolean; message?: string }>;
   signOut: () => Promise<{ success: boolean; message?: string }>;

@@ -112,17 +112,19 @@ export const SignUpService = {
     try {
       console.log('Creating demo test account...');
       
-      // Generate a unique demo email with a valid domain
-      const timestamp = new Date().getTime();
-      const randomString = Math.random().toString(36).substring(2, 8);
-      const demoEmail = `demo_${randomString}_${timestamp}@example.com`;
-      const demoPassword = 'Demo1234!'; // Stronger password
+      // Generate a unique demo email that's more reliable
+      const timestamp = Date.now();
+      const randomString = Math.random().toString(36).substring(2, 10); // Longer random string
+      const demoEmail = `demo_${randomString}_${timestamp}@greentrails.demo`;
+      
+      // Stronger password for demo accounts
+      const demoPassword = `Demo${randomString.substring(0, 4)}!`;
       
       // Create a birthdate that makes the user over 21 (requirement for GreenTrails)
       const birthDate = new Date();
       birthDate.setFullYear(birthDate.getFullYear() - 25); // 25 years old
       
-      console.log(`Attempting direct Supabase signup for demo account: ${demoEmail}`);
+      console.log(`Attempting Supabase signup for demo account: ${demoEmail}`);
       
       const { data, error } = await supabase.auth.signUp({
         email: demoEmail,
@@ -131,12 +133,12 @@ export const SignUpService = {
           data: {
             birthdate: birthDate.toISOString(),
             is_demo_account: true,
-            full_name: 'Demo User',
+            full_name: 'Demo Explorer',
+            username: `TrailDemo_${randomString.substring(0, 4)}`,
             role: 'demo',
             favorite_trails: [],
             last_login: new Date().toISOString()
           },
-          // Skip email confirmation for demo accounts
           emailRedirectTo: `${window.location.origin}/`
         }
       });

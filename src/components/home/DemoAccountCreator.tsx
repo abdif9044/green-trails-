@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ArrowRightIcon } from 'lucide-react';
 import { DemoCredentialsDisplay } from './DemoCredentialsDisplay';
 import { DemoAccountError } from './DemoAccountError';
 import { useDemoAccount } from '@/hooks/use-demo-account';
@@ -58,7 +58,10 @@ export function DemoAccountCreator() {
                 Signing in...
               </>
             ) : (
-              'Sign in with Demo Account'
+              <>
+                Sign in with Demo Account
+                <ArrowRightIcon className="ml-2 h-4 w-4" />
+              </>
             )}
           </Button>
         ) : (
@@ -73,7 +76,10 @@ export function DemoAccountCreator() {
                 Creating demo account...
               </>
             ) : (
-              'Try GreenTrails Now'
+              <>
+                Try GreenTrails Now
+                <ArrowRightIcon className="ml-2 h-4 w-4" />
+              </>
             )}
           </Button>
         )}

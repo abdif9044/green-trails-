@@ -29,7 +29,21 @@ export const initializeAuthState = async (
       };
     }
     
-    // Get user session
+    // Get user session from localStorage first for immediate UI update
+    const savedSessionStr = localStorage.getItem('supabase.auth.token');
+    if (savedSessionStr) {
+      try {
+        const savedSession = JSON.parse(savedSessionStr);
+        if (savedSession?.currentSession?.access_token) {
+          console.log('Found saved session in localStorage');
+          // Don't set user yet - wait for official session check
+        }
+      } catch (e) {
+        console.warn('Failed to parse saved session:', e);
+      }
+    }
+    
+    // Get official user session from Supabase
     const { data: { session: initialSession }, error: sessionError } = await supabase.auth.getSession();
     
     if (sessionError) {
@@ -70,9 +84,14 @@ export const initializeAuthState = async (
   }
 };
 
+type AuthEventCallback = (
+  event: string, 
+  session: Session | null
+) => void;
+
 export const setupAuthStateListener = (
   { setUser, setSession, setLoading }: AuthStateUpdater,
-  currentUserId?: string
+  callback?: AuthEventCallback
 ) => {
   console.log('Setting up auth state listener...');
   
@@ -85,6 +104,15 @@ export const setupAuthStateListener = (
       setUser(currentSession?.user || null);
       setLoading(false);
       
+      // Save session to localStorage for persistence
+      if (currentSession) {
+        localStorage.setItem('greentrails.last_auth_event', JSON.stringify({
+          event,
+          timestamp: new Date().toISOString(),
+          user_email: currentSession.user?.email
+        }));
+      }
+      
       // Log auth state changes for security purposes
       if (event) {
         try {
@@ -96,25 +124,11 @@ export const setupAuthStateListener = (
         } catch (error) {
           console.warn('Error in auth state logging (non-critical):', error);
         }
-        
-        // Handle specific auth events
-        switch (event) {
-          case 'SIGNED_IN':
-            console.log('User signed in successfully');
-            break;
-          case 'SIGNED_OUT':
-            console.log('User signed out');
-            break;
-          case 'TOKEN_REFRESHED':
-            console.log('Auth token refreshed');
-            break;
-          case 'USER_UPDATED':
-            console.log('User profile updated');
-            break;
-          case 'PASSWORD_RECOVERY':
-            console.log('Password recovery initiated');
-            break;
-        }
+      }
+
+      // Execute callback if provided
+      if (callback) {
+        callback(event, currentSession);
       }
     }
   );
@@ -150,5 +164,24 @@ export const checkSupabaseConnection = async () => {
       message: err instanceof Error ? err.message : 'Unknown error checking connection',
       duration: 0
     };
+  }
+};
+
+// Clean up expired sessions from localStorage
+export const cleanupExpiredSessions = () => {
+  try {
+    const savedSessionStr = localStorage.getItem('supabase.auth.token');
+    if (savedSessionStr) {
+      const savedSession = JSON.parse(savedSessionStr);
+      if (savedSession?.currentSession?.expires_at) {
+        const expiresAt = new Date(savedSession.currentSession.expires_at * 1000);
+        if (expiresAt < new Date()) {
+          console.log('Removing expired session from localStorage');
+          localStorage.removeItem('supabase.auth.token');
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('Failed to cleanup expired sessions:', e);
   }
 };

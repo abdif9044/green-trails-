@@ -31,13 +31,13 @@ export function useDemoAccount() {
         setDemoCredentials(result.credentials);
         toast({
           title: "Demo account created!",
-          description: `You can explore GreenTrails as a demo user now`,
+          description: `You can now explore GreenTrails as ${result.credentials.email}`,
           variant: "default",
         });
         
         // If the auto-login has already happened, redirect
         if (!result.message.includes('auto-login failed')) {
-          navigate('/discover');
+          navigate('/discover', { replace: true });
           return;
         }
       } else {
@@ -79,9 +79,10 @@ export function useDemoAccount() {
       if (result.success) {
         toast({
           title: "Signed in!",
-          description: "You're now exploring GreenTrails as a demo user.",
+          description: "Welcome to GreenTrails! You're exploring as a demo user.",
+          variant: "default",
         });
-        navigate('/discover');
+        navigate('/discover', { replace: true });
       } else {
         setError(result.message || 'Failed to sign in with demo account');
         toast({

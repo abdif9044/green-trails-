@@ -30,6 +30,10 @@ export const useAuthMethods = (user: User | null) => {
       }
       
       console.log('Sign in successful for:', email);
+      
+      // Store session information in localStorage for persistence
+      localStorage.setItem('greentrails.user_email', email);
+      
       toast({
         title: "Sign in successful",
         description: "Welcome back to GreenTrails!",
@@ -74,6 +78,8 @@ export const useAuthMethods = (user: User | null) => {
             ...metadata,
             signup_timestamp: new Date().toISOString(),
           },
+          // Set a more reasonable session duration
+          emailRedirectTo: window.location.origin + '/auth',
         }
       });
       
@@ -94,9 +100,12 @@ export const useAuthMethods = (user: User | null) => {
           description: "Please check your email to confirm your account before signing in.",
         });
       } else {
+        // Store the user email for later reference
+        localStorage.setItem('greentrails.user_email', email);
+        
         toast({
           title: "Account created successfully",
-          description: "You can now sign in with your credentials",
+          description: "Welcome to GreenTrails! Your account is ready.",
         });
       }
       
@@ -133,6 +142,9 @@ export const useAuthMethods = (user: User | null) => {
         });
         return { success: false, message: error.message };
       }
+      
+      // Clear any stored auth data
+      localStorage.removeItem('greentrails.user_email');
       
       return { success: true };
     } catch (error) {

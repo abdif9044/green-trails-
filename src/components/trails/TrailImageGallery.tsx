@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useTrailImages, useDeleteTrailImage, useSetPrimaryImage } from '@/hooks/trail-images';
-import { Loader2, Plus, Image } from 'lucide-react';
+import { Loader2, Plus, Image, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import ImageGalleryItem from './ImageGalleryItem';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface TrailImageGalleryProps {
   trailId: string;
@@ -22,7 +23,7 @@ interface TrailImageGalleryProps {
 
 const TrailImageGallery = ({ trailId, userId }: TrailImageGalleryProps) => {
   const [uploadOpen, setUploadOpen] = useState(false);
-  const { data: images, isLoading, isError } = useTrailImages(trailId);
+  const { data: images, isLoading, isError, error } = useTrailImages(trailId);
   const { mutate: deleteImage, isPending: isDeleting } = useDeleteTrailImage(trailId);
   const { mutate: setPrimary, isPending: isSettingPrimary } = useSetPrimaryImage(trailId);
   const { user } = useAuth();
@@ -40,11 +41,24 @@ const TrailImageGallery = ({ trailId, userId }: TrailImageGalleryProps) => {
   
   if (isError) {
     return (
-      <div className="flex flex-col justify-center items-center h-48 gap-4 text-center">
-        <Image className="h-12 w-12 text-muted-foreground" />
-        <p className="text-muted-foreground">
-          There was an error loading trail images. Please try again later.
-        </p>
+      <div className="space-y-4">
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            There was an error loading trail images. Please try again later.
+            {error instanceof Error && <span className="block text-xs mt-1">{error.message}</span>}
+          </AlertDescription>
+        </Alert>
+        
+        <div className="flex flex-col justify-center items-center h-32 gap-4">
+          <Image className="h-12 w-12 text-muted-foreground" />
+          <Button 
+            onClick={() => window.location.reload()} 
+            variant="outline"
+          >
+            Retry
+          </Button>
+        </div>
       </div>
     );
   }
@@ -81,9 +95,10 @@ const TrailImageGallery = ({ trailId, userId }: TrailImageGalleryProps) => {
         )}
       </div>
       
-      {!images?.length ? (
+      {!images || images.length === 0 ? (
         <div className="text-center py-8 text-muted-foreground">
-          No images available for this trail yet.
+          No images available for this trail yet. 
+          {user && <span className="block mt-2">Be the first to add an image!</span>}
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

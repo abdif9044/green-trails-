@@ -12,6 +12,7 @@ interface LazyImageProps {
   placeholderSrc?: string;
   onLoad?: () => void;
   fallbackImage?: string;
+  objectFit?: "cover" | "contain" | "fill" | "none" | "scale-down";
 }
 
 const DEFAULT_TRAIL_IMAGE = "https://images.unsplash.com/photo-1469474968028-56623f02e42e";
@@ -25,6 +26,7 @@ export const LazyImage: React.FC<LazyImageProps> = ({
   placeholderSrc = "/placeholder.svg",
   onLoad,
   fallbackImage = DEFAULT_TRAIL_IMAGE,
+  objectFit = "cover",
 }) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isInView, setIsInView] = useState(false);
@@ -49,7 +51,7 @@ export const LazyImage: React.FC<LazyImageProps> = ({
         });
       },
       {
-        rootMargin: "100px",
+        rootMargin: "200px", // Increased for better prefetching
       }
     );
 
@@ -72,8 +74,8 @@ export const LazyImage: React.FC<LazyImageProps> = ({
 
   // Handle image error
   const handleError = () => {
-    setHasError(true);
     console.warn(`Image failed to load: ${src}`);
+    setHasError(true);
   };
 
   // Style for the container to prevent layout shifts
@@ -108,8 +110,15 @@ export const LazyImage: React.FC<LazyImageProps> = ({
   const isValidSource = (source: string): boolean => {
     if (!source) return false;
     
-    // Check if it's a URL or storage path
-    return source.startsWith('http') || source.includes('/');
+    // More comprehensive check for valid paths
+    try {
+      // Try to create a URL - will throw if invalid
+      new URL(source, window.location.origin);
+      return true;
+    } catch {
+      // Check if it's a relative path at minimum
+      return source.includes('/') || source.startsWith('blob:');
+    }
   };
 
   // Get actual image source to display
@@ -145,7 +154,8 @@ export const LazyImage: React.FC<LazyImageProps> = ({
           <img
             src={getImageSource()}
             alt={alt}
-            className={`${className} ${isLoaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300 object-cover`}
+            className={`${className} ${isLoaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300`}
+            style={{ objectFit }}
             onLoad={handleLoad}
             onError={handleError}
             loading="lazy"

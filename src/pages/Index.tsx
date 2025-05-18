@@ -7,11 +7,15 @@ import Hero from '@/components/Hero';
 import FeatureSection from '@/components/home/FeatureSection';
 import FeaturedTrails from '@/components/home/FeaturedTrails';
 import CtaSection from '@/components/home/CtaSection';
+import { DemoAccountCreator } from '@/components/home/DemoAccountCreator';
 import { Button } from '@/components/ui/button';
 import { Import } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '@/hooks/use-auth';
 
 const Index = () => {
+  const { user } = useAuth();
+  
   return (
     <div className="min-h-screen flex flex-col">
       <SEOProvider
@@ -23,6 +27,24 @@ const Index = () => {
       
       <main className="flex-grow">
         <Hero />
+
+        {/* Demo Account Section - Only show if user is not logged in */}
+        {!user && (
+          <section className="py-12 bg-greentrail-50 dark:bg-greentrail-900/30">
+            <div className="container mx-auto px-4">
+              <div className="text-center mb-10">
+                <h2 className="text-2xl md:text-3xl font-bold text-greentrail-800 dark:text-greentrail-200 mb-4">
+                  Try Before You Sign Up
+                </h2>
+                <p className="max-w-2xl mx-auto text-greentrail-600 dark:text-greentrail-400">
+                  Experience GreenTrails without creating an account. Our one-click demo gives you full access to explore all features.
+                </p>
+              </div>
+              <DemoAccountCreator />
+            </div>
+          </section>
+        )}
+        
         <FeatureSection />
         <FeaturedTrails />
         <CtaSection />

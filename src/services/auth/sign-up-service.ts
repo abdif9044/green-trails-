@@ -136,6 +136,7 @@ export const SignUpService = {
             full_name: 'Demo Explorer',
             username: `TrailDemo_${randomString.substring(0, 4)}`,
             role: 'demo',
+            age_verified: true,
             favorite_trails: [],
             last_login: new Date().toISOString()
           },
@@ -190,6 +191,26 @@ export const SignUpService = {
             password: demoPassword
           }
         };
+      }
+      
+      // Add some sample activities for the demo account
+      try {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            id: data.user.id,
+            username: `TrailDemo_${randomString.substring(0, 4)}`,
+            full_name: 'Demo Explorer',
+            bio: 'This is a demo account to try out GreenTrails features!',
+            is_demo_account: true,
+            age_verified: true
+          });
+          
+        if (profileError) {
+          console.warn('Could not create demo profile:', profileError);
+        }
+      } catch (err) {
+        console.warn('Error creating demo profile data:', err);
       }
       
       return { 

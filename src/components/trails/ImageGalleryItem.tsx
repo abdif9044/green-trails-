@@ -6,6 +6,7 @@ import {
   Loader2,
   StarIcon,
   MoreVertical,
+  ImageIcon
 } from 'lucide-react';
 import { TrailImage } from '@/hooks/trail-images/types';
 import { supabase } from '@/integrations/supabase/client';
@@ -51,35 +52,41 @@ const ImageGalleryItem: React.FC<ImageGalleryItemProps> = ({
   isDeleting,
   isSettingPrimary = false
 }) => {
-  // Get image URL from Supabase storage - safely
-  let imageUrl = DEFAULT_TRAIL_IMAGE;
-  try {
-    if (image.image_path) {
+  // Get image URL from Supabase storage or use image's full_image_url if available
+  let imageUrl = image.full_image_url || DEFAULT_TRAIL_IMAGE;
+  
+  // If full_image_url not available, try to generate it
+  if (!imageUrl && image.image_path) {
+    try {
       imageUrl = supabase.storage
         .from('trail_images')
         .getPublicUrl(image.image_path).data.publicUrl;
+    } catch (e) {
+      console.error('Error getting image URL:', e);
+      imageUrl = DEFAULT_TRAIL_IMAGE;
     }
-  } catch (e) {
-    console.error('Error getting image URL:', e);
   }
     
   return (
-    <div className="relative group rounded-lg overflow-hidden">
-      <LazyImage
-        src={imageUrl}
-        alt={image.caption || 'Trail image'}
-        className="w-full h-48 object-cover"
-        fallbackImage={DEFAULT_TRAIL_IMAGE}
-      />
+    <div className="relative group rounded-lg overflow-hidden border border-greentrail-100 dark:border-greentrail-800 shadow-sm">
+      <div className="h-48 bg-muted">
+        <LazyImage
+          src={imageUrl}
+          alt={image.caption || 'Trail image'}
+          className="w-full h-full"
+          fallbackImage={DEFAULT_TRAIL_IMAGE}
+          objectFit="cover"
+        />
+      </div>
       
       {image.is_primary && (
-        <Badge className="absolute top-2 left-2 bg-greentrail-600">
+        <Badge className="absolute top-2 left-2 bg-greentrail-600 text-white">
           <StarIcon className="h-3 w-3 mr-1" /> Primary
         </Badge>
       )}
       
       {image.caption && (
-        <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white p-2">
+        <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white p-2 truncate">
           {image.caption}
         </div>
       )}
@@ -127,7 +134,7 @@ const ImageGalleryItem: React.FC<ImageGalleryItemProps> = ({
                       <AlertDialogDescription>
                         Are you sure you want to delete this image? This action cannot be undone.
                         {image.is_primary && (
-                          <p className="font-semibold mt-2">
+                          <p className="font-semibold mt-2 text-destructive">
                             Warning: This is the primary image for this trail.
                           </p>
                         )}

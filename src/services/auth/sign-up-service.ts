@@ -112,10 +112,11 @@ export const SignUpService = {
     try {
       console.log('Creating demo test account...');
       
-      // Generate a unique demo email that's more reliable
+      // Generate a unique demo email that's compatible with Supabase auth requirements
       const timestamp = Date.now();
-      const randomString = Math.random().toString(36).substring(2, 10); // Longer random string
-      const demoEmail = `demo_${randomString}_${timestamp}@greentrails.demo`;
+      const randomString = Math.random().toString(36).substring(2, 8);
+      // Use a valid email domain that will pass validation
+      const demoEmail = `demo_${randomString}_${timestamp}@example.com`;
       
       // Stronger password for demo accounts
       const demoPassword = `Demo${randomString.substring(0, 4)}!`;

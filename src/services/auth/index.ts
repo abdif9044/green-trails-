@@ -17,7 +17,7 @@ import { SignOutService } from './sign-out-service';
 import { SignUpService } from './sign-up-service';
 import { PasswordService } from './password-service';
 import { AgeVerificationService } from './age-verification-service';
-import { AuthVerificationService as AVerificationService } from './auth-verification-service';
+import { AgeVerificationService as AVerificationService } from './auth-verification-service';
 import { DemoAccountService } from './demo-account-service';
 
 export const AuthService = {

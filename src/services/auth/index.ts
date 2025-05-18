@@ -17,6 +17,7 @@ import { SignOutService } from './sign-out-service';
 import { SignUpService } from './sign-up-service';
 import { PasswordService } from './password-service';
 import { AgeVerificationService } from './age-verification-service';
+import { AuthVerificationService as AVerificationService } from './auth-verification-service';
 import { DemoAccountService } from './demo-account-service';
 
 export const AuthService = {
@@ -25,8 +26,9 @@ export const AuthService = {
   signOut: SignOutService.signOut,
   resetPassword: PasswordService.resetPassword,
   updatePassword: PasswordService.updatePassword,
+  verifyAge: AgeVerificationService.verifyAge,
   verifyUserAge: AgeVerificationService.verifyUserAge,
-  verifyAuthToken: AuthVerificationService.verifyAuthToken,
+  verifyAuthToken: AVerificationService.verifyAge, // Using the age verification function from auth-verification-service
   createDemoAccount: DemoAccountService.createDemoAccount
 };
 

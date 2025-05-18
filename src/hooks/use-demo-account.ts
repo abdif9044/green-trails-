@@ -3,12 +3,7 @@ import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
-import { SignUpService } from '@/services/auth/sign-up-service';
-
-export interface DemoCredentials {
-  email: string;
-  password: string;
-}
+import { DemoAccountService, DemoAccountCredentials } from '@/services/auth/demo-account-service';
 
 // Storage keys for demo credentials
 const STORAGE_KEY_EMAIL = 'greentrails.demo.email';
@@ -18,7 +13,7 @@ const STORAGE_KEY_CREATED = 'greentrails.demo.created';
 export function useDemoAccount() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [demoCredentials, setDemoCredentials] = useState<DemoCredentials | null>(null);
+  const [demoCredentials, setDemoCredentials] = useState<DemoAccountCredentials | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
   const { signIn, user } = useAuth();
@@ -93,7 +88,7 @@ export function useDemoAccount() {
     
     try {
       console.log('Attempting to create demo account...');
-      const result = await SignUpService.createDemoAccount();
+      const result = await DemoAccountService.createDemoAccount();
       console.log('Demo account creation result:', result);
       
       if (result.success && result.credentials) {

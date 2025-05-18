@@ -13,14 +13,21 @@ interface MapTrailPathsProps {
 const MapTrailPaths: React.FC<MapTrailPathsProps> = ({ trails, map, onTrailSelect }) => {
   return (
     <>
-      {trails.map(trail => (
-        <TrailPathLayer
-          key={trail.id}
-          trail={trail}
-          map={map}
-          onClick={() => onTrailSelect?.(trail.id)}
-        />
-      ))}
+      {trails.map(trail => {
+        // Skip trails without geojson data
+        if (!trail.geojson) {
+          return null;
+        }
+        
+        return (
+          <TrailPathLayer
+            key={trail.id}
+            trail={trail}
+            map={map}
+            onClick={() => onTrailSelect?.(trail.id)}
+          />
+        );
+      })}
     </>
   );
 };

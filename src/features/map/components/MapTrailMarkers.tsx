@@ -19,7 +19,7 @@ const MapTrailMarkers: React.FC<MapTrailMarkersProps> = ({ trails, map, onTrailS
     <>
       {trails.map(trail => {
         // Skip trails without valid coordinates
-        if (!trail.latitude || !trail.longitude) {
+        if (!trail.coordinates) {
           return null;
         }
         

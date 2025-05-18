@@ -13,14 +13,21 @@ interface MapTrailMarkersProps {
 const MapTrailMarkers: React.FC<MapTrailMarkersProps> = ({ trails, map, onTrailSelect }) => {
   return (
     <>
-      {trails.map(trail => (
-        <MapMarker
-          key={trail.id}
-          trail={trail}
-          map={map}
-          onSelect={onTrailSelect}
-        />
-      ))}
+      {trails.map(trail => {
+        // Skip trails without valid coordinates
+        if (!trail.coordinates) {
+          return null;
+        }
+        
+        return (
+          <MapMarker
+            key={trail.id}
+            trail={trail}
+            map={map}
+            onSelect={onTrailSelect}
+          />
+        );
+      })}
     </>
   );
 };

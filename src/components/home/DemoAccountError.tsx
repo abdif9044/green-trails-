@@ -7,10 +7,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 interface DemoAccountErrorProps {
   error: string;
+  onClose?: () => void;
   onDismiss?: () => void;
 }
 
-export function DemoAccountError({ error, onDismiss }: DemoAccountErrorProps) {
+export function DemoAccountError({ error, onClose, onDismiss = onClose }: DemoAccountErrorProps) {
   if (!error) return null;
   
   return (

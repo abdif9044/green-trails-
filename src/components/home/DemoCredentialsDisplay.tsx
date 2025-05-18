@@ -1,15 +1,16 @@
-
 import React, { useState } from 'react';
 import { Check, Copy, Eye, EyeOff } from 'lucide-react';
-import { DemoCredentials } from '@/hooks/use-demo-account';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
+import { DemoCredentials } from '@/utils/demo-account-storage';
 
 interface DemoCredentialsDisplayProps {
   credentials: DemoCredentials;
+  onSignIn?: () => void;
+  loading?: boolean;
 }
 
-export function DemoCredentialsDisplay({ credentials }: DemoCredentialsDisplayProps) {
+export function DemoCredentialsDisplay({ credentials, onSignIn, loading }: DemoCredentialsDisplayProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
   

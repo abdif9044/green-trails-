@@ -2,8 +2,8 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { useDemoAccount } from '@/hooks/use-demo-account';
-import DemoCredentialsDisplay from './DemoCredentialsDisplay';
-import DemoAccountError from './DemoAccountError';
+import { DemoCredentialsDisplay } from './DemoCredentialsDisplay';
+import { DemoAccountError } from './DemoAccountError';
 import { Loader2, UserPlus } from 'lucide-react';
 
 export const DemoAccountCreator = () => {

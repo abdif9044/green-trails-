@@ -5,7 +5,9 @@ export * from './sign-out-service';
 export * from './sign-up-service';
 export * from './password-service';
 export * from './age-verification-service';
-export * from './auth-verification-service';
+// Re-export without name collision
+import { AuthVerificationService } from './auth-verification-service';
+export { AuthVerificationService };
 export * from './demo-account-service';
 export * from './types';
 
@@ -15,7 +17,6 @@ import { SignOutService } from './sign-out-service';
 import { SignUpService } from './sign-up-service';
 import { PasswordService } from './password-service';
 import { AgeVerificationService } from './age-verification-service';
-import { AuthVerificationService } from './auth-verification-service';
 import { DemoAccountService } from './demo-account-service';
 
 export const AuthService = {

@@ -6,7 +6,7 @@ export * from './sign-up-service';
 export * from './password-service';
 export * from './age-verification-service';
 // Re-export without name collision
-import { AuthVerificationService } from './auth-verification-service';
+import { AgeVerificationService as AuthVerificationService } from './auth-verification-service';
 export { AuthVerificationService };
 export * from './demo-account-service';
 export * from './types';

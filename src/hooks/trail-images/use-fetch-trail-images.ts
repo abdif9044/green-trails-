@@ -13,7 +13,14 @@ export const useTrailImages = (trailId: string) => {
   return useQuery({
     queryKey: ['trail-images', trailId],
     queryFn: async () => {
+      if (!trailId) {
+        console.error('No trail ID provided to useTrailImages');
+        return [];
+      }
+      
       try {
+        console.log(`Fetching images for trail: ${trailId}`);
+        
         const { data, error } = await supabase
           .from('trail_images')
           .select('*')
@@ -23,6 +30,11 @@ export const useTrailImages = (trailId: string) => {
 
         if (error) {
           console.error('Error fetching trail images:', error);
+          toast({
+            title: "Failed to load images",
+            description: "There was an error loading trail images",
+            variant: "destructive",
+          });
           throw error;
         }
 
@@ -42,9 +54,15 @@ export const useTrailImages = (trailId: string) => {
               } as TrailImage;
             }
 
+            // Make sure we're using a valid storage bucket name
+            const bucketName = 'trail_images';
+            const imagePath = image.image_path.startsWith(`${bucketName}/`) 
+              ? image.image_path.substring(bucketName.length + 1)
+              : image.image_path;
+              
             const publicUrl = supabase.storage
-              .from('trail_images')
-              .getPublicUrl(image.image_path)
+              .from(bucketName)
+              .getPublicUrl(imagePath)
               .data.publicUrl;
             
             return {
@@ -60,6 +78,9 @@ export const useTrailImages = (trailId: string) => {
           }
         }) as TrailImage[];
 
+        // Log success for debugging
+        console.log(`Successfully processed ${processedImages.length} images for trail ${trailId}`);
+        
         return processedImages;
       } catch (error) {
         console.error('Failed to fetch trail images:', error);
@@ -72,6 +93,7 @@ export const useTrailImages = (trailId: string) => {
       }
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
-    retry: 2
+    retry: 2,
+    refetchOnWindowFocus: false,
   });
 };

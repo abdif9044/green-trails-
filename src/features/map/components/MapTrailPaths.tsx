@@ -11,16 +11,27 @@ interface MapTrailPathsProps {
 }
 
 const MapTrailPaths: React.FC<MapTrailPathsProps> = ({ trails, map, onTrailSelect }) => {
+  if (!trails || trails.length === 0) {
+    return null;
+  }
+
   return (
     <>
-      {trails.map(trail => (
-        <TrailPathLayer
-          key={trail.id}
-          trail={trail}
-          map={map}
-          onClick={() => onTrailSelect?.(trail.id)}
-        />
-      ))}
+      {trails.map(trail => {
+        // Skip trails without path data
+        if (!trail.path_data) {
+          return null;
+        }
+        
+        return (
+          <TrailPathLayer
+            key={trail.id}
+            trail={trail}
+            map={map}
+            onClick={() => onTrailSelect?.(trail.id)}
+          />
+        );
+      })}
     </>
   );
 };

@@ -118,8 +118,8 @@ export const SignUpService = {
       // Use a valid email domain that will pass validation
       const demoEmail = `demo_${randomString}_${timestamp}@example.com`;
       
-      // Stronger password for demo accounts
-      const demoPassword = `Demo${randomString.substring(0, 4)}!`;
+      // Stronger password for demo accounts with better randomization
+      const demoPassword = `Demo${randomString}${Math.floor(Math.random() * 1000)}!`;
       
       // Create a birthdate that makes the user over 21 (requirement for GreenTrails)
       const birthDate = new Date();
@@ -141,7 +141,7 @@ export const SignUpService = {
             favorite_trails: [],
             last_login: new Date().toISOString()
           },
-          emailRedirectTo: `${window.location.origin}/`
+          // Remove emailRedirectTo to avoid email verification issues with demo accounts
         }
       });
       

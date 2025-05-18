@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
@@ -10,16 +10,83 @@ export interface DemoCredentials {
   password: string;
 }
 
+// Storage keys for demo credentials
+const STORAGE_KEY_EMAIL = 'greentrails.demo.email';
+const STORAGE_KEY_PASSWORD = 'greentrails.demo.password';
+const STORAGE_KEY_CREATED = 'greentrails.demo.created';
+
 export function useDemoAccount() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [demoCredentials, setDemoCredentials] = useState<DemoCredentials | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { signIn } = useAuth();
+  const { signIn, user } = useAuth();
+
+  // Load saved credentials on component mount
+  useEffect(() => {
+    const loadSavedCredentials = () => {
+      try {
+        const email = sessionStorage.getItem(STORAGE_KEY_EMAIL);
+        const password = sessionStorage.getItem(STORAGE_KEY_PASSWORD);
+        const createdTime = sessionStorage.getItem(STORAGE_KEY_CREATED);
+      
+        // If we have all the required data and it's not too old (24 hours)
+        if (email && password && createdTime) {
+          const created = parseInt(createdTime);
+          const now = Date.now();
+          const dayInMs = 24 * 60 * 60 * 1000;
+          
+          // Only use credentials if they're less than 24 hours old
+          if (now - created < dayInMs) {
+            setDemoCredentials({ email, password });
+            return;
+          } else {
+            // Credentials too old, clear them
+            clearStoredCredentials();
+          }
+        }
+      } catch (err) {
+        console.error("Error loading saved demo credentials:", err);
+        clearStoredCredentials();
+      }
+    };
+    
+    loadSavedCredentials();
+  }, []);
+
+  // Clear stored credentials helper
+  const clearStoredCredentials = () => {
+    try {
+      sessionStorage.removeItem(STORAGE_KEY_EMAIL);
+      sessionStorage.removeItem(STORAGE_KEY_PASSWORD);
+      sessionStorage.removeItem(STORAGE_KEY_CREATED);
+    } catch (err) {
+      console.error("Error clearing demo credentials:", err);
+    }
+  };
+
+  // Store credentials helper
+  const storeCredentials = (email: string, password: string) => {
+    try {
+      sessionStorage.setItem(STORAGE_KEY_EMAIL, email);
+      sessionStorage.setItem(STORAGE_KEY_PASSWORD, password);
+      sessionStorage.setItem(STORAGE_KEY_CREATED, Date.now().toString());
+    } catch (err) {
+      console.error("Error storing demo credentials:", err);
+    }
+  };
 
   const createDemoAccount = async () => {
     if (loading) return; // Prevent multiple calls
+    if (user) {
+      toast({
+        title: "Already signed in",
+        description: "You're already signed in to an account. Please sign out first to create a demo account.",
+        variant: "default",
+      });
+      return;
+    }
     
     setLoading(true);
     setError(null);
@@ -31,15 +98,13 @@ export function useDemoAccount() {
       
       if (result.success && result.credentials) {
         setDemoCredentials(result.credentials);
+        storeCredentials(result.credentials.email, result.credentials.password);
+        
         toast({
           title: "Demo account created!",
           description: `You can now explore GreenTrails as ${result.credentials.email}`,
           variant: "default",
         });
-        
-        // Store credentials in session storage temporarily for persistence
-        sessionStorage.setItem('greentrails.demo.email', result.credentials.email);
-        sessionStorage.setItem('greentrails.demo.password', result.credentials.password);
         
         // If the auto-login has already happened, redirect
         if (!result.message.includes('auto-login failed')) {
@@ -71,27 +136,23 @@ export function useDemoAccount() {
   };
   
   const signInWithDemoAccount = async () => {
-    if (!demoCredentials) {
-      // Try to restore from session storage
-      const email = sessionStorage.getItem('greentrails.demo.email');
-      const password = sessionStorage.getItem('greentrails.demo.password');
-      
-      if (email && password) {
-        setDemoCredentials({ email, password });
-      } else {
-        setError('No demo credentials available');
-        return;
-      }
+    const credentials = demoCredentials || {
+      email: sessionStorage.getItem(STORAGE_KEY_EMAIL) || '',
+      password: sessionStorage.getItem(STORAGE_KEY_PASSWORD) || ''
+    };
+    
+    if (!credentials.email || !credentials.password) {
+      setError('No demo credentials available');
+      toast({
+        title: "No demo credentials",
+        description: "Cannot find demo account credentials. Please create a new demo account.",
+        variant: "destructive",
+      });
+      return;
     }
     
     setLoading(true);
     setError(null);
-    
-    // Use local variable to ensure we have the credentials even if they came from session storage
-    const credentials = demoCredentials || {
-      email: sessionStorage.getItem('greentrails.demo.email') || '',
-      password: sessionStorage.getItem('greentrails.demo.password') || ''
-    };
     
     try {
       console.log(`Attempting to sign in with demo account: ${credentials.email}`);
@@ -106,6 +167,10 @@ export function useDemoAccount() {
         });
         navigate('/discover', { replace: true });
       } else {
+        // If sign-in failed, clear stored credentials as they may be invalid
+        clearStoredCredentials();
+        setDemoCredentials(null);
+        
         setError(result.message || 'Failed to sign in with demo account');
         toast({
           title: "Sign in failed",
@@ -131,16 +196,6 @@ export function useDemoAccount() {
   const clearError = () => {
     setError(null);
   };
-  
-  // Check for stored demo credentials on initialization
-  useState(() => {
-    const email = sessionStorage.getItem('greentrails.demo.email');
-    const password = sessionStorage.getItem('greentrails.demo.password');
-    
-    if (email && password) {
-      setDemoCredentials({ email, password });
-    }
-  });
 
   return {
     loading,

@@ -11,16 +11,27 @@ interface MapTrailMarkersProps {
 }
 
 const MapTrailMarkers: React.FC<MapTrailMarkersProps> = ({ trails, map, onTrailSelect }) => {
+  if (!trails || trails.length === 0) {
+    return null;
+  }
+
   return (
     <>
-      {trails.map(trail => (
-        <MapMarker
-          key={trail.id}
-          trail={trail}
-          map={map}
-          onSelect={onTrailSelect}
-        />
-      ))}
+      {trails.map(trail => {
+        // Skip trails without valid coordinates
+        if (!trail.latitude || !trail.longitude) {
+          return null;
+        }
+        
+        return (
+          <MapMarker
+            key={trail.id}
+            trail={trail}
+            map={map}
+            onSelect={onTrailSelect}
+          />
+        );
+      })}
     </>
   );
 };

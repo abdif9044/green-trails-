@@ -30,14 +30,14 @@ const Index = () => {
 
         {/* Demo Account Section - Only show if user is not logged in */}
         {!user && (
-          <section className="py-12 bg-greentrail-50 dark:bg-greentrail-900/30">
+          <section className="py-12 bg-gradient-to-r from-greentrail-50 to-green-50 dark:from-greentrail-900/30 dark:to-green-900/30 border-y border-greentrail-100 dark:border-greentrail-800">
             <div className="container mx-auto px-4">
-              <div className="text-center mb-10">
+              <div className="text-center mb-8">
                 <h2 className="text-2xl md:text-3xl font-bold text-greentrail-800 dark:text-greentrail-200 mb-4">
-                  Try Before You Sign Up
+                  Try GreenTrails Instantly
                 </h2>
                 <p className="max-w-2xl mx-auto text-greentrail-600 dark:text-greentrail-400">
-                  Experience GreenTrails without creating an account. Our one-click demo gives you full access to explore all features.
+                  Experience all features with a pre-loaded demo account. No email verification required!
                 </p>
               </div>
               <DemoAccountCreator />

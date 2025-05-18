@@ -32,6 +32,7 @@ export const LazyImage: React.FC<LazyImageProps> = ({
   const [isInView, setIsInView] = useState(false);
   const [hasError, setHasError] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
+  const observerRef = useRef<IntersectionObserver | null>(null);
 
   // Reset states when src changes
   useEffect(() => {
@@ -41,27 +42,36 @@ export const LazyImage: React.FC<LazyImageProps> = ({
 
   // Set up the intersection observer
   useEffect(() => {
-    const observer = new IntersectionObserver(
+    // Clean up previous observer if it exists
+    if (observerRef.current && imgRef.current) {
+      observerRef.current.unobserve(imgRef.current);
+    }
+    
+    observerRef.current = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             setIsInView(true);
-            observer.unobserve(entry.target);
+            if (observerRef.current) {
+              observerRef.current.unobserve(entry.target);
+            }
           }
         });
       },
       {
         rootMargin: "200px", // Increased for better prefetching
+        threshold: 0.01,
       }
     );
 
-    if (imgRef.current) {
-      observer.observe(imgRef.current);
+    if (imgRef.current && observerRef.current) {
+      observerRef.current.observe(imgRef.current);
     }
 
     return () => {
-      if (imgRef.current) {
-        observer.unobserve(imgRef.current);
+      if (observerRef.current && imgRef.current) {
+        observerRef.current.unobserve(imgRef.current);
+        observerRef.current.disconnect();
       }
     };
   }, []);

@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
-import { Check, Copy, Eye, EyeOff } from 'lucide-react';
+
+import React, { useState, useEffect } from 'react';
+import { Check, Copy, Eye, EyeOff, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { DemoCredentials } from '@/utils/demo-account-storage';
+import { Loader2 } from 'lucide-react';
 
 interface DemoCredentialsDisplayProps {
   credentials: DemoCredentials;
-  onSignIn?: () => void;
+  onSignIn?: (credentials?: DemoCredentials) => void;
   loading?: boolean;
 }
 
@@ -84,6 +86,28 @@ export function DemoCredentialsDisplay({ credentials, onSignIn, loading }: DemoC
         <p className="text-xs text-muted-foreground mt-2 italic">
           Note: Demo accounts have limited editing capabilities
         </p>
+        
+        {onSignIn && (
+          <div className="mt-4 pt-2 border-t border-greentrail-100 dark:border-greentrail-800">
+            <Button 
+              className="w-full bg-greentrail-600 hover:bg-greentrail-700"
+              onClick={() => onSignIn(credentials)}
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Signing In...
+                </>
+              ) : (
+                <>
+                  <LogIn className="mr-2 h-4 w-4" />
+                  Sign In with Demo Account
+                </>
+              )}
+            </Button>
+          </div>
+        )}
       </div>
     </motion.div>
   );

@@ -2,6 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { DatabaseSetupService } from '@/services/database/setup-service';
 import { AuthResult } from './types';
+import { validateEmail } from '@/utils/form-validators';
 
 /**
  * Service for handling demo account creation and management
@@ -20,11 +21,20 @@ export const DemoAccountService = {
     try {
       console.log('Creating demo test account...');
       
-      // Generate a unique demo email that's compatible with Supabase auth requirements
-      const timestamp = Date.now();
+      // Generate a unique demo email using a shorter format
       const randomString = Math.random().toString(36).substring(2, 8);
+      const shorterTimestamp = Date.now().toString().slice(-6); // Just use last 6 digits of timestamp
       // Use a valid email domain that will pass validation
-      const demoEmail = `demo_${randomString}_${timestamp}@example.com`;
+      const demoEmail = `demo_${randomString}_${shorterTimestamp}@example.com`;
+      
+      // Validate email format before proceeding
+      if (!validateEmail(demoEmail)) {
+        console.error('Generated invalid email format:', demoEmail);
+        return {
+          success: false,
+          message: 'Failed to generate a valid email format for demo account'
+        };
+      }
       
       // Stronger password for demo accounts with better randomization
       const demoPassword = `Demo${randomString}${Math.floor(Math.random() * 1000)}!`;

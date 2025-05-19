@@ -23,7 +23,17 @@ export interface TrailCardProps {
   isAgeRestricted?: boolean;
 }
 
-const DEFAULT_TRAIL_IMAGE = "https://images.unsplash.com/photo-1469474968028-56623f02e42e";
+// Default trail images by category for better fallbacks
+const TRAIL_FALLBACK_IMAGES = {
+  forest: "https://images.unsplash.com/photo-1448375240586-882707db888b?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
+  mountain: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
+  urban: "https://images.unsplash.com/photo-1507992781348-310259076fe0?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
+  desert: "https://images.unsplash.com/photo-1587223075055-82e9a937ddff?ixlib=rb-1.2.1&auto=format&fit=crop&w=1353&q=80",
+  river: "https://images.unsplash.com/photo-1482938289607-e9573fc25ebb?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
+  park: "https://images.unsplash.com/photo-1568393691622-c7ba131d63b4?ixlib=rb-1.2.1&auto=format&fit=crop&w=1489&q=80",
+  lake: "https://images.unsplash.com/photo-1544714042-5dc4f6a3c4ce?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
+  default: "https://images.unsplash.com/photo-1469474968028-56623f02e42e"
+};
 
 const TrailCard = ({
   id,
@@ -38,8 +48,26 @@ const TrailCard = ({
   strainTags = [],
   isAgeRestricted = false
 }: TrailCardProps) => {
-  // Ensure we have a valid image URL or use default
-  const safeImageUrl = imageUrl || DEFAULT_TRAIL_IMAGE;
+  // Choose a more appropriate fallback image based on the trail tags
+  const getFallbackImage = () => {
+    if (!tags || tags.length === 0) return TRAIL_FALLBACK_IMAGES.default;
+    
+    // Check tags for relevant categories
+    for (const tag of tags) {
+      const tagLower = typeof tag === 'string' ? tag.toLowerCase() : '';
+      if (tagLower in TRAIL_FALLBACK_IMAGES) {
+        return TRAIL_FALLBACK_IMAGES[tagLower as keyof typeof TRAIL_FALLBACK_IMAGES];
+      }
+    }
+    
+    // If no matching tag is found, return default
+    return TRAIL_FALLBACK_IMAGES.default;
+  };
+  
+  // Ensure we have a valid image URL or use an appropriate fallback
+  const safeImageUrl = (imageUrl && !imageUrl.includes('lovable-uploads')) 
+    ? imageUrl 
+    : getFallbackImage();
   
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-all duration-200 trail-card-shadow border-greentrail-200 dark:border-greentrail-800">
@@ -49,7 +77,7 @@ const TrailCard = ({
             src={safeImageUrl} 
             alt={name} 
             className="w-full h-full transition-transform hover:scale-105 duration-500"
-            fallbackImage={DEFAULT_TRAIL_IMAGE}
+            fallbackImage={getFallbackImage()}
           />
           <div className="absolute top-2 right-2 flex flex-col gap-2">
             <TrailDifficultyBadge difficulty={difficulty} />

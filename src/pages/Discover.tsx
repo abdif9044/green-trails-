@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -12,6 +12,7 @@ import { TrailFilters } from '@/types/trails';
 import SEOProvider from "@/components/SEOProvider";
 import { toast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { supabase } from '@/integrations/supabase/client';
 
 const Discover = () => {
   // Move hook calls to the top of the component function
@@ -27,6 +28,42 @@ const Discover = () => {
     searchParams.get('paths') === 'true'
   );
   const [trailCount, setTrailCount] = useState<number>(0);
+  const [totalTrailsInSystem, setTotalTrailsInSystem] = useState<number>(0);
+
+  // Fetch total count of trails in the system
+  useEffect(() => {
+    const fetchTotalTrailCount = async () => {
+      try {
+        // Try to get total count from Supabase
+        const { count, error } = await supabase
+          .from('trails')
+          .select('*', { count: 'exact', head: true });
+        
+        if (error) {
+          console.error('Error fetching total trail count:', error);
+          throw error;
+        }
+        
+        // If we successfully get a count from the database, use it
+        if (count !== null) {
+          setTotalTrailsInSystem(count);
+        } else {
+          // Fallback to counting sample trails
+          const { createSampleTrails } = await import('@/features/trails/utils/sample-trail-data');
+          const sampleTrails = createSampleTrails();
+          setTotalTrailsInSystem(sampleTrails.length);
+        }
+      } catch (error) {
+        console.error('Failed to get total trail count:', error);
+        // Fallback to sample data
+        const { createSampleTrails } = await import('@/features/trails/utils/sample-trail-data');
+        const sampleTrails = createSampleTrails();
+        setTotalTrailsInSystem(sampleTrails.length);
+      }
+    };
+    
+    fetchTotalTrailCount();
+  }, []);
 
   // Handle filters from URL params or set defaults
   const initialFilters: TrailFilters = {
@@ -100,7 +137,7 @@ const Discover = () => {
     setTrailCount(count);
   };
 
-  const handleTrailSelect = useCallback((trailId: string) => {
+  const handleTrailSelect = React.useCallback((trailId: string) => {
     navigate(`/trail/${trailId}`);
   }, [navigate]);
 
@@ -115,7 +152,7 @@ const Discover = () => {
       
       <main className="flex-grow bg-slate-50 dark:bg-greentrail-950">
         <div className="container mx-auto px-4 py-8">
-          <DiscoverHeader trailCount={trailCount} />
+          <DiscoverHeader trailCount={trailCount} totalTrails={totalTrailsInSystem} />
           
           <TrailStatsOverview />
           

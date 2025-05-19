@@ -1,3 +1,4 @@
+
 import { Heart, MapPin } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
@@ -22,19 +23,19 @@ export interface TrailCardProps {
   isAgeRestricted?: boolean;
 }
 
-// Default trail images by category for better fallbacks
+// High-quality curated trail images by category
 const TRAIL_FALLBACK_IMAGES = {
-  forest: "https://images.unsplash.com/photo-1448375240586-882707db888b?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
-  mountain: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
-  urban: "https://images.unsplash.com/photo-1507992781348-310259076fe0?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
-  desert: "https://images.unsplash.com/photo-1587223075055-82e9a937ddff?ixlib=rb-1.2.1&auto=format&fit=crop&w=1353&q=80",
-  river: "https://images.unsplash.com/photo-1482938289607-e9573fc25ebb?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
-  park: "https://images.unsplash.com/photo-1568393691622-c7ba131d63b4?ixlib=rb-1.2.1&auto=format&fit=crop&w=1489&q=80",
-  lake: "https://images.unsplash.com/photo-1544714042-5dc4f6a3c4ce?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
-  default: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
-  hiking: "https://images.unsplash.com/photo-1551632811-561732d1e306?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
-  waterfall: "https://images.unsplash.com/photo-1546587348-d12660c30c50?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
-  valley: "https://images.unsplash.com/photo-1483728642387-6c3bdd6c93e5?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80"
+  forest: "https://images.unsplash.com/photo-1448375240586-882707db888b",
+  mountain: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b",
+  urban: "https://images.unsplash.com/photo-1507992781348-310259076fe0",
+  desert: "https://images.unsplash.com/photo-1587223075055-82e9a937ddff",
+  river: "https://images.unsplash.com/photo-1482938289607-e9573fc25ebb",
+  park: "https://images.unsplash.com/photo-1568393691622-c7ba131d63b4",
+  lake: "https://images.unsplash.com/photo-1544714042-5dc4f6a3c4ce",
+  default: "https://images.unsplash.com/photo-1469474968028-56623f02e42e",
+  hiking: "https://images.unsplash.com/photo-1551632811-561732d1e306",
+  waterfall: "https://images.unsplash.com/photo-1546587348-d12660c30c50",
+  valley: "https://images.unsplash.com/photo-1483728642387-6c3bdd6c93e5"
 };
 
 const TrailCard = ({
@@ -66,34 +67,16 @@ const TrailCard = ({
     return TRAIL_FALLBACK_IMAGES.default;
   };
   
-  // Better image validation to ensure we have a valid image URL
-  const isValidImageUrl = (url: string): boolean => {
-    if (!url) return false;
-    
-    // Filter out problematic URLs
-    const invalidPatterns = [
-      'screen', 'phone', 'mobile', 'device', 'screenshot',
-      'data:image', 'blob:null', 'localhost', '127.0.0.1',
-      'lovable-uploads'  // Filter out uploads that might be problematic
-    ];
-    
-    return !invalidPatterns.some(pattern => url.toLowerCase().includes(pattern));
-  };
-  
-  // Ensure we have a valid image URL or use an appropriate fallback
-  const safeImageUrl = (imageUrl && isValidImageUrl(imageUrl))
-    ? imageUrl 
-    : getFallbackImage();
-  
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-all duration-200 trail-card-shadow border-greentrail-200 dark:border-greentrail-800">
       <Link to={`/trail/${id}`}>
         <div className="relative h-48 overflow-hidden">
           <LazyImage 
-            src={safeImageUrl} 
-            alt={name} 
+            src={imageUrl} 
+            alt={`${name} trail in ${location}`}
             className="w-full h-full object-cover transition-transform hover:scale-105 duration-500"
             fallbackImage={getFallbackImage()}
+            objectFit="cover"
           />
           <div className="absolute top-2 right-2 flex flex-col gap-2">
             <TrailDifficultyBadge difficulty={difficulty} />

@@ -15,9 +15,16 @@ interface LazyImageProps {
   objectFit?: "cover" | "contain" | "fill" | "none" | "scale-down";
 }
 
-// Default images for better fallbacks
-const DEFAULT_TRAIL_IMAGE = "https://images.unsplash.com/photo-1469474968028-56623f02e42e";
-const DEFAULT_NATURE_FALLBACK = "https://images.unsplash.com/photo-1441974231531-c6227db76b6e";
+// Curated nature images for better fallbacks
+const NATURE_IMAGES = {
+  forest: "https://images.unsplash.com/photo-1448375240586-882707db888b",
+  mountain: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b",
+  lake: "https://images.unsplash.com/photo-1544714042-5dc4f6a3c4ce",
+  trail: "https://images.unsplash.com/photo-1551632811-561732d1e306",
+  waterfall: "https://images.unsplash.com/photo-1546587348-d12660c30c50",
+  valley: "https://images.unsplash.com/photo-1483728642387-6c3bdd6c93e5",
+  default: "https://images.unsplash.com/photo-1469474968028-56623f02e42e"
+};
 
 export const LazyImage: React.FC<LazyImageProps> = ({
   src,
@@ -27,7 +34,7 @@ export const LazyImage: React.FC<LazyImageProps> = ({
   height,
   placeholderSrc = "/placeholder.svg",
   onLoad,
-  fallbackImage = DEFAULT_TRAIL_IMAGE,
+  fallbackImage = NATURE_IMAGES.default,
   objectFit = "cover",
 }) => {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -118,57 +125,76 @@ export const LazyImage: React.FC<LazyImageProps> = ({
     checkWebPSupport();
   }, []);
 
-  // Check if source is a valid URL or path and not a device screenshot
+  // Enhanced source validation - completely prevents phone screenshots or problematic images
   const isValidSource = (source: string): boolean => {
     if (!source) return false;
     
-    // Detect potential phone screenshots or problematic images
+    // Stringent checks for problematic image sources
     const invalidPatterns = [
-      'screen', 'phone', 'mobile', 'device', 'screenshot',
-      'data:image', 'blob:null', 'localhost', '127.0.0.1',
-      'lovable-uploads'  // Added to filter out uploads that might be problematic
+      'screen', 'phone', 'mobile', 'device', 'iphone', 'android', 'screenshot',
+      'data:image', 'blob:', 'localhost', '127.0.0.1', 'http://localhost',
+      'lovable-uploads', 'base64', 'test', 'demo', 'fake'
     ];
     
-    const hasInvalidPattern = invalidPatterns.some(pattern => 
-      source.toLowerCase().includes(pattern)
-    );
-    
-    if (hasInvalidPattern) return false;
-    
-    // Try to create a URL - will throw if invalid
-    try {
-      new URL(source, window.location.origin);
-      
-      // Verify it's likely a nature/trail image by checking URL patterns
-      const likelyNatureImage = [
-        'unsplash', 'trail', 'nature', 'outdoor', 'hike', 
-        'mountain', 'forest', 'path', 'landscape'
-      ].some(term => source.toLowerCase().includes(term));
-      
-      return likelyNatureImage;
-    } catch {
-      // If URL creation fails, check if it's a valid relative path
-      return source.includes('/') && !hasInvalidPattern;
+    // If the source contains any of these patterns, reject it
+    for (const pattern of invalidPatterns) {
+      if (source.toLowerCase().includes(pattern)) {
+        return false;
+      }
     }
+    
+    // Only accept sources from trusted domains
+    const trustedDomains = [
+      'unsplash.com', 'images.unsplash.com',
+      'pexels.com', 'images.pexels.com',
+      'githubusercontent.com',
+      'greentrails.global', // Our app domain
+      'supabase.co', 'supabase.in'
+    ];
+    
+    try {
+      const url = new URL(source, window.location.origin);
+      return trustedDomains.some(domain => url.hostname.includes(domain));
+    } catch {
+      // If URL creation fails, reject the source
+      return false;
+    }
+  };
+
+  // Get a nature-themed fallback based on alt text
+  const getNatureFallback = () => {
+    if (!alt) return fallbackImage || NATURE_IMAGES.default;
+    
+    const altLower = alt.toLowerCase();
+    
+    for (const [key, value] of Object.entries(NATURE_IMAGES)) {
+      if (altLower.includes(key)) {
+        return value;
+      }
+    }
+    
+    return fallbackImage || NATURE_IMAGES.default;
   };
 
   // Get actual image source to display
   const getImageSource = () => {
-    // If we've already detected an error, use fallback
-    if (hasError) return fallbackImage || DEFAULT_NATURE_FALLBACK;
-    
     // If not in view yet, use placeholder
     if (!isInView) return placeholderSrc;
     
-    // Validate source
-    return isValidSource(src) ? src : (fallbackImage || DEFAULT_NATURE_FALLBACK);
+    // If we've already detected an error or the source is invalid, use fallback
+    if (hasError || !isValidSource(src)) {
+      return getNatureFallback();
+    }
+    
+    // Source is valid and we're in view
+    return src;
   };
 
   return (
     <div style={containerStyle} ref={imgRef}>
-      {!isLoaded && !hasError && <Skeleton className="absolute inset-0" />}
+      {!isLoaded && <Skeleton className="absolute inset-0" />}
       
-      {hasError && !isLoaded && (
+      {(hasError || !isValidSource(src)) && !isLoaded && (
         <div className="absolute inset-0 flex items-center justify-center bg-muted">
           <ImageIcon className="h-8 w-8 text-muted-foreground" />
         </div>
@@ -176,7 +202,7 @@ export const LazyImage: React.FC<LazyImageProps> = ({
       
       {isInView && (
         <picture>
-          {supportsWebP && !hasError && isValidSource(src) && (
+          {supportsWebP && isValidSource(src) && (
             <source 
               srcSet={src.replace(/\.(jpg|jpeg|png)$/, '.webp')} 
               type="image/webp" 

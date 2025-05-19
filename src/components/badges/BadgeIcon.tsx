@@ -12,7 +12,7 @@ import {
   Star,
   Leaf,
   BadgeCheck,
-  Hiking
+  Trophy
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -64,7 +64,7 @@ export const BadgeIcon: React.FC<BadgeIconProps> = ({
     case 'badge':
       return <BadgeCheck {...iconProps} />;
     case 'hiking':
-      return <Mountain {...iconProps} />;
+      return <Mountain {...iconProps} />; // Using Mountain instead of Hiking
     default:
       return <Award {...iconProps} />;
   }

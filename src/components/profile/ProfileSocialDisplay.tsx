@@ -1,71 +1,43 @@
 
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { ProfileWithSocial } from '@/types/profiles';
-import { Globe, Twitter, Instagram } from 'lucide-react';
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface ProfileSocialDisplayProps {
-  profile: ProfileWithSocial;
+  userId?: string;
 }
 
-const ProfileSocialDisplay: React.FC<ProfileSocialDisplayProps> = ({ profile }) => {
-  const { website_url, twitter_url, instagram_url } = profile;
-  
-  const hasSocialLinks = website_url || twitter_url || instagram_url;
-
-  if (!hasSocialLinks) {
-    return null;
+const ProfileSocialDisplay: React.FC<ProfileSocialDisplayProps> = ({ userId }) => {
+  if (!userId) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Social Activity</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-center text-muted-foreground">Sign in to see your social activity</p>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
-    <Card className="shadow-md border-greentrail-100 dark:border-greentrail-800">
-      <CardContent className="p-4">
-        <h3 className="text-base font-medium mb-3 text-greentrail-800 dark:text-greentrail-300">
-          Connect
-        </h3>
-        
-        <div className="flex flex-wrap gap-2">
-          {website_url && (
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700"
-              asChild
-            >
-              <a href={website_url} target="_blank" rel="noopener noreferrer" className="flex items-center">
-                <Globe className="h-4 w-4 mr-1" />
-                Website
-              </a>
-            </Button>
-          )}
-          
-          {twitter_url && (
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700"
-              asChild
-            >
-              <a href={twitter_url} target="_blank" rel="noopener noreferrer" className="flex items-center">
-                <Twitter className="h-4 w-4 mr-1" />
-                Twitter
-              </a>
-            </Button>
-          )}
-          
-          {instagram_url && (
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700"
-              asChild
-            >
-              <a href={instagram_url} target="_blank" rel="noopener noreferrer" className="flex items-center">
-                <Instagram className="h-4 w-4 mr-1" />
-                Instagram
-              </a>
-            </Button>
-          )}
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-lg">Social Activity</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          <p className="text-sm">Recent activity will appear here once you start engaging with the community.</p>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <p className="text-sm font-medium">Following</p>
+              <p className="text-2xl font-bold">0</p>
+            </div>
+            <div>
+              <p className="text-sm font-medium">Followers</p>
+              <p className="text-2xl font-bold">0</p>
+            </div>
+          </div>
         </div>
       </CardContent>
     </Card>

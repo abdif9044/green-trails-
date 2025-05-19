@@ -3,7 +3,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { Badge } from '@/types/badges';
 import { availableBadges } from '@/data/available-badges';
 import { useAuth } from '@/hooks/use-auth';
-import { supabase } from '@/integrations/supabase/client';
 import { useBadgeUnlockToast } from '@/components/badges/BadgeUnlockToast';
 
 export const useBadges = () => {
@@ -12,7 +11,7 @@ export const useBadges = () => {
   const [loading, setLoading] = useState(true);
   const { showBadgeUnlockToast } = useBadgeUnlockToast();
 
-  // Function to load badge progress from database
+  // Function to load badge progress
   const loadBadges = useCallback(async () => {
     if (!user) {
       setLoading(false);
@@ -21,29 +20,24 @@ export const useBadges = () => {
 
     setLoading(true);
     try {
-      // Fetch badge progress from Supabase
-      const { data, error } = await supabase
-        .from('badge_progress')
-        .select('*')
-        .eq('user_id', user.id);
-
-      if (error) {
-        throw error;
-      }
-
-      // Map the progress data to our badges
+      // TODO: In future, fetch badge progress from Supabase
+      // For now, we'll simulate some random progress
+      
+      // Simulate loading time
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      // Simulate some random badge progress
       const updatedBadges = availableBadges.map(badge => {
-        const userProgress = data?.find(p => p.badge_id === badge.id);
+        // Randomly unlock some badges for demo purposes
+        const randomUnlock = Math.random() > 0.7;
+        const randomProgress = Math.floor(Math.random() * (badge.maxProgress || 1));
         
-        if (userProgress) {
-          return {
-            ...badge,
-            progress: userProgress.progress,
-            unlocked: userProgress.unlocked,
-            unlockedAt: userProgress.unlocked_at ? new Date(userProgress.unlocked_at) : undefined
-          };
-        }
-        return badge;
+        return {
+          ...badge,
+          progress: randomProgress,
+          unlocked: randomUnlock || (badge.maxProgress ? randomProgress >= badge.maxProgress : false),
+          unlockedAt: randomUnlock ? new Date() : undefined
+        };
       });
 
       setBadges(updatedBadges);
@@ -68,22 +62,6 @@ export const useBadges = () => {
       const maxProgress = badgeToUpdate.maxProgress || 0;
       const shouldUnlock = progress >= maxProgress && !badgeToUpdate.unlocked;
       
-      // Update in Supabase
-      const { data, error } = await supabase
-        .from('badge_progress')
-        .upsert(
-          {
-            user_id: user.id,
-            badge_id: badgeId,
-            progress,
-            unlocked: shouldUnlock,
-            unlocked_at: shouldUnlock ? new Date().toISOString() : undefined
-          },
-          { onConflict: 'user_id,badge_id' }
-        );
-
-      if (error) throw error;
-
       // Update local state
       setBadges(prev => 
         prev.map(badge => 

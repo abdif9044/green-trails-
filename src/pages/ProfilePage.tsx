@@ -6,15 +6,15 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import SEOProvider from '@/components/SEOProvider';
 import ProfileHeader from '@/components/profile/ProfileHeader';
-import { ProfileSocialDisplay } from '@/components/profile/ProfileSocialDisplay';
+import ProfileSocialDisplay from '@/components/profile/ProfileSocialDisplay';
 import { ProfileBadges } from '@/components/profile/ProfileBadges';
 import { ProfileStatsCard } from '@/components/profile/ProfileStatsCard';
 import { useBadges } from '@/hooks/use-badges';
-import { Hiking, MapPin, Calendar, Award } from 'lucide-react';
+import { MapPin, Calendar, Award, Trophy } from 'lucide-react';
 
 const ProfilePage = () => {
-  const { user, profile, loading } = useAuth();
-  const { profile: userProfile, loading: loadingProfile } = useProfile(user?.id);
+  const { user } = useAuth();
+  const { data: userProfile, isLoading: loadingProfile } = useProfile(user?.id);
   const { badges, loading: loadingBadges } = useBadges();
   
   // Mock stats for demonstration
@@ -22,7 +22,7 @@ const ProfilePage = () => {
     { 
       value: '12', 
       label: 'Trails Hiked',
-      icon: <Hiking size={16} className="text-greentrail-600" />
+      icon: <Trophy size={16} className="text-greentrail-600" /> // Changed from Hiking to Trophy
     },
     { 
       value: '134', 
@@ -52,17 +52,18 @@ const ProfilePage = () => {
       <Navbar />
       
       <main className="flex-grow container mx-auto px-4 py-6 lg:py-8">
-        <ProfileHeader 
-          user={user} 
-          profile={userProfile} 
-          loading={loading || loadingProfile} 
-        />
+        {user && (
+          <ProfileHeader 
+            profile={userProfile} 
+            isLoading={loadingProfile} 
+          />
+        )}
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
           <div className="lg:col-span-2 space-y-6">
             <ProfileStatsCard stats={stats} loading={loadingBadges} />
             
-            <ProfileSocialDisplay userId={user?.id} />
+            {user && <ProfileSocialDisplay userId={user.id} />}
           </div>
           
           <div>

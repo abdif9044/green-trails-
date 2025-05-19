@@ -34,11 +34,21 @@ export const sendMessageToAssistant = async (
   userLocation?: UserLocation | null
 ): Promise<ChatMessage> => {
   try {
+    // Format chat history to include only necessary fields for the API
     const formattedHistory = chatHistory.map(msg => ({
       role: msg.role,
       content: msg.content
     }));
     
+    // Log the request for debugging purposes
+    console.log('Sending to assistant:', {
+      message,
+      historyLength: formattedHistory.length,
+      hasTrailContext: !!trailContext,
+      hasLocation: !!userLocation
+    });
+    
+    // Call the Supabase edge function for the assistant
     const { data, error } = await supabase.functions.invoke('roamie-assistant', {
       body: { 
         message,
@@ -49,8 +59,11 @@ export const sendMessageToAssistant = async (
     });
     
     if (error) {
+      console.error('Assistant API error:', error);
       throw new Error(`Failed to get assistant response: ${error.message}`);
     }
+    
+    console.log('Received assistant response:', data);
     
     return {
       id: crypto.randomUUID(),
@@ -67,5 +80,45 @@ export const sendMessageToAssistant = async (
     });
     
     throw error;
+  }
+};
+
+/**
+ * Checks if the OpenAI API key is configured
+ */
+export const checkAssistantAvailability = async (): Promise<boolean> => {
+  try {
+    const { data, error } = await supabase.functions.invoke('check-openai-key');
+    
+    if (error) {
+      console.error('Error checking assistant availability:', error);
+      return false;
+    }
+    
+    return data?.keyExists || false;
+  } catch (error) {
+    console.error('Error checking assistant availability:', error);
+    return false;
+  }
+};
+
+/**
+ * Saves a new OpenAI API key to the Supabase Edge Function environment
+ */
+export const saveOpenAIApiKey = async (apiKey: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase.functions.invoke('set-openai-key', {
+      body: { apiKey }
+    });
+    
+    if (error) {
+      console.error('Error saving API key:', error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error saving API key:', error);
+    return false;
   }
 };

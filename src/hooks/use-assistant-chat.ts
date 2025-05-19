@@ -1,15 +1,32 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useGeolocation } from '@/hooks/use-geolocation';
-import { sendMessageToAssistant, ChatMessage, TrailContext, UserLocation } from '@/services/assistant-service';
+import { 
+  sendMessageToAssistant, 
+  checkAssistantAvailability,
+  ChatMessage, 
+  TrailContext, 
+  UserLocation 
+} from '@/services/assistant-service';
 
 export const useAssistantChat = (initialTrailContext?: TrailContext | null) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isApiKeyConfigured, setIsApiKeyConfigured] = useState<boolean | null>(null);
   const [trailContext, setTrailContext] = useState<TrailContext | null>(initialTrailContext || null);
   const { user } = useAuth();
   const { location } = useGeolocation();
+  
+  // Check if OpenAI API key is configured
+  useEffect(() => {
+    const checkApiKey = async () => {
+      const isConfigured = await checkAssistantAvailability();
+      setIsApiKeyConfigured(isConfigured);
+    };
+    
+    checkApiKey();
+  }, []);
   
   // Function to send a message to the assistant
   const sendMessage = useCallback(async (content: string) => {
@@ -68,6 +85,7 @@ export const useAssistantChat = (initialTrailContext?: TrailContext | null) => {
   return {
     messages,
     isLoading,
+    isApiKeyConfigured,
     sendMessage,
     clearChat,
     trailContext,

@@ -49,3 +49,21 @@ export const clearMapboxTokenCache = (): void => {
   cachedToken = null;
   tokenExpiryTime = null;
 };
+
+/**
+ * Returns an appropriate color based on trail difficulty
+ */
+export const getTrailColor = (difficulty: string = 'moderate'): string => {
+  switch (difficulty.toLowerCase()) {
+    case 'easy':
+      return '#4ade80'; // green
+    case 'moderate':
+      return '#fbbf24'; // amber
+    case 'hard':
+      return '#f87171'; // red
+    case 'expert':
+      return '#8b5cf6'; // purple
+    default:
+      return '#60a5fa'; // blue
+  }
+};

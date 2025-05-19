@@ -14,10 +14,12 @@ import { toast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const Discover = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
+  // Move hook calls to the top of the component function
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const [searchParams, setSearchParams] = useSearchParams();
   
+  // Initialize state based on searchParams after the hook is called
   const [viewType, setViewType] = useState<'list' | 'map'>(
     searchParams.get('view') === 'map' ? 'map' : 'list'
   );

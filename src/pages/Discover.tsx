@@ -1,8 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
+import { Layout } from '@/components/layout/layout';
 import DiscoverHeader from '@/components/discover/DiscoverHeader';
 import DiscoverFilters from '@/components/discover/DiscoverFilters';
 import DiscoverTrailsList from '@/components/discover/DiscoverTrailsList';
@@ -142,13 +140,11 @@ const Discover = () => {
   }, [navigate]);
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <Layout>
       <SEOProvider 
         title="Discover Trails - GreenTrails"
         description="Explore and discover trails for hiking, biking, and outdoor adventures"
       />
-      
-      <Navbar />
       
       <main className="flex-grow bg-slate-50 dark:bg-greentrail-950">
         <div className="container mx-auto px-4 py-8">
@@ -194,9 +190,7 @@ const Discover = () => {
           </div>
         </div>
       </main>
-      
-      <Footer />
-    </div>
+    </Layout>
   );
 };
 

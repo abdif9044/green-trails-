@@ -2,7 +2,6 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from '@/providers/theme-provider';
-import { Layout } from '@/components/layout/layout';
 import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/providers/auth-provider';
 import { useAuth } from '@/hooks/use-auth';
@@ -17,7 +16,7 @@ const NotFound = lazy(() => import('@/pages/NotFound'));
 const AdminTrailImport = lazy(() => import('@/pages/AdminTrailImport'));
 const AutoImportPage = lazy(() => import('@/pages/AutoImportPage'));
 const AdminRedirect = lazy(() => import('@/pages/AdminRedirect'));
-const Badges = lazy(() => import('@/pages/Badges')); // Add this line for the new Badges page
+const Badges = lazy(() => import('@/pages/Badges')); 
 const Trail = lazy(() => import('@/pages/Trail'));
 const Social = lazy(() => import('@/pages/Social'));
 
@@ -101,12 +100,10 @@ function App() {
       disableTransitionOnChange
     >
       <AuthProvider>
-        <Layout>
-          <Suspense fallback={<LoadingFallback />}>
-            <AppRoutes />
-          </Suspense>
-          <Toaster />
-        </Layout>
+        <Suspense fallback={<LoadingFallback />}>
+          <AppRoutes />
+        </Suspense>
+        <Toaster />
       </AuthProvider>
     </ThemeProvider>
   );

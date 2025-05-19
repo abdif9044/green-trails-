@@ -5,12 +5,13 @@ import Footer from '@/components/Footer';
 
 interface LayoutProps {
   children: React.ReactNode;
+  hideNav?: boolean;
 }
 
-export const Layout: React.FC<LayoutProps> = ({ children }) => {
+export const Layout: React.FC<LayoutProps> = ({ children, hideNav = false }) => {
   return (
     <div className="min-h-screen flex flex-col">
-      <Navbar />
+      {!hideNav && <Navbar />}
       <main className="flex-grow">
         {children}
       </main>

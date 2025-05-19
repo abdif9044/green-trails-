@@ -120,9 +120,10 @@ export const sendMessageToAssistant = async (
     
     console.log('Received assistant response:', data);
     
-    const assistantResponse = {
+    // Fix #1: Ensure 'role' is explicitly typed as 'assistant' to match ChatMessage interface
+    const assistantResponse: ChatMessage = {
       id: crypto.randomUUID(),
-      role: 'assistant',
+      role: 'assistant', // Explicitly use 'assistant' literal instead of string
       content: data.message,
       timestamp: data.timestamp || new Date().toISOString()
     };
@@ -208,10 +209,11 @@ export const saveOpenAIApiKey = async (apiKey: string): Promise<boolean> => {
       return false;
     }
     
+    // Fix #3: Change "success" to "default" as success is not a valid variant
     toast({
       title: "API Key Saved",
       description: "Your OpenAI API key has been securely stored.",
-      variant: "success",
+      variant: "default", // Changed from "success" to "default" as it's one of the allowed variants
     });
     
     return true;

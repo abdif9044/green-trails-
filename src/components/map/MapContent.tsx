@@ -21,6 +21,8 @@ interface MapContentProps {
   className?: string;
   showParking?: boolean;
   showTrailPaths?: boolean;
+  showWeatherLayer?: boolean;
+  weatherLayerType?: 'temperature' | 'precipitation' | 'clouds' | 'wind';
   country?: string;
   stateProvince?: string;
   difficulty?: string;
@@ -33,7 +35,9 @@ const MapContent: React.FC<MapContentProps> = ({
   zoom = 10,
   className = 'h-[500px] w-full',
   showParking = true,
-  showTrailPaths = false
+  showTrailPaths = false,
+  showWeatherLayer = false,
+  weatherLayerType = 'temperature'
 }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const { map } = useMap();
@@ -48,7 +52,12 @@ const MapContent: React.FC<MapContentProps> = ({
     currentMapStyle,
     handleStyleChange,
     handleResetView
-  } = useMapLayers(showParking, showTrailPaths);
+  } = useMapLayers(showParking, showTrailPaths, showWeatherLayer);
+
+  // Set initial weather layer state based on prop
+  useEffect(() => {
+    setWeatherLayer(showWeatherLayer);
+  }, [showWeatherLayer, setWeatherLayer]);
 
   const { isLoading } = useMapInitialization({
     mapContainer,
@@ -108,7 +117,10 @@ const MapContent: React.FC<MapContentProps> = ({
         </>
       )}
 
-      <MapWeatherLayer enabled={weatherLayer} />
+      <MapWeatherLayer 
+        enabled={weatherLayer} 
+        type={weatherLayerType} 
+      />
       
       {isLoading && <MapLoadingState />}
     </div>

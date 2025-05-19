@@ -2,6 +2,7 @@
 import React, { useEffect } from 'react';
 import mapboxgl from 'mapbox-gl';
 import { Trail } from '@/types/trails';
+import { getTrailColor } from '@/features/map/utils/mapUtils';
 
 interface MapMarkerProps {
   trail: Trail;
@@ -11,14 +12,26 @@ interface MapMarkerProps {
 
 const MapMarker: React.FC<MapMarkerProps> = ({ trail, map, onSelect }) => {
   useEffect(() => {
-    if (!map || !trail.coordinates || !trail.coordinates[0] || !trail.coordinates[1]) {
+    // Ensure we have valid coordinates before creating a marker
+    if (!map || !trail.coordinates || !Array.isArray(trail.coordinates) || trail.coordinates.length < 2) {
+      console.warn(`Invalid coordinates for trail ${trail.name} (${trail.id})`);
+      return;
+    }
+    
+    // Extract coordinates properly, ensuring they are numbers
+    const lng = parseFloat(String(trail.coordinates[0]));
+    const lat = parseFloat(String(trail.coordinates[1]));
+    
+    // Validate coordinates
+    if (isNaN(lng) || isNaN(lat) || !isFinite(lng) || !isFinite(lat)) {
+      console.warn(`Invalid coordinates values for trail ${trail.name} (${trail.id}): [${lng}, ${lat}]`);
       return;
     }
     
     // Create marker element
     const element = document.createElement('div');
     
-    // Style the marker
+    // Style the marker using the utility function
     const markerStyle = {
       width: '24px',
       height: '24px',
@@ -26,11 +39,7 @@ const MapMarker: React.FC<MapMarkerProps> = ({ trail, map, onSelect }) => {
       cursor: 'pointer',
       border: '2px solid white',
       boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-      backgroundColor: 
-        trail.difficulty === 'easy' ? '#4ade80' :
-        trail.difficulty === 'moderate' ? '#fbbf24' :
-        trail.difficulty === 'hard' ? '#f87171' :
-        '#000000'
+      backgroundColor: getTrailColor(trail.difficulty)
     };
     
     Object.assign(element.style, markerStyle);
@@ -48,21 +57,26 @@ const MapMarker: React.FC<MapMarkerProps> = ({ trail, map, onSelect }) => {
       </div>
     `);
     
-    // Create and add marker to map
-    const marker = new mapboxgl.Marker(element)
-      .setLngLat([trail.coordinates[0], trail.coordinates[1]])
-      .setPopup(popup)
-      .addTo(map);
+    // Create and add marker to map with validated coordinates
+    try {
+      const marker = new mapboxgl.Marker(element)
+        .setLngLat([lng, lat])
+        .setPopup(popup)
+        .addTo(map);
+        
+      // Add click handler if provided
+      if (onSelect) {
+        element.addEventListener('click', () => onSelect(trail.id));
+      }
       
-    // Add click handler if provided
-    if (onSelect) {
-      element.addEventListener('click', () => onSelect(trail.id));
+      // Return a cleanup function that removes the marker
+      return () => {
+        marker.remove();
+      };
+    } catch (error) {
+      console.error(`Error creating marker for trail ${trail.id}:`, error);
+      return undefined;
     }
-    
-    // Return a cleanup function that removes the marker
-    return () => {
-      marker.remove();
-    };
   }, [trail, map, onSelect]);
   
   return null;

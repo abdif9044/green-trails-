@@ -24,41 +24,61 @@ interface MapParkingMarkersProps {
 }
 
 const MapParkingMarkers: React.FC<MapParkingMarkersProps> = ({ 
-  parkingSpots: providedParkingSpots,
+  parkingSpots: providedParkingSpots = [],
   trails = [],
   map 
 }) => {
-  const [parkingSpots, setParkingSpots] = useState<ParkingSpot[]>(providedParkingSpots || []);
+  const [parkingSpots, setParkingSpots] = useState<ParkingSpot[]>(providedParkingSpots);
   
-  // If parking spots weren't provided, fetch them based on trail IDs
+  // If parking spots weren't provided or are empty, fetch them based on trail IDs
   useEffect(() => {
     const fetchParkingSpots = async () => {
-      if (providedParkingSpots || trails.length === 0) return;
+      if (providedParkingSpots.length > 0 || trails.length === 0) return;
       
-      const trailIds = trails.map(trail => trail.id);
+      const trailIds = trails.map(trail => trail.id).filter(Boolean);
+      if (trailIds.length === 0) return;
       
-      const { data, error } = await supabase
-        .from('parking_spots')
-        .select('*')
-        .in('trail_id', trailIds);
+      try {
+        const { data, error } = await supabase
+          .from('parking_spots')
+          .select('*')
+          .in('trail_id', trailIds);
+          
+        if (error) {
+          console.error('Error fetching parking spots:', error);
+          return;
+        }
         
-      if (!error && data) {
-        setParkingSpots(data);
+        if (data && data.length > 0) {
+          setParkingSpots(data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch parking spots:', err);
       }
     };
     
     fetchParkingSpots();
   }, [trails, providedParkingSpots]);
 
+  if (!map || parkingSpots.length === 0) {
+    return null;
+  }
+
   return (
     <>
-      {parkingSpots.map(parkingSpot => (
-        <ParkingMarker
-          key={parkingSpot.id}
-          parkingSpot={parkingSpot}
-          map={map}
-        />
-      ))}
+      {parkingSpots.map(parkingSpot => {
+        if (!parkingSpot.latitude || !parkingSpot.longitude) {
+          return null;
+        }
+        
+        return (
+          <ParkingMarker
+            key={parkingSpot.id}
+            parkingSpot={parkingSpot}
+            map={map}
+          />
+        );
+      })}
     </>
   );
 };

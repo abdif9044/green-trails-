@@ -2,8 +2,12 @@
 import { useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 
-export const useMapLayers = (initialShowParking = true, initialShowTrailPaths = false) => {
-  const [weatherLayer, setWeatherLayer] = useState(false);
+export const useMapLayers = (
+  initialShowParking = true, 
+  initialShowTrailPaths = false,
+  initialShowWeather = false
+) => {
+  const [weatherLayer, setWeatherLayer] = useState(initialShowWeather);
   const [parkingLayer, setParkingLayer] = useState(initialShowParking);
   const [trailPathsLayer, setTrailPathsLayer] = useState(initialShowTrailPaths);
   const [currentMapStyle, setCurrentMapStyle] = useState<string>('outdoors');

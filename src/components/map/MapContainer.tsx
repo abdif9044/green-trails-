@@ -12,6 +12,8 @@ interface MapContainerProps {
   className?: string;
   showParking?: boolean;
   showTrailPaths?: boolean;
+  showWeatherLayer?: boolean;
+  weatherLayerType?: 'temperature' | 'precipitation' | 'clouds' | 'wind';
   country?: string;
   stateProvince?: string;
   difficulty?: string;

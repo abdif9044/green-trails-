@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import mapboxgl from 'mapbox-gl';
 import { Trail } from '@/types/trails';
 import MapMarker from './MapMarker';

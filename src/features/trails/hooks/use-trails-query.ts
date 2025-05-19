@@ -28,9 +28,6 @@ export const useTrailsQuery = (currentFilters: TrailFilters, onTrailCountChange?
                 details,
                 tag_type
               )
-            ),
-            trail_likes (
-              id
             )
           `);
         
@@ -81,10 +78,32 @@ export const useTrailsQuery = (currentFilters: TrailFilters, onTrailCountChange?
           return;
         }
         
-        // Transform the data using our common formatter
+        // Fetch likes counts separately to avoid relationship errors
+        const trailIds = data.map(trail => trail.id);
+        const { data: likesData, error: likesError } = await supabase
+          .from('trail_likes')
+          .select('trail_id, id')
+          .in('trail_id', trailIds);
+          
+        if (likesError) {
+          console.warn('Error fetching trail likes:', likesError);
+        }
+        
+        // Create a map of trail_id to like count
+        const likeCountsMap: Record<string, number> = {};
+        if (likesData) {
+          likesData.forEach(like => {
+            if (!likeCountsMap[like.trail_id]) {
+              likeCountsMap[like.trail_id] = 0;
+            }
+            likeCountsMap[like.trail_id]++;
+          });
+        }
+        
+        // Transform the data using our common formatter with likes count
         const formattedTrails: Trail[] = data.map(trail => {
-          // Add likes count
-          const likesCount = trail.trail_likes?.length || 0;
+          // Add likes count from our map
+          const likesCount = likeCountsMap[trail.id] || 0;
           return formatTrailData({...trail, likes_count: likesCount});
         });
         

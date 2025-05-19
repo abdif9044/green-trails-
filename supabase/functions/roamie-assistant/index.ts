@@ -23,6 +23,12 @@ When users ask about specific trails:
 4. Suggest appropriate gear based on trail difficulty and conditions
 5. Recommend best times to visit based on weather and seasonality
 
+If users ask about cannabis or related products:
+1. Only provide information if the trail is marked as age-restricted
+2. Focus on responsible use and safety in natural settings
+3. Mention "green-friendly" areas only if specifically designated in the trail data
+4. Always emphasize safety, respect for other hikers, and adherence to local laws
+
 Your voice is enthusiastic, knowledgeable, and supportive. You want to inspire people to explore the outdoors safely and responsibly.
 `;
 
@@ -53,7 +59,13 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
     
     // Parse request
-    const { message, chatHistory = [], trailContext = null, userLocation = null } = await req.json();
+    const { 
+      message, 
+      chatHistory = [], 
+      trailContext = null, 
+      userLocation = null,
+      timestamp = new Date().toISOString()
+    } = await req.json();
     
     if (!message) {
       return new Response(
@@ -74,18 +86,53 @@ serve(async (req) => {
     
     // Add trail context if provided
     if (trailContext) {
-      const contextInfo = `
+      // Use enhanced context if available
+      let contextInfo;
+      
+      if (trailContext.trailDetails) {
+        contextInfo = `Current trail information: ${trailContext.trailDetails}`;
+      } else {
+        contextInfo = `
 Current trail information:
 - Name: ${trailContext.trailName || 'Not specified'}
 - Difficulty: ${trailContext.difficulty || 'Not specified'}
 - Length: ${trailContext.length ? `${trailContext.length} miles` : 'Not specified'}
 - Elevation Gain: ${trailContext.elevation ? `${trailContext.elevation} ft` : 'Not specified'}
 - Location: ${trailContext.location || 'Not specified'}`;
+      }
       
       messages.splice(1, 0, { 
         role: 'system', 
         content: contextInfo
       });
+      
+      // If we have a trail ID, try to fetch any additional information
+      if (trailContext.trailId) {
+        try {
+          // Try to enrich with additional trail data if available
+          const { data: trailData } = await supabase
+            .from('trails')
+            .select('description, surface, trail_type, is_age_restricted')
+            .eq('id', trailContext.trailId)
+            .single();
+            
+          if (trailData) {
+            const enrichedInfo = `
+Additional trail information:
+${trailData.description ? `- Description: ${trailData.description}` : ''}
+${trailData.surface ? `- Surface: ${trailData.surface}` : ''}
+${trailData.trail_type ? `- Trail Type: ${trailData.trail_type}` : ''}
+${trailData.is_age_restricted ? '- Note: This trail is age-restricted (21+)' : ''}
+`;
+            messages.splice(2, 0, { 
+              role: 'system', 
+              content: enrichedInfo
+            });
+          }
+        } catch (e) {
+          console.error("Error fetching additional trail data:", e);
+        }
+      }
     }
     
     // Add user location if provided
@@ -111,6 +158,33 @@ Current trail information:
         role: 'system', 
         content: `User is currently at: ${locationName} (Coordinates: ${userLocation.latitude}, ${userLocation.longitude})` 
       });
+      
+      // Try to get current weather at user location
+      try {
+        const weatherKey = Deno.env.get('OPENWEATHER_API_KEY');
+        if (weatherKey) {
+          const weatherResponse = await fetch(
+            `https://api.openweathermap.org/data/2.5/weather?lat=${userLocation.latitude}&lon=${userLocation.longitude}&appid=${weatherKey}&units=imperial`
+          );
+          
+          if (weatherResponse.ok) {
+            const weatherData = await weatherResponse.json();
+            const weatherInfo = `
+Current weather at user location:
+- Temperature: ${weatherData.main.temp}°F (feels like ${weatherData.main.feels_like}°F)
+- Conditions: ${weatherData.weather[0].description}
+- Humidity: ${weatherData.main.humidity}%
+- Wind: ${weatherData.wind.speed} mph
+`;
+            messages.splice(2, 0, { 
+              role: 'system', 
+              content: weatherInfo
+            });
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching weather data:", error);
+      }
     }
 
     console.log("Sending request to OpenAI with messages:", JSON.stringify(messages));
@@ -148,9 +222,28 @@ Current trail information:
   } catch (error) {
     console.error('Error in roamie-assistant function:', error);
     
+    // Generate more specific error messages
+    let errorMessage = 'Internal Server Error';
+    let errorDetails = error.message;
+    let statusCode = 500;
+    
+    if (error.message?.includes('API key')) {
+      errorMessage = 'OpenAI API Key Error';
+      errorDetails = 'Invalid or missing API key. Please check your configuration.';
+      statusCode = 401;
+    } else if (error.message?.includes('429')) {
+      errorMessage = 'Rate Limit Exceeded';
+      errorDetails = 'Too many requests to OpenAI API. Please try again later.';
+      statusCode = 429;
+    } else if (error.message?.includes('timeout')) {
+      errorMessage = 'Request Timeout';
+      errorDetails = 'The request to OpenAI API timed out. Please try again.';
+      statusCode = 504;
+    }
+    
     return new Response(
-      JSON.stringify({ error: 'Internal Server Error', details: error.message }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      JSON.stringify({ error: errorMessage, details: errorDetails }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: statusCode }
     );
   }
 });

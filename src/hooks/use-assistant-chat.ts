@@ -7,7 +7,8 @@ import {
   checkAssistantAvailability,
   ChatMessage, 
   TrailContext, 
-  UserLocation 
+  UserLocation,
+  saveChatHistory 
 } from '@/services/assistant-service';
 
 export const useAssistantChat = (initialTrailContext?: TrailContext | null) => {
@@ -41,7 +42,11 @@ export const useAssistantChat = (initialTrailContext?: TrailContext | null) => {
     };
     
     // Add user message to chat
-    setMessages(prev => [...prev, userMessage]);
+    setMessages(prev => {
+      const updatedMessages = [...prev, userMessage];
+      return updatedMessages;
+    });
+    
     setIsLoading(true);
     
     try {
@@ -55,16 +60,22 @@ export const useAssistantChat = (initialTrailContext?: TrailContext | null) => {
         };
       }
       
-      // Send message to assistant
+      // Send message to assistant with current messages for context
+      const currentMessages = [...messages, userMessage];
       const assistantMessage = await sendMessageToAssistant(
         content, 
-        messages, 
+        currentMessages, 
         trailContext,
         userLocation
       );
       
       // Add assistant reply to chat
-      setMessages(prev => [...prev, assistantMessage]);
+      setMessages(prev => {
+        const updatedMessages = [...prev, assistantMessage];
+        // Save to local storage for persistence
+        saveChatHistory(updatedMessages);
+        return updatedMessages;
+      });
     } catch (error) {
       console.error('Error in chat:', error);
     } finally {
@@ -84,6 +95,7 @@ export const useAssistantChat = (initialTrailContext?: TrailContext | null) => {
   
   return {
     messages,
+    setMessages,
     isLoading,
     isApiKeyConfigured,
     sendMessage,

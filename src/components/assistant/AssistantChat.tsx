@@ -2,10 +2,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Loader2, Trash2, Settings } from "lucide-react";
+import { Send, Loader2, Trash2, Settings, Save } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAssistantChat } from '@/hooks/use-assistant-chat';
-import { TrailContext, ChatMessage } from '@/services/assistant-service';
+import { TrailContext, ChatMessage, saveChatHistory, loadChatHistory } from '@/services/assistant-service';
 import ChatMessageItem from './ChatMessageItem';
 import ApiKeySetupModal from './ApiKeySetupModal';
 import { useToast } from '@/hooks/use-toast';
@@ -25,18 +25,31 @@ const WELCOME_MESSAGE: ChatMessage = {
 const AssistantChat: React.FC<AssistantChatProps> = ({ trailContext, onClose }) => {
   const [input, setInput] = useState('');
   const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   
   const { 
     messages,
+    setMessages,
     isLoading,
     isApiKeyConfigured,
     sendMessage,
     clearChat,
     updateTrailContext
   } = useAssistantChat(trailContext);
+  
+  // Load chat history from local storage on component mount
+  useEffect(() => {
+    // Only load saved history if we don't already have messages
+    if (messages.length === 0) {
+      const savedHistory = loadChatHistory();
+      if (savedHistory.length > 0) {
+        setMessages(savedHistory);
+      }
+    }
+  }, []);
   
   // Check if we need to show the API key modal
   useEffect(() => {
@@ -78,10 +91,32 @@ const AssistantChat: React.FC<AssistantChatProps> = ({ trailContext, onClose }) 
   // Handle clearing chat history
   const handleClearChat = () => {
     clearChat();
+    // Also clear from local storage
+    saveChatHistory([]);
     toast({
       title: "Chat cleared",
       description: "All messages have been cleared.",
     });
+  };
+  
+  // Handle saving chat history
+  const handleSaveChat = () => {
+    setIsSaving(true);
+    try {
+      saveChatHistory(messages);
+      toast({
+        title: "Chat saved",
+        description: "Your conversation has been saved for next time.",
+      });
+    } catch (error) {
+      toast({
+        title: "Save error",
+        description: "Could not save your conversation.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
   
   // Handle API key setup completion
@@ -95,7 +130,18 @@ const AssistantChat: React.FC<AssistantChatProps> = ({ trailContext, onClose }) 
     : [WELCOME_MESSAGE];
   
   return (
-    <div className="flex flex-col h-[500px]">
+    <div className="flex flex-col h-[500px] bg-white dark:bg-greentrail-900 rounded-lg shadow-lg border border-gray-200 dark:border-gray-800">
+      <div className="p-3 border-b border-gray-200 dark:border-gray-700 bg-greentrail-50 dark:bg-greentrail-800 rounded-t-lg">
+        <div className="flex justify-between items-center">
+          <h3 className="text-lg font-medium text-greentrail-800 dark:text-greentrail-100">Roamie Assistant</h3>
+          {onClose && (
+            <Button variant="ghost" size="sm" onClick={onClose}>
+              ×
+            </Button>
+          )}
+        </div>
+      </div>
+      
       <ScrollArea className="flex-grow p-4">
         <div className="space-y-4">
           {displayMessages.map(message => (
@@ -136,6 +182,7 @@ const AssistantChat: React.FC<AssistantChatProps> = ({ trailContext, onClose }) 
             variant="outline"
             size="icon"
             onClick={handleClearChat}
+            title="Clear chat history"
             className="text-slate-500"
           >
             <Trash2 className="h-4 w-4" />
@@ -144,7 +191,19 @@ const AssistantChat: React.FC<AssistantChatProps> = ({ trailContext, onClose }) 
             type="button"
             variant="outline"
             size="icon"
+            onClick={handleSaveChat}
+            disabled={isSaving || messages.length === 0}
+            title="Save chat history"
+            className="text-slate-500"
+          >
+            <Save className="h-4 w-4" />
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
             onClick={() => setIsApiKeyModalOpen(true)}
+            title="API Key settings"
             className="text-slate-500"
           >
             <Settings className="h-4 w-4" />

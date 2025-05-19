@@ -2,6 +2,8 @@
 import { useState, useEffect, RefObject } from 'react';
 import mapboxgl from 'mapbox-gl';
 import { useMap } from '@/components/map/MapContext';
+import { getMapboxToken } from '@/features/map/utils/mapUtils';
+import { toast } from '@/hooks/use-toast';
 
 interface UseMapInitializationProps {
   mapContainer: RefObject<HTMLDivElement>;
@@ -24,9 +26,8 @@ export const useMapInitialization = ({
 
     const initializeMap = async () => {
       try {
-        // Get Mapbox token from Supabase function
-        const response = await fetch('/api/get-mapbox-token');
-        const { token } = await response.json();
+        // Get Mapbox token using the utility function from mapUtils
+        const token = await getMapboxToken();
         
         if (!token) {
           throw new Error('Failed to retrieve Mapbox token');
@@ -78,6 +79,11 @@ export const useMapInitialization = ({
         setMap(newMap);
       } catch (error) {
         console.error('Error initializing map:', error);
+        toast({
+          title: "Map Error",
+          description: "Could not initialize map. Please try again later.",
+          variant: "destructive"
+        });
         setIsLoading(false);
       }
     };

@@ -1,70 +1,77 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useAuth } from '@/hooks/use-auth';
+import { useProfile } from '@/hooks/use-profile';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
+import SEOProvider from '@/components/SEOProvider';
 import ProfileHeader from '@/components/profile/ProfileHeader';
-import ProfileEditForm from '@/components/profile/ProfileEditForm';
-import SignInRequired from '@/components/social/SignInRequired';
-
-// Define the profile type
-interface UserProfile {
-  id: string;
-  username: string;
-  full_name: string;
-  bio: string;
-  avatar_url: string | null;
-  is_age_verified: boolean;
-  website_url: string | null;
-}
+import { ProfileSocialDisplay } from '@/components/profile/ProfileSocialDisplay';
+import { ProfileBadges } from '@/components/profile/ProfileBadges';
+import { ProfileStatsCard } from '@/components/profile/ProfileStatsCard';
+import { useBadges } from '@/hooks/use-badges';
+import { Hiking, MapPin, Calendar, Award } from 'lucide-react';
 
 const ProfilePage = () => {
-  const { user } = useAuth();
-  const [showEditProfile, setShowEditProfile] = useState(false);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Simulate profile loading for now (would be replaced with real data fetching)
-  useEffect(() => {
-    if (user) {
-      // Simulate loading profile data
-      setTimeout(() => {
-        setProfile({
-          id: user.id,
-          username: user.email?.split('@')[0] || 'user',
-          full_name: '',
-          bio: '',
-          avatar_url: null,
-          is_age_verified: false,
-          website_url: null
-        });
-        setIsLoading(false);
-      }, 500);
-    } else {
-      setIsLoading(false);
-    }
-  }, [user]);
-
-  if (!user) {
-    return <SignInRequired />;
-  }
+  const { user, profile, loading } = useAuth();
+  const { profile: userProfile, loading: loadingProfile } = useProfile(user?.id);
+  const { badges, loading: loadingBadges } = useBadges();
+  
+  // Mock stats for demonstration
+  const stats = [
+    { 
+      value: '12', 
+      label: 'Trails Hiked',
+      icon: <Hiking size={16} className="text-greentrail-600" />
+    },
+    { 
+      value: '134', 
+      label: 'Miles',
+      icon: <MapPin size={16} className="text-greentrail-600" />
+    },
+    { 
+      value: '7', 
+      label: 'Day Streak',
+      icon: <Calendar size={16} className="text-greentrail-600" />
+    },
+    { 
+      value: badges.filter(b => b.unlocked).length, 
+      label: 'Badges',
+      icon: <Award size={16} className="text-greentrail-600" />
+    },
+  ];
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      {profile && (
-        <ProfileHeader 
-          profile={profile} 
-          isLoading={isLoading} 
-          isCurrentUser={true}
-          onEditProfile={() => setShowEditProfile(true)}
-        />
-      )}
+    <div className="min-h-screen flex flex-col">
+      <SEOProvider
+        title="My Profile - GreenTrails"
+        description="View and manage your GreenTrails profile, achievements, and hiking stats."
+        type="profile"
+      />
       
-      {profile && showEditProfile && (
-        <ProfileEditForm 
-          profile={profile}
-          open={showEditProfile}
-          onClose={() => setShowEditProfile(false)}
+      <Navbar />
+      
+      <main className="flex-grow container mx-auto px-4 py-6 lg:py-8">
+        <ProfileHeader 
+          user={user} 
+          profile={userProfile} 
+          loading={loading || loadingProfile} 
         />
-      )}
+        
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+          <div className="lg:col-span-2 space-y-6">
+            <ProfileStatsCard stats={stats} loading={loadingBadges} />
+            
+            <ProfileSocialDisplay userId={user?.id} />
+          </div>
+          
+          <div>
+            <ProfileBadges badges={badges} loading={loadingBadges} />
+          </div>
+        </div>
+      </main>
+      
+      <Footer />
     </div>
   );
 };

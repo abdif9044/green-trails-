@@ -17,6 +17,9 @@ const NotFound = lazy(() => import('@/pages/NotFound'));
 const AdminTrailImport = lazy(() => import('@/pages/AdminTrailImport'));
 const AutoImportPage = lazy(() => import('@/pages/AutoImportPage'));
 const AdminRedirect = lazy(() => import('@/pages/AdminRedirect'));
+const Badges = lazy(() => import('@/pages/Badges')); // Add this line for the new Badges page
+const Trail = lazy(() => import('@/pages/Trail'));
+const Social = lazy(() => import('@/pages/Social'));
 
 // Route Protection Component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -39,11 +42,19 @@ function AppRoutes() {
       <Route path="/" element={<HomePage />} />
       <Route path="/discover" element={<Discover />} />
       <Route path="/auth" element={<Auth />} />
+      <Route path="/trail/:trailId" element={<Trail />} />
+      <Route path="/social" element={<Social />} />
       
       {/* Protected routes */}
       <Route path="/profile" element={
         <ProtectedRoute>
           <ProfilePage />
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/badges" element={
+        <ProtectedRoute>
+          <Badges />
         </ProtectedRoute>
       } />
       

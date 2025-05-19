@@ -1,7 +1,7 @@
+
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+import { Layout } from '@/components/layout/layout';
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from '@/hooks/use-auth';
 import { useToggleLike, useTrailLikes } from "@/hooks/use-trail-interactions";
@@ -59,7 +59,7 @@ const Trail: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <Layout>
       {trail && (
         <SEOProvider
           title={`${trail.name} - GreenTrails`}
@@ -68,8 +68,6 @@ const Trail: React.FC = () => {
           type="article"
         />
       )}
-      
-      <Navbar />
       
       <main className="flex-grow container mx-auto px-4 py-6 md:py-10">
         {isLoading ? (
@@ -106,12 +104,16 @@ const Trail: React.FC = () => {
             </div>
           </div>
         ) : (
-          <></>
+          <div className="p-8 text-center">
+            <h2 className="text-2xl font-bold text-red-600 mb-4">Trail Not Found</h2>
+            <p className="text-gray-600 dark:text-gray-400">
+              Sorry, we couldn't find the trail you're looking for. 
+              It may have been removed or you might have followed a broken link.
+            </p>
+          </div>
         )}
       </main>
-      
-      <Footer />
-    </div>
+    </Layout>
   );
 };
 

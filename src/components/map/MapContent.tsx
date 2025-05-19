@@ -1,16 +1,16 @@
 
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { useMapInitialization } from '@/hooks/use-map-initialization';
 import { useMapLayers } from '@/hooks/use-map-layers';
 import { Trail } from '@/types/trails';
 import { useParkingSpots } from '@/hooks/use-parking-spots';
 import { useMap } from './MapContext';
 import MapControls from './MapControls';
-import MapLoadingState from '@/features/map/components/MapLoadingState';
-import MapTrailMarkers from '@/features/map/components/MapTrailMarkers';
-import MapParkingMarkers from '@/features/map/components/MapParkingMarkers';
-import MapTrailPaths from '@/features/map/components/MapTrailPaths';
-import MapWeatherLayer from '@/features/map/components/MapWeatherLayer';
+import MapLoadingState from './MapLoadingState';
+import MapTrailMarkers from './MapTrailMarkers';
+import MapParkingMarkers from './MapParkingMarkers';
+import MapTrailPaths from './MapTrailPaths';
+import MapWeatherLayer from './MapWeatherLayer';
 import { mapStyles } from '@/features/map/utils/mapStyles';
 
 interface MapContentProps {

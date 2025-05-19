@@ -7,12 +7,16 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
 
   try {
-    const token = Deno.env.get('MAPBOX_ACCESS_TOKEN')
+    // Get the Mapbox token from environment variables
+    const token = Deno.env.get('MAPBOX_ACCESS_TOKEN') || 'pk.eyJ1IjoiZGVtby1ncmVlbnRyYWlscyIsImEiOiJjbHdnYW9sdTAwbmpvMmp0ZWJvNnQ2cXdxIn0.F7uYVxm9vBqBRdlSIkd4Kg';
+    
+    // Return the token
     return new Response(
       JSON.stringify({ token }),
       { 
@@ -21,6 +25,7 @@ serve(async (req) => {
       }
     )
   } catch (error) {
+    // Return error response
     return new Response(
       JSON.stringify({ error: error.message }),
       { 

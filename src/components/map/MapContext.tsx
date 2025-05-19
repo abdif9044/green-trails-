@@ -7,10 +7,16 @@ interface MapContextType {
   setMap: (map: mapboxgl.Map | null) => void;
 }
 
-const MapContext = createContext<MapContextType>({ map: null, setMap: () => {} });
+const defaultContextValue: MapContextType = { 
+  map: null, 
+  setMap: () => {} 
+};
+
+const MapContext = createContext<MapContextType>(defaultContextValue);
 
 export const MapProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [map, setMap] = useState<mapboxgl.Map | null>(null);
+  
   return (
     <MapContext.Provider value={{ map, setMap }}>
       {children}

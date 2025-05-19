@@ -35,6 +35,7 @@ export const useMapInitialization = ({
         
         mapboxgl.accessToken = token;
 
+        // Create a new map instance
         const newMap = new mapboxgl.Map({
           container: mapContainer.current,
           style: style,
@@ -51,29 +52,36 @@ export const useMapInitialization = ({
           'bottom-right'
         );
 
+        // Handle map load event
         newMap.on('load', () => {
           setIsLoading(false);
           
-          newMap.addSource('terrain', {
-            type: 'raster-dem',
-            url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
-            tileSize: 512
-          });
-          
-          newMap.setTerrain({
-            source: 'terrain',
-            exaggeration: 1.5
-          });
+          // Add terrain and atmosphere layers
+          try {
+            newMap.addSource('terrain', {
+              type: 'raster-dem',
+              url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
+              tileSize: 512
+            });
+            
+            newMap.setTerrain({
+              source: 'terrain',
+              exaggeration: 1.5
+            });
 
-          newMap.addLayer({
-            id: 'sky',
-            type: 'sky',
-            paint: {
-              'sky-type': 'atmosphere',
-              'sky-atmosphere-sun': [0.0, 0.0],
-              'sky-atmosphere-sun-intensity': 15
-            }
-          });
+            newMap.addLayer({
+              id: 'sky',
+              type: 'sky',
+              paint: {
+                'sky-type': 'atmosphere',
+                'sky-atmosphere-sun': [0.0, 0.0],
+                'sky-atmosphere-sun-intensity': 15
+              }
+            });
+          } catch (terrainError) {
+            console.warn('Could not add terrain or sky:', terrainError);
+            // Continue without terrain if it fails
+          }
         });
 
         setMap(newMap);
@@ -88,11 +96,15 @@ export const useMapInitialization = ({
       }
     };
 
+    // Initialize map
     initializeMap();
 
+    // Cleanup function to remove map when component unmounts
     return () => {
-      map?.remove();
-      setMap(null);
+      if (map) {
+        map.remove();
+        setMap(null);
+      }
     };
   }, [style, mapContainer, center, zoom, setMap, map]);
 

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import mapboxgl from 'mapbox-gl';
 import { Trail } from '@/types/trails';
 import TrailPathLayer from './TrailPathLayer';
@@ -11,6 +11,10 @@ interface MapTrailPathsProps {
 }
 
 const MapTrailPaths: React.FC<MapTrailPathsProps> = ({ trails, map, onTrailSelect }) => {
+  if (!trails || trails.length === 0 || !map) {
+    return null;
+  }
+
   return (
     <>
       {trails.map(trail => {

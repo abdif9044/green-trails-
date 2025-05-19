@@ -1,4 +1,3 @@
-
 import { Heart, MapPin } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
@@ -32,7 +31,10 @@ const TRAIL_FALLBACK_IMAGES = {
   river: "https://images.unsplash.com/photo-1482938289607-e9573fc25ebb?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
   park: "https://images.unsplash.com/photo-1568393691622-c7ba131d63b4?ixlib=rb-1.2.1&auto=format&fit=crop&w=1489&q=80",
   lake: "https://images.unsplash.com/photo-1544714042-5dc4f6a3c4ce?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
-  default: "https://images.unsplash.com/photo-1469474968028-56623f02e42e"
+  default: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
+  hiking: "https://images.unsplash.com/photo-1551632811-561732d1e306?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
+  waterfall: "https://images.unsplash.com/photo-1546587348-d12660c30c50?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
+  valley: "https://images.unsplash.com/photo-1483728642387-6c3bdd6c93e5?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80"
 };
 
 const TrailCard = ({
@@ -64,8 +66,22 @@ const TrailCard = ({
     return TRAIL_FALLBACK_IMAGES.default;
   };
   
+  // Better image validation to ensure we have a valid image URL
+  const isValidImageUrl = (url: string): boolean => {
+    if (!url) return false;
+    
+    // Filter out problematic URLs
+    const invalidPatterns = [
+      'screen', 'phone', 'mobile', 'device', 'screenshot',
+      'data:image', 'blob:null', 'localhost', '127.0.0.1',
+      'lovable-uploads'  // Filter out uploads that might be problematic
+    ];
+    
+    return !invalidPatterns.some(pattern => url.toLowerCase().includes(pattern));
+  };
+  
   // Ensure we have a valid image URL or use an appropriate fallback
-  const safeImageUrl = (imageUrl && !imageUrl.includes('lovable-uploads')) 
+  const safeImageUrl = (imageUrl && isValidImageUrl(imageUrl))
     ? imageUrl 
     : getFallbackImage();
   
@@ -76,7 +92,7 @@ const TrailCard = ({
           <LazyImage 
             src={safeImageUrl} 
             alt={name} 
-            className="w-full h-full transition-transform hover:scale-105 duration-500"
+            className="w-full h-full object-cover transition-transform hover:scale-105 duration-500"
             fallbackImage={getFallbackImage()}
           />
           <div className="absolute top-2 right-2 flex flex-col gap-2">

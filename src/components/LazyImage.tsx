@@ -15,7 +15,9 @@ interface LazyImageProps {
   objectFit?: "cover" | "contain" | "fill" | "none" | "scale-down";
 }
 
+// Default images for better fallbacks
 const DEFAULT_TRAIL_IMAGE = "https://images.unsplash.com/photo-1469474968028-56623f02e42e";
+const DEFAULT_NATURE_FALLBACK = "https://images.unsplash.com/photo-1441974231531-c6227db76b6e";
 
 export const LazyImage: React.FC<LazyImageProps> = ({
   src,
@@ -116,31 +118,50 @@ export const LazyImage: React.FC<LazyImageProps> = ({
     checkWebPSupport();
   }, []);
 
-  // Check if source is a valid URL or path
+  // Check if source is a valid URL or path and not a device screenshot
   const isValidSource = (source: string): boolean => {
     if (!source) return false;
     
-    // More comprehensive check for valid paths
+    // Detect potential phone screenshots or problematic images
+    const invalidPatterns = [
+      'screen', 'phone', 'mobile', 'device', 'screenshot',
+      'data:image', 'blob:null', 'localhost', '127.0.0.1',
+      'lovable-uploads'  // Added to filter out uploads that might be problematic
+    ];
+    
+    const hasInvalidPattern = invalidPatterns.some(pattern => 
+      source.toLowerCase().includes(pattern)
+    );
+    
+    if (hasInvalidPattern) return false;
+    
+    // Try to create a URL - will throw if invalid
     try {
-      // Try to create a URL - will throw if invalid
       new URL(source, window.location.origin);
-      return true;
+      
+      // Verify it's likely a nature/trail image by checking URL patterns
+      const likelyNatureImage = [
+        'unsplash', 'trail', 'nature', 'outdoor', 'hike', 
+        'mountain', 'forest', 'path', 'landscape'
+      ].some(term => source.toLowerCase().includes(term));
+      
+      return likelyNatureImage;
     } catch {
-      // Check if it's a relative path at minimum
-      return source.includes('/') || source.startsWith('blob:');
+      // If URL creation fails, check if it's a valid relative path
+      return source.includes('/') && !hasInvalidPattern;
     }
   };
 
   // Get actual image source to display
   const getImageSource = () => {
     // If we've already detected an error, use fallback
-    if (hasError) return fallbackImage;
+    if (hasError) return fallbackImage || DEFAULT_NATURE_FALLBACK;
     
     // If not in view yet, use placeholder
     if (!isInView) return placeholderSrc;
     
     // Validate source
-    return isValidSource(src) ? src : fallbackImage;
+    return isValidSource(src) ? src : (fallbackImage || DEFAULT_NATURE_FALLBACK);
   };
 
   return (

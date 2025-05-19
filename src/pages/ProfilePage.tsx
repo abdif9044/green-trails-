@@ -22,7 +22,7 @@ const ProfilePage = () => {
     { 
       value: '12', 
       label: 'Trails Hiked',
-      icon: <Trophy size={16} className="text-greentrail-600" /> // Changed from Hiking to Trophy
+      icon: <Trophy size={16} className="text-greentrail-600" /> 
     },
     { 
       value: '134', 
@@ -56,6 +56,7 @@ const ProfilePage = () => {
           <ProfileHeader 
             profile={userProfile} 
             isLoading={loadingProfile} 
+            isCurrentUser={true}  // Added the missing prop
           />
         )}
         

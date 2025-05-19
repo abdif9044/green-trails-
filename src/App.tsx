@@ -1,111 +1,59 @@
 
-import React, { useState, useEffect, lazy, Suspense } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
-import { ThemeProvider } from '@/providers/theme-provider';
-import { Toaster } from '@/components/ui/toaster';
-import { AuthProvider } from '@/providers/auth-provider';
-import { useAuth } from '@/hooks/use-auth';
-import LoadingFallback from '@/components/LoadingFallback';
-
-// Lazy loaded components
-const Discover = lazy(() => import('@/pages/Discover'));
-const Auth = lazy(() => import('@/pages/Auth'));
-const ProfilePage = lazy(() => import('@/pages/ProfilePage'));
-const HomePage = lazy(() => import('@/pages/HomePage'));
-const NotFound = lazy(() => import('@/pages/NotFound'));
-const AdminTrailImport = lazy(() => import('@/pages/AdminTrailImport'));
-const AutoImportPage = lazy(() => import('@/pages/AutoImportPage'));
-const AdminRedirect = lazy(() => import('@/pages/AdminRedirect'));
-const Badges = lazy(() => import('@/pages/Badges')); 
-const Trail = lazy(() => import('@/pages/Trail'));
-const Social = lazy(() => import('@/pages/Social'));
-
-// Route Protection Component
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user, loading, isInitialized } = useAuth();
-  
-  if (!isInitialized || loading) {
-    return <LoadingFallback message="Checking authentication..." />;
-  }
-  
-  if (!user) {
-    return <Navigate to="/auth" replace />;
-  }
-  
-  return <>{children}</>;
-};
-
-function AppRoutes() {
-  return (
-    <Routes>
-      <Route path="/" element={<HomePage />} />
-      <Route path="/discover" element={<Discover />} />
-      <Route path="/auth" element={<Auth />} />
-      <Route path="/trail/:trailId" element={<Trail />} />
-      <Route path="/social" element={<Social />} />
-      
-      {/* Protected routes */}
-      <Route path="/profile" element={
-        <ProtectedRoute>
-          <ProfilePage />
-        </ProtectedRoute>
-      } />
-      
-      <Route path="/badges" element={
-        <ProtectedRoute>
-          <Badges />
-        </ProtectedRoute>
-      } />
-      
-      <Route path="/admin" element={
-        <ProtectedRoute>
-          <AdminRedirect />
-        </ProtectedRoute>
-      } />
-      
-      <Route path="/admin/trails/import" element={
-        <ProtectedRoute>
-          <AdminTrailImport />
-        </ProtectedRoute>
-      } />
-      
-      <Route path="/auto-import" element={
-        <ProtectedRoute>
-          <AutoImportPage />
-        </ProtectedRoute>
-      } />
-      
-      <Route path="*" element={<NotFound />} />
-    </Routes>
-  );
-}
+import React, { useState, useEffect } from 'react';
+import { Routes, Route } from 'react-router-dom';
+import { useAuth } from './hooks/use-auth';
+import HomePage from './pages/HomePage';
+import Auth from './pages/Auth';
+import Trail from './pages/Trail';
+import Discover from './pages/Discover';
+import Social from './pages/Social';
+import Profile from './pages/Profile';
+import AdminTrailImport from './pages/AdminTrailImport';
+import NotFound from './pages/NotFound';
+import Legal from './pages/Legal';
+import AlbumDetail from './pages/AlbumDetail';
+import CreateAlbum from './pages/CreateAlbum';
+import AdminRedirect from './pages/AdminRedirect';
+import AdminImportGuidePage from './pages/AdminImportGuidePage';
+import { ToastProvider } from './components/ToastProvider';
+import SplashScreen from './components/SplashScreen';
+import Badges from './pages/Badges';
+import AutoImport from './pages/AutoImport';
+import './App.css';
 
 function App() {
-  const [isMounted, setIsMounted] = useState(false);
+  const { user } = useAuth();
+  const [splashFinished, setSplashFinished] = useState(false);
 
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  // Prevent route transitions during initial mount to avoid hydration issues
-  if (!isMounted) {
-    return <LoadingFallback message="Loading GreenTrails..." />;
+  if (!splashFinished) {
+    return <SplashScreen onFinished={() => setSplashFinished(true)} />;
   }
 
   return (
-    <ThemeProvider
-      attribute="class"
-      defaultTheme="system"
-      enableSystem
-      disableTransitionOnChange
-    >
-      <AuthProvider>
-        <Suspense fallback={<LoadingFallback />}>
-          <AppRoutes />
-        </Suspense>
-        <Toaster />
-      </AuthProvider>
-    </ThemeProvider>
+    <ToastProvider>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/auth" element={<Auth />} />
+        <Route path="/trail/:id" element={<Trail />} />
+        <Route path="/discover" element={<Discover />} />
+        <Route path="/social" element={<Social />} />
+        <Route path="/profile/:userId" element={<Profile />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/legal/:type" element={<Legal />} />
+        <Route path="/album/:albumId" element={<AlbumDetail />} />
+        <Route path="/album/create" element={<CreateAlbum />} />
+        <Route path="/badges" element={<Badges />} />
+        {user && (
+          <>
+            <Route path="/admin/import" element={<AdminTrailImport />} />
+            <Route path="/admin" element={<AdminRedirect />} />
+            <Route path="/admin/guide" element={<AdminImportGuidePage />} />
+            <Route path="/admin/auto-import" element={<AutoImport />} />
+          </>
+        )}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </ToastProvider>
   );
 }
 

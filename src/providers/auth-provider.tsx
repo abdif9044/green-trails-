@@ -5,7 +5,7 @@ import { useAuthState } from '@/hooks/auth/use-auth-state';
 import { useAuthMethods } from '@/hooks/auth/use-auth-methods';
 import { useUserManagement } from '@/hooks/auth/use-user-management';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/hooks/use-toast';
 import { Session } from '@supabase/supabase-js';
 import { initializeAuthState, setupAuthStateListener } from '@/utils/auth-utils';
 
@@ -14,7 +14,6 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-  const { toast } = useToast();
   const { user, session, loading, setUser, setSession, setLoading } = useAuthState();
   const { signIn, signUp, signOut } = useAuthMethods(user);
   const { verifyAge, resetPassword, updatePassword } = useUserManagement(user);

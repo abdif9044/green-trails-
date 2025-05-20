@@ -1,6 +1,6 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0'
-import { corsHeaders } from '../import-trails/utils/cors.ts'
+import { corsHeaders } from './utils/cors.ts'
 import { Database } from '../import-trails/types.ts'
 
 // Create a Supabase client with the Auth context of the logged in user.

@@ -1,8 +1,18 @@
 
+import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 
-export const ToastProvider = () => {
-  return <Toaster />;
+interface ToastProviderProps {
+  children?: React.ReactNode;
+}
+
+export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
+  return (
+    <>
+      <Toaster />
+      {children}
+    </>
+  );
 };
 
 export default ToastProvider;

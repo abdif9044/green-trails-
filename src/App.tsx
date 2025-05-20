@@ -15,9 +15,10 @@ function App() {
   }
 
   return (
-    <ToastProvider>
+    <>
+      <ToastProvider />
       <AppRoutes />
-    </ToastProvider>
+    </>
   );
 }
 

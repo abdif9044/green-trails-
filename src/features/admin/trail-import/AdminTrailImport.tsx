@@ -1,7 +1,6 @@
 
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/hooks/use-auth";
 import { useTrailImport } from "@/hooks/useTrailImport";
 import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
@@ -20,7 +19,6 @@ import ImportTabs from "./components/ImportTabs";
 
 const AdminTrailImport = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = React.useState("bulk");
   
@@ -69,19 +67,9 @@ const AdminTrailImport = () => {
   });
 
   useEffect(() => {
-    // Check if user is authenticated
-    if (!user) {
-      toast({
-        title: "Authentication required",
-        description: "Please sign in to access this page.",
-        variant: "destructive",
-      });
-      navigate("/auth");
-      return;
-    }
-    
+    // Load data when component mounts, no user authentication check
     loadData();
-  }, [user, navigate, toast, loadData]);
+  }, [loadData]);
   
   // Check if database tables exist and set them up if needed
   useEffect(() => {

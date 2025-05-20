@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { useAuth } from './hooks/use-auth';
@@ -28,12 +27,17 @@ const AppRoutes: React.FC = () => {
       <Route path="/trails/:id" element={<Trail />} />
       <Route path="/discover" element={<Discover />} />
       <Route path="/social" element={<Social />} />
+      
+      {/* Profile routes - keep authentication requirement */}
       <Route path="/profile" element={<Profile />} />
       <Route path="/profile/:id" element={<Profile />} />
+      
+      {/* Admin routes - no longer require authentication */}
       <Route path="/admin/import" element={<AdminTrailImport />} />
       <Route path="/admin/auto-import" element={<AutoImport />} />
       <Route path="/admin/import-guide" element={<AdminImportGuidePage />} />
       <Route path="/admin" element={<AdminRedirect />} />
+      
       <Route path="/legal/:id" element={<Legal />} />
       <Route path="/album/:id" element={<AlbumDetail />} />
       <Route path="/album/create" element={<CreateAlbum />} />

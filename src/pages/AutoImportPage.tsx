@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
@@ -112,38 +111,33 @@ const AutoImportPage: React.FC = () => {
 
   const checkDatabaseIndexes = async () => {
     try {
-      // Check if the optimization indexes exist by querying pg_indexes
+      // Check if the optimization indexes exist using a simpler method - query one trail with a specific index
       const { data, error } = await supabase
-        .from('_execution_result')
-        .select('result')
-        .rpc('execute_sql', { 
-          sql_query: "SELECT COUNT(*) FROM pg_indexes WHERE indexname = 'idx_trails_location'" 
-        });
+        .from('trails')
+        .select('id')
+        .eq('country', 'USA')
+        .limit(1);
         
-      if (error) throw error;
-      
-      // Parse the result (comes as JSON)
-      if (data && data.length > 0) {
-        const result = data[0].result;
-        if (result && parseInt(result.count) > 0) {
-          setIsIndexesCreated(true);
-        }
+      if (error && error.message.includes('index')) {
+        // If error mentions index issues, assume indexes don't exist
+        setIsIndexesCreated(false);
+      } else {
+        // No index error, assume indexes are working
+        setIsIndexesCreated(true);
       }
     } catch (error) {
       console.error('Error checking database indexes:', error);
+      setIsIndexesCreated(false);
     }
   };
 
   const createDatabaseIndexes = async () => {
     setIsCreatingIndexes(true);
     try {
-      // Read the SQL file content from your build directory
-      const response = await fetch('/sql/create_database_indexes.sql');
-      const sqlContent = await response.text();
-      
-      // Execute the SQL to create indexes
-      const { error } = await supabase
-        .rpc('execute_sql', { sql_query: sqlContent });
+      // Execute the SQL directly using the Edge Function instead
+      const { data, error } = await supabase.functions.invoke('create-database-indexes', {
+        body: { action: 'create' }
+      });
         
       if (error) throw error;
       

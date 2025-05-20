@@ -66,6 +66,11 @@ no_hooks = false
 verify_jwt = false  # Allow webhook access
 no_hooks = false
 
+# Function to create database indexes
+[functions.create-database-indexes]
+verify_jwt = true
+no_hooks = false
+
 [functions.get-mapbox-token]
 verify_jwt = true
 no_hooks = false

@@ -28,3 +28,4 @@ const TrailMap: React.FC<TrailMapProps> = (props) => {
 
 export default TrailMap;
 export * from './context/MapContext';
+export type { TrailMapProps };

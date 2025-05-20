@@ -19,8 +19,52 @@ export const useTrailsQuery = (currentFilters: TrailFilters, onTrailCountChange?
       try {
         console.log("Fetching trails with filters:", currentFilters);
         
-        // Build the query based on filters
-        let query = supabase
+        // First get the count with a separate query
+        let countQuery = supabase
+          .from('trails')
+          .select('*', { count: 'exact', head: true });
+          
+        // Apply the same filters to both queries
+        if (currentFilters.searchQuery) {
+          countQuery = countQuery.ilike('name', `%${currentFilters.searchQuery}%`);
+        }
+        
+        if (currentFilters.difficulty) {
+          countQuery = countQuery.eq('difficulty', currentFilters.difficulty);
+        }
+        
+        if (currentFilters.lengthRange) {
+          countQuery = countQuery
+            .gte('length', currentFilters.lengthRange[0])
+            .lte('length', currentFilters.lengthRange[1]);
+        }
+        
+        if (currentFilters.country) {
+          countQuery = countQuery.eq('country', currentFilters.country);
+        }
+        
+        if (currentFilters.stateProvince) {
+          countQuery = countQuery.eq('state_province', currentFilters.stateProvince);
+        }
+        
+        if (!currentFilters.showAgeRestricted) {
+          countQuery = countQuery.eq('is_age_restricted', false);
+        }
+        
+        // Get the count
+        const { count, error: countError } = await countQuery;
+        
+        if (countError) {
+          console.error('Error fetching trail count:', countError);
+        } else if (count !== null) {
+          setTotalCount(count);
+          if (onTrailCountChange) {
+            onTrailCountChange(count);
+          }
+        }
+        
+        // Now fetch the actual data
+        let dataQuery = supabase
           .from('trails')
           .select(`
             *,
@@ -31,35 +75,34 @@ export const useTrailsQuery = (currentFilters: TrailFilters, onTrailCountChange?
                 details,
                 tag_type
               )
-            ),
-            count() OVER() as total_count
+            )
           `);
         
         // Apply filters
         if (currentFilters.searchQuery) {
-          query = query.ilike('name', `%${currentFilters.searchQuery}%`);
+          dataQuery = dataQuery.ilike('name', `%${currentFilters.searchQuery}%`);
         }
         
         if (currentFilters.difficulty) {
-          query = query.eq('difficulty', currentFilters.difficulty);
+          dataQuery = dataQuery.eq('difficulty', currentFilters.difficulty);
         }
         
         if (currentFilters.lengthRange) {
-          query = query
+          dataQuery = dataQuery
             .gte('length', currentFilters.lengthRange[0])
             .lte('length', currentFilters.lengthRange[1]);
         }
         
         if (currentFilters.country) {
-          query = query.eq('country', currentFilters.country);
+          dataQuery = dataQuery.eq('country', currentFilters.country);
         }
         
         if (currentFilters.stateProvince) {
-          query = query.eq('state_province', currentFilters.stateProvince);
+          dataQuery = dataQuery.eq('state_province', currentFilters.stateProvince);
         }
         
         if (!currentFilters.showAgeRestricted) {
-          query = query.eq('is_age_restricted', false);
+          dataQuery = dataQuery.eq('is_age_restricted', false);
         }
         
         // Add pagination
@@ -67,7 +110,7 @@ export const useTrailsQuery = (currentFilters: TrailFilters, onTrailCountChange?
         const to = from + pageSize - 1;
         
         // Execute the query with pagination and ordering
-        const { data, error } = await query
+        const { data, error } = await dataQuery
           .order('name', { ascending: true })
           .range(from, to);
         
@@ -93,14 +136,6 @@ export const useTrailsQuery = (currentFilters: TrailFilters, onTrailCountChange?
             setTrails([]);
           }
           return;
-        }
-        
-        // Extract total count from the first row
-        if (data.length > 0 && data[0].total_count) {
-          setTotalCount(data[0].total_count);
-          if (onTrailCountChange) {
-            onTrailCountChange(data[0].total_count);
-          }
         }
         
         // Fetch likes counts separately for the current page of trails

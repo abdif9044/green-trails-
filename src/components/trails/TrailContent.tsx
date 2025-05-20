@@ -45,13 +45,14 @@ const TrailContent: React.FC<TrailContentProps> = ({ trail }) => {
       <TabsContent value="map" className="mt-6">
         <Card>
           <CardContent className="p-0">
-            <TrailMap
-              trails={[trail]}
-              center={trail.coordinates}
-              zoom={12}
-              className="h-[400px] w-full"
-              showTrailPaths={true}
-            />
+            <div className="h-[400px] w-full">
+              <TrailMap
+                trails={[trail]}
+                center={trail.coordinates}
+                zoom={12}
+                showTrailPaths={true}
+              />
+            </div>
           </CardContent>
         </Card>
       </TabsContent>

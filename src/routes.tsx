@@ -17,33 +17,27 @@ import AdminRedirect from './pages/AdminRedirect';
 import AdminImportGuidePage from './pages/AdminImportGuidePage';
 import Badges from './pages/Badges';
 import AutoImport from './pages/AutoImport';
-import PrivacyPolicy from './pages/PrivacyPolicy';
 
 const AppRoutes: React.FC = () => {
   const { user } = useAuth();
-  
+
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />
       <Route path="/auth" element={<Auth />} />
-      <Route path="/trail/:id" element={<Trail />} />
+      <Route path="/trails/:id" element={<Trail />} />
       <Route path="/discover" element={<Discover />} />
       <Route path="/social" element={<Social />} />
-      <Route path="/profile/:userId" element={<Profile />} />
       <Route path="/profile" element={<Profile />} />
-      <Route path="/legal/:type" element={<Legal />} />
-      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-      <Route path="/album/:albumId" element={<AlbumDetail />} />
+      <Route path="/profile/:id" element={<Profile />} />
+      <Route path="/admin/import" element={<AdminTrailImport />} />
+      <Route path="/admin/auto-import" element={<AutoImport />} />
+      <Route path="/admin/import-guide" element={<AdminImportGuidePage />} />
+      <Route path="/admin" element={<AdminRedirect />} />
+      <Route path="/legal/:id" element={<Legal />} />
+      <Route path="/album/:id" element={<AlbumDetail />} />
       <Route path="/album/create" element={<CreateAlbum />} />
       <Route path="/badges" element={<Badges />} />
-      {user && (
-        <>
-          <Route path="/admin/import" element={<AdminTrailImport />} />
-          <Route path="/admin" element={<AdminRedirect />} />
-          <Route path="/admin/guide" element={<AdminImportGuidePage />} />
-          <Route path="/admin/auto-import" element={<AutoImport />} />
-        </>
-      )}
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

@@ -1,11 +1,10 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0'
 import { corsHeaders } from './utils/cors.ts'
-import { Database } from '../import-trails/types.ts'
 
 // Create a Supabase client with the Auth context of the logged in user.
 const createServiceClient = () => {
-  return createClient<Database>(
+  return createClient(
     Deno.env.get('SUPABASE_URL') ?? '',
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
   )

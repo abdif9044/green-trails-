@@ -4,20 +4,52 @@ import { Capacitor } from '@capacitor/core';
 
 const SplashScreen: React.FC<{ onFinished: () => void }> = ({ onFinished }) => {
   const [visible, setVisible] = useState(true);
+  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
     // Only show splash screen for a few seconds in mobile environments
     if (Capacitor.isNativePlatform()) {
+      // Animate progress bar
+      const progressInterval = setInterval(() => {
+        setProgress(prev => {
+          const newProgress = prev + 5;
+          if (newProgress >= 100) {
+            clearInterval(progressInterval);
+            // Wait a bit after reaching 100%
+            setTimeout(() => {
+              setVisible(false);
+              onFinished();
+            }, 500);
+            return 100;
+          }
+          return newProgress;
+        });
+      }, 100);
+      
+      return () => clearInterval(progressInterval);
+    } else {
+      // On web, show a quick splash screen
       const timer = setTimeout(() => {
         setVisible(false);
         onFinished();
-      }, 3000);
+      }, 1500);
       
-      return () => clearTimeout(timer);
-    } else {
-      // On web, don't show the splash screen
-      setVisible(false);
-      onFinished();
+      // Animate progress bar more quickly
+      const progressInterval = setInterval(() => {
+        setProgress(prev => {
+          const newProgress = prev + 10;
+          if (newProgress >= 100) {
+            clearInterval(progressInterval);
+            return 100;
+          }
+          return newProgress;
+        });
+      }, 100);
+      
+      return () => {
+        clearTimeout(timer);
+        clearInterval(progressInterval);
+      };
     }
   }, [onFinished]);
 
@@ -34,9 +66,13 @@ const SplashScreen: React.FC<{ onFinished: () => void }> = ({ onFinished }) => {
       </div>
       <h1 className="text-white text-2xl font-bold">GreenTrails</h1>
       <p className="text-greentrail-200 mt-2">Discover Nature's Path, Find Your Peace</p>
-      <div className="mt-6">
-        <div className="w-12 h-12 rounded-full border-4 border-greentrail-200 border-t-greentrail-500 animate-spin"></div>
+      <div className="w-64 bg-greentrail-700 rounded-full h-2 mt-6">
+        <div 
+          className="bg-greentrail-300 h-2 rounded-full transition-all duration-300 ease-out"
+          style={{ width: `${progress}%` }}
+        />
       </div>
+      <p className="text-greentrail-300 text-sm mt-2">Loading trail data...</p>
     </div>
   );
 };

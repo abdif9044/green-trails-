@@ -8,6 +8,9 @@ import { createSampleTrails } from '../utils/sample-trail-data';
 export const useTrailsQuery = (currentFilters: TrailFilters, onTrailCountChange?: (count: number) => void) => {
   const [trails, setTrails] = useState<Trail[]>([]);
   const [loading, setLoading] = useState(true);
+  const [totalCount, setTotalCount] = useState(0);
+  const [page, setPage] = useState(1);
+  const pageSize = 24; // Number of trails per page
 
   useEffect(() => {
     const fetchTrails = async () => {
@@ -28,9 +31,11 @@ export const useTrailsQuery = (currentFilters: TrailFilters, onTrailCountChange?
                 details,
                 tag_type
               )
-            )
+            ),
+            count() OVER() as total_count
           `);
         
+        // Apply filters
         if (currentFilters.searchQuery) {
           query = query.ilike('name', `%${currentFilters.searchQuery}%`);
         }
@@ -57,8 +62,14 @@ export const useTrailsQuery = (currentFilters: TrailFilters, onTrailCountChange?
           query = query.eq('is_age_restricted', false);
         }
         
-        // Execute the query
-        const { data, error } = await query.limit(20);
+        // Add pagination
+        const from = (page - 1) * pageSize;
+        const to = from + pageSize - 1;
+        
+        // Execute the query with pagination and ordering
+        const { data, error } = await query
+          .order('name', { ascending: true })
+          .range(from, to);
         
         if (error) {
           console.error('Error fetching trails:', error);
@@ -68,17 +79,31 @@ export const useTrailsQuery = (currentFilters: TrailFilters, onTrailCountChange?
         console.log("Raw trails data:", data);
         
         if (!data || data.length === 0) {
-          // If no trails in database, create sample data for development
-          console.log("No trails found, creating sample trails");
-          const sampleTrails = createSampleTrails();
-          setTrails(sampleTrails);
-          if (onTrailCountChange) {
-            onTrailCountChange(sampleTrails.length);
+          if (page === 1) {
+            // Only fall back to sample data on first page and if no real data exists
+            console.log("No trails found, creating sample trails");
+            const sampleTrails = createSampleTrails();
+            setTrails(sampleTrails);
+            setTotalCount(sampleTrails.length);
+            if (onTrailCountChange) {
+              onTrailCountChange(sampleTrails.length);
+            }
+          } else {
+            // No more data for this page
+            setTrails([]);
           }
           return;
         }
         
-        // Fetch likes counts separately to avoid relationship errors
+        // Extract total count from the first row
+        if (data.length > 0 && data[0].total_count) {
+          setTotalCount(data[0].total_count);
+          if (onTrailCountChange) {
+            onTrailCountChange(data[0].total_count);
+          }
+        }
+        
+        // Fetch likes counts separately for the current page of trails
         const trailIds = data.map(trail => trail.id);
         const { data: likesData, error: likesError } = await supabase
           .from('trail_likes')
@@ -110,19 +135,17 @@ export const useTrailsQuery = (currentFilters: TrailFilters, onTrailCountChange?
         console.log("Formatted trails:", formattedTrails);
         setTrails(formattedTrails);
         
-        if (onTrailCountChange) {
-          onTrailCountChange(formattedTrails.length);
-        }
-        
       } catch (error) {
         console.error('Error fetching trails:', error);
         
-        // Fallback to sample data if fetching fails
-        const sampleTrails = createSampleTrails();
-        setTrails(sampleTrails);
-        
-        if (onTrailCountChange) {
-          onTrailCountChange(sampleTrails.length);
+        // Fallback to sample data if fetching fails on first page
+        if (page === 1) {
+          const sampleTrails = createSampleTrails();
+          setTrails(sampleTrails);
+          setTotalCount(sampleTrails.length);
+          if (onTrailCountChange) {
+            onTrailCountChange(sampleTrails.length);
+          }
         }
       } finally {
         setLoading(false);
@@ -130,7 +153,19 @@ export const useTrailsQuery = (currentFilters: TrailFilters, onTrailCountChange?
     };
     
     fetchTrails();
-  }, [currentFilters, onTrailCountChange]);
+  }, [currentFilters, page, onTrailCountChange]);
 
-  return { trails, loading };
+  // Function to change page
+  const changePage = (newPage: number) => {
+    setPage(newPage);
+  };
+
+  return { 
+    trails, 
+    loading, 
+    totalCount, 
+    page, 
+    pageSize, 
+    changePage 
+  };
 };

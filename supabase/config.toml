@@ -1,5 +1,95 @@
 
 project_id = "qzcplkyinvndvhnevsbt"
 
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "storage", "graphql_public"]
+
+[db]
+port = 54322
+
+[studio]
+enabled = true
+port = 54323
+
+# Enable Database Webhooks
+[db.database_webhooks]
+enabled = true
+port = 54324
+
+[inbucket]
+enabled = true
+port = 54325
+
+[storage]
+enabled = true
+
+[auth]
+enabled = true
+port = 54326
+
+[realtime]
+enabled = true
+port = 54327
+
+[analytics]
+enabled = true
+port = 54328
+
+[vector]
+enabled = true
+port = 54329
+
+# Function configuration
+[functions]
+enabled = true
+port = 54330
+
+# Function that imports trail data from external sources
+[functions.import-trails]
+verify_jwt = true
+no_hooks = false
+
+# Enhanced trail importer for large-scale data
+[functions.enhanced-import-trails]
+verify_jwt = true
+no_hooks = false
+
+# Optimized function for bulk importing trails
+[functions.bulk-import-trails-optimized]
+verify_jwt = true
+no_hooks = false
+
+# Trail data refresh scheduler function
+[functions.trail-refresh-scheduler]
+verify_jwt = false  # Allow webhook access
+no_hooks = false
+
 [functions.get-mapbox-token]
-verify_jwt = false
+verify_jwt = true
+no_hooks = false
+
+[functions.get-weather]
+verify_jwt = true
+no_hooks = false
+
+[functions.get-weather-forecast]
+verify_jwt = true
+no_hooks = false
+
+[functions.get-weather-key]
+verify_jwt = true
+no_hooks = false
+
+[functions.roamie-assistant]
+verify_jwt = true
+no_hooks = false
+
+[functions.check-openai-key]
+verify_jwt = true
+no_hooks = false
+
+[functions.set-openai-key]
+verify_jwt = true
+no_hooks = false

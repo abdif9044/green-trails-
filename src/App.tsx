@@ -20,6 +20,7 @@ import SplashScreen from './components/SplashScreen';
 import Badges from './pages/Badges';
 import AutoImport from './pages/AutoImport';
 import './App.css';
+import AppRoutes from './routes';
 
 function App() {
   const { user } = useAuth();
@@ -31,28 +32,7 @@ function App() {
 
   return (
     <ToastProvider>
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/auth" element={<Auth />} />
-        <Route path="/trail/:id" element={<Trail />} />
-        <Route path="/discover" element={<Discover />} />
-        <Route path="/social" element={<Social />} />
-        <Route path="/profile/:userId" element={<Profile />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/legal/:type" element={<Legal />} />
-        <Route path="/album/:albumId" element={<AlbumDetail />} />
-        <Route path="/album/create" element={<CreateAlbum />} />
-        <Route path="/badges" element={<Badges />} />
-        {user && (
-          <>
-            <Route path="/admin/import" element={<AdminTrailImport />} />
-            <Route path="/admin" element={<AdminRedirect />} />
-            <Route path="/admin/guide" element={<AdminImportGuidePage />} />
-            <Route path="/admin/auto-import" element={<AutoImport />} />
-          </>
-        )}
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+      <AppRoutes />
     </ToastProvider>
   );
 }

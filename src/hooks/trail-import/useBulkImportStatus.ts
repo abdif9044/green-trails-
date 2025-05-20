@@ -1,79 +1,111 @@
 
-import { useState, useEffect } from 'react';
-import { useToast } from '@/hooks/use-toast';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { BulkImportJob } from '@/hooks/useTrailImport';
-import { createExtendedSupabaseClient } from '@/types/supabase-extensions';
+import { BulkImportJob } from '../useTrailImport';
 
 export function useBulkImportStatus(reloadData: () => void) {
   const [activeBulkJobId, setActiveBulkJobId] = useState<string | null>(null);
-  const [bulkProgress, setBulkProgress] = useState(0);
-  const [bulkImportLoading, setBulkImportLoading] = useState(false);
-  const { toast } = useToast();
+  const [bulkProgress, setBulkProgress] = useState<number>(0);
+  const [bulkImportLoading, setBulkImportLoading] = useState<boolean>(false);
+  const [bulkJobDetails, setBulkJobDetails] = useState<BulkImportJob | null>(null);
 
-  // Effect to monitor the active bulk job
-  useEffect(() => {
-    if (!activeBulkJobId) return;
+  // Function to check for active bulk jobs
+  const checkForActiveBulkJob = useCallback((bulkJobs?: BulkImportJob[]) => {
+    if (!bulkJobs || bulkJobs.length === 0) return;
     
-    const interval = setInterval(async () => {
+    // Look for in-progress jobs
+    const activeJob = bulkJobs.find(job => 
+      job.status === 'processing' || job.status === 'queued'
+    );
+    
+    if (activeJob) {
+      console.log('Found active bulk import job:', activeJob.id);
+      setActiveBulkJobId(activeJob.id);
+      
+      // Calculate initial progress
+      if (activeJob.total_trails_requested > 0) {
+        const progress = Math.min(
+          100,
+          Math.round((activeJob.trails_processed / activeJob.total_trails_requested) * 100)
+        );
+        setBulkProgress(progress);
+        setBulkJobDetails(activeJob);
+      }
+      
+      // Start monitoring progress
+      startProgressUpdates(activeJob.id);
+    }
+  }, []);
+
+  // Function to start monitoring progress updates
+  const startProgressUpdates = useCallback((jobId: string) => {
+    setBulkImportLoading(true);
+    
+    const intervalId = setInterval(async () => {
       try {
-        // Create an extended client with the additional types
-        const extendedSupabase = createExtendedSupabaseClient(supabase);
-        
-        const { data, error } = await extendedSupabase
-          .from("bulk_import_jobs")
-          .select("*")
-          .eq("id", activeBulkJobId)
+        const { data: job, error } = await supabase
+          .from('bulk_import_jobs')
+          .select('*')
+          .eq('id', jobId)
           .single();
           
-        if (error || !data) {
-          clearInterval(interval);
+        if (error) {
+          console.error('Error fetching bulk job status:', error);
           return;
         }
         
-        if (data.status === "completed" || data.status === "error") {
-          // Job finished
-          clearInterval(interval);
-          setActiveBulkJobId(null);
-          reloadData();
+        if (job) {
+          setBulkJobDetails(job);
           
-          toast({
-            title: data.status === "completed" ? "Bulk import completed" : "Bulk import error",
-            description: `Processed ${data.trails_processed.toLocaleString()} trails: ${data.trails_added.toLocaleString()} added, ${data.trails_updated.toLocaleString()} updated, ${data.trails_failed.toLocaleString()} failed`,
-            variant: data.status === "completed" ? "default" : "destructive",
-          });
-        } else {
-          // Job in progress
-          const progress = Math.round((data.trails_processed / data.total_trails_requested) * 100);
-          setBulkProgress(progress);
+          // Calculate progress
+          if (job.total_trails_requested > 0) {
+            const progress = Math.min(
+              100,
+              Math.round((job.trails_processed / job.total_trails_requested) * 100)
+            );
+            setBulkProgress(progress);
+          }
+          
+          // Check if job is completed or errored
+          if (job.status === 'completed' || job.status === 'error') {
+            console.log('Bulk job completed:', job.id);
+            clearInterval(intervalId);
+            
+            // Wait 2 seconds before clearing the active job to allow progress display
+            setTimeout(() => {
+              setActiveBulkJobId(null);
+              setBulkImportLoading(false);
+              
+              // Reload data to show updated results
+              reloadData();
+            }, 2000);
+          }
         }
-      } catch (error) {
-        console.error("Error checking bulk job status:", error);
+      } catch (e) {
+        console.error('Error monitoring bulk job status:', e);
       }
-    }, 2000);
+    }, 3000);
     
-    return () => clearInterval(interval);
-  }, [activeBulkJobId, toast, reloadData]);
+    // Store the interval ID to clear it later
+    return () => clearInterval(intervalId);
+  }, [reloadData]);
 
-  // Check if there's an active bulk job when jobs are loaded
-  const checkForActiveBulkJob = (bulkImportJobs: BulkImportJob[] | undefined) => {
-    const activeJob = bulkImportJobs?.find(job => job.status === 'processing');
-    if (activeJob) {
-      setActiveBulkJobId(activeJob.id);
-      const progress = Math.round((activeJob.trails_processed / activeJob.total_trails_requested) * 100);
-      setBulkProgress(progress);
-    } else {
-      setActiveBulkJobId(null);
-    }
-  };
+  // Effect to clear active job when component unmounts
+  useEffect(() => {
+    return () => {
+      // This is just a cleanup function - nothing needs to happen here
+      // since the interval is managed within startProgressUpdates
+    };
+  }, []);
 
   return {
     activeBulkJobId,
     setActiveBulkJobId,
     bulkProgress,
-    setBulkProgress,
     bulkImportLoading,
     setBulkImportLoading,
-    checkForActiveBulkJob
+    bulkJobDetails,
+    checkForActiveBulkJob,
+    startProgressUpdates
   };
 }

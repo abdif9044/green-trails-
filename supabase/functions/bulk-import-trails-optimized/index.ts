@@ -60,150 +60,125 @@ serve(async (req) => {
       );
     }
 
-    // Track job progress
-    let totalProcessed = 0;
-    let totalAdded = 0;
-    let totalUpdated = 0;
-    let totalFailed = 0;
-    
-    // Calculate trails per source
-    const totalPerSource = Math.ceil(totalTrails / sourceIds.length);
+    console.log(`Starting bulk import job ${bulkJob.id} for ${totalTrails} trails from ${sourceIds.length} sources`);
 
-    // Set up progress update function for long-running jobs
-    const updateProgress = async () => {
-      try {
-        await supabase
-          .from('bulk_import_jobs')
-          .update({
-            trails_processed: totalProcessed,
-            trails_added: totalAdded,
-            trails_updated: totalUpdated,
-            trails_failed: totalFailed,
-            last_updated: new Date().toISOString()
-          })
-          .eq('id', bulkJob.id);
-      } catch (error) {
-        console.error('Error updating progress:', error);
+    // Process source IDs in parallel to maximize throughput
+    const sourcePromises = sourceIds.map(async (sourceId) => {
+      console.log(`Processing source ${sourceId}: targeting ${Math.ceil(totalTrails / sourceIds.length)} trails`);
+      
+      // Get source information
+      const { data: source } = await supabase
+        .from('trail_data_sources')
+        .select('*')
+        .eq('id', sourceId)
+        .single();
+        
+      if (!source) {
+        console.error(`Source ${sourceId} not found`);
+        return {
+          source_id: sourceId,
+          success: false,
+          error: 'Source not found'
+        };
       }
-    };
 
-    // Start progress updates every 3 seconds
-    const progressInterval = setInterval(updateProgress, 3000);
-
-    try {
-      // Process source IDs in batches based on concurrency
-      for (let i = 0; i < sourceIds.length; i += concurrency) {
-        const batch = sourceIds.slice(i, i + concurrency);
-        const promises = batch.map(async (sourceId) => {
-          try {
-            // Calculate how many trails to import from this source
-            let remainingForThisSource = totalPerSource;
-            let offset = 0;
-            
-            // Get source information
-            const { data: source } = await supabase
-              .from('trail_data_sources')
-              .select('*')
-              .eq('id', sourceId)
-              .single();
-              
-            if (!source) {
-              console.error(`Source ${sourceId} not found`);
-              return null;
+      // Calculate trails per source evenly
+      const trailsPerSource = Math.ceil(totalTrails / sourceIds.length);
+      let remainingToProcess = trailsPerSource;
+      let currentOffset = 0;
+      let totalProcessed = 0;
+      let totalAdded = 0;
+      let totalUpdated = 0;
+      let totalFailed = 0;
+      
+      // Process in batches for better memory management
+      while (remainingToProcess > 0) {
+        const currentBatchSize = Math.min(remainingToProcess, batchSize);
+        
+        try {
+          // Call import-trails function for this batch
+          const response = await supabase.functions.invoke('import-trails', {
+            body: { 
+              sourceId, 
+              limit: currentBatchSize, 
+              offset: currentOffset,
+              bulkJobId: bulkJob.id
             }
+          });
+          
+          if (response.error) {
+            console.error(`Error importing batch from source ${sourceId}:`, response.error);
+            totalFailed += currentBatchSize;
             
-            console.log(`Processing source ${source.name} (${source.id}): targeting ${remainingForThisSource} trails`);
+            // Update bulk job with progress
+            await updateBulkJobProgress(supabase, bulkJob.id, {
+              processed: currentBatchSize,
+              failed: currentBatchSize
+            });
             
-            // Import in batches until we reach the target or run out of data
-            while (remainingForThisSource > 0) {
-              const currentBatchSize = Math.min(remainingForThisSource, batchSize);
-              
-              // Call the enhanced-import-trails function with a batch
-              const response = await supabase.functions.invoke('enhanced-import-trails', {
-                body: { 
-                  sourceId, 
-                  limit: currentBatchSize, 
-                  offset,
-                  bulkJobId: bulkJob.id
-                }
-              });
-              
-              if (response.error) {
-                console.error(`Error importing from source ${sourceId}:`, response.error);
-                totalFailed += currentBatchSize;
-                break;
-              }
-              
-              const result = response.data;
-              
-              // Update counters
-              totalProcessed += result.trails_processed;
-              totalAdded += result.trails_added;
-              totalUpdated += result.trails_updated;
-              totalFailed += result.trails_failed;
-              
-              // Prepare for next batch
-              remainingForThisSource -= result.trails_processed;
-              offset += result.trails_processed;
-              
-              // If we didn't get as many trails as requested, we're out of data
-              if (result.trails_processed < currentBatchSize) {
-                console.log(`Source ${sourceId} provided fewer trails than requested, moving on`);
-                break;
-              }
-              
-              // Add delay to avoid overwhelming the database
-              await new Promise(r => setTimeout(r, 500));
-            }
-            
-            return {
-              source_id: sourceId,
-              trails_processed: totalProcessed,
-              status: 'completed'
-            };
-          } catch (error) {
-            console.error(`Error processing source ${sourceId}:`, error);
-            totalFailed += totalPerSource;
-            return {
-              source_id: sourceId,
-              status: 'error',
-              error: error.message
-            };
+            break;
           }
-        });
-        
-        // Wait for this batch of sources to complete
-        await Promise.all(promises);
-        
-        // Update progress after each batch
-        await updateProgress();
+          
+          // Update counters
+          totalProcessed += response.data.trails_processed || 0;
+          totalAdded += response.data.trails_added || 0;
+          totalUpdated += response.data.trails_updated || 0;
+          totalFailed += response.data.trails_failed || 0;
+          
+          // Update bulk job with progress
+          await updateBulkJobProgress(supabase, bulkJob.id, {
+            processed: response.data.trails_processed || 0,
+            added: response.data.trails_added || 0,
+            updated: response.data.trails_updated || 0,
+            failed: response.data.trails_failed || 0
+          });
+          
+          // Check if we reached the end of available data
+          if (response.data.trails_processed < currentBatchSize) {
+            console.log(`Source ${sourceId} has no more data after ${totalProcessed} trails`);
+            break;
+          }
+          
+          // Prepare for next batch
+          remainingToProcess -= currentBatchSize;
+          currentOffset += currentBatchSize;
+          
+          // Small pause to avoid overwhelming the system
+          await new Promise(r => setTimeout(r, 100));
+        } catch (error) {
+          console.error(`Error processing batch for source ${sourceId}:`, error);
+          break;
+        }
       }
-    } finally {
-      // Stop progress updates
-      clearInterval(progressInterval);
-    }
+      
+      return {
+        source_id: sourceId,
+        success: true,
+        trails_processed: totalProcessed,
+        trails_added: totalAdded,
+        trails_updated: totalUpdated, 
+        trails_failed: totalFailed
+      };
+    });
+    
+    // Process all sources in parallel up to the concurrency limit
+    const sourceResults = await Promise.all(sourcePromises);
     
     // Mark bulk job as completed
     await supabase
       .from('bulk_import_jobs')
       .update({
         status: 'completed',
-        completed_at: new Date().toISOString(),
-        trails_processed: totalProcessed,
-        trails_added: totalAdded,
-        trails_updated: totalUpdated,
-        trails_failed: totalFailed
+        completed_at: new Date().toISOString()
       })
       .eq('id', bulkJob.id);
     
+    // Return success response
     return new Response(
       JSON.stringify({
+        success: true,
         job_id: bulkJob.id,
-        status: 'completed',
-        trails_processed: totalProcessed,
-        trails_added: totalAdded,
-        trails_updated: totalUpdated,
-        trails_failed: totalFailed
+        results: sourceResults
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
@@ -212,8 +187,44 @@ serve(async (req) => {
     console.error('Unexpected error:', error);
     
     return new Response(
-      JSON.stringify({ error: 'Internal Server Error', details: error.message }),
+      JSON.stringify({ 
+        success: false,
+        error: 'Internal Server Error', 
+        details: error.message 
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
   }
 });
+
+// Helper function to update bulk job progress
+async function updateBulkJobProgress(
+  supabase: any,
+  jobId: string, 
+  progress: { processed?: number, added?: number, updated?: number, failed?: number }
+) {
+  try {
+    // Get current job status
+    const { data: job } = await supabase
+      .from('bulk_import_jobs')
+      .select('trails_processed, trails_added, trails_updated, trails_failed')
+      .eq('id', jobId)
+      .single();
+      
+    if (!job) return;
+    
+    // Update with incremental progress
+    await supabase
+      .from('bulk_import_jobs')
+      .update({
+        trails_processed: job.trails_processed + (progress.processed || 0),
+        trails_added: job.trails_added + (progress.added || 0),
+        trails_updated: job.trails_updated + (progress.updated || 0),
+        trails_failed: job.trails_failed + (progress.failed || 0),
+        last_updated: new Date().toISOString()
+      })
+      .eq('id', jobId);
+  } catch (e) {
+    console.error('Error updating job progress:', e);
+  }
+}

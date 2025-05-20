@@ -48,9 +48,8 @@ export function useBulkImportHandler(
         description: "Failed to start the large-scale trail import process.",
         variant: "destructive",
       });
-      return false;
-    } finally {
       setBulkImportLoading(false);
+      return false;
     }
   };
 

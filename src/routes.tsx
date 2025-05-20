@@ -15,7 +15,7 @@ import CreateAlbum from './pages/CreateAlbum';
 import AdminRedirect from './pages/AdminRedirect';
 import AdminImportGuidePage from './pages/AdminImportGuidePage';
 import Badges from './pages/Badges';
-import AutoImport from './pages/AutoImport';
+import AutoImportPage from './pages/AutoImportPage';
 
 const AppRoutes: React.FC = () => {
   const { user } = useAuth();
@@ -32,11 +32,14 @@ const AppRoutes: React.FC = () => {
       <Route path="/profile" element={<Profile />} />
       <Route path="/profile/:id" element={<Profile />} />
       
-      {/* Admin routes - no longer require authentication */}
+      {/* Admin routes with auto-import - no authentication requirement */}
       <Route path="/admin/import" element={<AdminTrailImport />} />
-      <Route path="/admin/auto-import" element={<AutoImport />} />
+      <Route path="/admin/auto-import" element={<AutoImportPage />} />
       <Route path="/admin/import-guide" element={<AdminImportGuidePage />} />
       <Route path="/admin" element={<AdminRedirect />} />
+      
+      {/* Quick route for auto-import */}
+      <Route path="/auto-import" element={<AdminTrailImport />} />
       
       <Route path="/legal/:id" element={<Legal />} />
       <Route path="/album/:id" element={<AlbumDetail />} />

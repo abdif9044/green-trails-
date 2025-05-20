@@ -12,18 +12,37 @@ export function useBulkImportHandler(
 
   // Function to start a bulk import
   const handleBulkImport = async (sourceIds: string[], trailCount: number) => {
-    if (sourceIds.length === 0) return false;
+    if (sourceIds.length === 0) {
+      toast({
+        title: "No sources selected",
+        description: "Please select at least one data source for import.",
+        variant: "destructive",
+      });
+      return false;
+    }
     
     setBulkImportLoading(true);
     setImportProgress(0);
     try {
+      console.log(`Starting bulk import of ${trailCount} trails from ${sourceIds.length} sources`);
+      
+      // First ensure indexes are created for better performance
+      try {
+        await supabase.functions.invoke('create-database-indexes', {
+          body: { action: 'create' }
+        });
+        console.log("Database indexes created or verified");
+      } catch (indexError) {
+        console.warn("Could not create indexes, but continuing with import:", indexError);
+      }
+      
       // Call the optimized bulk-import-trails-optimized edge function
       const response = await supabase.functions.invoke('bulk-import-trails-optimized', {
         body: { 
           sourceIds, 
           totalTrails: trailCount,
-          batchSize: 2500,  // Increased batch size for better performance
-          concurrency: 5    // Increased concurrency for parallel processing
+          batchSize: 1000,  // Smaller batch size for better stability
+          concurrency: 3    // Reduced concurrency to prevent DB overload
         }
       });
       
@@ -33,7 +52,7 @@ export function useBulkImportHandler(
       setActiveBulkJobId(response.data.job_id);
       
       toast({
-        title: "Large-scale import started",
+        title: "Trail import started",
         description: `Starting import of approximately ${trailCount.toLocaleString()} trails from ${sourceIds.length} sources.`,
       });
       
@@ -45,7 +64,7 @@ export function useBulkImportHandler(
       console.error('Bulk import error:', error);
       toast({
         title: "Import error",
-        description: "Failed to start the large-scale trail import process.",
+        description: "Failed to start the trail import process. Try again with fewer trails or sources.",
         variant: "destructive",
       });
       setBulkImportLoading(false);
@@ -78,6 +97,7 @@ export function useBulkImportHandler(
           // Stop monitoring once complete
           if (data.status === 'completed' || data.status === 'error') {
             clearInterval(intervalId);
+            setBulkImportLoading(false);
             
             // Show completion notification
             if (data.status === 'completed') {
@@ -92,6 +112,11 @@ export function useBulkImportHandler(
                 variant: "destructive",
               });
             }
+            
+            // Clear the active job ID after a short delay
+            setTimeout(() => {
+              setActiveBulkJobId(null);
+            }, 1000);
           }
         }
       } catch (e) {
@@ -99,7 +124,7 @@ export function useBulkImportHandler(
       }
     }, 3000); // Check progress every 3 seconds
     
-    // Cleanup the interval when component unmounts
+    // Return cleanup function
     return () => clearInterval(intervalId);
   };
 

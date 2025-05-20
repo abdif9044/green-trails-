@@ -6,6 +6,8 @@ import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import SEOProvider from "@/components/SEOProvider";
+import { Button } from "@/components/ui/button";
+import { PlayCircle } from "lucide-react";
 
 // Import refactored components
 import { useDBSetup } from "./hooks/useDBSetup";
@@ -56,7 +58,7 @@ const AdminTrailImport = () => {
     deselectAllSources 
   } = useSourceSelection(dataSources);
   
-  const { autoImportTriggered } = useAutoImport({
+  const { autoImportTriggered, triggerAutoImport } = useAutoImport({
     dataSources,
     loading,
     bulkImportLoading,
@@ -104,6 +106,18 @@ const AdminTrailImport = () => {
             retryDatabaseSetup={async () => await checkAndSetupDatabase()}
           />
         
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-3xl font-bold">Trail Data Import</h1>
+            <Button 
+              onClick={triggerAutoImport} 
+              disabled={bulkImportLoading || isSettingUpDb || loading || activeBulkJobId !== null}
+              className="bg-greentrail-600 hover:bg-greentrail-700"
+            >
+              <PlayCircle className="mr-2 h-4 w-4" />
+              Auto-Import Trails
+            </Button>
+          </div>
+          
           <ImportHeader
             bulkImportOpen={bulkImportOpen}
             setBulkImportOpen={setBulkImportOpen}

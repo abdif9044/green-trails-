@@ -54,18 +54,28 @@ export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setLoading(false);
     
+    console.log('Form submission started:', { email, showDobFields, day, month, year });
+    
+    // First validate basic credentials
     if (!validateForm(email, password, confirmPassword, showDobFields, day, month, year)) {
+      console.log('Basic validation failed');
+      setFormTouched(true);
       return;
     }
     
+    // If DOB fields aren't shown yet, show them
     if (!showDobFields) {
+      console.log('Showing DOB fields');
       setShowDobFields(true);
       return;
     }
     
+    // Validate date of birth
     const dobValidation = validateDateOfBirth(day, month, year);
     if (!dobValidation.isValid || !dobValidation.birthDate) {
+      console.log('DOB validation failed:', dobValidation.message);
       setDobError(dobValidation.message || 'Invalid date of birth');
       return;
     }
@@ -76,36 +86,39 @@ export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
       console.log('Submitting signup with DOB:', dobValidation.birthDate);
       
       const { success, message } = await signUp(email, password, {
-        birthdate: dobValidation.birthDate.toISOString()
+        birthdate: dobValidation.birthDate.toISOString(),
+        signup_source: 'web_form'
       });
       
       if (!success) {
-        console.error('Signup error details:', message);
+        console.error('Signup failed:', message);
         
         // Handle specific error messages
-        if (message?.includes('User already registered')) {
-          setError('This email is already registered. Please sign in instead.');
-        } else if (message?.toLowerCase().includes('email')) {
+        if (message?.includes('User already registered') || message?.includes('already registered')) {
+          setError('This email is already registered. Please sign in instead or use a different email.');
+        } else if (message?.includes('Invalid email')) {
           setError('Please provide a valid email address.');
-        } else if (message?.toLowerCase().includes('password')) {
+        } else if (message?.includes('Password')) {
           setError('Password must be at least 6 characters long.');
-        } else if (message?.includes('pattern')) {
-          setError('One or more fields contain invalid characters.');
+        } else if (message?.includes('Signup is disabled')) {
+          setError('Account registration is currently disabled. Please try again later.');
         } else {
           setError(message || 'Failed to create account. Please try again.');
         }
         return;
       }
       
+      console.log('Signup successful');
+      
       toast({
-        title: "Account created!",
+        title: "Account created successfully!",
         description: "You can now sign in with your account.",
       });
       
       onSuccess();
     } catch (err: any) {
       console.error('Sign up error:', err);
-      setError(err.message || 'Failed to create account');
+      setError(err.message || 'Failed to create account. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -155,18 +168,26 @@ export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
       
       <Button 
         type="submit" 
-        className="w-full" 
-        disabled={loading || (formTouched && !validateForm(email, password, confirmPassword, showDobFields, day, month, year))}
+        className="w-full bg-greentrail-600 hover:bg-greentrail-700 text-white" 
+        disabled={loading}
       >
         {loading ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            {showDobFields ? 'Creating account...' : 'Validating...'}
+            {showDobFields ? 'Creating account...' : 'Processing...'}
           </>
         ) : (
           showDobFields ? 'Create Account' : 'Continue'
         )}
       </Button>
+      
+      {/* Debug info in development */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="text-xs text-gray-400 mt-2">
+          Debug: Email={email ? 'filled' : 'empty'}, Password={password ? 'filled' : 'empty'}, 
+          DOB shown={showDobFields ? 'yes' : 'no'}
+        </div>
+      )}
     </form>
   );
 };

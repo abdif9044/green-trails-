@@ -15,10 +15,11 @@ export const useSignupValidation = () => {
   const [dobError, setDobError] = useState('');
 
   const validateEmailField = (emailValue: string): boolean => {
-    if (!emailValue) {
+    const trimmedEmail = emailValue.trim();
+    if (!trimmedEmail) {
       setEmailError('Email is required');
       return false;
-    } else if (!validateEmail(emailValue)) {
+    } else if (!validateEmail(trimmedEmail)) {
       setEmailError('Please enter a valid email address');
       return false;
     }

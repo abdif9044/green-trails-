@@ -8,7 +8,7 @@ export const validateEmail = (email: string): boolean => {
   // Using a more permissive email regex that matches most valid emails
   // without being overly restrictive
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return !!email && emailRegex.test(email);
+  return !!email && emailRegex.test(email.trim());
 };
 
 /**
@@ -75,6 +75,12 @@ export const validateDateOfBirth = (day: string, month: string, year: string): {
     return { isValid: false, birthDate: null, message: 'Please complete all date fields' };
   }
   
+  // Validate day
+  const dayNum = parseInt(day);
+  if (isNaN(dayNum) || dayNum < 1 || dayNum > 31) {
+    return { isValid: false, birthDate: null, message: 'Please enter a valid day (1-31)' };
+  }
+  
   // Validate year
   if (!validateYear(year)) {
     return { isValid: false, birthDate: null, message: 'Please enter a valid year' };
@@ -88,17 +94,17 @@ export const validateDateOfBirth = (day: string, month: string, year: string): {
   const monthIndex = months.indexOf(month);
   
   if (monthIndex === -1) {
-    return { isValid: false, birthDate: null, message: 'Invalid month' };
+    return { isValid: false, birthDate: null, message: 'Please select a valid month' };
   }
   
-  const birthDate = new Date(parseInt(year), monthIndex, parseInt(day));
+  const birthDate = new Date(parseInt(year), monthIndex, dayNum);
   const today = new Date();
   
   // Check if valid date (e.g., not February 30)
   if (
     birthDate.getFullYear() !== parseInt(year) ||
     birthDate.getMonth() !== monthIndex ||
-    birthDate.getDate() !== parseInt(day)
+    birthDate.getDate() !== dayNum
   ) {
     return { isValid: false, birthDate: null, message: 'Invalid date. Please check day, month, and year' };
   }
@@ -116,7 +122,7 @@ export const validateDateOfBirth = (day: string, month: string, year: string): {
     return { 
       isValid: false, 
       birthDate, 
-      message: 'You must be 21 or older to use this app' 
+      message: `You must be 21 or older to use this app. You are currently ${age} years old.` 
     };
   }
   

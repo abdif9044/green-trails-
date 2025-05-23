@@ -1,196 +1,173 @@
-import React, { useState, useEffect } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Layout } from '@/components/layout/layout';
-import DiscoverHeader from '@/components/discover/DiscoverHeader';
-import DiscoverFilters from '@/components/discover/DiscoverFilters';
-import DiscoverTrailsList from '@/components/discover/DiscoverTrailsList';
-import DiscoverViewControls from '@/components/discover/DiscoverViewControls';
-import { TrailStatsOverview } from '@/components/discover/TrailStatsOverview';
+
+import React, { useState } from 'react';
+import { Search, Filter, MapPin } from 'lucide-react';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
+import SEOProvider from '@/components/SEOProvider';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import TrailCard from '@/components/ui/TrailCard';
+import { InfiniteScrollContainer } from '@/components/ui/InfiniteScrollContainer';
+import { usePaginatedTrails } from '@/hooks/usePaginatedTrails';
 import { TrailFilters } from '@/types/trails';
-import SEOProvider from "@/components/SEOProvider";
-import { toast } from '@/hooks/use-toast';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { supabase } from '@/integrations/supabase/client';
 
 const Discover = () => {
-  // Move hook calls to the top of the component function
-  const navigate = useNavigate();
-  const isMobile = useIsMobile();
-  const [searchParams, setSearchParams] = useSearchParams();
-  
-  // Initialize state based on searchParams after the hook is called
-  const [viewType, setViewType] = useState<'list' | 'map'>(
-    searchParams.get('view') === 'map' ? 'map' : 'list'
-  );
-  const [showTrailPaths, setShowTrailPaths] = useState<boolean>(
-    searchParams.get('paths') === 'true'
-  );
-  const [trailCount, setTrailCount] = useState<number>(0);
-  const [totalTrailsInSystem, setTotalTrailsInSystem] = useState<number>(0);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filters, setFilters] = useState<TrailFilters>({});
+  const [showFilters, setShowFilters] = useState(false);
 
-  // Fetch total count of trails in the system
-  useEffect(() => {
-    const fetchTotalTrailCount = async () => {
-      try {
-        // Try to get total count from Supabase
-        const { count, error } = await supabase
-          .from('trails')
-          .select('*', { count: 'exact', head: true });
-        
-        if (error) {
-          console.error('Error fetching total trail count:', error);
-          throw error;
-        }
-        
-        // If we successfully get a count from the database, use it
-        if (count !== null) {
-          setTotalTrailsInSystem(count);
-        } else {
-          // Fallback to counting sample trails
-          const { createSampleTrails } = await import('@/features/trails/utils/sample-trail-data');
-          const sampleTrails = createSampleTrails();
-          setTotalTrailsInSystem(sampleTrails.length);
-        }
-      } catch (error) {
-        console.error('Failed to get total trail count:', error);
-        // Fallback to sample data
-        const { createSampleTrails } = await import('@/features/trails/utils/sample-trail-data');
-        const sampleTrails = createSampleTrails();
-        setTotalTrailsInSystem(sampleTrails.length);
-      }
-    };
-    
-    fetchTotalTrailCount();
-  }, []);
+  const { trails, loading, hasMore, totalCount, loadMore } = usePaginatedTrails(filters);
 
-  // Handle filters from URL params or set defaults
-  const initialFilters: TrailFilters = {
-    searchQuery: searchParams.get('q') || undefined,
-    difficulty: searchParams.get('difficulty') || undefined,
-    lengthRange: searchParams.get('length') 
-      ? searchParams.get('length')!.split('-').map(Number) as [number, number]
-      : undefined,
-    tags: searchParams.get('tags')
-      ? searchParams.get('tags')!.split(',')
-      : undefined,
-    country: searchParams.get('country') || undefined,
-    stateProvince: searchParams.get('state') || undefined,
-    showAgeRestricted: searchParams.get('age_restricted') === 'true'
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    setFilters(prev => ({ ...prev, searchQuery: searchQuery.trim() || undefined }));
   };
 
-  const [filters, setFilters] = useState<TrailFilters>(initialFilters);
-
-  const handleFilterChange = (newFilters: TrailFilters) => {
-    setFilters(newFilters);
-    
-    // Update URL params
-    const params = new URLSearchParams();
-    if (newFilters.searchQuery) params.set('q', newFilters.searchQuery);
-    if (newFilters.difficulty) params.set('difficulty', newFilters.difficulty);
-    if (newFilters.lengthRange) params.set('length', newFilters.lengthRange.join('-'));
-    if (newFilters.tags && newFilters.tags.length > 0) params.set('tags', newFilters.tags.join(','));
-    if (newFilters.country) params.set('country', newFilters.country);
-    if (newFilters.stateProvince) params.set('state', newFilters.stateProvince);
-    if (newFilters.showAgeRestricted) params.set('age_restricted', 'true');
-    if (viewType === 'map') params.set('view', 'map');
-    if (showTrailPaths) params.set('paths', 'true');
-    
-    setSearchParams(params);
+  const clearFilters = () => {
+    setFilters({});
+    setSearchQuery('');
   };
-
-  const handleViewChange = (view: 'list' | 'map') => {
-    setViewType(view);
-    
-    const params = new URLSearchParams(searchParams);
-    if (view === 'map') {
-      params.set('view', 'map');
-    } else {
-      params.delete('view');
-    }
-    
-    setSearchParams(params);
-
-    // Show toast to confirm view change
-    toast({
-      title: `${view === 'list' ? 'List' : 'Map'} view activated`,
-      duration: 2000,
-    });
-  };
-  
-  const handleToggleTrailPaths = () => {
-    const newState = !showTrailPaths;
-    setShowTrailPaths(newState);
-    
-    const params = new URLSearchParams(searchParams);
-    if (newState) {
-      params.set('paths', 'true');
-    } else {
-      params.delete('paths');
-    }
-    
-    setSearchParams(params);
-  };
-  
-  const updateTrailCount = (count: number) => {
-    setTrailCount(count);
-  };
-
-  const handleTrailSelect = React.useCallback((trailId: string) => {
-    navigate(`/trail/${trailId}`);
-  }, [navigate]);
 
   return (
-    <Layout>
+    <div className="min-h-screen flex flex-col">
       <SEOProvider 
         title="Discover Trails - GreenTrails"
-        description="Explore and discover trails for hiking, biking, and outdoor adventures"
+        description="Explore amazing hiking trails and outdoor adventures. Find your perfect trail based on difficulty, location, and more."
       />
+      
+      <Navbar />
       
       <main className="flex-grow bg-slate-50 dark:bg-greentrail-950">
         <div className="container mx-auto px-4 py-8">
-          <DiscoverHeader trailCount={trailCount} totalTrails={totalTrailsInSystem} />
-          
-          <TrailStatsOverview />
-          
-          <div className="flex flex-col lg:flex-row gap-6">
-            <div className={`${viewType === 'map' && !isMobile ? 'lg:w-64 shrink-0' : 'w-full'}`}>
-              {isMobile || viewType === 'list' ? (
-                <DiscoverFilters 
-                  currentFilters={filters} 
-                  onFilterChange={handleFilterChange} 
-                />
-              ) : (
-                <div className="sticky top-20">
-                  <DiscoverFilters 
-                    currentFilters={filters} 
-                    onFilterChange={handleFilterChange} 
-                  />
-                </div>
-              )}
-            </div>
-            
-            <div className="flex-grow">
-              <DiscoverViewControls 
-                viewMode={viewType} 
-                onViewModeChange={handleViewChange}
-                showTrailPaths={showTrailPaths}
-                onToggleTrailPaths={handleToggleTrailPaths}
-              />
-              
-              <div className="mt-4">
-                <DiscoverTrailsList 
-                  currentFilters={filters} 
-                  viewMode={viewType}
-                  showTrailPaths={showTrailPaths}
-                  onTrailCountChange={updateTrailCount}
-                  onTrailSelect={handleTrailSelect}
+          {/* Header */}
+          <div className="text-center mb-8">
+            <h1 className="text-3xl md:text-4xl font-bold text-greentrail-800 dark:text-greentrail-200 mb-4">
+              Discover Amazing Trails
+            </h1>
+            <p className="text-lg text-greentrail-600 dark:text-greentrail-400 max-w-2xl mx-auto">
+              Explore thousands of hiking trails and outdoor adventures. Find your perfect path to nature.
+            </p>
+          </div>
+
+          {/* Search and Filters */}
+          <div className="mb-8 space-y-4">
+            <form onSubmit={handleSearch} className="flex gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Input
+                  type="text"
+                  placeholder="Search trails by name, location, or features..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
                 />
               </div>
+              <Button type="submit" variant="default" className="bg-greentrail-600 hover:bg-greentrail-700">
+                Search
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowFilters(!showFilters)}
+                className="flex items-center gap-2"
+              >
+                <Filter className="h-4 w-4" />
+                Filters
+              </Button>
+            </form>
+
+            {/* Quick filters */}
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant={filters.difficulty === 'easy' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setFilters(prev => ({ 
+                  ...prev, 
+                  difficulty: prev.difficulty === 'easy' ? undefined : 'easy' 
+                }))}
+                className="text-xs"
+              >
+                Easy
+              </Button>
+              <Button
+                variant={filters.difficulty === 'moderate' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setFilters(prev => ({ 
+                  ...prev, 
+                  difficulty: prev.difficulty === 'moderate' ? undefined : 'moderate' 
+                }))}
+                className="text-xs"
+              >
+                Moderate
+              </Button>
+              <Button
+                variant={filters.difficulty === 'hard' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setFilters(prev => ({ 
+                  ...prev, 
+                  difficulty: prev.difficulty === 'hard' ? undefined : 'hard' 
+                }))}
+                className="text-xs"
+              >
+                Hard
+              </Button>
+              {(filters.searchQuery || filters.difficulty) && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearFilters}
+                  className="text-xs text-red-600 hover:text-red-700"
+                >
+                  Clear Filters
+                </Button>
+              )}
             </div>
           </div>
+
+          {/* Results count */}
+          <div className="mb-6">
+            <p className="text-sm text-muted-foreground">
+              {loading ? 'Searching...' : `Found ${totalCount} trails`}
+            </p>
+          </div>
+
+          {/* Trail Grid with Infinite Scroll */}
+          <InfiniteScrollContainer
+            onLoadMore={loadMore}
+            hasMore={hasMore}
+            isLoading={loading}
+            className="space-y-6"
+          >
+            {trails.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {trails.map((trail) => (
+                  <TrailCard 
+                    key={trail.id} 
+                    trail={trail}
+                    showLikeButton={true}
+                  />
+                ))}
+              </div>
+            ) : !loading ? (
+              <div className="text-center py-12">
+                <MapPin className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+                  No trails found
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-4">
+                  Try adjusting your search criteria or explore different areas.
+                </p>
+                <Button onClick={clearFilters} variant="outline">
+                  Clear Filters
+                </Button>
+              </div>
+            ) : null}
+          </InfiniteScrollContainer>
         </div>
       </main>
-    </Layout>
+      
+      <Footer />
+    </div>
   );
 };
 

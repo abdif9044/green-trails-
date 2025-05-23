@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useAuth } from './hooks/use-auth';
 import { ToastProvider } from './components/ToastProvider';
+import { ErrorBoundary } from './components/ui/ErrorBoundary';
 import SplashScreen from './components/SplashScreen';
 import './App.css';
 import AppRoutes from './routes';
@@ -15,10 +16,10 @@ function App() {
   }
 
   return (
-    <>
+    <ErrorBoundary>
       <ToastProvider />
       <AppRoutes />
-    </>
+    </ErrorBoundary>
   );
 }
 

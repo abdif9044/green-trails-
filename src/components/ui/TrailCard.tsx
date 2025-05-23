@@ -51,9 +51,9 @@ const TrailCard = memo(({
       )}>
         <div className="relative">
           <div className="aspect-[4/3] overflow-hidden bg-gradient-to-br from-greentrail-100 to-greentrail-200">
-            {trail.image_url ? (
+            {trail.imageUrl ? (
               <img
-                src={trail.image_url}
+                src={trail.imageUrl}
                 alt={trail.name}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 loading="lazy"

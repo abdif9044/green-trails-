@@ -70,61 +70,68 @@ export const calculateAge = (birthDate: Date): number => {
  * @returns Object containing validity and the Date object if valid
  */
 export const validateDateOfBirth = (day: string, month: string, year: string): { isValid: boolean; birthDate: Date | null; message?: string } => {
-  // Check if all fields are provided
-  if (!day || !month || !year) {
-    return { isValid: false, birthDate: null, message: 'Please complete all date fields' };
+  try {
+    // Check if all fields are provided
+    if (!day || !month || !year) {
+      return { isValid: false, birthDate: null, message: 'Please complete all date of birth fields' };
+    }
+    
+    // Validate day
+    const dayNum = parseInt(day);
+    if (isNaN(dayNum) || dayNum < 1 || dayNum > 31) {
+      return { isValid: false, birthDate: null, message: 'Please enter a valid day (1-31)' };
+    }
+    
+    // Validate year
+    if (!validateYear(year)) {
+      return { isValid: false, birthDate: null, message: 'Please enter a valid year' };
+    }
+    
+    // Convert month name to index (0-11)
+    const months = [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
+    ];
+    const monthIndex = months.indexOf(month);
+    
+    if (monthIndex === -1) {
+      return { isValid: false, birthDate: null, message: 'Please select a valid month' };
+    }
+    
+    // Create the date object
+    const birthDate = new Date(parseInt(year), monthIndex, dayNum);
+    
+    // Check if valid date (e.g., not February 30)
+    if (
+      birthDate.getFullYear() !== parseInt(year) ||
+      birthDate.getMonth() !== monthIndex ||
+      birthDate.getDate() !== dayNum
+    ) {
+      return { isValid: false, birthDate: null, message: 'Invalid date. Please check day, month, and year' };
+    }
+    
+    const today = new Date();
+    
+    // Check if date is in the future
+    if (birthDate > today) {
+      return { isValid: false, birthDate: null, message: 'Date cannot be in the future' };
+    }
+    
+    // Calculate age
+    const age = calculateAge(birthDate);
+    
+    // Check if user is 21 or older
+    if (age < 21) {
+      return { 
+        isValid: false, 
+        birthDate, 
+        message: `You must be 21 or older to use this app. You are currently ${age} years old.` 
+      };
+    }
+    
+    return { isValid: true, birthDate };
+  } catch (error) {
+    console.error('Error validating date of birth:', error);
+    return { isValid: false, birthDate: null, message: 'An error occurred while validating your date of birth' };
   }
-  
-  // Validate day
-  const dayNum = parseInt(day);
-  if (isNaN(dayNum) || dayNum < 1 || dayNum > 31) {
-    return { isValid: false, birthDate: null, message: 'Please enter a valid day (1-31)' };
-  }
-  
-  // Validate year
-  if (!validateYear(year)) {
-    return { isValid: false, birthDate: null, message: 'Please enter a valid year' };
-  }
-  
-  // Convert month name to index (0-11)
-  const months = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
-  ];
-  const monthIndex = months.indexOf(month);
-  
-  if (monthIndex === -1) {
-    return { isValid: false, birthDate: null, message: 'Please select a valid month' };
-  }
-  
-  const birthDate = new Date(parseInt(year), monthIndex, dayNum);
-  const today = new Date();
-  
-  // Check if valid date (e.g., not February 30)
-  if (
-    birthDate.getFullYear() !== parseInt(year) ||
-    birthDate.getMonth() !== monthIndex ||
-    birthDate.getDate() !== dayNum
-  ) {
-    return { isValid: false, birthDate: null, message: 'Invalid date. Please check day, month, and year' };
-  }
-  
-  // Check if date is in the future
-  if (birthDate > today) {
-    return { isValid: false, birthDate: null, message: 'Date cannot be in the future' };
-  }
-  
-  // Calculate age
-  const age = calculateAge(birthDate);
-  
-  // Check if user is 21 or older
-  if (age < 21) {
-    return { 
-      isValid: false, 
-      birthDate, 
-      message: `You must be 21 or older to use this app. You are currently ${age} years old.` 
-    };
-  }
-  
-  return { isValid: true, birthDate };
 };

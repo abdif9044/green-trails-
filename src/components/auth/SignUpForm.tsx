@@ -53,8 +53,9 @@ export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Clear previous errors
     setError('');
-    setLoading(false);
     
     console.log('Form submission started:', { email, showDobFields, day, month, year });
     
@@ -80,6 +81,7 @@ export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
       return;
     }
     
+    // Set loading state to true BEFORE making the API call
     setLoading(true);
     
     try {
@@ -105,6 +107,9 @@ export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
         } else {
           setError(message || 'Failed to create account. Please try again.');
         }
+        
+        // Set loading state to false after handling the error
+        setLoading(false);
         return;
       }
       
@@ -115,11 +120,13 @@ export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
         description: "You can now sign in with your account.",
       });
       
+      // Only call onSuccess after the signup has been successful
       onSuccess();
     } catch (err: any) {
       console.error('Sign up error:', err);
       setError(err.message || 'Failed to create account. Please try again.');
     } finally {
+      // Always set loading to false in finally block
       setLoading(false);
     }
   };

@@ -51,19 +51,47 @@ export const useSignupValidation = () => {
     return true;
   };
 
-  const validateForm = (email: string, password: string, confirmPassword: string, 
-                         showDobFields: boolean, day: string, month: string, year: string): boolean => {
+  const validateForm = (
+    email: string, 
+    password: string, 
+    confirmPassword: string, 
+    showDobFields: boolean, 
+    day: string, 
+    month: string, 
+    year: string
+  ): boolean => {
+    // Always validate email and password
     const isEmailValid = validateEmailField(email);
     const isPasswordValid = validatePasswordField(password);
     const isConfirmPasswordValid = validateConfirmPasswordField(password, confirmPassword);
     
+    // If DOB fields aren't shown yet, only validate email and password
     if (!showDobFields) {
       return isEmailValid && isPasswordValid && isConfirmPasswordValid;
     }
     
+    // If DOB fields are shown, also validate DOB
+    if (!day || !month || !year) {
+      setDobError('Please complete all date of birth fields');
+      return false;
+    }
+    
     const dobValidation = validateDateOfBirth(day, month, year);
-    setDobError(dobValidation.message || '');
-    return isEmailValid && isPasswordValid && isConfirmPasswordValid && dobValidation.isValid;
+    if (!dobValidation.isValid) {
+      setDobError(dobValidation.message || 'Invalid date of birth');
+      return false;
+    }
+    
+    setDobError('');
+    return isEmailValid && isPasswordValid && isConfirmPasswordValid;
+  };
+
+  // Clear all validation errors
+  const clearErrors = () => {
+    setEmailError('');
+    setPasswordError('');
+    setConfirmPasswordError('');
+    setDobError('');
   };
 
   return {
@@ -75,6 +103,7 @@ export const useSignupValidation = () => {
     validateEmailField,
     validatePasswordField,
     validateConfirmPasswordField,
-    validateForm
+    validateForm,
+    clearErrors
   };
 };

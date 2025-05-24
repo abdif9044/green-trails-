@@ -20,6 +20,9 @@ interface Profile {
   experience_level: string | null;
   location: string | null;
   profile_image_url: string | null;
+  avatar_url?: string | null;
+  website_url?: string | null;
+  is_age_verified?: boolean;
   created_at: string;
   updated_at: string;
 }

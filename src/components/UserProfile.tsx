@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -52,7 +51,23 @@ export const UserProfile = () => {
         console.error('Error fetching profile:', error);
         setError('Failed to load profile');
       } else {
-        setProfile(data);
+        // Create a complete profile object with email from user and defaults for missing fields
+        const completeProfile: Profile = {
+          id: data.id,
+          email: user?.email || '',
+          username: data.username,
+          full_name: data.full_name,
+          bio: data.bio,
+          experience_level: data.experience_level,
+          location: data.location,
+          profile_image_url: data.profile_image_url,
+          avatar_url: data.avatar_url,
+          website_url: data.website_url,
+          is_age_verified: data.is_age_verified,
+          created_at: data.created_at,
+          updated_at: data.updated_at
+        };
+        setProfile(completeProfile);
       }
     } catch (error) {
       console.error('Profile fetch exception:', error);

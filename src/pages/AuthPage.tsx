@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { LoginForm } from '@/components/auth/LoginForm';
-import { SignupForm } from '@/components/auth/SignupForm';
+import { SignUpForm } from '@/components/auth/SignUpForm';
 import { Button } from '@/components/ui/button';
 import { AuthGuard } from '@/components/auth/AuthGuard';
 
@@ -34,7 +34,7 @@ export const AuthPage = () => {
             </Button>
           </div>
           
-          {isLogin ? <LoginForm /> : <SignupForm />}
+          {isLogin ? <LoginForm /> : <SignUpForm />}
         </div>
       </div>
     </AuthGuard>

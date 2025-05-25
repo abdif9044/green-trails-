@@ -3,7 +3,7 @@ import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 
 interface ToastProviderProps {
-  children?: React.ReactNode;
+  children: React.ReactNode;
 }
 
 export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {

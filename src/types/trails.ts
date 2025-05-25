@@ -4,7 +4,7 @@ export interface Trail {
   name: string;
   location: string;
   imageUrl: string;
-  difficulty: 'easy' | 'moderate' | 'hard';
+  difficulty: 'easy' | 'moderate' | 'hard' | 'expert';
   length: number;
   elevation: number;
   elevation_gain: number;
@@ -27,7 +27,6 @@ export interface Trail {
   last_updated?: string;
   latitude?: number;
   longitude?: number;
-  strainTags?: StrainTag[];
   isAgeRestricted?: boolean;
 }
 

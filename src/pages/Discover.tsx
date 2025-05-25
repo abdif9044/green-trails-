@@ -5,7 +5,7 @@ import DiscoverHeader from '@/components/discover/DiscoverHeader';
 import DiscoverFilters from '@/components/discover/DiscoverFilters';
 import DiscoverTrailsList from '@/components/discover/DiscoverTrailsList';
 import DiscoverViewControls from '@/components/discover/DiscoverViewControls';
-import TrailStatsOverview from '@/components/discover/TrailStatsOverview';
+import { TrailStatsOverview } from '@/components/discover/TrailStatsOverview';
 import { Separator } from '@/components/ui/separator';
 
 const Discover: React.FC = () => {
@@ -29,14 +29,13 @@ const Discover: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="container mx-auto px-4 py-8">
-        <DiscoverHeader />
+        <DiscoverHeader trailCount={trailCount} />
         
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mt-8">
           <div className="lg:col-span-1">
             <div className="space-y-6">
               <DiscoverFilters 
                 onFiltersChange={handleFiltersChange}
-                onResetFilters={handleResetFilters}
                 currentFilters={currentFilters}
               />
               
@@ -52,7 +51,6 @@ const Discover: React.FC = () => {
                 viewMode={viewMode}
                 onViewModeChange={setViewMode}
                 showTrailPaths={showTrailPaths}
-                onShowTrailPathsChange={setShowTrailPaths}
                 resultsCount={trailCount}
               />
               

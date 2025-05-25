@@ -5,7 +5,6 @@ import { useAuthState } from '@/hooks/auth/use-auth-state';
 import { useAuthMethods } from '@/hooks/auth/use-auth-methods';
 import { useUserManagement } from '@/hooks/auth/use-user-management';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/hooks/use-toast';
 import { Session } from '@supabase/supabase-js';
 import { initializeAuthState, setupAuthStateListener } from '@/utils/auth-utils';
 
@@ -28,22 +27,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       { setUser, setSession, setLoading },
       (event, currentSession) => {
         if (event === 'SIGNED_IN') {
-          toast({
-            title: "Welcome to GreenTrails!",
-            description: `You're now signed in as ${currentSession?.user?.email}`,
-          });
+          console.log("User signed in:", currentSession?.user?.email);
         } else if (event === 'SIGNED_OUT') {
-          toast({
-            title: "Signed out",
-            description: "You have been signed out successfully",
-          });
+          console.log("User signed out");
         } else if (event === 'TOKEN_REFRESHED') {
           console.log('Auth token refreshed successfully');
         } else if (event === 'USER_UPDATED') {
-          toast({
-            title: "Profile updated",
-            description: "Your profile information has been updated",
-          });
+          console.log("User profile updated");
         }
       }
     );
@@ -56,11 +46,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         
         if (!result.success) {
           console.warn('Auth initialization issue:', result.message);
-          toast({
-            title: "Authentication Notice",
-            description: "There was an issue with your session. Please sign in again if needed.",
-            variant: "default",
-          });
         }
       } catch (error) {
         console.error('Exception during auth initialization:', error);

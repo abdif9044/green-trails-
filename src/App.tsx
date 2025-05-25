@@ -17,8 +17,9 @@ function App() {
   return (
     <AuthProvider>
       <ErrorBoundary>
-        <ToastProvider />
-        <AppRoutes />
+        <ToastProvider>
+          <AppRoutes />
+        </ToastProvider>
       </ErrorBoundary>
     </AuthProvider>
   );

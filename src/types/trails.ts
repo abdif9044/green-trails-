@@ -28,6 +28,8 @@ export interface Trail {
   latitude?: number;
   longitude?: number;
   isAgeRestricted?: boolean;
+  is_age_restricted?: boolean;
+  strainTags?: StrainTag[];
 }
 
 export interface TrailFilters {

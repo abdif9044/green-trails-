@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { ToastProvider } from './components/ToastProvider';
 import { ErrorBoundary } from './components/ui/ErrorBoundary';
 import SplashScreen from './components/SplashScreen';
-import { AuthProvider } from './contexts/AuthContext';
+import { AuthProvider } from '@/providers/auth-provider';
 import AppRoutes from './routes';
 import './App.css';
 

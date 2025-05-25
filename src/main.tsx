@@ -4,7 +4,6 @@ import { createRoot } from 'react-dom/client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { HelmetProvider } from 'react-helmet-async'
 import { BrowserRouter } from 'react-router-dom'
-import { AuthProvider } from '@/providers/auth-provider'
 import App from './App.tsx'
 import './index.css'
 
@@ -46,9 +45,7 @@ root.render(
     <BrowserRouter>
       <HelmetProvider>
         <QueryClientProvider client={queryClient}>
-          <AuthProvider>
-            <App />
-          </AuthProvider>
+          <App />
         </QueryClientProvider>
       </HelmetProvider>
     </BrowserRouter>

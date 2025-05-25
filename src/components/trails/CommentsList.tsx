@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useTrailComments } from '@/hooks/use-trail-interactions';
+import { useTrailComments } from '@/hooks/use-trail-comments';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { formatDistanceToNow } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -10,9 +10,9 @@ interface CommentsListProps {
 }
 
 const CommentsList: React.FC<CommentsListProps> = ({ trailId }) => {
-  const { data: comments, isLoading, error } = useTrailComments(trailId);
+  const { comments, loading, error } = useTrailComments(trailId);
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="space-y-4">
         {[1, 2, 3].map((i) => (
@@ -29,7 +29,7 @@ const CommentsList: React.FC<CommentsListProps> = ({ trailId }) => {
   }
 
   if (error) {
-    return <div className="text-destructive py-3">Error loading comments: {error.message}</div>;
+    return <div className="text-destructive py-3">Error loading comments: {error}</div>;
   }
 
   if (!comments?.length) {
@@ -45,15 +45,15 @@ const CommentsList: React.FC<CommentsListProps> = ({ trailId }) => {
       {comments.map((comment) => (
         <div key={comment.id} className="flex gap-4">
           <Avatar>
-            <AvatarImage src={comment.profiles?.avatar_url || ''} />
+            <AvatarImage src={comment.user?.avatar_url || ''} />
             <AvatarFallback className="bg-greentrail-600 text-white">
-              {comment.profiles?.username?.charAt(0)?.toUpperCase() || '?'}
+              {comment.user?.username?.charAt(0)?.toUpperCase() || '?'}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1">
             <div className="flex items-baseline justify-between">
               <h4 className="font-medium text-greentrail-800 dark:text-greentrail-200">
-                {comment.profiles?.username || 'Anonymous'}
+                {comment.user?.username || 'Anonymous'}
               </h4>
               <span className="text-xs text-muted-foreground">
                 {comment.created_at ? formatDistanceToNow(new Date(comment.created_at), { addSuffix: true }) : 'Recently'}

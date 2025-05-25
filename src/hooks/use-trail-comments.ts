@@ -66,7 +66,7 @@ export const useTrailComments = (trailId: string) => {
   return {
     comments,
     loading,
-    error,
+    error: error || '',
     addComment,
     refetch: fetchComments
   };

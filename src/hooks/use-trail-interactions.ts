@@ -5,9 +5,11 @@ import { useToast } from '@/hooks/use-toast';
 export const useTrailInteractions = (trailId: string) => {
   const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
   const toggleLike = async () => {
+    setIsLoading(true);
     try {
       // Toggle like state
       setIsLiked(!isLiked);
@@ -29,6 +31,8 @@ export const useTrailInteractions = (trailId: string) => {
         description: "Failed to update favorite status",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -36,5 +40,10 @@ export const useTrailInteractions = (trailId: string) => {
     isLiked,
     likeCount,
     toggleLike,
+    isLoading,
+    likes: likeCount
   };
 };
+
+// Export the trail comments hook
+export { useTrailComments } from './use-trail-comments';

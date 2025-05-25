@@ -1,36 +1,56 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { Trail, TrailFilters } from '@/types/trails';
-import { useTrailFilters } from './use-trail-filters';
-import { formatTrailData, queryTrailsWithFilters } from './use-trail-query-base';
 
-export const useTrails = (filters?: TrailFilters) => {
-  const { data: trails = [], ...rest } = useQuery({
+export const useTrails = (filters: TrailFilters = {}) => {
+  return useQuery({
     queryKey: ['trails', filters],
-    queryFn: async () => {
-      try {
-        const query = queryTrailsWithFilters(filters);
-        const { data, error } = await query;
-
-        if (error) {
-          console.error('Error fetching trails:', error);
-          throw error;
+    queryFn: async (): Promise<Trail[]> => {
+      // Mock data for now - replace with actual API call
+      const mockTrails: Trail[] = [
+        {
+          id: '1',
+          name: 'Mountain Peak Trail',
+          location: 'Colorado, USA',
+          imageUrl: '/placeholder.svg',
+          difficulty: 'hard',
+          length: 8.5,
+          elevation: 2400,
+          elevation_gain: 1200,
+          tags: ['mountain', 'peak', 'challenging'],
+          likes: 89,
+          coordinates: [39.7392, -104.9903]
+        },
+        {
+          id: '2',
+          name: 'Forest Loop',
+          location: 'Oregon, USA',
+          imageUrl: '/placeholder.svg',
+          difficulty: 'easy',
+          length: 3.2,
+          elevation: 400,
+          elevation_gain: 200,
+          tags: ['forest', 'loop', 'family-friendly'],
+          likes: 45,
+          coordinates: [45.5152, -122.6784]
         }
+      ];
 
-        // Transform the data to match our Trail type
-        const formattedTrails: Trail[] = data.map(trail => formatTrailData(trail));
-
-        return formattedTrails;
-      } catch (error) {
-        console.error('Error in useTrails:', error);
-        return [];
+      // Apply filters
+      let filteredTrails = mockTrails;
+      
+      if (filters.searchQuery) {
+        filteredTrails = filteredTrails.filter(trail => 
+          trail.name.toLowerCase().includes(filters.searchQuery!.toLowerCase()) ||
+          trail.location.toLowerCase().includes(filters.searchQuery!.toLowerCase())
+        );
       }
+      
+      if (filters.difficulty) {
+        filteredTrails = filteredTrails.filter(trail => trail.difficulty === filters.difficulty);
+      }
+
+      return filteredTrails;
     }
   });
-
-  const filteredTrails = useTrailFilters(trails, filters);
-  return { data: filteredTrails, ...rest };
 };
-
-// Re-export types from the types file for components that import from this file
-export type { Trail, TrailFilters, TrailDifficulty } from '@/types/trails';

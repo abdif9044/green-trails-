@@ -1,71 +1,37 @@
 
 import React from 'react';
-import { Compass, Map, MapPin } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Toggle } from "@/components/ui/toggle";
 
 export interface DiscoverViewControlsProps {
   viewMode: 'list' | 'map';
-  onViewModeChange: (value: 'list' | 'map') => void;
-  showTrailPaths?: boolean;
-  onToggleTrailPaths?: () => void;
+  onViewModeChange: (mode: 'list' | 'map') => void;
+  showTrailPaths: boolean;
+  resultsCount?: number;
 }
 
 const DiscoverViewControls: React.FC<DiscoverViewControlsProps> = ({
   viewMode,
   onViewModeChange,
   showTrailPaths,
-  onToggleTrailPaths
+  resultsCount = 0
 }) => {
   return (
-    <div className="flex flex-wrap items-center gap-3">
-      <Tabs 
-        value={viewMode} 
-        onValueChange={(value) => onViewModeChange(value as 'list' | 'map')}
-        className="mr-2"
-      >
-        <TabsList className="grid grid-cols-2 h-9 w-[160px]">
-          <TabsTrigger value="list" className="text-xs">
-            <Compass className="h-4 w-4 mr-1" />
-            List View
-          </TabsTrigger>
-          <TabsTrigger value="map" className="text-xs">
-            <Map className="h-4 w-4 mr-1" />
-            Map View
-          </TabsTrigger>
-        </TabsList>
-      </Tabs>
-      
-      {viewMode === 'map' && onToggleTrailPaths && (
-        <Toggle 
-          pressed={showTrailPaths} 
-          onPressedChange={onToggleTrailPaths}
-          className="bg-white dark:bg-greentrail-800 border border-input hover:bg-slate-100 dark:hover:bg-greentrail-700 data-[state=on]:bg-greentrail-100 data-[state=on]:text-greentrail-900 dark:data-[state=on]:bg-greentrail-600 dark:data-[state=on]:text-greentrail-100 h-9 px-3"
+    <div className="flex items-center justify-between">
+      <div className="text-sm text-gray-600 dark:text-gray-400">
+        {resultsCount} trails found
+      </div>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => onViewModeChange('list')}
+          className={`px-3 py-1 rounded ${viewMode === 'list' ? 'bg-green-600 text-white' : 'bg-gray-200'}`}
         >
-          <MapPin className="h-4 w-4 mr-1" />
-          <span className="text-xs">Show Paths</span>
-        </Toggle>
-      )}
-      
-      <div className="ml-auto">
-        <Select defaultValue="popular">
-          <SelectTrigger className="w-[180px] bg-white dark:bg-greentrail-800 border-greentrail-200 dark:border-greentrail-700">
-            <SelectValue placeholder="Sort by" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="popular">Most Popular</SelectItem>
-            <SelectItem value="recent">Recently Added</SelectItem>
-            <SelectItem value="length-asc">Length (Shortest)</SelectItem>
-            <SelectItem value="length-desc">Length (Longest)</SelectItem>
-          </SelectContent>
-        </Select>
+          List
+        </button>
+        <button
+          onClick={() => onViewModeChange('map')}
+          className={`px-3 py-1 rounded ${viewMode === 'map' ? 'bg-green-600 text-white' : 'bg-gray-200'}`}
+        >
+          Map
+        </button>
       </div>
     </div>
   );

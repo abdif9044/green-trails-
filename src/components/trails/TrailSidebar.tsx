@@ -1,54 +1,32 @@
 
-import React from "react";
-import { Cloud, ParkingMeter } from "lucide-react";
-import WeatherForecast from "./WeatherForecast";
-import SimilarTrails from "./SimilarTrails";
-import ParkingInfo from "./ParkingInfo";
-import { DetailedWeatherData } from "@/features/weather/types/weather-types";
+import React from 'react';
+import { Trail } from '@/types/trails';
 
-interface TrailSidebarProps {
+export interface TrailSidebarProps {
   trailId: string;
-  weatherData: DetailedWeatherData | null;
-  isWeatherLoading: boolean;
+  trail?: Trail;
 }
 
-const TrailSidebar: React.FC<TrailSidebarProps> = ({ 
-  trailId, 
-  weatherData, 
-  isWeatherLoading 
-}) => {
+const TrailSidebar: React.FC<TrailSidebarProps> = ({ trailId, trail }) => {
   return (
-    <div className="space-y-6">
-      <div className="space-y-3">
-        <h3 className="flex items-center gap-2 font-semibold">
-          <Cloud className="h-4 w-4 text-greentrail-600" />
-          Weather Forecast
-        </h3>
-        <WeatherForecast 
-          temperature={weatherData?.temperature}
-          condition={weatherData?.condition}
-          high={weatherData?.high}
-          low={weatherData?.low}
-          precipitation={weatherData?.precipitation}
-          sunrise={weatherData?.sunrise}
-          sunset={weatherData?.sunset}
-          windSpeed={weatherData?.windSpeed}
-          windDirection={weatherData?.windDirection}
-          hourlyForecast={weatherData?.hourlyForecast}
-          dailyForecast={weatherData?.dailyForecast}
-          isLoading={isWeatherLoading}
-        />
-      </div>
-      
-      <div className="space-y-3">
-        <h3 className="flex items-center gap-2 font-semibold">
-          <ParkingMeter className="h-4 w-4 text-greentrail-600" />
-          Parking Information
-        </h3>
-        <ParkingInfo trailId={trailId} />
-      </div>
-      
-      <SimilarTrails trailId={trailId} />
+    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm">
+      <h3 className="text-lg font-semibold mb-4">Trail Information</h3>
+      {trail && (
+        <div className="space-y-3">
+          <div>
+            <span className="text-sm text-gray-600 dark:text-gray-400">Length:</span>
+            <span className="ml-2 font-medium">{trail.length} miles</span>
+          </div>
+          <div>
+            <span className="text-sm text-gray-600 dark:text-gray-400">Difficulty:</span>
+            <span className="ml-2 font-medium capitalize">{trail.difficulty}</span>
+          </div>
+          <div>
+            <span className="text-sm text-gray-600 dark:text-gray-400">Elevation:</span>
+            <span className="ml-2 font-medium">{trail.elevation} ft</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

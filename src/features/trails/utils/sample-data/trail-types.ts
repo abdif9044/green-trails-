@@ -1,43 +1,19 @@
 
 import { Trail } from '@/types/trails';
 
-// Helper functions for generating sample trail data
-export const createBaseTrail = (
-  id: string,
-  name: string,
-  location: string,
-  imageUrl: string,
-  difficulty: Trail['difficulty'],
-  coordinates: [number, number]
-): Trail => {
-  return {
-    id,
-    name,
-    location,
-    imageUrl,
-    difficulty,
-    coordinates,
-    likes: Math.floor(Math.random() * 200) + 20,
-    isAgeRestricted: Math.random() > 0.7, // ~30% of trails are age restricted
-    tags: [],
-    length: 0,
-    elevation: 0,
-    elevation_gain: 0,
-    description: '',
-  };
-};
-
-export const createGeoJsonLineString = (
-  coordinates: Array<[number, number]>
-): Trail['geojson'] => {
-  return {
-    type: "FeatureCollection",
-    features: [{
-      type: "Feature",
-      geometry: {
-        type: "LineString",
-        coordinates
-      }
-    }]
-  };
-};
+export const trailTypes: Trail[] = [
+  {
+    id: 'trail-type-1',
+    name: 'Urban Art Walk',
+    location: 'Downtown Arts District, Portland',
+    difficulty: 'easy',
+    length: 3.2,
+    elevation: 30,
+    elevation_gain: 30,
+    imageUrl: '/placeholder.svg',
+    tags: ['urban', 'art', 'cultural', 'self-guided'],
+    likes: 189,
+    coordinates: [45.5152, -122.6784],
+    description: 'Self-guided walking tour through the vibrant arts district with murals and galleries.'
+  }
+];

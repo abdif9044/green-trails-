@@ -1,119 +1,118 @@
 
-import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import { Layout } from '@/components/layout/layout';
-import { Skeleton } from "@/components/ui/skeleton";
-import { useAuth } from '@/hooks/use-auth';
-import { useToggleLike, useTrailLikes } from "@/hooks/use-trail-interactions";
-import { getTrailWeather } from "@/features/weather/services/weather-service";
-import { useTrail } from "@/features/trails/hooks/use-trail";
-import TrailHeader from "@/components/trails/TrailHeader";
-import TrailContent from "@/components/trails/TrailContent";
-import TrailSidebar from "@/components/trails/TrailSidebar";
-import TrailStats from "@/components/trails/TrailStats";
-import SEOProvider from "@/components/SEOProvider";
-import { LazyImage } from "@/components/LazyImage";
-import { useDetailedWeather } from '@/features/weather/hooks/use-detailed-weather';
-
-interface Params extends Readonly<Record<string, string | undefined>> {
-  trailId?: string;
-}
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useTrail } from '@/features/trails/hooks/use-trail';
+import { useTrailInteractions } from '@/hooks/use-trail-interactions';
+import TrailHeader from '@/components/trails/TrailHeader';
+import TrailImageGallery from '@/components/trails/TrailImageGallery';
+import TrailContent from '@/components/trails/TrailContent';
+import TrailSidebar from '@/components/trails/TrailSidebar';
+import SimilarTrails from '@/components/trails/SimilarTrails';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const Trail: React.FC = () => {
-  const { trailId } = useParams<Params>();
-  const { user } = useAuth();
-  const { data: trail, isLoading, error } = useTrail(trailId);
-  const [weatherData, setWeatherData] = useState(null);
-  
-  // Use our enhanced weather hook
-  const { data: detailedWeatherData, isLoading: isWeatherLoading } = useDetailedWeather(
-    trail?.id,
-    trail?.coordinates
-  );
-  
-  useEffect(() => {
-    const fetchWeatherData = async () => {
-      if (trail?.id && trail?.coordinates) {
-        try {
-          const data = await getTrailWeather(trail.id, trail.coordinates);
-          setWeatherData(data);
-        } catch (error) {
-          console.error('Error fetching weather data:', error);
-        }
-      }
-    };
-    
-    fetchWeatherData();
-  }, [trail?.id, trail?.coordinates]);
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { data: trail, isLoading, error } = useTrail(id || '');
+  const { 
+    isLiked, 
+    likes, 
+    toggleLike,
+    isLoading: interactionsLoading 
+  } = useTrailInteractions(id || '');
 
-  const { data: likes, refetch: refetchLikes } = useTrailLikes(trailId || '');
-  const { mutate: toggleLike } = useToggleLike(trailId || '');
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-gray-900">
+        <div className="container mx-auto px-4 py-8">
+          <Skeleton className="h-8 w-32 mb-6" />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2 space-y-6">
+              <Skeleton className="h-64 w-full" />
+              <Skeleton className="h-32 w-full" />
+            </div>
+            <div className="space-y-6">
+              <Skeleton className="h-48 w-full" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !trail) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            Trail Not Found
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
+            The trail you're looking for doesn't exist or has been removed.
+          </p>
+          <Button onClick={() => navigate('/discover')}>
+            Back to Discover
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   const handleLikeClick = async () => {
-    if (!user) {
-      return;
-    }
-
     await toggleLike();
-    await refetchLikes();
+  };
+
+  const handleShare = () => {
+    if (navigator.share) {
+      navigator.share({
+        title: trail.name,
+        text: `Check out this amazing trail: ${trail.name}`,
+        url: window.location.href,
+      });
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+    }
   };
 
   return (
-    <Layout>
-      {trail && (
-        <SEOProvider
-          title={`${trail.name} - GreenTrails`}
-          description={`Explore ${trail.name} in ${trail.location}. ${trail.description?.substring(0, 100)}...`}
-          image={trail.imageUrl}
-          type="article"
-        />
-      )}
-      
-      <main className="flex-grow container mx-auto px-4 py-6 md:py-10">
-        {isLoading ? (
-          <div className="flex-grow flex items-center justify-center">
-            <div className="flex flex-col items-center">
-              <Skeleton className="h-12 w-12 rounded-full mb-4" />
-              <Skeleton className="h-6 w-48" />
-            </div>
-          </div>
-        ) : trail ? (
-          <div className="flex-grow">
+    <div className="min-h-screen bg-white dark:bg-gray-900">
+      <div className="container mx-auto px-4 py-8">
+        <Button
+          variant="ghost"
+          onClick={() => navigate(-1)}
+          className="mb-6 flex items-center gap-2 text-gray-600 hover:text-gray-900"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back
+        </Button>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-6">
             <TrailHeader 
               trail={trail} 
-              likes={likes} 
-              onLikeClick={handleLikeClick} 
+              likes={likes}
+              onLike={handleLikeClick}
+              onShare={handleShare}
+              isLiked={isLiked}
             />
             
-            <div className="container mx-auto px-4 py-8">
-              <TrailStats trailId={trail.id} className="mb-8" />
-              
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-2 space-y-8">
-                  <TrailContent trail={trail} />
-                </div>
-                
-                <div>
-                  <TrailSidebar 
-                    trailId={trailId as string} 
-                    weatherData={detailedWeatherData}
-                    isWeatherLoading={isWeatherLoading}
-                  />
-                </div>
-              </div>
-            </div>
+            <TrailImageGallery trailId={trail.id} />
+            
+            <TrailContent trail={trail} />
           </div>
-        ) : (
-          <div className="p-8 text-center">
-            <h2 className="text-2xl font-bold text-red-600 mb-4">Trail Not Found</h2>
-            <p className="text-gray-600 dark:text-gray-400">
-              Sorry, we couldn't find the trail you're looking for. 
-              It may have been removed or you might have followed a broken link.
-            </p>
+          
+          <div className="space-y-6">
+            <TrailSidebar trail={trail} />
           </div>
-        )}
-      </main>
-    </Layout>
+        </div>
+
+        <div className="mt-12">
+          <SimilarTrails currentTrailId={trail.id} />
+        </div>
+      </div>
+    </div>
   );
 };
 

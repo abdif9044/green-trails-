@@ -27,6 +27,8 @@ export interface Trail {
   last_updated?: string;
   latitude?: number;
   longitude?: number;
+  strainTags?: StrainTag[];
+  isAgeRestricted?: boolean;
 }
 
 export interface TrailFilters {
@@ -94,7 +96,7 @@ export interface ParkingSpot {
   updated_at: string;
 }
 
-export type TrailDifficulty = 'easy' | 'moderate' | 'hard';
+export type TrailDifficulty = 'easy' | 'moderate' | 'hard' | 'expert';
 
 export interface StrainTag {
   id: string;

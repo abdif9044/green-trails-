@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { MapPin, Heart, Share2 } from "lucide-react";
 
 interface TrailDifficultyBadgeProps {
-  difficulty: 'easy' | 'moderate' | 'hard';
+  difficulty: 'easy' | 'moderate' | 'hard' | 'expert';
 }
 
 const TrailDifficultyBadge: React.FC<TrailDifficultyBadgeProps> = ({ difficulty }) => {
@@ -15,6 +15,7 @@ const TrailDifficultyBadge: React.FC<TrailDifficultyBadgeProps> = ({ difficulty 
       case 'easy': return 'bg-green-100 text-green-800';
       case 'moderate': return 'bg-yellow-100 text-yellow-800';
       case 'hard': return 'bg-red-100 text-red-800';
+      case 'expert': return 'bg-purple-100 text-purple-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -48,7 +49,7 @@ const TrailHeader: React.FC<TrailHeaderProps> = ({
       <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
         <div className="flex-1 space-y-3">
           <div className="flex flex-wrap items-center gap-2">
-            <TrailDifficultyBadge difficulty={trail.difficulty} />
+            <TrailDifficultyBadge difficulty={trail.difficulty as 'easy' | 'moderate' | 'hard' | 'expert'} />
             {trail.tags.slice(0, 3).map((tag, idx) => (
               <Badge key={idx} variant="secondary" className="text-xs">
                 {tag}

@@ -1,135 +1,127 @@
 
-import { Button } from "@/components/ui/button";
-import { Compass } from "lucide-react";
-import { Link } from "react-router-dom";
-import TrailCardPrefetch from "@/features/trails/components/TrailCardPrefetch";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { TrailDifficulty } from "@/types/trails";
+import React from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { MapPin, Clock, TrendingUp } from 'lucide-react';
+import { Trail } from '@/types/trails';
 
-const DEFAULT_TRAIL_IMAGE = "https://images.unsplash.com/photo-1469474968028-56623f02e42e";
-
-const useFeaturedTrails = () => {
-  return useQuery({
-    queryKey: ['featured-trails'],
-    queryFn: async () => {
-      const { data: trails, error } = await supabase
-        .from('trails')
-        .select(`
-          *,
-          trail_images (
-            image_path,
-            is_primary
-          ),
-          trail_tags (
-            tag,
-            is_strain_tag
-          )
-        `)
-        .eq('location', 'Rochester, MN')
-        .limit(3)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      // Count likes for each trail
-      const trailsWithLikes = await Promise.all(
-        trails.map(async (trail) => {
-          const { count } = await supabase
-            .from('trail_likes')
-            .select('*', { count: 'exact', head: true })
-            .eq('trail_id', trail.id);
-            
-          return {
-            ...trail,
-            likesCount: count || 0
-          };
-        })
-      );
-
-      return trailsWithLikes.map(trail => {
-        // Ensure the difficulty is cast to a valid TrailDifficulty type
-        const difficulty = validateDifficulty(trail.difficulty);
-        
-        // Get primary image if exists
-        const primaryImage = trail.trail_images?.find(img => img.is_primary);
-        // If no primary image, get first image
-        const firstImage = trail.trail_images?.[0];
-        // Get image path
-        const imagePath = primaryImage?.image_path || firstImage?.image_path;
-        
-        // Get image URL
-        let imageUrl = DEFAULT_TRAIL_IMAGE;
-        if (imagePath) {
-          imageUrl = supabase.storage
-            .from('trail_images')
-            .getPublicUrl(imagePath)
-            .data.publicUrl;
-        }
-        
-        return {
-          id: trail.id,
-          name: trail.name,
-          location: trail.location,
-          coordinates: [trail.longitude, trail.latitude] as [number, number],
-          imageUrl: imageUrl,
-          difficulty: difficulty,
-          length: trail.length,
-          elevation: trail.elevation,
-          tags: trail.trail_tags
-            ?.filter(tag => !tag.is_strain_tag)
-            .map(tag => tag.tag) || [],
-          strainTags: trail.trail_tags
-            ?.filter(tag => tag.is_strain_tag)
-            .map(tag => tag.tag) || [],
-          isAgeRestricted: trail.is_age_restricted,
-          description: trail.description,
-          likes: trail.likesCount,
-        };
-      });
-    }
-  });
-};
-
-// Helper function to validate and convert string difficulty to TrailDifficulty type
-const validateDifficulty = (difficulty: string): TrailDifficulty => {
-  const validDifficulties: TrailDifficulty[] = ['easy', 'moderate', 'hard', 'expert'];
-  
-  if (validDifficulties.includes(difficulty as TrailDifficulty)) {
-    return difficulty as TrailDifficulty;
+const mockFeaturedTrails: Trail[] = [
+  {
+    id: '1',
+    name: 'Angels Landing',
+    location: 'Zion National Park, Utah',
+    imageUrl: '/placeholder.svg',
+    difficulty: 'hard' as const,
+    length: 5.4,
+    elevation: 1488,
+    elevation_gain: 1488,
+    tags: ['mountain views', 'challenging', 'chains section'],
+    likes: 2847,
+    description: 'One of the most famous and thrilling hikes in Zion.',
+    coordinates: [37.2692, -112.9481] as [number, number]
+  },
+  {
+    id: '2', 
+    name: 'Half Dome',
+    location: 'Yosemite National Park, California',
+    imageUrl: '/placeholder.svg',
+    difficulty: 'hard' as const,
+    length: 16.0,
+    elevation: 8842,
+    elevation_gain: 4800,
+    tags: ['granite dome', 'cables', 'permits required'],
+    likes: 3124,
+    description: 'Iconic granite dome with cables for the final ascent.',
+    coordinates: [37.7459, -119.5332] as [number, number]
+  },
+  {
+    id: '3',
+    name: 'Emerald Lake Trail',
+    location: 'Rocky Mountain National Park, Colorado', 
+    imageUrl: '/placeholder.svg',
+    difficulty: 'moderate' as const,
+    length: 3.2,
+    elevation: 10110,
+    elevation_gain: 605,
+    tags: ['alpine lake', 'family friendly', 'scenic views'],
+    likes: 1856,
+    description: 'Beautiful alpine lake surrounded by towering peaks.',
+    coordinates: [40.3428, -105.6836] as [number, number]
   }
-  
-  // Default to 'moderate' if the difficulty is not valid
-  console.warn(`Invalid difficulty: ${difficulty}, defaulting to 'moderate'`);
-  return 'moderate';
-};
+];
 
 const FeaturedTrails = () => {
-  const { data: trails, isLoading } = useFeaturedTrails();
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty) {
+      case 'easy': return 'bg-green-100 text-green-800';
+      case 'moderate': return 'bg-yellow-100 text-yellow-800';
+      case 'hard': return 'bg-red-100 text-red-800';
+      case 'expert': return 'bg-purple-100 text-purple-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
 
   return (
-    <section className="py-16 bg-white dark:bg-greentrail-950">
+    <section className="py-16 bg-gray-50 dark:bg-gray-900">
       <div className="container mx-auto px-4">
-        <div className="flex justify-between items-center mb-8">
-          <h2 className="text-3xl font-bold text-greentrail-800 dark:text-greentrail-200">
-            Featured Minnesota Trails
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold text-greentrail-800 dark:text-greentrail-200 mb-4">
+            Featured Trails
           </h2>
-          <Link to="/discover">
-            <Button 
-              variant="ghost" 
-              className="text-greentrail-600 hover:text-greentrail-800 hover:bg-greentrail-100 dark:text-greentrail-400 dark:hover:text-greentrail-200 dark:hover:bg-greentrail-900"
-            >
-              View All <Compass className="ml-2" size={16} />
-            </Button>
-          </Link>
+          <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+            Discover some of the most popular and breathtaking trails from our community
+          </p>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {trails?.map((trail) => (
-            <TrailCardPrefetch
-              key={trail.id}
-              {...trail}
-            />
+          {mockFeaturedTrails.map((trail) => (
+            <Card key={trail.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+              <div className="aspect-video bg-gray-200 overflow-hidden">
+                <img 
+                  src={trail.imageUrl} 
+                  alt={trail.name}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <CardContent className="p-4">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Badge variant="secondary" className={getDifficultyColor(trail.difficulty)}>
+                      {trail.difficulty}
+                    </Badge>
+                    <span className="text-sm text-gray-500">{trail.likes} likes</span>
+                  </div>
+                  
+                  <h3 className="font-semibold text-lg line-clamp-1">{trail.name}</h3>
+                  
+                  <div className="flex items-center gap-1 text-gray-600">
+                    <MapPin className="h-4 w-4" />
+                    <span className="text-sm line-clamp-1">{trail.location}</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-4 text-sm text-gray-500">
+                    <div className="flex items-center gap-1">
+                      <Clock className="h-4 w-4" />
+                      <span>{trail.length} miles</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <TrendingUp className="h-4 w-4" />
+                      <span>{trail.elevation_gain}ft gain</span>
+                    </div>
+                  </div>
+                  
+                  {trail.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {trail.tags.slice(0, 2).map((tag, idx) => (
+                        <Badge key={idx} variant="outline" className="text-xs">
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
           ))}
         </div>
       </div>

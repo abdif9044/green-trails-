@@ -1,121 +1,94 @@
 
 import { useMemo } from 'react';
-import { Trail, TrailFilters } from '@/types/trails';
+import { TrailFilters, Trail } from '@/types/trails';
 
-// Calculate distance between two coordinates using Haversine formula
-export const getDistanceFromCoordinates = (
-  lon1: number,
-  lat1: number,
-  lon2: number,
-  lat2: number
-): number => {
-  const R = 3963.19; // Earth radius in miles
-  const dLat = (lat2 - lat1) * Math.PI / 180; 
-  const dLon = (lon2 - lon1) * Math.PI / 180;
-  const a = 
-    Math.sin(dLat/2) * Math.sin(dLat/2) +
-    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-    Math.sin(dLon/2) * Math.sin(dLon/2); 
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
-  const distance = R * c; // Distance in miles
-  return distance;
-};
+export const useTrailFilters = () => {
+  const filterTrails = useMemo(() => {
+    return (trails: Trail[], filters: TrailFilters): Trail[] => {
+      if (!trails || trails.length === 0) return [];
 
-export const useTrailFilters = (trails: Trail[] = [], filters?: TrailFilters) => {
-  return useMemo(() => {
-    if (!filters || trails.length === 0) {
-      return trails;
-    }
-    
-    return trails.filter(trail => {
-      // Filter by search query (name or location)
-      if (filters.searchQuery) {
-        const search = filters.searchQuery.toLowerCase();
-        const nameMatch = trail.name?.toLowerCase().includes(search);
-        const locationMatch = trail.location?.toLowerCase().includes(search);
-        const descriptionMatch = trail.description?.toLowerCase().includes(search);
-        
-        if (!(nameMatch || locationMatch || descriptionMatch)) {
-          return false;
+      return trails.filter(trail => {
+        // Search query filter
+        if (filters.searchQuery) {
+          const query = filters.searchQuery.toLowerCase();
+          const matchesSearch = 
+            trail.name.toLowerCase().includes(query) ||
+            trail.location.toLowerCase().includes(query) ||
+            trail.description?.toLowerCase().includes(query) ||
+            trail.tags.some(tag => tag.toLowerCase().includes(query));
+          
+          if (!matchesSearch) return false;
         }
-      }
-      
-      // Filter by nearby location if coordinates are provided
-      if (filters.nearbyCoordinates && trail.coordinates) {
-        const [filterLon, filterLat] = filters.nearbyCoordinates;
-        const [trailLon, trailLat] = trail.coordinates;
-        const radius = filters.radius || 50; // Default 50 mile radius
-        
-        const distance = getDistanceFromCoordinates(
-          filterLon, filterLat, 
-          trailLon, trailLat
-        );
-        
-        if (distance > radius) {
-          return false;
+
+        // Difficulty filter
+        if (filters.difficulty && filters.difficulty !== '') {
+          if (trail.difficulty !== filters.difficulty) return false;
         }
-      }
-      
-      // Filter by difficulty
-      if (filters.difficulty && trail.difficulty !== filters.difficulty) {
-        return false;
-      }
-      
-      // Filter by length range
-      if (filters.lengthRange) {
-        const [min, max] = filters.lengthRange;
-        if (trail.length < min || (max < 20 && trail.length > max)) {
-          return false;
+
+        // Length range filter
+        if (filters.lengthRange) {
+          const [minLength, maxLength] = filters.lengthRange;
+          if (trail.length < minLength || trail.length > maxLength) return false;
         }
-      }
-      
-      // Filter by tags
-      if (filters.tags && filters.tags.length > 0) {
-        const hasMatchingTag = filters.tags.some(tag => trail.tags.includes(tag));
-        if (!hasMatchingTag) {
-          return false;
+
+        // Country filter
+        if (filters.country && filters.country !== '') {
+          if (trail.country !== filters.country) return false;
         }
-      }
-      
-      // Filter by strain types
-      if (filters.strainTypes && filters.strainTypes.length > 0 && trail.strainTags) {
-        let hasMatchingStrainType = false;
-        
-        if (Array.isArray(trail.strainTags)) {
-          if (typeof trail.strainTags[0] === 'string') {
-            // If strainTags is an array of strings, we can't filter by type
-            // So we'll consider it a match if it has any strain tags
-            hasMatchingStrainType = trail.strainTags.length > 0;
-          } else {
-            // If strainTags is an array of StrainTag objects
-            hasMatchingStrainType = trail.strainTags.some(strain => {
-              if (typeof strain === 'string') return false;
-              return filters.strainTypes?.includes(strain.type);
-            });
-          }
+
+        // State/Province filter
+        if (filters.stateProvince && filters.stateProvince !== '') {
+          if (trail.state_province !== filters.stateProvince) return false;
         }
-        
-        if (!hasMatchingStrainType) {
-          return false;
+
+        // Tags filter
+        if (filters.tags && filters.tags.length > 0) {
+          const hasMatchingTag = filters.tags.some(filterTag =>
+            trail.tags.some(trailTag => 
+              trailTag.toLowerCase().includes(filterTag.toLowerCase())
+            )
+          );
+          if (!hasMatchingTag) return false;
         }
-      }
-      
-      // Filter by country
-      if (filters.country && trail.country && trail.country !== filters.country) {
-        return false;
-      }
-      
-      // Filter by state/province
-      if (filters.stateProvince && trail.state_province && trail.state_province !== filters.stateProvince) {
-        return false;
-      }
-      
-      // Filter by age restriction
-      if (!filters.showAgeRestricted && trail.isAgeRestricted) {
-        return false;
-      }
-      
-      return true;
-    });
-  }, [trails, filters]);
+
+        // Nearby coordinates filter
+        if (filters.nearbyCoordinates && filters.radius && trail.coordinates) {
+          const [filterLng, filterLat] = filters.nearbyCoordinates;
+          const [trailLng, trailLat] = trail.coordinates;
+          
+          // Simple distance calculation (not perfectly accurate for long distances)
+          const distance = Math.sqrt(
+            Math.pow(filterLng - trailLng, 2) + Math.pow(filterLat - trailLat, 2)
+          ) * 69; // Rough conversion to miles
+          
+          if (distance > filters.radius) return false;
+        }
+
+        return true;
+      });
+    };
+  }, []);
+
+  const sortTrails = useMemo(() => {
+    return (trails: Trail[], sortBy: 'distance' | 'difficulty' | 'length' | 'likes' = 'likes'): Trail[] => {
+      return [...trails].sort((a, b) => {
+        switch (sortBy) {
+          case 'difficulty':
+            const difficultyOrder = { easy: 1, moderate: 2, hard: 3, expert: 4 };
+            return difficultyOrder[a.difficulty] - difficultyOrder[b.difficulty];
+          case 'length':
+            return a.length - b.length;
+          case 'likes':
+            return b.likes - a.likes;
+          default:
+            return 0;
+        }
+      });
+    };
+  }, []);
+
+  return {
+    filterTrails,
+    sortTrails
+  };
 };

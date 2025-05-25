@@ -1,206 +1,88 @@
 
-import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { TrailFilters, Trail } from '@/types/trails';
-import { formatTrailData } from '@/features/trails';
-import { createSampleTrails } from '../utils/sample-trail-data';
+import { Trail, TrailFilters } from '@/types/trails';
 
-export const useTrailsQuery = (currentFilters: TrailFilters, onTrailCountChange?: (count: number) => void) => {
-  const [trails, setTrails] = useState<Trail[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [totalCount, setTotalCount] = useState(0);
-  const [page, setPage] = useState(1);
-  const pageSize = 24; // Number of trails per page
+const TRAILS_QUERY_KEY = 'trails';
 
-  useEffect(() => {
-    const fetchTrails = async () => {
-      setLoading(true);
+interface UseTrailsQueryOptions {
+  filters?: TrailFilters;
+  limit?: number;
+  offset?: number;
+  enabled?: boolean;
+}
+
+export const useTrailsQuery = (options: UseTrailsQueryOptions = {}) => {
+  const { filters = {}, limit = 20, offset = 0, enabled = true } = options;
+
+  return useQuery({
+    queryKey: [TRAILS_QUERY_KEY, filters, limit, offset],
+    queryFn: async (): Promise<{ data: Trail[]; count: number }> => {
+      console.log('Fetching trails with filters:', filters);
       
-      try {
-        console.log("Fetching trails with filters:", currentFilters);
-        
-        // First get the count with a separate query
-        let countQuery = supabase
-          .from('trails')
-          .select('*', { count: 'exact', head: true });
-          
-        // Apply the same filters to both queries
-        if (currentFilters.searchQuery) {
-          countQuery = countQuery.ilike('name', `%${currentFilters.searchQuery}%`);
-        }
-        
-        if (currentFilters.difficulty) {
-          countQuery = countQuery.eq('difficulty', currentFilters.difficulty);
-        }
-        
-        if (currentFilters.lengthRange) {
-          countQuery = countQuery
-            .gte('length', currentFilters.lengthRange[0])
-            .lte('length', currentFilters.lengthRange[1]);
-        }
-        
-        if (currentFilters.country) {
-          countQuery = countQuery.eq('country', currentFilters.country);
-        }
-        
-        if (currentFilters.stateProvince) {
-          countQuery = countQuery.eq('state_province', currentFilters.stateProvince);
-        }
-        
-        if (!currentFilters.showAgeRestricted) {
-          countQuery = countQuery.eq('is_age_restricted', false);
-        }
-        
-        // Get the count
-        const { count, error: countError } = await countQuery;
-        
-        if (countError) {
-          console.error('Error fetching trail count:', countError);
-        } else if (count !== null) {
-          setTotalCount(count);
-          if (onTrailCountChange) {
-            onTrailCountChange(count);
-          }
-        }
-        
-        // Now fetch the actual data
-        let dataQuery = supabase
-          .from('trails')
-          .select(`
-            *,
-            trail_tags (
-              is_strain_tag,
-              tag:tag_id (
-                name,
-                details,
-                tag_type
-              )
-            )
-          `);
-        
-        // Apply filters
-        if (currentFilters.searchQuery) {
-          dataQuery = dataQuery.ilike('name', `%${currentFilters.searchQuery}%`);
-        }
-        
-        if (currentFilters.difficulty) {
-          dataQuery = dataQuery.eq('difficulty', currentFilters.difficulty);
-        }
-        
-        if (currentFilters.lengthRange) {
-          dataQuery = dataQuery
-            .gte('length', currentFilters.lengthRange[0])
-            .lte('length', currentFilters.lengthRange[1]);
-        }
-        
-        if (currentFilters.country) {
-          dataQuery = dataQuery.eq('country', currentFilters.country);
-        }
-        
-        if (currentFilters.stateProvince) {
-          dataQuery = dataQuery.eq('state_province', currentFilters.stateProvince);
-        }
-        
-        if (!currentFilters.showAgeRestricted) {
-          dataQuery = dataQuery.eq('is_age_restricted', false);
-        }
-        
-        // Add pagination
-        const from = (page - 1) * pageSize;
-        const to = from + pageSize - 1;
-        
-        // Execute the query with pagination and ordering
-        const { data, error } = await dataQuery
-          .order('name', { ascending: true })
-          .range(from, to);
-        
-        if (error) {
-          console.error('Error fetching trails:', error);
-          throw error;
-        }
-        
-        console.log("Raw trails data:", data);
-        
-        if (!data || data.length === 0) {
-          if (page === 1) {
-            // Only fall back to sample data on first page and if no real data exists
-            console.log("No trails found, creating sample trails");
-            const sampleTrails = createSampleTrails();
-            setTrails(sampleTrails);
-            setTotalCount(sampleTrails.length);
-            if (onTrailCountChange) {
-              onTrailCountChange(sampleTrails.length);
-            }
-          } else {
-            // No more data for this page
-            setTrails([]);
-          }
-          return;
-        }
-        
-        // Fetch likes counts separately for the current page of trails
-        const trailIds = data.map(trail => trail.id);
-        const { data: likesData, error: likesError } = await supabase
-          .from('trail_likes')
-          .select('trail_id, id')
-          .in('trail_id', trailIds);
-          
-        if (likesError) {
-          console.warn('Error fetching trail likes:', likesError);
-        }
-        
-        // Create a map of trail_id to like count
-        const likeCountsMap: Record<string, number> = {};
-        if (likesData) {
-          likesData.forEach(like => {
-            if (!likeCountsMap[like.trail_id]) {
-              likeCountsMap[like.trail_id] = 0;
-            }
-            likeCountsMap[like.trail_id]++;
-          });
-        }
-        
-        // Transform the data using our common formatter with likes count
-        const formattedTrails: Trail[] = data.map(trail => {
-          // Add likes count from our map
-          const likesCount = likeCountsMap[trail.id] || 0;
-          return formatTrailData({...trail, likes_count: likesCount});
-        });
-        
-        console.log("Formatted trails:", formattedTrails);
-        setTrails(formattedTrails);
-        
-      } catch (error) {
-        console.error('Error fetching trails:', error);
-        
-        // Fallback to sample data if fetching fails on first page
-        if (page === 1) {
-          const sampleTrails = createSampleTrails();
-          setTrails(sampleTrails);
-          setTotalCount(sampleTrails.length);
-          if (onTrailCountChange) {
-            onTrailCountChange(sampleTrails.length);
-          }
-        }
-      } finally {
-        setLoading(false);
+      let query = supabase
+        .from('trails')
+        .select('*', { count: 'exact' })
+        .range(offset, offset + limit - 1);
+
+      // Apply filters
+      if (filters.searchQuery) {
+        query = query.or(`name.ilike.%${filters.searchQuery}%,location.ilike.%${filters.searchQuery}%,description.ilike.%${filters.searchQuery}%`);
       }
-    };
-    
-    fetchTrails();
-  }, [currentFilters, page, onTrailCountChange]);
 
-  // Function to change page
-  const changePage = (newPage: number) => {
-    setPage(newPage);
-  };
+      if (filters.difficulty) {
+        query = query.eq('difficulty', filters.difficulty);
+      }
 
-  return { 
-    trails, 
-    loading, 
-    totalCount, 
-    page, 
-    pageSize, 
-    changePage 
-  };
+      if (filters.lengthRange) {
+        const [minLength, maxLength] = filters.lengthRange;
+        query = query.gte('length', minLength).lte('length', maxLength);
+      }
+
+      if (filters.country) {
+        query = query.eq('country', filters.country);
+      }
+
+      if (filters.stateProvince) {
+        query = query.eq('state_province', filters.stateProvince);
+      }
+
+      if (filters.tags && filters.tags.length > 0) {
+        query = query.overlaps('tags', filters.tags);
+      }
+
+      if (filters.nearbyCoordinates && filters.radius) {
+        const [lng, lat] = filters.nearbyCoordinates;
+        // Using a simple bounding box for now - could be improved with PostGIS
+        const latDelta = filters.radius / 69;
+        const lngDelta = filters.radius / (69 * Math.cos(lat * Math.PI / 180));
+        
+        query = query
+          .gte('coordinates->1', lat - latDelta)
+          .lte('coordinates->1', lat + latDelta)
+          .gte('coordinates->0', lng - lngDelta)
+          .lte('coordinates->0', lng + lngDelta);
+      }
+
+      // Order by likes descending by default
+      query = query.order('likes', { ascending: false });
+
+      const { data, error, count } = await query;
+
+      if (error) {
+        console.error('Error fetching trails:', error);
+        throw new Error(error.message);
+      }
+
+      console.log(`Fetched ${data?.length || 0} trails out of ${count || 0} total`);
+      
+      return {
+        data: (data as Trail[]) || [],
+        count: count || 0
+      };
+    },
+    enabled,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+  });
 };

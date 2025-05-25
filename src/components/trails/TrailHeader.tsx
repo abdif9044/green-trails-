@@ -1,65 +1,67 @@
 
 import React from "react";
-import { Link } from "react-router-dom";
-import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Heart, MapPin, Mountain, ArrowUpRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Trail } from "@/types/trails";
-import TrailRating from "./TrailRating";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { MapPin, Heart, Share2, Star } from "lucide-react";
+import { TrailDifficultyBadge } from "@/features/trails/components/TrailDifficultyBadge";
 
 interface TrailHeaderProps {
   trail: Trail;
-  likes: number;
-  onLikeClick: () => void;
+  onLike?: () => void;
+  onShare?: () => void;
+  isLiked?: boolean;
 }
 
-const TrailHeader: React.FC<TrailHeaderProps> = ({ trail, likes, onLikeClick }) => {
+const TrailHeader: React.FC<TrailHeaderProps> = ({
+  trail,
+  onLike,
+  onShare,
+  isLiked = false
+}) => {
   return (
-    <div className="bg-greentrail-50 dark:bg-greentrail-900 py-12">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between mb-6">
-          <Link to="/discover" className="flex items-center gap-2 text-greentrail-600 hover:text-greentrail-800 dark:text-greentrail-400 dark:hover:text-greentrail-200">
-            <ArrowLeft className="h-5 w-5" />
-            Back to Trails
-          </Link>
-          <Button onClick={onLikeClick}>
-            <Heart className="h-4 w-4 mr-2" />
-            {likes} Likes
-          </Button>
-        </div>
-        
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-greentrail-800 dark:text-greentrail-200 mb-2">
-              {trail.name}
-            </h1>
-            <div className="flex items-center gap-2 text-greentrail-600 dark:text-greentrail-400">
-              <MapPin className="h-4 w-4" />
-              {trail.location}
-            </div>
-            <TrailRating trailId={trail.id} className="mt-2" />
-          </div>
-          <div className="mt-4 md:mt-0">
-            {trail.isAgeRestricted && (
-              <Badge className="bg-purple-100 text-purple-800 dark:bg-purple-800 dark:text-purple-100 mr-2">
-                21+
+    <div className="space-y-4">
+      <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+        <div className="flex-1 space-y-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <TrailDifficultyBadge difficulty={trail.difficulty} />
+            {trail.tags.slice(0, 3).map((tag, idx) => (
+              <Badge key={idx} variant="secondary" className="text-xs">
+                {tag}
               </Badge>
-            )}
-            <Badge className={`bg-${trail.difficulty}-100 text-${trail.difficulty}-800 dark:bg-${trail.difficulty}-800 dark:text-${trail.difficulty}-100`}>
-              {trail.difficulty}
-            </Badge>
+            ))}
+          </div>
+          
+          <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white">
+            {trail.name}
+          </h1>
+          
+          <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
+            <MapPin className="h-4 w-4" />
+            <span className="text-sm">{trail.location}</span>
           </div>
         </div>
         
-        <div className="flex items-center gap-4 mt-4">
-          <div className="flex items-center gap-2 text-greentrail-600 dark:text-greentrail-400">
-            <Mountain className="h-4 w-4" />
-            {trail.elevation} ft
-          </div>
-          <div className="flex items-center gap-2 text-greentrail-600 dark:text-greentrail-400">
-            <ArrowUpRight className="h-4 w-4" />
-            {trail.length} miles
-          </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant={isLiked ? "default" : "outline"}
+            size="sm"
+            onClick={onLike}
+            className="flex items-center gap-2"
+          >
+            <Heart className={`h-4 w-4 ${isLiked ? 'fill-current' : ''}`} />
+            <span>{trail.likes}</span>
+          </Button>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onShare}
+            className="flex items-center gap-2"
+          >
+            <Share2 className="h-4 w-4" />
+            Share
+          </Button>
         </div>
       </div>
     </div>

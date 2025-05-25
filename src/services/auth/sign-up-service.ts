@@ -1,8 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { DatabaseSetupService } from '@/services/database/setup-service';
 import { AuthResult } from './types';
-import { DemoAccountService } from './demo-account-service';
 
 /**
  * Service for handling sign-up operations
@@ -26,12 +24,6 @@ export const SignUpService = {
       
       if (password.length < 6) {
         return { success: false, message: "Password must be at least 6 characters long" };
-      }
-      
-      // Check if metadata contains birthdate for age verification
-      if (!metadata.hasOwnProperty('birthdate')) {
-        console.warn('Signup attempt without birthdate. Age verification is required.');
-        return { success: false, message: "Date of birth is required for age verification" };
       }
       
       // Clean up email - trim whitespace
@@ -63,14 +55,6 @@ export const SignUpService = {
         }
   
         console.log('Signup successful, user ID:', data.user.id);
-        
-        try {
-          // Log successful registration
-          await SignUpService.logRegistration(data.user.id);
-        } catch (logError) {
-          // Non-critical error, just log it
-          console.warn('Failed to log security event for registration (non-critical):', logError);
-        }
   
         // If email confirmation is enabled in Supabase, let the user know
         if (data.session === null) {
@@ -84,7 +68,7 @@ export const SignUpService = {
         return { 
           success: true,
           user_id: data.user.id, 
-          message: "Account created successfully. You can now sign in." 
+          message: "Account created successfully. Welcome to GreenTrails!" 
         };
       } catch (supabaseError) {
         console.error('Supabase API error:', supabaseError);
@@ -101,19 +85,5 @@ export const SignUpService = {
       }
       return { success: false, message: 'An unknown error occurred' };
     }
-  },
-
-  /**
-   * Log a registration security event
-   * @param userId The ID of the user who registered
-   */
-  logRegistration: async (userId: string): Promise<void> => {
-    await DatabaseSetupService.logSecurityEvent('user_registration', { 
-      user_id: userId,
-      timestamp: new Date().toISOString() 
-    });
-  },
-
-  // Re-export the demo account creation function
-  createDemoAccount: DemoAccountService.createDemoAccount
+  }
 };

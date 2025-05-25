@@ -12,8 +12,8 @@ const Social = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <SEOProvider
-        title="Social Feed - GreenTrails"
-        description="Connect with fellow trailblazers, share your adventures, and discover new trails through the GreenTrails community."
+        title="Nature Feed - GreenTrails"
+        description="Connect with fellow nature lovers, share your trail adventures, and discover amazing outdoor experiences through the GreenTrails community."
         type="website"
       />
       

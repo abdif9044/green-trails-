@@ -1,13 +1,6 @@
 
 export type TrailDifficulty = 'easy' | 'moderate' | 'hard' | 'expert';
 
-export interface StrainTag {
-  name: string;
-  type: 'sativa' | 'indica' | 'hybrid';
-  effects: string[];
-  description?: string;
-}
-
 export interface Trail {
   id: string;
   name: string;
@@ -16,12 +9,10 @@ export interface Trail {
   difficulty: TrailDifficulty;
   length: number;
   elevation: number;
-  elevation_gain: number; // Making this required
+  elevation_gain: number;
   tags: string[];
   likes: number;
   coordinates?: [number, number]; // [longitude, latitude]
-  strainTags?: string[] | StrainTag[];
-  isAgeRestricted: boolean;
   description?: string;
   country?: string;
   state_province?: string;
@@ -37,8 +28,6 @@ export interface TrailFilters {
   difficulty?: string | null;
   lengthRange?: [number, number];
   tags?: string[];
-  strainTypes?: ('sativa' | 'indica' | 'hybrid')[];
-  showAgeRestricted?: boolean;
   country?: string;
   stateProvince?: string;
   nearbyCoordinates?: [number, number]; // [longitude, latitude]

@@ -7,7 +7,6 @@ import TrailMap from "@/components/map/TrailMap";
 import TrailDetails from "./TrailDetails";
 import TrailComments from "./TrailComments";
 import TrailAlbums from "./TrailAlbums";
-import AgeRestrictedContent from "./AgeRestrictedContent";
 import TrailElevationProfile from "./TrailElevationProfile";
 import GroupHikeScheduler from "../community/GroupHikeScheduler";
 
@@ -29,7 +28,6 @@ const TrailContent: React.FC<TrailContentProps> = ({ trail }) => {
       <TabsContent value="details" className="mt-6 space-y-4">
         <TrailDetails 
           description={trail.description} 
-          strainTags={trail.strainTags}
           difficulty={trail.difficulty}
           length={trail.length}
         />
@@ -58,21 +56,15 @@ const TrailContent: React.FC<TrailContentProps> = ({ trail }) => {
       </TabsContent>
       
       <TabsContent value="group-hikes" className="mt-6">
-        <AgeRestrictedContent isAgeRestricted={trail.isAgeRestricted}>
-          <GroupHikeScheduler trailId={trail.id} trailName={trail.name} />
-        </AgeRestrictedContent>
+        <GroupHikeScheduler trailId={trail.id} trailName={trail.name} />
       </TabsContent>
       
       <TabsContent value="albums" className="mt-6">
-        <AgeRestrictedContent isAgeRestricted={trail.isAgeRestricted}>
-          <TrailAlbums trailId={trail.id} />
-        </AgeRestrictedContent>
+        <TrailAlbums trailId={trail.id} />
       </TabsContent>
       
       <TabsContent value="comments" className="mt-6">
-        <AgeRestrictedContent isAgeRestricted={trail.isAgeRestricted}>
-          <TrailComments trailId={trail.id} />
-        </AgeRestrictedContent>
+        <TrailComments trailId={trail.id} />
       </TabsContent>
     </Tabs>
   );

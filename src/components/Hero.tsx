@@ -20,17 +20,17 @@ const Hero = () => {
           </div>
           
           <h1 className="text-5xl md:text-7xl font-heading font-bold text-greentrail-900 dark:text-greentrail-100 mb-6">
-            Blaze Your Path
+            Share Your Nature Adventures
           </h1>
           
           <p className="text-xl md:text-2xl text-greentrail-700 dark:text-greentrail-300 mb-12 max-w-3xl mx-auto leading-relaxed">
-            Your social hiking app for cannabis-friendly adventures, trail sharing, and community-powered exploration.
+            Connect with fellow nature lovers, discover amazing trails, and share your outdoor experiences through photos and stories.
           </p>
           
           <Button asChild className="bg-greentrail-600 hover:bg-greentrail-700 text-white px-8 py-6 text-lg rounded-full shadow-lg hover:shadow-xl transition-all duration-300 group">
             <Link to={user ? "/discover" : "/auth"}>
               <Compass className="mr-2 group-hover:rotate-90 transition-transform duration-300" size={20} />
-              Start Exploring
+              Start Your Journey
             </Link>
           </Button>
         </div>

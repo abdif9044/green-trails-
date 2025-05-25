@@ -3,130 +3,100 @@ import { useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle, Loader2 } from 'lucide-react';
-import { DateOfBirthForm } from '@/components/auth/DateOfBirthForm';
-import { validateDateOfBirth } from '@/utils/form-validators';
-import { AccountCredentialsForm } from '@/components/auth/AccountCredentialsForm';
 import { TermsAndPrivacy } from '@/components/auth/TermsAndPrivacy';
-import { useSignupValidation } from '@/hooks/use-signup-validation';
 
 interface SignUpFormProps {
   onSuccess: () => void;
 }
 
 export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
-  // Form field states
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [day, setDay] = useState('');
-  const [month, setMonth] = useState('');
-  const [year, setYear] = useState('');
-  
-  // Form state management
+  const [fullName, setFullName] = useState('');
+  const [username, setUsername] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showDobFields, setShowDobFields] = useState(false);
-  const [formTouched, setFormTouched] = useState(false);
   
   const { signUp } = useAuth();
   const { toast } = useToast();
-  
-  // Use the validation hook
-  const {
-    emailError,
-    passwordError,
-    confirmPasswordError,
-    dobError,
-    setDobError,
-    validateEmailField,
-    validatePasswordField,
-    validateConfirmPasswordField,
-    validateForm
-  } = useSignupValidation();
 
-  const handleFieldChange = () => {
-    if (!formTouched) setFormTouched(true);
-    if (error) setError('');
+  const validateForm = () => {
+    if (!email.trim()) {
+      setError('Email is required');
+      return false;
+    }
+    
+    if (!password) {
+      setError('Password is required');
+      return false;
+    }
+    
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters long');
+      return false;
+    }
+    
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      return false;
+    }
+    
+    if (!fullName.trim()) {
+      setError('Full name is required');
+      return false;
+    }
+    
+    if (!username.trim()) {
+      setError('Username is required');
+      return false;
+    }
+    
+    return true;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Clear previous errors
     setError('');
     
-    console.log('Form submission started:', { email, showDobFields, day, month, year });
-    
-    // First validate basic credentials
-    if (!validateForm(email, password, confirmPassword, showDobFields, day, month, year)) {
-      console.log('Basic validation failed');
-      setFormTouched(true);
+    if (!validateForm()) {
       return;
     }
     
-    // If DOB fields aren't shown yet, show them
-    if (!showDobFields) {
-      console.log('Showing DOB fields');
-      setShowDobFields(true);
-      return;
-    }
-    
-    // Validate date of birth
-    const dobValidation = validateDateOfBirth(day, month, year);
-    if (!dobValidation.isValid || !dobValidation.birthDate) {
-      console.log('DOB validation failed:', dobValidation.message);
-      setDobError(dobValidation.message || 'Invalid date of birth');
-      return;
-    }
-    
-    // Set loading state to true BEFORE making the API call
     setLoading(true);
     
     try {
-      console.log('Submitting signup with DOB:', dobValidation.birthDate);
-      
       const { success, message } = await signUp(email, password, {
-        birthdate: dobValidation.birthDate.toISOString(),
+        full_name: fullName.trim(),
+        username: username.trim(),
         signup_source: 'web_form'
       });
       
       if (!success) {
-        console.error('Signup failed:', message);
-        
-        // Handle specific error messages
-        if (message?.includes('User already registered') || message?.includes('already registered')) {
-          setError('This email is already registered. Please sign in instead or use a different email.');
+        if (message?.includes('User already registered')) {
+          setError('This email is already registered. Please sign in instead.');
         } else if (message?.includes('Invalid email')) {
           setError('Please provide a valid email address.');
-        } else if (message?.includes('Password')) {
-          setError('Password must be at least 6 characters long.');
-        } else if (message?.includes('Signup is disabled')) {
-          setError('Account registration is currently disabled. Please try again later.');
         } else {
           setError(message || 'Failed to create account. Please try again.');
         }
-        
-        // Set loading state to false after handling the error
-        setLoading(false);
         return;
       }
       
-      console.log('Signup successful');
-      
       toast({
-        title: "Account created successfully!",
-        description: "You can now sign in with your account.",
+        title: "Welcome to GreenTrails!",
+        description: "Your account has been created successfully.",
       });
       
-      // Only call onSuccess after the signup has been successful
       onSuccess();
     } catch (err: any) {
       console.error('Sign up error:', err);
       setError(err.message || 'Failed to create account. Please try again.');
     } finally {
-      // Always set loading to false in finally block
       setLoading(false);
     }
   };
@@ -140,36 +110,65 @@ export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
         </Alert>
       )}
       
-      <AccountCredentialsForm
-        email={email}
-        password={password}
-        confirmPassword={confirmPassword}
-        emailError={emailError}
-        passwordError={passwordError}
-        confirmPasswordError={confirmPasswordError}
-        formTouched={formTouched}
-        onEmailChange={setEmail}
-        onPasswordChange={setPassword}
-        onConfirmPasswordChange={setConfirmPassword}
-        onFieldChange={handleFieldChange}
-        onBlurEmail={() => validateEmailField(email)}
-        onBlurPassword={() => validatePasswordField(password)}
-        onBlurConfirmPassword={() => validateConfirmPasswordField(password, confirmPassword)}
-      />
-      
-      {showDobFields && (
-        <DateOfBirthForm
-          day={day}
-          month={month}
-          year={year}
-          setDay={setDay}
-          setMonth={setMonth}
-          setYear={setYear}
-          dobError={dobError}
-          formTouched={formTouched}
-          onFieldChange={handleFieldChange}
+      <div className="space-y-2">
+        <Label htmlFor="fullName">Full Name</Label>
+        <Input
+          id="fullName"
+          type="text"
+          value={fullName}
+          onChange={(e) => setFullName(e.target.value)}
+          placeholder="Enter your full name"
+          required
         />
-      )}
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="username">Username</Label>
+        <Input
+          id="username"
+          type="text"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          placeholder="Choose a username"
+          required
+        />
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="email">Email</Label>
+        <Input
+          id="email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Enter your email"
+          required
+        />
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="password">Password</Label>
+        <Input
+          id="password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="Create a password"
+          required
+        />
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="confirmPassword">Confirm Password</Label>
+        <Input
+          id="confirmPassword"
+          type="password"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          placeholder="Confirm your password"
+          required
+        />
+      </div>
       
       <TermsAndPrivacy />
       
@@ -181,20 +180,12 @@ export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
         {loading ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            {showDobFields ? 'Creating account...' : 'Processing...'}
+            Creating account...
           </>
         ) : (
-          showDobFields ? 'Create Account' : 'Continue'
+          'Create Account'
         )}
       </Button>
-      
-      {/* Debug info in development */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="text-xs text-gray-400 mt-2">
-          Debug: Email={email ? 'filled' : 'empty'}, Password={password ? 'filled' : 'empty'}, 
-          DOB shown={showDobFields ? 'yes' : 'no'}
-        </div>
-      )}
     </form>
   );
 };

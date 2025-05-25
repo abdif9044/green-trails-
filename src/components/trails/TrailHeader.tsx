@@ -4,7 +4,27 @@ import { Trail } from "@/types/trails";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MapPin, Heart, Share2 } from "lucide-react";
-import { TrailDifficultyBadge } from "@/features/trails/components/TrailDifficultyBadge";
+
+interface TrailDifficultyBadgeProps {
+  difficulty: 'easy' | 'moderate' | 'hard';
+}
+
+const TrailDifficultyBadge: React.FC<TrailDifficultyBadgeProps> = ({ difficulty }) => {
+  const getColorClass = (diff: string) => {
+    switch (diff) {
+      case 'easy': return 'bg-green-100 text-green-800';
+      case 'moderate': return 'bg-yellow-100 text-yellow-800';
+      case 'hard': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  return (
+    <Badge variant="secondary" className={getColorClass(difficulty)}>
+      {difficulty}
+    </Badge>
+  );
+};
 
 interface TrailHeaderProps {
   trail: Trail;

@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -9,9 +10,9 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/hooks/use-auth";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, User, LogOut, Map, Heart, Settings, Camera } from "lucide-react";
+import { Loader2, User, LogOut, Map, Camera } from "lucide-react";
 
 export const NavbarAuth = () => {
   const { user, signOut, loading } = useAuth();

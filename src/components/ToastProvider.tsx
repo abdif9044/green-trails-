@@ -9,8 +9,8 @@ interface ToastProviderProps {
 export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
   return (
     <>
-      <Toaster />
       {children}
+      <Toaster />
     </>
   );
 };

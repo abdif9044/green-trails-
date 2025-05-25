@@ -31,14 +31,18 @@ interface TrailHeaderProps {
   onLike?: () => void;
   onShare?: () => void;
   isLiked?: boolean;
+  likes?: number;
 }
 
 const TrailHeader: React.FC<TrailHeaderProps> = ({
   trail,
   onLike,
   onShare,
-  isLiked = false
+  isLiked = false,
+  likes
 }) => {
+  const displayLikes = likes !== undefined ? likes : trail.likes;
+  
   return (
     <div className="space-y-4">
       <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
@@ -70,7 +74,7 @@ const TrailHeader: React.FC<TrailHeaderProps> = ({
             className="flex items-center gap-2"
           >
             <Heart className={`h-4 w-4 ${isLiked ? 'fill-current' : ''}`} />
-            <span>{trail.likes}</span>
+            <span>{displayLikes}</span>
           </Button>
           
           <Button

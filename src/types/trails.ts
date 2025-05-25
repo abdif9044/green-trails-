@@ -38,6 +38,8 @@ export interface TrailFilters {
   stateProvince?: string;
   nearbyCoordinates?: [number, number];
   radius?: number;
+  showAgeRestricted?: boolean;
+  filters?: any;
 }
 
 export interface TrailComment {
@@ -90,4 +92,14 @@ export interface ParkingSpot {
   notes?: string;
   created_at: string;
   updated_at: string;
+}
+
+export type TrailDifficulty = 'easy' | 'moderate' | 'hard';
+
+export interface StrainTag {
+  id: string;
+  name: string;
+  type: 'sativa' | 'indica' | 'hybrid';
+  effects: string[];
+  description?: string;
 }

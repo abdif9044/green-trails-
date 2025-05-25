@@ -3,7 +3,7 @@ import React from "react";
 import { Trail } from "@/types/trails";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, Heart, Share2, Star } from "lucide-react";
+import { MapPin, Heart, Share2 } from "lucide-react";
 import { TrailDifficultyBadge } from "@/features/trails/components/TrailDifficultyBadge";
 
 interface TrailHeaderProps {

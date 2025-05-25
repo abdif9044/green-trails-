@@ -1,35 +1,93 @@
 
-export type TrailDifficulty = 'easy' | 'moderate' | 'hard' | 'expert';
-
 export interface Trail {
   id: string;
   name: string;
   location: string;
   imageUrl: string;
-  difficulty: TrailDifficulty;
+  difficulty: 'easy' | 'moderate' | 'hard';
   length: number;
   elevation: number;
   elevation_gain: number;
   tags: string[];
   likes: number;
-  coordinates?: [number, number]; // [longitude, latitude]
+  coordinates?: [number, number];
   description?: string;
   country?: string;
   state_province?: string;
   surface?: string;
   trail_type?: string;
-  geojson?: any; // GeoJSON data for trail path
   source?: string;
   source_id?: string;
+  created_at?: string;
+  updated_at?: string;
+  user_id?: string;
+  is_verified?: boolean;
+  geojson?: any;
+  length_km?: number;
+  last_updated?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface TrailFilters {
   searchQuery?: string;
-  difficulty?: string | null;
+  difficulty?: string;
   lengthRange?: [number, number];
   tags?: string[];
   country?: string;
   stateProvince?: string;
-  nearbyCoordinates?: [number, number]; // [longitude, latitude]
-  radius?: number; // Search radius in miles
+  nearbyCoordinates?: [number, number];
+  radius?: number;
+}
+
+export interface TrailComment {
+  id: string;
+  user_id: string;
+  trail_id: string;
+  content: string;
+  created_at: string;
+  updated_at: string;
+  user?: {
+    username?: string;
+    full_name?: string;
+    avatar_url?: string;
+  };
+}
+
+export interface TrailRating {
+  id: string;
+  user_id: string;
+  trail_id: string;
+  rating: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TrailWeather {
+  id: string;
+  trail_id: string;
+  temperature?: number;
+  high?: number;
+  low?: number;
+  condition?: string;
+  precipitation?: string;
+  wind_speed?: string;
+  wind_direction?: string;
+  sunrise?: string;
+  sunset?: string;
+  updated_at: string;
+}
+
+export interface ParkingSpot {
+  id: string;
+  trail_id: string;
+  name: string;
+  description?: string;
+  latitude: number;
+  longitude: number;
+  is_free: boolean;
+  capacity?: number;
+  notes?: string;
+  created_at: string;
+  updated_at: string;
 }

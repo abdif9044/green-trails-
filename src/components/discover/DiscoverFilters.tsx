@@ -81,12 +81,29 @@ const DiscoverFilters: React.FC<DiscoverFiltersProps> = ({
           <TagsFilter
             value={filters.tags || []}
             onChange={(value) => updateFilter('tags', value)}
+            availableTags={[
+              'mountain views',
+              'wildlife',
+              'photography',
+              'sunset views',
+              'beach',
+              'family friendly',
+              'forest',
+              'loop trail',
+              'beginner friendly',
+              'desert',
+              'canyon',
+              'challenging',
+              'meadows',
+              'wildflowers',
+              'scenic views'
+            ]}
           />
         </div>
       </div>
 
       {hasActiveFilters() && (
-        <FilterActions onReset={onReset} activeFiltersCount={1} />
+        <FilterActions onReset={onReset} />
       )}
     </div>
   );

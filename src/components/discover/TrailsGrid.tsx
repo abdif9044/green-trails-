@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Trail } from '@/types/trails';
-import { TrailCard } from '@/features/trails/components/TrailCard';
+import TrailCard from '@/features/trails/components/TrailCard';
 import { Loader2 } from 'lucide-react';
 
 interface TrailsGridProps {

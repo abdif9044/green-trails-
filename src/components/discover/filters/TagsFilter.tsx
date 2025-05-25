@@ -1,47 +1,110 @@
 
 import React from 'react';
-import { Badge } from "@/components/ui/badge";
-import { 
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger 
-} from "@/components/ui/accordion";
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { X } from 'lucide-react';
 
 interface TagsFilterProps {
   value: string[];
-  onChange: (tags: string[]) => void;
-  availableTags: string[];
+  onChange: (value: string[]) => void;
+  availableTags?: string[];
 }
 
-const TagsFilter: React.FC<TagsFilterProps> = ({ value, onChange, availableTags }) => {
-  const handleTagChange = (tag: string) => {
-    if (value.includes(tag)) {
-      onChange(value.filter((t) => t !== tag));
-    } else {
+const TagsFilter: React.FC<TagsFilterProps> = ({
+  value,
+  onChange,
+  availableTags = [
+    'mountain views',
+    'wildlife',
+    'photography',
+    'sunset views',
+    'beach',
+    'family friendly',
+    'forest',
+    'loop trail',
+    'beginner friendly',
+    'desert',
+    'canyon',
+    'challenging',
+    'meadows',
+    'wildflowers',
+    'scenic views'
+  ]
+}) => {
+  const [inputValue, setInputValue] = React.useState('');
+
+  const addTag = (tag: string) => {
+    if (tag && !value.includes(tag)) {
       onChange([...value, tag]);
     }
   };
 
+  const removeTag = (tagToRemove: string) => {
+    onChange(value.filter(tag => tag !== tagToRemove));
+  };
+
+  const handleInputKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (inputValue.trim()) {
+        addTag(inputValue.trim());
+        setInputValue('');
+      }
+    }
+  };
+
+  const suggestedTags = availableTags.filter(tag => 
+    !value.includes(tag) && 
+    tag.toLowerCase().includes(inputValue.toLowerCase())
+  );
+
   return (
-    <AccordionItem value="tags">
-      <AccordionTrigger className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed text-greentrail-800 dark:text-greentrail-200">
-        Tags
-      </AccordionTrigger>
-      <AccordionContent className="pt-2">
-        <div className="flex flex-wrap gap-2 mt-2">
-          {availableTags.map((tag) => (
-            <Badge
-              key={tag}
-              variant={value.includes(tag) ? "default" : "outline"}
-              className={`cursor-pointer ${value.includes(tag) ? 'bg-greentrail-600 text-white dark:bg-greentrail-700' : 'text-greentrail-600 dark:text-greentrail-400 border-greentrail-200 dark:border-greentrail-700'}`}
-              onClick={() => handleTagChange(tag)}
-            >
+    <div className="space-y-3">
+      <Label>Trail Tags</Label>
+      
+      <Input
+        placeholder="Add tags (press Enter)"
+        value={inputValue}
+        onChange={(e) => setInputValue(e.target.value)}
+        onKeyPress={handleInputKeyPress}
+      />
+      
+      {value.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {value.map((tag, index) => (
+            <Badge key={index} variant="secondary" className="flex items-center gap-1">
               {tag}
+              <X 
+                className="h-3 w-3 cursor-pointer" 
+                onClick={() => removeTag(tag)}
+              />
             </Badge>
           ))}
         </div>
-      </AccordionContent>
-    </AccordionItem>
+      )}
+      
+      {inputValue && suggestedTags.length > 0 && (
+        <div className="space-y-2">
+          <Label className="text-sm text-muted-foreground">Suggestions:</Label>
+          <div className="flex flex-wrap gap-2">
+            {suggestedTags.slice(0, 5).map((tag, index) => (
+              <Badge 
+                key={index} 
+                variant="outline" 
+                className="cursor-pointer hover:bg-secondary"
+                onClick={() => {
+                  addTag(tag);
+                  setInputValue('');
+                }}
+              >
+                {tag}
+              </Badge>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 

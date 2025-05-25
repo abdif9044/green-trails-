@@ -9,9 +9,7 @@ const Hero = () => {
   
   return (
     <div className="relative overflow-hidden bg-gradient-to-br from-greentrail-50 to-greentrail-100 dark:from-greentrail-900 dark:to-greentrail-950">
-      <div className="absolute inset-0 opacity-20 bg-[url('/lovable-uploads/f1f69aac-d6e2-4389-8835-f83b42f87d98.png')] bg-no-repeat bg-right-top bg-contain"></div>
-      
-      <div className="container mx-auto px-4 py-20 md:py-32 relative z-10">
+      <div className="container mx-auto px-4 py-16 md:py-28 relative z-10">
         <div className="max-w-4xl mx-auto text-center">
           <div className="mb-8 inline-block">
             <img 

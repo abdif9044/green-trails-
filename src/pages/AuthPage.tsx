@@ -34,7 +34,11 @@ export const AuthPage = () => {
             </Button>
           </div>
           
-          {isLogin ? <LoginForm /> : <SignUpForm />}
+          {isLogin ? (
+            <LoginForm />
+          ) : (
+            <SignUpForm onSuccess={() => setIsLogin(true)} />
+          )}
         </div>
       </div>
     </AuthGuard>

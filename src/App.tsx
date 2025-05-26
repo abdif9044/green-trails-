@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { ToastProvider } from './components/ToastProvider';
-import { ErrorBoundary } from './components/ui/ErrorBoundary';
+import { AppErrorBoundary } from './components/AppErrorBoundary';
 import SplashScreen from './components/SplashScreen';
 import { AuthProvider } from '@/providers/auth-provider';
 import AppRoutes from './routes';
@@ -15,13 +15,13 @@ function App() {
   }
 
   return (
-    <AuthProvider>
-      <ErrorBoundary>
+    <AppErrorBoundary>
+      <AuthProvider>
         <ToastProvider>
           <AppRoutes />
         </ToastProvider>
-      </ErrorBoundary>
-    </AuthProvider>
+      </AuthProvider>
+    </AppErrorBoundary>
   );
 }
 

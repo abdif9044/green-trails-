@@ -1,12 +1,11 @@
 
 import { useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
-import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle, Loader2 } from 'lucide-react';
+import { AlertCircle, Loader2, CheckCircle } from 'lucide-react';
 import { TermsAndPrivacy } from '@/components/auth/TermsAndPrivacy';
 
 interface SignUpFormProps {
@@ -21,13 +20,19 @@ export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
   const [username, setUsername] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
   
   const { signUp } = useAuth();
-  const { toast } = useToast();
 
   const validateForm = () => {
     if (!email.trim()) {
       setError('Email is required');
+      return false;
+    }
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError('Please enter a valid email address');
       return false;
     }
     
@@ -56,6 +61,11 @@ export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
       return false;
     }
     
+    if (username.length < 3) {
+      setError('Username must be at least 3 characters long');
+      return false;
+    }
+    
     return true;
   };
 
@@ -70,36 +80,53 @@ export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
     setLoading(true);
     
     try {
-      const { success, message } = await signUp(email, password, {
+      console.log('Attempting to create account for:', email);
+      
+      const { success: signUpSuccess, message } = await signUp(email, password, {
         full_name: fullName.trim(),
         username: username.trim(),
         signup_source: 'web_form'
       });
       
-      if (!success) {
+      if (!signUpSuccess) {
+        console.error('Sign up failed:', message);
         if (message?.includes('User already registered')) {
           setError('This email is already registered. Please sign in instead.');
         } else if (message?.includes('Invalid email')) {
           setError('Please provide a valid email address.');
+        } else if (message?.includes('Password should be at least')) {
+          setError('Password must be at least 6 characters long.');
         } else {
           setError(message || 'Failed to create account. Please try again.');
         }
         return;
       }
       
-      toast({
-        title: "Welcome to GreenTrails!",
-        description: "Your account has been created successfully.",
-      });
+      console.log('Account created successfully for:', email);
+      setSuccess(true);
       
-      onSuccess();
+      // Show success message briefly before switching to sign in
+      setTimeout(() => {
+        onSuccess();
+      }, 2000);
+      
     } catch (err: any) {
       console.error('Sign up error:', err);
-      setError(err.message || 'Failed to create account. Please try again.');
+      setError('Network error. Please check your connection and try again.');
     } finally {
       setLoading(false);
     }
   };
+
+  if (success) {
+    return (
+      <div className="text-center py-8">
+        <CheckCircle className="mx-auto h-16 w-16 text-green-500 mb-4" />
+        <h3 className="text-lg font-semibold text-green-800 mb-2">Account Created!</h3>
+        <p className="text-green-600">Welcome to GreenTrails! You can now sign in.</p>
+      </div>
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -119,6 +146,7 @@ export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
           onChange={(e) => setFullName(e.target.value)}
           placeholder="Enter your full name"
           required
+          disabled={loading}
         />
       </div>
       
@@ -131,6 +159,7 @@ export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
           onChange={(e) => setUsername(e.target.value)}
           placeholder="Choose a username"
           required
+          disabled={loading}
         />
       </div>
       
@@ -143,6 +172,7 @@ export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
           onChange={(e) => setEmail(e.target.value)}
           placeholder="Enter your email"
           required
+          disabled={loading}
         />
       </div>
       
@@ -153,8 +183,9 @@ export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="Create a password"
+          placeholder="Create a password (min 6 characters)"
           required
+          disabled={loading}
         />
       </div>
       
@@ -167,6 +198,7 @@ export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
           onChange={(e) => setConfirmPassword(e.target.value)}
           placeholder="Confirm your password"
           required
+          disabled={loading}
         />
       </div>
       

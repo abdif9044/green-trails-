@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle, Loader2, CheckCircle } from 'lucide-react';
 import { TermsAndPrivacy } from '@/components/auth/TermsAndPrivacy';
@@ -23,6 +24,10 @@ export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
   const [success, setSuccess] = useState(false);
   
   const { signUp } = useAuth();
+
+  // Generate years for dropdown (current year - 100 to current year - 18)
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: 83 }, (_, i) => currentYear - 18 - i);
 
   const validateForm = () => {
     if (!email.trim()) {

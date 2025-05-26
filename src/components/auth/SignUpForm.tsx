@@ -2,12 +2,12 @@
 import { useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle, Loader2, CheckCircle } from 'lucide-react';
+import { AlertCircle, Loader2 } from 'lucide-react';
 import { TermsAndPrivacy } from '@/components/auth/TermsAndPrivacy';
+import { SignUpFormFields } from '@/components/auth/SignUpFormFields';
+import { SignUpSuccessMessage } from '@/components/auth/SignUpSuccessMessage';
+import { useSignUpValidation } from '@/components/auth/SignUpFormValidation';
 
 interface SignUpFormProps {
   onSuccess: () => void;
@@ -19,66 +19,21 @@ export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [username, setUsername] = useState('');
+  const [birthYear, setBirthYear] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   
   const { signUp } = useAuth();
-
-  // Generate years for dropdown (current year - 100 to current year - 18)
-  const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: 83 }, (_, i) => currentYear - 18 - i);
-
-  const validateForm = () => {
-    if (!email.trim()) {
-      setError('Email is required');
-      return false;
-    }
-    
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      setError('Please enter a valid email address');
-      return false;
-    }
-    
-    if (!password) {
-      setError('Password is required');
-      return false;
-    }
-    
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters long');
-      return false;
-    }
-    
-    if (password !== confirmPassword) {
-      setError('Passwords do not match');
-      return false;
-    }
-    
-    if (!fullName.trim()) {
-      setError('Full name is required');
-      return false;
-    }
-    
-    if (!username.trim()) {
-      setError('Username is required');
-      return false;
-    }
-    
-    if (username.length < 3) {
-      setError('Username must be at least 3 characters long');
-      return false;
-    }
-    
-    return true;
-  };
+  const { validateForm } = useSignUpValidation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     
-    if (!validateForm()) {
+    const validationError = validateForm(email, password, confirmPassword, fullName, username, birthYear);
+    if (validationError) {
+      setError(validationError);
       return;
     }
     
@@ -90,6 +45,7 @@ export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
       const { success: signUpSuccess, message } = await signUp(email, password, {
         full_name: fullName.trim(),
         username: username.trim(),
+        birth_year: birthYear,
         signup_source: 'web_form'
       });
       
@@ -124,13 +80,7 @@ export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
   };
 
   if (success) {
-    return (
-      <div className="text-center py-8">
-        <CheckCircle className="mx-auto h-16 w-16 text-green-500 mb-4" />
-        <h3 className="text-lg font-semibold text-green-800 mb-2">Account Created!</h3>
-        <p className="text-green-600">Welcome to GreenTrails! You can now sign in.</p>
-      </div>
-    );
+    return <SignUpSuccessMessage />;
   }
 
   return (
@@ -142,70 +92,21 @@ export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
         </Alert>
       )}
       
-      <div className="space-y-2">
-        <Label htmlFor="fullName">Full Name</Label>
-        <Input
-          id="fullName"
-          type="text"
-          value={fullName}
-          onChange={(e) => setFullName(e.target.value)}
-          placeholder="Enter your full name"
-          required
-          disabled={loading}
-        />
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="username">Username</Label>
-        <Input
-          id="username"
-          type="text"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          placeholder="Choose a username"
-          required
-          disabled={loading}
-        />
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
-        <Input
-          id="email"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="Enter your email"
-          required
-          disabled={loading}
-        />
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="password">Password</Label>
-        <Input
-          id="password"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Create a password (min 6 characters)"
-          required
-          disabled={loading}
-        />
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="confirmPassword">Confirm Password</Label>
-        <Input
-          id="confirmPassword"
-          type="password"
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-          placeholder="Confirm your password"
-          required
-          disabled={loading}
-        />
-      </div>
+      <SignUpFormFields
+        fullName={fullName}
+        username={username}
+        email={email}
+        password={password}
+        confirmPassword={confirmPassword}
+        birthYear={birthYear}
+        loading={loading}
+        onFullNameChange={setFullName}
+        onUsernameChange={setUsername}
+        onEmailChange={setEmail}
+        onPasswordChange={setPassword}
+        onConfirmPasswordChange={setConfirmPassword}
+        onBirthYearChange={setBirthYear}
+      />
       
       <TermsAndPrivacy />
       

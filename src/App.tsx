@@ -16,11 +16,11 @@ function App() {
 
   return (
     <AppErrorBoundary>
-      <AuthProvider>
-        <ToastProvider>
+      <ToastProvider>
+        <AuthProvider>
           <AppRoutes />
-        </ToastProvider>
-      </AuthProvider>
+        </AuthProvider>
+      </ToastProvider>
     </AppErrorBoundary>
   );
 }

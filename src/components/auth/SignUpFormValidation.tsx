@@ -47,8 +47,8 @@ export const useSignUpValidation = () => {
 
     const currentYear = new Date().getFullYear();
     const age = currentYear - parseInt(birthYear);
-    if (age < 21) {
-      return 'You must be at least 21 years old to create an account';
+    if (age < 13) {
+      return 'You must be at least 13 years old to create an account';
     }
     
     return null;

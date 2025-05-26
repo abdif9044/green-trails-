@@ -34,9 +34,9 @@ export const SignUpFormFields = ({
   onConfirmPasswordChange,
   onBirthYearChange
 }: SignUpFormFieldsProps) => {
-  // Generate years for dropdown (current year - 100 to current year - 18)
+  // Generate years for dropdown (current year - 100 to current year - 13)
   const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: 83 }, (_, i) => currentYear - 18 - i);
+  const years = Array.from({ length: 88 }, (_, i) => currentYear - 13 - i);
 
   return (
     <>
@@ -106,7 +106,7 @@ export const SignUpFormFields = ({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="birthYear">Year of Birth (Must be 21+)</Label>
+        <Label htmlFor="birthYear">Year of Birth (Must be 13+)</Label>
         <Select onValueChange={onBirthYearChange} value={birthYear} disabled={loading}>
           <SelectTrigger>
             <SelectValue placeholder="Select your birth year" />

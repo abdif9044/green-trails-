@@ -87,9 +87,51 @@ export const useAuthMethods = (user: User | null) => {
     }
   };
 
+  const resetPassword = async (email: string) => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + '/auth/update-password',
+      });
+
+      if (error) {
+        console.error('Password reset failed:', error.message);
+        return { success: false, message: error.message };
+      }
+
+      console.log('Password reset email sent to:', email);
+      return { success: true, message: 'Password reset email sent successfully' };
+    } catch (error) {
+      console.error('Exception during password reset:', error);
+      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+      return { success: false, message: errorMessage };
+    }
+  };
+
+  const updatePassword = async (password: string) => {
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: password
+      });
+
+      if (error) {
+        console.error('Password update failed:', error.message);
+        return { success: false, message: error.message };
+      }
+
+      console.log('Password updated successfully');
+      return { success: true, message: 'Password updated successfully' };
+    } catch (error) {
+      console.error('Exception during password update:', error);
+      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+      return { success: false, message: errorMessage };
+    }
+  };
+
   return {
     signIn,
     signUp,
     signOut,
+    resetPassword,
+    updatePassword,
   };
 };

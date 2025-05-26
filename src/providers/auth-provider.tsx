@@ -5,7 +5,6 @@ import { useAuthState } from '@/hooks/auth/use-auth-state';
 import { useAuthMethods } from '@/hooks/auth/use-auth-methods';
 import { useUserManagement } from '@/hooks/auth/use-user-management';
 import { supabase } from '@/integrations/supabase/client';
-import { Session } from '@supabase/supabase-js';
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -13,8 +12,8 @@ interface AuthProviderProps {
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const { user, session, loading, setUser, setSession, setLoading } = useAuthState();
-  const { signIn, signUp, signOut } = useAuthMethods(user);
-  const { verifyAge, resetPassword, updatePassword } = useUserManagement(user);
+  const { signIn, signUp, signOut, resetPassword, updatePassword } = useAuthMethods(user);
+  const { verifyAge } = useUserManagement(user);
   const [authInitialized, setAuthInitialized] = useState(false);
 
   useEffect(() => {

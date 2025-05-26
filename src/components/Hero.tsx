@@ -20,7 +20,7 @@ const Hero = () => {
           </div>
           
           <h1 className="text-5xl md:text-7xl font-heading font-bold text-greentrail-900 dark:text-greentrail-100 mb-6">
-            Share Your Nature Adventures
+            Blaze Your Path
           </h1>
           
           <p className="text-xl md:text-2xl text-greentrail-700 dark:text-greentrail-300 mb-12 max-w-3xl mx-auto leading-relaxed">

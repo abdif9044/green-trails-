@@ -1,4 +1,3 @@
-
 import React from 'react';
 import SEOProvider from '@/components/SEOProvider';
 import Navbar from '@/components/Navbar';
@@ -15,7 +14,7 @@ const Index = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <SEOProvider
-        title="GreenTrails - Share Your Nature Adventures"
+        title="GreenTrails - Blaze Your Path"
         description="Connect with fellow nature lovers, share trail photos, discover amazing hikes, and build your outdoor community on GreenTrails."
       />
       
@@ -35,7 +34,7 @@ const Index = () => {
               </div>
               
               <h1 className="text-5xl md:text-7xl font-heading font-bold text-greentrail-900 dark:text-greentrail-100 mb-6">
-                Share Your Nature Adventures
+                Blaze Your Path
               </h1>
               
               <p className="text-xl md:text-2xl text-greentrail-700 dark:text-greentrail-300 mb-12 max-w-3xl mx-auto leading-relaxed">
@@ -144,7 +143,7 @@ const Index = () => {
           <div className="container mx-auto px-4 text-center">
             <div className="max-w-3xl mx-auto">
               <h2 className="text-3xl md:text-4xl font-heading font-bold mb-6">
-                Nature is better when shared.
+                Ready to blaze your path?
               </h2>
               <p className="text-xl text-greentrail-100 mb-8">
                 Join thousands of nature lovers sharing their adventures on GreenTrails.

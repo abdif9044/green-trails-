@@ -3,8 +3,8 @@ import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import { AuthProvider } from '@/providers/auth-provider';
-import { ToastProvider } from '@/components/ToastProvider';
 import LoadingFallback from '@/components/LoadingFallback';
+import { Toaster } from "@/components/ui/toaster";
 
 // Lazy load components for better performance
 const HomePage = lazy(() => import('@/pages/HomePage'));
@@ -23,28 +23,27 @@ const AutoImport = lazy(() => import('@/pages/AutoImport'));
 const AppRoutes: React.FC = () => {
   return (
     <HelmetProvider>
-      <ToastProvider>
-        <Router>
-          <AuthProvider>
-            <Suspense fallback={<LoadingFallback />}>
-              <Routes>
-                <Route path="/" element={<HomePage />} />
-                <Route path="/discover" element={<Discover />} />
-                <Route path="/social" element={<Social />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/settings" element={<Settings />} />
-                <Route path="/terms" element={<TermsOfService />} />
-                <Route path="/privacy" element={<PrivacyPolicy />} />
-                <Route path="/landing" element={<LandingPage />} />
-                <Route path="/admin/import" element={<AdminTrailImport />} />
-                <Route path="/auto-import" element={<AutoImportPage />} />
-                <Route path="/auto-refresh" element={<AutoImport />} />
-              </Routes>
-            </Suspense>
-          </AuthProvider>
-        </Router>
-      </ToastProvider>
+      <Router>
+        <AuthProvider>
+          <Suspense fallback={<LoadingFallback />}>
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/discover" element={<Discover />} />
+              <Route path="/social" element={<Social />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/terms" element={<TermsOfService />} />
+              <Route path="/privacy" element={<PrivacyPolicy />} />
+              <Route path="/landing" element={<LandingPage />} />
+              <Route path="/admin/import" element={<AdminTrailImport />} />
+              <Route path="/auto-import" element={<AutoImportPage />} />
+              <Route path="/auto-refresh" element={<AutoImport />} />
+            </Routes>
+          </Suspense>
+          <Toaster />
+        </AuthProvider>
+      </Router>
     </HelmetProvider>
   );
 };

@@ -16,7 +16,6 @@ import { LazyAlbumDetail } from './components/lazy/LazyComponents';
 import { LazyCreateAlbum } from './components/lazy/LazyComponents';
 import { LazyBadges } from './components/lazy/LazyComponents';
 import { LazyAutoImportPage } from './components/lazy/LazyComponents';
-import { LazyAdminTrailImportFeature } from './components/lazy/LazyComponents';
 
 const LoadingFallback = () => (
   <div className="flex items-center justify-center min-h-screen">

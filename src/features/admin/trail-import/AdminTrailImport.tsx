@@ -1,6 +1,5 @@
 
 import React, { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { useTrailImport } from "@/hooks/useTrailImport";
 import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
@@ -20,7 +19,6 @@ import BulkImportSection from "./components/BulkImportSection";
 import ImportTabs from "./components/ImportTabs";
 
 const AdminTrailImport = () => {
-  const navigate = useNavigate();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = React.useState("bulk");
   

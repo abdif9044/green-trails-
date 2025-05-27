@@ -7,17 +7,19 @@ import { BrowserRouter } from 'react-router-dom'
 import App from './App.tsx'
 import './index.css'
 
-// Create a client for React Query
+// Create a client for React Query with optimized settings
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       refetchOnWindowFocus: false,
-      retry: false,
+      retry: 1,
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      gcTime: 1000 * 60 * 30, // 30 minutes
     },
   },
 });
 
-// Register service worker
+// Register service worker for better performance
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js')
@@ -31,22 +33,18 @@ if ('serviceWorker' in navigator) {
 }
 
 const container = document.getElementById('root');
-// Make sure we have a valid DOM element
 if (!container) {
   throw new Error('Root element not found');
 }
 
-// Create root with explicit React import
 const root = createRoot(container);
 
-// Render with strict mode to ensure proper React context
+// Single BrowserRouter at the top level
 root.render(
   <React.StrictMode>
     <BrowserRouter>
       <HelmetProvider>
-        <QueryClientProvider client={queryClient}>
-          <App />
-        </QueryClientProvider>
+        <App />
       </HelmetProvider>
     </BrowserRouter>
   </React.StrictMode>

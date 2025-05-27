@@ -7,15 +7,17 @@ import { AuthPage } from './pages/AuthPage';
 import { ResetPasswordForm } from './components/auth/ResetPasswordForm';
 import { AuthGuard } from './components/auth/AuthGuard';
 import { UserProfile } from './components/UserProfile';
-import { LazyTrail } from './components/lazy/LazyComponents';
-import { LazyDiscover } from './components/lazy/LazyComponents';
-import { LazySocial } from './components/lazy/LazyComponents';
-import { LazyProfile } from './components/lazy/LazyComponents';
-import { LazyAdminTrailImport } from './components/lazy/LazyComponents';
-import { LazyAlbumDetail } from './components/lazy/LazyComponents';
-import { LazyCreateAlbum } from './components/lazy/LazyComponents';
-import { LazyBadges } from './components/lazy/LazyComponents';
-import { LazyAutoImportPage } from './components/lazy/LazyComponents';
+
+// Optimized lazy loading with better error handling
+const LazyTrail = React.lazy(() => import('./pages/TrailDetailPage'));
+const LazyDiscover = React.lazy(() => import('./pages/Discover'));
+const LazySocial = React.lazy(() => import('./pages/Social'));
+const LazyProfile = React.lazy(() => import('./pages/Profile'));
+const LazyAdminTrailImport = React.lazy(() => import('./features/admin/trail-import/AdminTrailImport'));
+const LazyAlbumDetail = React.lazy(() => import('./pages/AlbumDetail'));
+const LazyCreateAlbum = React.lazy(() => import('./pages/CreateAlbum'));
+const LazyBadges = React.lazy(() => import('./pages/Badges'));
+const LazyAutoImportPage = React.lazy(() => import('./pages/AutoImportPage'));
 
 const LoadingFallback = () => (
   <div className="flex items-center justify-center min-h-screen">
@@ -25,68 +27,82 @@ const LoadingFallback = () => (
 
 const AppRoutes = () => {
   return (
-    <Suspense fallback={<LoadingFallback />}>
-      <Routes>
-        <Route path="/" element={<Index />} />
-        <Route path="/auth" element={<AuthPage />} />
-        <Route path="/auth/reset-password" element={<ResetPasswordForm />} />
-        
-        {/* Protected Routes */}
-        <Route path="/profile" element={
-          <AuthGuard>
-            <UserProfile />
-          </AuthGuard>
-        } />
-        
-        <Route path="/discover" element={
-          <AuthGuard>
+    <Routes>
+      <Route path="/" element={<Index />} />
+      <Route path="/auth" element={<AuthPage />} />
+      <Route path="/auth/reset-password" element={<ResetPasswordForm />} />
+      
+      {/* Protected Routes */}
+      <Route path="/profile" element={
+        <AuthGuard>
+          <UserProfile />
+        </AuthGuard>
+      } />
+      
+      <Route path="/discover" element={
+        <AuthGuard>
+          <Suspense fallback={<LoadingFallback />}>
             <LazyDiscover />
-          </AuthGuard>
-        } />
-        
-        <Route path="/social" element={
-          <AuthGuard>
+          </Suspense>
+        </AuthGuard>
+      } />
+      
+      <Route path="/social" element={
+        <AuthGuard>
+          <Suspense fallback={<LoadingFallback />}>
             <LazySocial />
-          </AuthGuard>
-        } />
-        
-        <Route path="/trail/:id" element={
-          <AuthGuard>
+          </Suspense>
+        </AuthGuard>
+      } />
+      
+      <Route path="/trail/:id" element={
+        <AuthGuard>
+          <Suspense fallback={<LoadingFallback />}>
             <LazyTrail />
-          </AuthGuard>
-        } />
-        
-        <Route path="/admin/import" element={
-          <AuthGuard>
+          </Suspense>
+        </AuthGuard>
+      } />
+      
+      <Route path="/admin/import" element={
+        <AuthGuard>
+          <Suspense fallback={<LoadingFallback />}>
             <LazyAdminTrailImport />
-          </AuthGuard>
-        } />
-        
-        <Route path="/album/:id" element={
-          <AuthGuard>
+          </Suspense>
+        </AuthGuard>
+      } />
+      
+      <Route path="/album/:id" element={
+        <AuthGuard>
+          <Suspense fallback={<LoadingFallback />}>
             <LazyAlbumDetail />
-          </AuthGuard>
-        } />
-        
-        <Route path="/create-album" element={
-          <AuthGuard>
+          </Suspense>
+        </AuthGuard>
+      } />
+      
+      <Route path="/create-album" element={
+        <AuthGuard>
+          <Suspense fallback={<LoadingFallback />}>
             <LazyCreateAlbum />
-          </AuthGuard>
-        } />
-        
-        <Route path="/badges" element={
-          <AuthGuard>
+          </Suspense>
+        </AuthGuard>
+      } />
+      
+      <Route path="/badges" element={
+        <AuthGuard>
+          <Suspense fallback={<LoadingFallback />}>
             <LazyBadges />
-          </AuthGuard>
-        } />
-        
-        <Route path="/auto-import" element={
-          <AuthGuard>
+          </Suspense>
+        </AuthGuard>
+      } />
+      
+      <Route path="/auto-import" element={
+        <AuthGuard>
+          <Suspense fallback={<LoadingFallback />}>
             <LazyAutoImportPage />
-          </AuthGuard>
-        } />
-      </Routes>
-    </Suspense>
+          </Suspense>
+        </AuthGuard>
+      } />
+    </Routes>
   );
 };
 

@@ -18,8 +18,8 @@ const AutoImport = lazy(() => import('@/pages/AutoImport'));
 const AppRoutes: React.FC = () => {
   return (
     <HelmetProvider>
-      <AuthProvider>
-        <Router>
+      <Router>
+        <AuthProvider>
           <Suspense fallback={<LoadingFallback />}>
             <Routes>
               <Route path="/" element={<HomePage />} />
@@ -32,8 +32,8 @@ const AppRoutes: React.FC = () => {
               <Route path="/auto-refresh" element={<AutoImport />} />
             </Routes>
           </Suspense>
-        </Router>
-      </AuthProvider>
+        </AuthProvider>
+      </Router>
     </HelmetProvider>
   );
 };

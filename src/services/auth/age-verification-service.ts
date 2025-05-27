@@ -70,3 +70,6 @@ export const AgeVerificationService = {
     }
   }
 };
+
+// Export individual functions for easier importing
+export const { verifyAge, verifyUserAge } = AgeVerificationService;

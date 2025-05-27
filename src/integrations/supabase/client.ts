@@ -1,12 +1,8 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://placeholder.supabase.co';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'placeholder-key';
-
-if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
-  console.warn('Supabase environment variables not found. Using placeholder values.');
-}
+const supabaseUrl = 'https://qzcplkyinvndvhnevsbt.supabase.co';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF6Y3Bsa3lpbnZuZHZobmV2c2J0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzg1OTUsImV4cCI6MjA2MDYxNDU5NX0.ehgiR9tiAz4kbaMFaRI-loE7NI7eOfcvrE-gnutONQY';
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {

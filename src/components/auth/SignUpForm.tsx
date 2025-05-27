@@ -8,30 +8,30 @@ import { TermsAndPrivacy } from '@/components/auth/TermsAndPrivacy';
 import { SignUpFormFields } from '@/components/auth/SignUpFormFields';
 import { SignUpSuccessMessage } from '@/components/auth/SignUpSuccessMessage';
 import { useSignUpValidation } from '@/components/auth/SignUpFormValidation';
+import AgeVerification from '@/components/auth/AgeVerification';
 
 interface SignUpFormProps {
   onSuccess: () => void;
 }
 
 export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
+  const [step, setStep] = useState<'signup' | 'age-verification' | 'success'>('signup');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [username, setUsername] = useState('');
-  const [birthYear, setBirthYear] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
   
   const { signUp } = useAuth();
   const { validateForm } = useSignUpValidation();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSignUpSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     
-    const validationError = validateForm(email, password, confirmPassword, fullName, username, birthYear);
+    const validationError = validateForm(email, password, confirmPassword, fullName, username, '2000'); // Placeholder birth year
     if (validationError) {
       setError(validationError);
       return;
@@ -45,7 +45,6 @@ export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
       const { success: signUpSuccess, message } = await signUp(email, password, {
         full_name: fullName.trim(),
         username: username.trim(),
-        birth_year: birthYear,
         signup_source: 'web_form'
       });
       
@@ -64,12 +63,7 @@ export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
       }
       
       console.log('Account created successfully for:', email);
-      setSuccess(true);
-      
-      // Show success message briefly before switching to sign in
-      setTimeout(() => {
-        onSuccess();
-      }, 2000);
+      setStep('age-verification');
       
     } catch (err: any) {
       console.error('Sign up error:', err);
@@ -79,12 +73,35 @@ export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
     }
   };
 
-  if (success) {
+  const handleAgeVerified = () => {
+    setStep('success');
+    setTimeout(() => {
+      onSuccess();
+    }, 2000);
+  };
+
+  const handleSkipAge = () => {
+    setStep('success');
+    setTimeout(() => {
+      onSuccess();
+    }, 2000);
+  };
+
+  if (step === 'success') {
     return <SignUpSuccessMessage />;
   }
 
+  if (step === 'age-verification') {
+    return (
+      <AgeVerification 
+        onVerified={handleAgeVerified}
+        onSkip={handleSkipAge}
+      />
+    );
+  }
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSignUpSubmit} className="space-y-4">
       {error && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
@@ -98,14 +115,14 @@ export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
         email={email}
         password={password}
         confirmPassword={confirmPassword}
-        birthYear={birthYear}
+        birthYear=""
         loading={loading}
         onFullNameChange={setFullName}
         onUsernameChange={setUsername}
         onEmailChange={setEmail}
         onPasswordChange={setPassword}
         onConfirmPasswordChange={setConfirmPassword}
-        onBirthYearChange={setBirthYear}
+        onBirthYearChange={() => {}} // Not used in this flow
       />
       
       <TermsAndPrivacy />

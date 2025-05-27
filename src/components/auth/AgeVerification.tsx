@@ -10,11 +10,12 @@ import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 
 interface AgeVerificationProps {
-  onVerified: () => void;
+  onVerified?: () => void;
+  onVerify?: (isVerified: boolean) => void;
   onSkip?: () => void;
 }
 
-const AgeVerification: React.FC<AgeVerificationProps> = ({ onVerified, onSkip }) => {
+const AgeVerification: React.FC<AgeVerificationProps> = ({ onVerified, onVerify, onSkip }) => {
   const [birthdate, setBirthdate] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -48,13 +49,16 @@ const AgeVerification: React.FC<AgeVerificationProps> = ({ onVerified, onSkip })
           title: "Age verified!",
           description: "Welcome to GreenTrails! You can now access all features.",
         });
-        onVerified();
+        onVerified?.();
+        onVerify?.(true);
       } else {
         setError('You must be 21 or older to use GreenTrails');
+        onVerify?.(false);
       }
     } catch (err) {
       console.error('Age verification error:', err);
       setError('An error occurred during verification. Please try again.');
+      onVerify?.(false);
     } finally {
       setLoading(false);
     }

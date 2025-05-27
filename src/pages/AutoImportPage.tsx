@@ -6,7 +6,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, Calendar, RefreshCcw, Database } from 'lucide-react';
+import { Loader2, Calendar, RefreshCcw, Database, CheckCircle, AlertCircle } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -26,6 +26,7 @@ const AutoImportPage: React.FC = () => {
   });
   const [isIndexesCreated, setIsIndexesCreated] = useState<boolean>(false);
   const [isCreatingIndexes, setIsCreatingIndexes] = useState<boolean>(false);
+  const [activeSources, setActiveSources] = useState<any[]>([]);
 
   useEffect(() => {
     if (!user) {
@@ -41,7 +42,22 @@ const AutoImportPage: React.FC = () => {
     fetchRefreshInfo();
     checkDatabaseIndexes();
     fetchTotalTrailCount();
+    fetchActiveSources();
   }, [user, navigate, toast]);
+
+  const fetchActiveSources = async () => {
+    try {
+      const { data: sources, error } = await supabase
+        .from('trail_data_sources')
+        .select('*')
+        .eq('is_active', true);
+        
+      if (error) throw error;
+      setActiveSources(sources || []);
+    } catch (error) {
+      console.error('Error fetching active sources:', error);
+    }
+  };
 
   const fetchRefreshInfo = async () => {
     try {
@@ -163,48 +179,68 @@ const AutoImportPage: React.FC = () => {
     setLoading(true);
     
     try {
-      // Get active data sources
-      const { data: sources, error: sourcesError } = await supabase
-        .from('trail_data_sources')
-        .select('id')
-        .eq('is_active', true)
-        .limit(5);
-        
-      if (sourcesError) throw sourcesError;
+      console.log('Starting manual refresh process...');
       
-      if (!sources || sources.length === 0) {
+      // Check if we have active sources
+      if (activeSources.length === 0) {
         toast({
           title: "No active sources",
-          description: "Please set up data sources before refreshing trail data.",
+          description: "Please set up and activate data sources before refreshing trail data.",
           variant: "destructive",
         });
         return;
       }
       
-      // Start the bulk import
+      console.log(`Found ${activeSources.length} active sources:`, activeSources.map(s => s.name));
+      
+      // Create database indexes first if they don't exist
+      if (!isIndexesCreated) {
+        console.log('Creating database indexes for better performance...');
+        toast({
+          title: "Optimizing database",
+          description: "Creating performance indexes before import...",
+        });
+        
+        try {
+          await createDatabaseIndexes();
+        } catch (indexError) {
+          console.warn('Could not create indexes, but continuing with import:', indexError);
+        }
+      }
+      
+      // Start the bulk import with optimized settings
+      console.log('Invoking bulk-import-trails-optimized function...');
       const response = await supabase.functions.invoke('bulk-import-trails-optimized', {
         body: {
-          sourceIds: sources.map(s => s.id),
+          sourceIds: activeSources.map(s => s.id),
           totalTrails: 10000,
           batchSize: 2500,
-          concurrency: 5
+          concurrency: 3
         }
       });
       
-      if (response.error) throw new Error(response.error.message);
+      console.log('Bulk import response:', response);
+      
+      if (response.error) {
+        console.error('Bulk import error:', response.error);
+        throw new Error(response.error.message || 'Failed to start bulk import');
+      }
       
       toast({
-        title: "Refresh started",
-        description: "Trail data refresh has been initiated. This may take several minutes.",
+        title: "Import started successfully!",
+        description: `Starting import of up to 10,000 trails from ${activeSources.length} sources. Redirecting to monitor progress...`,
       });
       
-      // Navigate to the import page to see progress
-      navigate('/admin/import');
+      // Wait a moment for the toast to be visible, then navigate
+      setTimeout(() => {
+        navigate('/admin/import?autoImport=true');
+      }, 2000);
+      
     } catch (error) {
-      console.error('Error starting refresh:', error);
+      console.error('Error starting manual refresh:', error);
       toast({
         title: "Refresh failed",
-        description: "Could not start the trail data refresh process.",
+        description: error instanceof Error ? error.message : "Could not start the trail data refresh process.",
         variant: "destructive",
       });
     } finally {
@@ -315,37 +351,51 @@ const AutoImportPage: React.FC = () => {
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
                   <RefreshCcw size={20} />
-                  Refresh Statistics
+                  Active Data Sources
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Total jobs:</p>
-                    <p className="font-medium">{jobStats.totalJobs}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Succeeded:</p>
-                    <p className="font-medium text-green-600">{jobStats.succeededJobs}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Failed:</p>
-                    <p className="font-medium text-red-600">{jobStats.failedJobs}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Trails processed:</p>
-                    <p className="font-medium">{jobStats.totalTrails.toLocaleString()}</p>
-                  </div>
+                <div className="flex items-center gap-2 mb-4">
+                  {activeSources.length > 0 ? (
+                    <CheckCircle className="h-5 w-5 text-green-500" />
+                  ) : (
+                    <AlertCircle className="h-5 w-5 text-yellow-500" />
+                  )}
+                  <span className="font-medium">
+                    {activeSources.length} active source{activeSources.length !== 1 ? 's' : ''}
+                  </span>
                 </div>
+                
+                {activeSources.length > 0 ? (
+                  <div className="space-y-2">
+                    {activeSources.slice(0, 3).map((source) => (
+                      <div key={source.id} className="text-sm">
+                        <span className="font-medium">{source.name}</span>
+                        <span className="text-muted-foreground ml-2">({source.source_type})</span>
+                      </div>
+                    ))}
+                    {activeSources.length > 3 && (
+                      <div className="text-sm text-muted-foreground">
+                        +{activeSources.length - 3} more sources
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    No active data sources found. Please activate sources in the admin panel.
+                  </p>
+                )}
+                
                 <Button 
                   onClick={handleManualRefresh} 
-                  disabled={loading}
-                  className="w-full mt-2"
+                  disabled={loading || activeSources.length === 0}
+                  className="w-full mt-4"
+                  size="lg"
                 >
                   {loading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Refreshing...
+                      Starting Import...
                     </>
                   ) : (
                     <>
@@ -354,40 +404,58 @@ const AutoImportPage: React.FC = () => {
                     </>
                   )}
                 </Button>
+                
+                {activeSources.length === 0 && (
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Set up data sources in the admin panel before refreshing.
+                  </p>
+                )}
               </CardContent>
             </Card>
           </div>
 
           <Card>
             <CardHeader>
-              <CardTitle>Advanced Data Source Settings</CardTitle>
+              <CardTitle>Refresh Statistics</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="mb-4">
-                The trail data refresh system connects to various APIs to fetch real trail information. To get the most out of your imports:
-              </p>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Total jobs:</p>
+                  <p className="font-medium">{jobStats.totalJobs}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Succeeded:</p>
+                  <p className="font-medium text-green-600">{jobStats.succeededJobs}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Failed:</p>
+                  <p className="font-medium text-red-600">{jobStats.failedJobs}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Trails processed:</p>
+                  <p className="font-medium">{jobStats.totalTrails.toLocaleString()}</p>
+                </div>
+              </div>
               
-              <ul className="list-disc ml-5 space-y-2">
-                <li>
-                  <strong>Add API Keys:</strong> Configure API keys in your Supabase environment variables for each data source you want to use.
-                </li>
-                <li>
-                  <strong>Configure New Sources:</strong> Add additional data sources through the Admin Import page for more trail variety.
-                </li>
-                <li>
-                  <strong>Optimize Batch Settings:</strong> For very large imports (50,000+ trails), you may need to adjust batch size and concurrency settings.
-                </li>
-                <li>
-                  <strong>Monitor API Usage:</strong> Some trail APIs have rate limits - check their documentation for details.
-                </li>
-              </ul>
+              <p className="text-sm text-muted-foreground">
+                Manual refresh will import up to 10,000 trails from your active data sources. 
+                The process runs in optimized batches for better performance and reliability.
+              </p>
             </CardContent>
             <CardFooter>
               <Button 
                 variant="outline" 
                 onClick={() => navigate('/admin/import')}
+                className="mr-2"
               >
                 Go to Trail Import Admin
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => navigate('/discover')}
+              >
+                View Current Trails
               </Button>
             </CardFooter>
           </Card>

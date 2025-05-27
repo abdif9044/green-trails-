@@ -179,7 +179,7 @@ const AutoImportPage: React.FC = () => {
     setLoading(true);
     
     try {
-      console.log('Starting manual refresh process...');
+      console.log('Starting massive trail import process...');
       
       // Check if we have active sources
       if (activeSources.length === 0) {
@@ -208,39 +208,56 @@ const AutoImportPage: React.FC = () => {
         }
       }
       
-      // Start the bulk import with optimized settings
-      console.log('Invoking bulk-import-trails-optimized function...');
-      const response = await supabase.functions.invoke('bulk-import-trails-optimized', {
-        body: {
-          sourceIds: activeSources.map(s => s.id),
-          totalTrails: 10000,
-          batchSize: 2500,
-          concurrency: 3
+      // Map source types to the massive import function
+      const sourceTypes = activeSources.map(source => {
+        switch (source.source_type) {
+          case 'overpass':
+            return 'openstreetmap';
+          case 'usgs':
+            return 'usgs';
+          case 'hiking_project':
+            return 'hiking_project';
+          default:
+            return 'hiking_project'; // Default fallback
         }
       });
       
-      console.log('Bulk import response:', response);
-      
-      if (response.error) {
-        console.error('Bulk import error:', response.error);
-        throw new Error(response.error.message || 'Failed to start bulk import');
-      }
-      
-      toast({
-        title: "Import started successfully!",
-        description: `Starting import of up to 10,000 trails from ${activeSources.length} sources. Redirecting to monitor progress...`,
+      // Start the massive import with real APIs
+      console.log('Invoking import-trails-massive function...');
+      const response = await supabase.functions.invoke('import-trails-massive', {
+        body: {
+          sources: [...new Set(sourceTypes)], // Remove duplicates
+          maxTrailsPerSource: 15000, // Higher limit for real data
+          batchSize: 50, // Smaller batches for better reliability
+          concurrency: 2 // Conservative concurrency for external APIs
+        }
       });
       
-      // Wait a moment for the toast to be visible, then navigate
+      console.log('Massive import response:', response);
+      
+      if (response.error) {
+        console.error('Massive import error:', response.error);
+        throw new Error(response.error.message || 'Failed to start massive import');
+      }
+      
+      const result = response.data;
+      
+      toast({
+        title: "Import completed successfully!",
+        description: `Imported ${result.total_added} trails from ${result.source_progress?.length || 0} real data sources. ${result.total_failed > 0 ? `${result.total_failed} trails failed to import.` : ''}`,
+      });
+      
+      // Refresh the data to show updated counts
       setTimeout(() => {
-        navigate('/admin/import?autoImport=true');
+        fetchRefreshInfo();
+        fetchTotalTrailCount();
       }, 2000);
       
     } catch (error) {
-      console.error('Error starting manual refresh:', error);
+      console.error('Error starting massive import:', error);
       toast({
-        title: "Refresh failed",
-        description: error instanceof Error ? error.message : "Could not start the trail data refresh process.",
+        title: "Import failed",
+        description: error instanceof Error ? error.message : "Could not start the massive trail import process.",
         variant: "destructive",
       });
     } finally {

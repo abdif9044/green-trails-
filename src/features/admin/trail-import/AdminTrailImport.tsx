@@ -7,6 +7,7 @@ import SEOProvider from "@/components/SEOProvider";
 import { Button } from "@/components/ui/button";
 import { PlayCircle } from "lucide-react";
 import QuickImport10K from "@/components/trails/QuickImport10K";
+import DebugImportInterface from "@/components/trails/DebugImportInterface";
 
 // Import refactored components
 import { useDBSetup } from "./hooks/useDBSetup";
@@ -20,7 +21,7 @@ import ImportTabs from "./components/ImportTabs";
 
 const AdminTrailImport = () => {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = React.useState("bulk");
+  const [activeTab, setActiveTab] = React.useState("debug"); // Changed default to debug
   
   const {
     dataSources,
@@ -118,6 +119,17 @@ const AdminTrailImport = () => {
             </div>
           </div>
 
+          {/* Debug Notice */}
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div className="flex items-center gap-2 text-red-800">
+              <AlertCircle className="h-5 w-5" />
+              <strong>Import Pipeline Debug Mode</strong>
+            </div>
+            <p className="text-red-700 mt-1">
+              Recent imports show 0% success rate. Use the debug interface below to identify and fix pipeline issues.
+            </p>
+          </div>
+
           {/* Quick 10K Import Section */}
           <div className="mb-6">
             <QuickImport10K />
@@ -150,19 +162,81 @@ const AdminTrailImport = () => {
             bulkProgress={bulkProgress}
           />
           
-          <ImportTabs
-            activeTab={activeTab}
-            setActiveTab={setActiveTab}
-            dataSources={dataSources}
-            importJobs={importJobs}
-            bulkImportJobs={bulkImportJobs || []} 
-            loading={loading || isSettingUpDb}
-            importLoading={importLoading}
-            handleImport={handleImport}
-            getSourceNameById={getSourceNameById}
-            selectAllSources={selectAllSources}
-            deselectAllSources={deselectAllSources}
-          />
+          {/* Update ImportTabs to include debug tab */}
+          <div className="bg-white rounded-lg shadow">
+            <div className="border-b border-gray-200">
+              <nav className="-mb-px flex space-x-8 px-6">
+                <button
+                  onClick={() => setActiveTab('debug')}
+                  className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                    activeTab === 'debug'
+                      ? 'border-red-500 text-red-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  🔍 Debug Pipeline
+                </button>
+                <button
+                  onClick={() => setActiveTab('bulk')}
+                  className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                    activeTab === 'bulk'
+                      ? 'border-greentrail-500 text-greentrail-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  Bulk Import Jobs
+                </button>
+                <button
+                  onClick={() => setActiveTab('individual')}
+                  className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                    activeTab === 'individual'
+                      ? 'border-greentrail-500 text-greentrail-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  Individual Imports
+                </button>
+              </nav>
+            </div>
+            
+            <div className="p-6">
+              {activeTab === 'debug' && (
+                <DebugImportInterface />
+              )}
+              
+              {activeTab === 'bulk' && (
+                <ImportTabs
+                  activeTab="bulk"
+                  setActiveTab={setActiveTab}
+                  dataSources={dataSources}
+                  importJobs={importJobs}
+                  bulkImportJobs={bulkImportJobs || []} 
+                  loading={loading || isSettingUpDb}
+                  importLoading={importLoading}
+                  handleImport={handleImport}
+                  getSourceNameById={getSourceNameById}
+                  selectAllSources={selectAllSources}
+                  deselectAllSources={deselectAllSources}
+                />
+              )}
+              
+              {activeTab === 'individual' && (
+                <ImportTabs
+                  activeTab="individual"
+                  setActiveTab={setActiveTab}
+                  dataSources={dataSources}
+                  importJobs={importJobs}
+                  bulkImportJobs={bulkImportJobs || []} 
+                  loading={loading || isSettingUpDb}
+                  importLoading={importLoading}
+                  handleImport={handleImport}
+                  getSourceNameById={getSourceNameById}
+                  selectAllSources={selectAllSources}
+                  deselectAllSources={deselectAllSources}
+                />
+              )}
+            </div>
+          </div>
         </div>
       </div>
       

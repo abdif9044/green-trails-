@@ -67,7 +67,7 @@ export const useApiFetch = () => {
 };
 
 export const useApiQuery = <T>(
-  queryKey: string[],
+  queryKey: (string | number | object)[],
   url: string,
   options: ApiFetchOptions = {},
   queryOptions: object = {}

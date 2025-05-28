@@ -6,8 +6,6 @@ import NoTrailsFound from './NoTrailsFound';
 import TrailsGrid from './TrailsGrid';
 import TrailMap from '@/components/map/TrailMap';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 export interface DiscoverTrailsListProps {
   currentFilters: TrailFilters;
@@ -26,8 +24,8 @@ const DiscoverTrailsList: React.FC<DiscoverTrailsListProps> = ({
 }) => {
   const { data, isLoading, error } = useTrailsQuery(currentFilters);
   
-  const trails = data?.data || [];
-  const totalCount = data?.count || 0;
+  const trails = data.data || [];
+  const totalCount = data.count || 0;
 
   React.useEffect(() => {
     if (onTrailCountChange) {

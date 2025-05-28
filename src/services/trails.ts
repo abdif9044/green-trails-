@@ -1,6 +1,8 @@
 
-import { useApiQuery, useApiMutation } from '@/hooks/use-api-fetch';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { Trail, TrailFilters } from '@/types/trails';
+import { formatTrailFromDatabase } from '@/utils/trail-formatter';
 
 export interface TrailSearchParams extends TrailFilters {
   page?: number;
@@ -15,53 +17,135 @@ export interface TrailsResponse {
 }
 
 export const useTrails = () => {
-  // Search trails with filters
+  // Search trails with filters using Supabase
   const useTrailsSearch = (params: TrailSearchParams = {}) => {
-    const searchParams = new URLSearchParams();
-    
-    Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
-        searchParams.append(key, String(value));
+    return useQuery({
+      queryKey: ['trails', 'search', params],
+      queryFn: async (): Promise<TrailsResponse> => {
+        const {
+          searchQuery,
+          difficulty,
+          lengthRange,
+          country,
+          stateProvince,
+          nearbyCoordinates,
+          radius = 25,
+          page = 1,
+          limit = 50
+        } = params;
+
+        let query = supabase
+          .from('trails')
+          .select(`
+            *,
+            trail_tags (
+              tag_name
+            )
+          `, { count: 'exact' });
+
+        // Apply search filters
+        if (searchQuery) {
+          query = query.or(`name.ilike.%${searchQuery}%,location.ilike.%${searchQuery}%`);
+        }
+
+        if (difficulty) {
+          query = query.eq('difficulty', difficulty);
+        }
+
+        if (lengthRange && lengthRange.length === 2) {
+          query = query.gte('trail_length', lengthRange[0]).lte('trail_length', lengthRange[1]);
+        }
+
+        if (country) {
+          query = query.eq('country', country);
+        }
+
+        if (stateProvince) {
+          query = query.eq('region', stateProvince);
+        }
+
+        // Nearby search using coordinates
+        if (nearbyCoordinates && nearbyCoordinates.length === 2) {
+          const [lat, lng] = nearbyCoordinates;
+          // Use ST_DWithin for radius search (radius in meters)
+          query = query.rpc('trails_within_radius', {
+            center_lat: lat,
+            center_lng: lng,
+            radius_meters: radius * 1000 // Convert km to meters
+          });
+        }
+
+        // Pagination
+        const from = (page - 1) * limit;
+        const to = from + limit - 1;
+        query = query.range(from, to);
+
+        const { data, error, count } = await query;
+
+        if (error) {
+          console.error('Error fetching trails:', error);
+          throw error;
+        }
+
+        const formattedTrails = (data || []).map(formatTrailFromDatabase);
+        
+        return {
+          data: formattedTrails,
+          count: count || 0,
+          page,
+          totalPages: Math.ceil((count || 0) / limit)
+        };
       }
     });
-
-    return useApiQuery<TrailsResponse>(
-      ['trails', 'search', params],
-      `/api/trails/search?${searchParams.toString()}`
-    );
   };
 
   // Get single trail by ID
   const useTrail = (trailId: string) => {
-    return useApiQuery<Trail>(
-      ['trails', trailId],
-      `/api/trails/${trailId}`,
-      {},
-      { enabled: !!trailId }
-    );
-  };
+    return useQuery({
+      queryKey: ['trails', trailId],
+      queryFn: async (): Promise<Trail> => {
+        const { data, error } = await supabase
+          .from('trails')
+          .select(`
+            *,
+            trail_tags (
+              tag_name
+            )
+          `)
+          .eq('id', trailId)
+          .single();
 
-  // Get nearby trails
-  const useNearbyTrails = (lat: number, lng: number, radius: number = 25) => {
-    return useApiQuery<Trail[]>(
-      ['trails', 'nearby', lat, lng, radius],
-      `/api/trails/nearby?lat=${lat}&lng=${lng}&radius=${radius}`,
-      {},
-      { enabled: !!(lat && lng) }
-    );
-  };
+        if (error) {
+          console.error('Error fetching trail:', error);
+          throw error;
+        }
 
-  // Create new trail (admin functionality)
-  const useCreateTrail = () => {
-    return useApiMutation<Trail, Partial<Trail>>('/api/trails', {
-      method: 'POST'
+        return formatTrailFromDatabase(data);
+      },
+      enabled: !!trailId
     });
   };
 
-  // Update trail
-  const useUpdateTrail = (trailId: string) => {
-    return useApiMutation<Trail, Partial<Trail>>(`/api/trails/${trailId}`, {
-      method: 'PUT'
+  // Get nearby trails using PostGIS
+  const useNearbyTrails = (lat: number, lng: number, radius: number = 25) => {
+    return useQuery({
+      queryKey: ['trails', 'nearby', lat, lng, radius],
+      queryFn: async (): Promise<Trail[]> => {
+        const { data, error } = await supabase
+          .rpc('trails_within_radius', {
+            center_lat: lat,
+            center_lng: lng,
+            radius_meters: radius * 1000
+          });
+
+        if (error) {
+          console.error('Error fetching nearby trails:', error);
+          throw error;
+        }
+
+        return (data || []).map(formatTrailFromDatabase);
+      },
+      enabled: !!(lat && lng)
     });
   };
 
@@ -69,7 +153,5 @@ export const useTrails = () => {
     useTrailsSearch,
     useTrail,
     useNearbyTrails,
-    useCreateTrail,
-    useUpdateTrail,
   };
 };

@@ -15,10 +15,7 @@ export const useTrailsQuery = (filters: TrailFilters = {}) => {
   const query = useTrailsSearch(searchParams);
   
   return {
-    data: query.data?.data ? {
-      data: query.data.data,
-      count: query.data.count
-    } : { data: [], count: 0 },
+    data: query.data || { data: [], count: 0 },
     isLoading: query.isLoading,
     error: query.error,
     refetch: query.refetch,

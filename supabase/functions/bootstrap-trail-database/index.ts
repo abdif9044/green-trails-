@@ -17,7 +17,7 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
     const supabase = createClient(supabaseUrl, supabaseKey);
     
-    console.log('🔍 Checking trail database status for 30K trail system...');
+    console.log('🔍 Checking trail database status for immediate 10K trail import...');
     
     // Check current trail count
     const { count, error: countError } = await supabase
@@ -32,24 +32,26 @@ serve(async (req) => {
     const currentTrailCount = count || 0;
     console.log(`📊 Current trail count: ${currentTrailCount}`);
     
-    // Trigger import if we have fewer than 1000 trails (lowered threshold for testing)
-    if (currentTrailCount >= 1000) {
-      console.log('✅ Database already has sufficient trails, skipping import');
+    // Target: 10,000 trails immediately (reduced for quick success)
+    const TARGET_TRAILS = 10000;
+    
+    if (currentTrailCount >= TARGET_TRAILS) {
+      console.log('✅ Database already has sufficient trails for 10K target');
       return new Response(
         JSON.stringify({
           success: true,
-          message: 'Database already populated',
+          message: 'Database already populated with 10K+ trails',
           current_count: currentTrailCount,
-          target_count: 30000,
+          target_count: TARGET_TRAILS,
           action: 'none'
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
     
-    console.log('🚀 Trail count below threshold, starting automatic trail import...');
+    console.log('🚀 Starting immediate 10K trail import...');
     
-    // Check if there's already an active bulk import job
+    // Check for active jobs
     const { data: activeJobs, error: jobError } = await supabase
       .from('bulk_import_jobs')
       .select('*')
@@ -61,15 +63,14 @@ serve(async (req) => {
       console.error('Error checking active jobs:', jobError);
     }
     
-    // If there's already an active job, don't start another
     if (activeJobs && activeJobs.length > 0) {
-      console.log('⏳ Import already in progress, skipping new import');
+      console.log('⏳ Import already in progress');
       return new Response(
         JSON.stringify({
           success: true,
           message: 'Import already in progress',
           current_count: currentTrailCount,
-          target_count: 30000,
+          target_count: TARGET_TRAILS,
           action: 'existing_import',
           job_id: activeJobs[0].id
         }),
@@ -77,38 +78,41 @@ serve(async (req) => {
       );
     }
     
-    // Start the import with all implemented sources
-    console.log('📥 Invoking trail import with all available sources...');
+    // Start focused 10K import with implemented sources only
+    console.log('📥 Starting 10K trail import with verified sources...');
     
     const { data: importResult, error: importError } = await supabase.functions.invoke('import-trails-massive', {
       body: {
-        sources: ['hiking_project', 'openstreetmap', 'usgs', 'parks_canada', 'inegi_mexico', 'trails_bc'],
-        maxTrailsPerSource: 5000, // 30,000 total across 6 sources
-        batchSize: 100, // Smaller batches for better error tracking
-        concurrency: 2, // Reduced concurrency for stability
-        priority: 'bootstrap',
-        debug: true // Enable debug mode
+        sources: ['hiking_project', 'openstreetmap', 'usgs'], // Only implemented sources
+        maxTrailsPerSource: 3334, // ~10K total across 3 sources
+        batchSize: 50, // Smaller batches for reliability
+        concurrency: 1, // Single thread for debugging
+        priority: 'immediate',
+        target: '10K',
+        debug: true,
+        validation: true // Enable extra validation
       }
     });
     
     if (importError) {
-      console.error('Error starting trail import:', importError);
+      console.error('Error starting 10K trail import:', importError);
       throw importError;
     }
     
-    console.log('✅ Bootstrap trail import started successfully:', importResult);
+    console.log('✅ 10K trail import started successfully:', importResult);
     
     return new Response(
       JSON.stringify({
         success: true,
-        message: 'Automatic trail import started with all sources',
+        message: 'Immediate 10K trail import started',
         current_count: currentTrailCount,
-        target_count: 30000,
+        target_count: TARGET_TRAILS,
         action: 'import_started',
         job_id: importResult.job_id,
-        estimated_completion: '15-30 minutes',
+        estimated_completion: '10-15 minutes',
         debug_enabled: true,
-        sources_used: 6
+        sources_used: 3,
+        strategy: 'immediate_10k'
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
@@ -120,7 +124,8 @@ serve(async (req) => {
       JSON.stringify({ 
         success: false, 
         error: 'Bootstrap failed', 
-        details: error.message 
+        details: error.message,
+        strategy: 'immediate_10k_failed'
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );

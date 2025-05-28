@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import { useTrailImport } from "@/hooks/useTrailImport";
 import { useToast } from "@/hooks/use-toast";
@@ -7,6 +6,7 @@ import Footer from "@/components/Footer";
 import SEOProvider from "@/components/SEOProvider";
 import { Button } from "@/components/ui/button";
 import { PlayCircle } from "lucide-react";
+import QuickImport10K from "@/components/trails/QuickImport10K";
 
 // Import refactored components
 import { useDBSetup } from "./hooks/useDBSetup";
@@ -106,14 +106,21 @@ const AdminTrailImport = () => {
         
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-3xl font-bold">Trail Data Import</h1>
-            <Button 
-              onClick={triggerAutoImport} 
-              disabled={bulkImportLoading || isSettingUpDb || loading || activeBulkJobId !== null}
-              className="bg-greentrail-600 hover:bg-greentrail-700"
-            >
-              <PlayCircle className="mr-2 h-4 w-4" />
-              Auto-Import Trails
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                onClick={triggerAutoImport} 
+                disabled={bulkImportLoading || isSettingUpDb || loading || activeBulkJobId !== null}
+                className="bg-greentrail-600 hover:bg-greentrail-700"
+              >
+                <PlayCircle className="mr-2 h-4 w-4" />
+                Auto-Import Trails
+              </Button>
+            </div>
+          </div>
+
+          {/* Quick 10K Import Section */}
+          <div className="mb-6">
+            <QuickImport10K />
           </div>
           
           <ImportHeader

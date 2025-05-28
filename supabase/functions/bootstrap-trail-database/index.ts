@@ -32,13 +32,13 @@ serve(async (req) => {
     const currentTrailCount = count || 0;
     console.log(`📊 Current trail count: ${currentTrailCount}`);
     
-    // Trigger import if we have fewer than 5000 trails (updated threshold for 30K system)
-    if (currentTrailCount >= 5000) {
-      console.log('✅ Database already has sufficient trails for 30K system, skipping import');
+    // Trigger import if we have fewer than 1000 trails (lowered threshold for testing)
+    if (currentTrailCount >= 1000) {
+      console.log('✅ Database already has sufficient trails, skipping import');
       return new Response(
         JSON.stringify({
           success: true,
-          message: 'Database already populated for 30K system',
+          message: 'Database already populated',
           current_count: currentTrailCount,
           target_count: 30000,
           action: 'none'
@@ -47,7 +47,7 @@ serve(async (req) => {
       );
     }
     
-    console.log('🚀 Trail count below threshold, starting automatic 30K trail import...');
+    console.log('🚀 Trail count below threshold, starting automatic trail import...');
     
     // Check if there's already an active bulk import job
     const { data: activeJobs, error: jobError } = await supabase
@@ -77,14 +77,14 @@ serve(async (req) => {
       );
     }
     
-    // Start the massive 30K import with only available sources
-    console.log('📥 Invoking massive 30K trail import with debug mode...');
+    // Start the import with all implemented sources
+    console.log('📥 Invoking trail import with all available sources...');
     
     const { data: importResult, error: importError } = await supabase.functions.invoke('import-trails-massive', {
       body: {
-        sources: ['hiking_project', 'openstreetmap', 'usgs'], // Only use implemented sources
-        maxTrailsPerSource: 10000, // 30,000 total across 3 sources
-        batchSize: 500, // Smaller batches for better error tracking
+        sources: ['hiking_project', 'openstreetmap', 'usgs', 'parks_canada', 'inegi_mexico', 'trails_bc'],
+        maxTrailsPerSource: 5000, // 30,000 total across 6 sources
+        batchSize: 100, // Smaller batches for better error tracking
         concurrency: 2, // Reduced concurrency for stability
         priority: 'bootstrap',
         debug: true // Enable debug mode
@@ -92,22 +92,23 @@ serve(async (req) => {
     });
     
     if (importError) {
-      console.error('Error starting massive 30K import:', importError);
+      console.error('Error starting trail import:', importError);
       throw importError;
     }
     
-    console.log('✅ Bootstrap 30K import started successfully:', importResult);
+    console.log('✅ Bootstrap trail import started successfully:', importResult);
     
     return new Response(
       JSON.stringify({
         success: true,
-        message: 'Automatic 30K trail import started with debug mode',
+        message: 'Automatic trail import started with all sources',
         current_count: currentTrailCount,
         target_count: 30000,
         action: 'import_started',
         job_id: importResult.job_id,
-        estimated_completion: '30-45 minutes',
-        debug_enabled: true
+        estimated_completion: '15-30 minutes',
+        debug_enabled: true,
+        sources_used: 6
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

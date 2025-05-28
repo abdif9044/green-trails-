@@ -5,7 +5,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import SEOProvider from "@/components/SEOProvider";
 import { Button } from "@/components/ui/button";
-import { PlayCircle } from "lucide-react";
+import { PlayCircle, AlertCircle } from "lucide-react";
 import QuickImport10K from "@/components/trails/QuickImport10K";
 import DebugImportInterface from "@/components/trails/DebugImportInterface";
 

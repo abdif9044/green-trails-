@@ -38,7 +38,7 @@ export const useTrails = () => {
         if (nearbyCoordinates && nearbyCoordinates.length === 2) {
           const [lat, lng] = nearbyCoordinates;
           
-          const { data, error, count } = await supabase
+          const { data, error } = await supabase
             .rpc('trails_within_radius', {
               center_lat: lat,
               center_lng: lng,

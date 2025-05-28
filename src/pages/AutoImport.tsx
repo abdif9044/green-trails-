@@ -4,8 +4,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
-import { Database, MapPin, Zap } from 'lucide-react';
-import MassiveImportTrigger from '@/components/trails/MassiveImportTrigger';
+import { Database, CheckCircle, Settings } from 'lucide-react';
+import AutoBootstrapStatus from '@/components/trails/AutoBootstrapStatus';
 
 const AutoImport: React.FC = () => {
   const [trailCount, setTrailCount] = useState<number>(0);
@@ -29,6 +29,10 @@ const AutoImport: React.FC = () => {
     };
 
     fetchTrailCount();
+    
+    // Refresh count every 30 seconds
+    const interval = setInterval(fetchTrailCount, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   return (
@@ -37,12 +41,15 @@ const AutoImport: React.FC = () => {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-            Trail Data Import System
+            Automated Trail Database System
           </h1>
           <p className="text-lg text-gray-600 dark:text-gray-300">
-            Import real trail data from multiple sources to build a comprehensive trail database
+            Trail data is automatically managed and maintained for all users
           </p>
         </div>
+
+        {/* Auto Bootstrap Status */}
+        <AutoBootstrapStatus />
 
         {/* Current Database Status */}
         <Card className="mb-8">
@@ -61,7 +68,7 @@ const AutoImport: React.FC = () => {
                 <div className="text-sm text-gray-600">Trails in database</div>
               </div>
               <Badge variant={trailCount >= 1000 ? "default" : "secondary"}>
-                {trailCount >= 1000 ? "Ready for Production" : "Needs More Data"}
+                {trailCount >= 1000 ? "Fully Populated" : "Auto-Populating"}
               </Badge>
             </div>
           </CardContent>
@@ -69,91 +76,85 @@ const AutoImport: React.FC = () => {
 
         <Separator className="my-8" />
 
-        {/* Massive Import Section */}
-        <div className="space-y-6">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-              Phase 1: Massive Trail Import
-            </h2>
-            <p className="text-gray-600 dark:text-gray-300">
-              Import 15,000 real trails from multiple sources across North America
-            </p>
-          </div>
-
-          <MassiveImportTrigger />
-        </div>
-
-        {/* Benefits Section */}
-        <Card className="mt-8">
+        {/* System Information */}
+        <Card className="mb-8">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Zap className="h-5 w-5" />
-              What This Import Provides
+              <Settings className="h-5 w-5" />
+              How It Works
             </CardTitle>
+            <CardDescription>
+              The trail database is fully automated and requires no user intervention
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <h4 className="font-semibold">Real Trail Data</h4>
-                <ul className="text-sm text-gray-600 space-y-1">
-                  <li>• Accurate GPS coordinates</li>
-                  <li>• Real difficulty ratings</li>
-                  <li>• Actual trail lengths & elevation</li>
-                  <li>• Current trail conditions</li>
-                </ul>
+            <div className="space-y-4">
+              <div className="flex items-start gap-3">
+                <CheckCircle className="h-5 w-5 mt-0.5 text-greentrail-600" />
+                <div>
+                  <div className="font-medium">Automatic Population</div>
+                  <div className="text-sm text-gray-600">
+                    When the database has fewer than 1,000 trails, the system automatically imports 15,000 real trails from multiple sources
+                  </div>
+                </div>
               </div>
               
-              <div className="space-y-2">
-                <h4 className="font-semibold">Geographic Coverage</h4>
-                <ul className="text-sm text-gray-600 space-y-1">
-                  <li>• All US national parks</li>
-                  <li>• Major Canadian parks</li>
-                  <li>• Popular hiking destinations</li>
-                  <li>• Local and regional trails</li>
-                </ul>
+              <div className="flex items-start gap-3">
+                <CheckCircle className="h-5 w-5 mt-0.5 text-greentrail-600" />
+                <div>
+                  <div className="font-medium">Background Processing</div>
+                  <div className="text-sm text-gray-600">
+                    Imports run in the background without affecting user experience. Users can browse trails immediately while more data loads
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-3">
+                <CheckCircle className="h-5 w-5 mt-0.5 text-greentrail-600" />
+                <div>
+                  <div className="font-medium">Daily Health Checks</div>
+                  <div className="text-sm text-gray-600">
+                    The system monitors trail count daily and automatically maintains database population
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <CheckCircle className="h-5 w-5 mt-0.5 text-greentrail-600" />
+                <div>
+                  <div className="font-medium">Multiple Data Sources</div>
+                  <div className="text-sm text-gray-600">
+                    Imports from Hiking Project, OpenStreetMap, USGS, Parks Canada, INEGI Mexico, and Trails BC for comprehensive coverage
+                  </div>
+                </div>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Next Steps */}
-        <Card className="mt-8">
+        {/* Geographic Coverage */}
+        <Card>
           <CardHeader>
-            <CardTitle>Next Steps After Import</CardTitle>
+            <CardTitle>Geographic Coverage</CardTitle>
             <CardDescription>
-              Once the massive import is complete, you'll have access to:
+              Automatic trail distribution across North America
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              <div className="flex items-start gap-3">
-                <MapPin className="h-5 w-5 mt-0.5 text-greentrail-600" />
-                <div>
-                  <div className="font-medium">Enhanced Discover Page</div>
-                  <div className="text-sm text-gray-600">
-                    Powerful filtering and search across 15,000+ real trails
-                  </div>
-                </div>
+            <div className="grid md:grid-cols-3 gap-4">
+              <div className="text-center p-4 bg-gray-50 rounded-lg">
+                <div className="text-2xl font-bold text-blue-600">8,000</div>
+                <div className="text-sm text-gray-600">🇺🇸 United States</div>
               </div>
               
-              <div className="flex items-start gap-3">
-                <MapPin className="h-5 w-5 mt-0.5 text-greentrail-600" />
-                <div>
-                  <div className="font-medium">Geographic Search</div>
-                  <div className="text-sm text-gray-600">
-                    Find trails near any location with PostGIS-powered search
-                  </div>
-                </div>
+              <div className="text-center p-4 bg-gray-50 rounded-lg">
+                <div className="text-2xl font-bold text-red-600">4,000</div>
+                <div className="text-sm text-gray-600">🇨🇦 Canada</div>
               </div>
               
-              <div className="flex items-start gap-3">
-                <MapPin className="h-5 w-5 mt-0.5 text-greentrail-600" />
-                <div>
-                  <div className="font-medium">Production Ready</div>
-                  <div className="text-sm text-gray-600">
-                    Ready for real users with a comprehensive trail database
-                  </div>
-                </div>
+              <div className="text-center p-4 bg-gray-50 rounded-lg">
+                <div className="text-2xl font-bold text-green-600">3,000</div>
+                <div className="text-sm text-gray-600">🇲🇽 Mexico</div>
               </div>
             </div>
           </CardContent>

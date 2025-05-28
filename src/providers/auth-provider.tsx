@@ -1,10 +1,9 @@
 
-import React, { useEffect, ReactNode, useState } from 'react';
+import React, { ReactNode } from 'react';
 import { AuthContext } from '@/contexts/auth-context';
-import { useAuthState } from '@/hooks/auth/use-auth-state';
-import { useAuthMethods } from '@/hooks/auth/use-auth-methods';
-import { useUserManagement } from '@/hooks/auth/use-user-management';
-import { supabase } from '@/integrations/supabase/client';
+import { useSimpleAuthState } from '@/hooks/auth/use-simple-auth-state';
+import { SimpleAuthService } from '@/services/auth/simple-auth-service';
+import { SimpleUserService } from '@/services/auth/simple-user-service';
 import { toast } from 'sonner';
 
 interface AuthProviderProps {
@@ -12,14 +11,11 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-  const { user, session, loading, setUser, setSession, setLoading } = useAuthState();
-  const authMethods = useAuthMethods(user);
-  const { verifyAge } = useUserManagement(user);
-  const [authInitialized, setAuthInitialized] = useState(false);
+  const { user, session, loading, initialized } = useSimpleAuthState();
 
-  // Wrap auth methods with toast notifications
+  // Auth methods with toast notifications handled here
   const signIn = async (email: string, password: string) => {
-    const result = await authMethods.signIn(email, password);
+    const result = await SimpleAuthService.signIn(email, password);
     
     if (result.success) {
       toast.success("Welcome back! You have successfully signed in.");
@@ -31,7 +27,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   const signUp = async (email: string, password: string, metadata: object = {}) => {
-    const result = await authMethods.signUp(email, password, metadata);
+    const result = await SimpleAuthService.signUp(email, password, metadata);
     
     if (result.success) {
       toast.success("Account created! Welcome to GreenTrails! You can now sign in.");
@@ -43,7 +39,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   const signOut = async () => {
-    const result = await authMethods.signOut();
+    const result = await SimpleAuthService.signOut();
     
     if (result.success) {
       toast.success("You have been successfully signed out.");
@@ -55,7 +51,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   const resetPassword = async (email: string) => {
-    const result = await authMethods.resetPassword(email);
+    const result = await SimpleAuthService.resetPassword(email);
     
     if (result.success) {
       toast.success(result.message || "Password reset email sent");
@@ -67,7 +63,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   const updatePassword = async (password: string) => {
-    const result = await authMethods.updatePassword(password);
+    const result = await SimpleAuthService.updatePassword(password);
     
     if (result.success) {
       toast.success(result.message || "Password updated successfully");
@@ -78,65 +74,17 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     return result;
   };
 
-  useEffect(() => {
-    console.log('AuthProvider initializing...');
-    let subscription: { unsubscribe: () => void };
+  const verifyAge = async (birthYear: string) => {
+    const result = await SimpleUserService.verifyAge(user, birthYear);
     
-    const initialize = async () => {
-      try {
-        setLoading(true);
-        
-        // Set up auth state listener first
-        subscription = supabase.auth.onAuthStateChange(
-          (event, currentSession) => {
-            console.log(`Auth state change: ${event}`, currentSession?.user?.email || 'No user');
-            setSession(currentSession);
-            setUser(currentSession?.user || null);
-            
-            if (event === 'SIGNED_IN') {
-              console.log("User signed in:", currentSession?.user?.email);
-            } else if (event === 'SIGNED_OUT') {
-              console.log("User signed out");
-            } else if (event === 'TOKEN_REFRESHED') {
-              console.log('Auth token refreshed successfully');
-            } else if (event === 'USER_UPDATED') {
-              console.log("User profile updated");
-            }
-          }
-        ).data.subscription;
-
-        // Get initial session
-        const { data: { session: initialSession }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error('Error getting initial session:', error);
-        } else if (initialSession) {
-          console.log('Initial session found:', initialSession.user?.email);
-          setSession(initialSession);
-          setUser(initialSession.user);
-        } else {
-          console.log('No active session found');
-          setSession(null);
-          setUser(null);
-        }
-        
-      } catch (error) {
-        console.error('Exception during auth initialization:', error);
-      } finally {
-        setLoading(false);
-        setAuthInitialized(true);
-      }
-    };
-
-    initialize();
-
-    return () => {
-      console.log('AuthProvider cleanup: unsubscribing from auth changes');
-      if (subscription) {
-        subscription.unsubscribe();
-      }
-    };
-  }, []);
+    if (result.success) {
+      toast.success("Age verification successful");
+    } else {
+      toast.error(result.message || "Age verification failed");
+    }
+    
+    return result;
+  };
 
   const value = {
     user,
@@ -148,7 +96,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     verifyAge,
     resetPassword,
     updatePassword,
-    isInitialized: authInitialized
+    isInitialized: initialized
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

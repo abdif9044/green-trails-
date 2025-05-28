@@ -32,7 +32,7 @@ serve(async (req) => {
     const currentTrailCount = count || 0;
     console.log(`📊 Current trail count: ${currentTrailCount}`);
     
-    // Only trigger import if we have fewer than 5000 trails (new threshold for 30K system)
+    // Trigger import if we have fewer than 5000 trails (updated threshold for 30K system)
     if (currentTrailCount >= 5000) {
       console.log('✅ Database already has sufficient trails for 30K system, skipping import');
       return new Response(
@@ -77,16 +77,17 @@ serve(async (req) => {
       );
     }
     
-    // Start the massive 30K import by calling the existing import function
-    console.log('📥 Invoking massive 30K trail import...');
+    // Start the massive 30K import with only available sources
+    console.log('📥 Invoking massive 30K trail import with debug mode...');
     
     const { data: importResult, error: importError } = await supabase.functions.invoke('import-trails-massive', {
       body: {
-        sources: ['hiking_project', 'openstreetmap', 'usgs', 'parks_canada', 'inegi_mexico', 'trails_bc'],
-        maxTrailsPerSource: 5000, // 30,000 total across 6 sources
-        batchSize: 1000, // Increased batch size for better performance
-        concurrency: 4, // Increased concurrency
-        priority: 'bootstrap'
+        sources: ['hiking_project', 'openstreetmap', 'usgs'], // Only use implemented sources
+        maxTrailsPerSource: 10000, // 30,000 total across 3 sources
+        batchSize: 500, // Smaller batches for better error tracking
+        concurrency: 2, // Reduced concurrency for stability
+        priority: 'bootstrap',
+        debug: true // Enable debug mode
       }
     });
     
@@ -100,12 +101,13 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        message: 'Automatic 30K trail import started',
+        message: 'Automatic 30K trail import started with debug mode',
         current_count: currentTrailCount,
         target_count: 30000,
         action: 'import_started',
         job_id: importResult.job_id,
-        estimated_completion: '45-60 minutes'
+        estimated_completion: '30-45 minutes',
+        debug_enabled: true
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

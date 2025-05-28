@@ -14,11 +14,12 @@ import {
 } from "./normalizer.ts";
 
 interface MassiveImportRequest {
-  sources: string[]; // Array of source names: 'hiking_project', 'openstreetmap', 'usgs'
+  sources: string[];
   maxTrailsPerSource?: number;
   bulkJobId?: string;
   batchSize?: number;
   concurrency?: number;
+  debug?: boolean;
 }
 
 interface ImportProgress {
@@ -30,31 +31,30 @@ interface ImportProgress {
   total: number;
   status: 'processing' | 'completed' | 'error';
   errorMessage?: string;
+  errors: string[];
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
   
   try {
-    // Create Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
     const supabase = createClient(supabaseUrl, supabaseKey);
     
-    // Parse request
     const { 
       sources = ['hiking_project'], 
       maxTrailsPerSource = 10000,
       bulkJobId,
-      batchSize = 100,
-      concurrency = 3
+      batchSize = 500,
+      concurrency = 2,
+      debug = false
     } = await req.json() as MassiveImportRequest;
     
-    console.log(`Starting massive import for sources: ${sources.join(', ')}`);
-    console.log(`Max trails per source: ${maxTrailsPerSource}, Batch size: ${batchSize}`);
+    console.log(`🚀 Starting massive import for sources: ${sources.join(', ')}`);
+    console.log(`📊 Config: maxTrails=${maxTrailsPerSource}, batch=${batchSize}, debug=${debug}`);
     
     // Create bulk import job if not provided
     let jobId = bulkJobId;
@@ -65,19 +65,24 @@ serve(async (req) => {
           status: 'processing',
           started_at: new Date().toISOString(),
           total_trails_requested: maxTrailsPerSource * sources.length,
-          total_sources: sources.length
+          total_sources: sources.length,
+          trails_processed: 0,
+          trails_added: 0,
+          trails_updated: 0,
+          trails_failed: 0
         }])
         .select('*')
         .single();
         
       if (jobError || !job) {
-        console.error('Error creating bulk import job:', jobError);
+        console.error('❌ Error creating bulk import job:', jobError);
         return new Response(
           JSON.stringify({ error: 'Failed to create bulk import job', details: jobError }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
         );
       }
       jobId = job.id;
+      console.log(`✅ Created bulk import job: ${jobId}`);
     }
     
     const progress: ImportProgress[] = [];
@@ -86,7 +91,7 @@ serve(async (req) => {
     let totalUpdated = 0;
     let totalFailed = 0;
     
-    // Process each source
+    // Process each source with enhanced error tracking
     for (const source of sources) {
       const sourceProgress: ImportProgress = {
         source,
@@ -95,38 +100,55 @@ serve(async (req) => {
         updated: 0,
         failed: 0,
         total: 0,
-        status: 'processing'
+        status: 'processing',
+        errors: []
       };
       progress.push(sourceProgress);
       
       try {
-        console.log(`Processing source: ${source}`);
+        console.log(`🎯 Processing source: ${source}`);
         
         let trails: any[] = [];
         
-        // Fetch trails based on source type
-        switch (source) {
-          case 'hiking_project':
-            trails = await fetchHikingProjectTrails(maxTrailsPerSource);
-            break;
-          case 'openstreetmap':
-            trails = await fetchOSMTrails(maxTrailsPerSource);
-            break;
-          case 'usgs':
-            trails = await fetchUSGSTrails(maxTrailsPerSource);
-            break;
-          default:
-            throw new Error(`Unknown source: ${source}`);
+        // Fetch trails based on source type with error handling
+        try {
+          switch (source) {
+            case 'hiking_project':
+              trails = await fetchHikingProjectTrails(maxTrailsPerSource, debug);
+              break;
+            case 'openstreetmap':
+              trails = await fetchOSMTrails(maxTrailsPerSource, debug);
+              break;
+            case 'usgs':
+              trails = await fetchUSGSTrails(maxTrailsPerSource, debug);
+              break;
+            default:
+              throw new Error(`Unknown source: ${source}`);
+          }
+        } catch (fetchError) {
+          console.error(`❌ Failed to fetch trails from ${source}:`, fetchError);
+          sourceProgress.status = 'error';
+          sourceProgress.errorMessage = `Fetch failed: ${fetchError.message}`;
+          sourceProgress.errors.push(`Fetch error: ${fetchError.message}`);
+          continue;
         }
         
         sourceProgress.total = trails.length;
-        console.log(`Fetched ${trails.length} trails from ${source}`);
+        console.log(`📦 Fetched ${trails.length} trails from ${source}`);
         
-        // Process trails in batches
+        if (trails.length === 0) {
+          console.warn(`⚠️ No trails fetched from ${source}`);
+          sourceProgress.status = 'completed';
+          continue;
+        }
+        
+        // Process trails in smaller batches with enhanced error handling
         const batches = [];
         for (let i = 0; i < trails.length; i += batchSize) {
           batches.push(trails.slice(i, i + batchSize));
         }
+        
+        console.log(`🔄 Processing ${batches.length} batches for ${source}`);
         
         // Process batches with controlled concurrency
         for (let i = 0; i < batches.length; i += concurrency) {
@@ -134,7 +156,7 @@ serve(async (req) => {
           
           for (let j = 0; j < concurrency && i + j < batches.length; j++) {
             const batch = batches[i + j];
-            batchPromises.push(processBatch(batch, source, supabase));
+            batchPromises.push(processBatch(batch, source, supabase, debug, sourceProgress.errors));
           }
           
           const batchResults = await Promise.allSettled(batchPromises);
@@ -146,25 +168,27 @@ serve(async (req) => {
               sourceProgress.updated += result.value.updated;
               sourceProgress.failed += result.value.failed;
             } else {
-              console.error('Batch processing failed:', result.reason);
-              sourceProgress.failed += batchSize; // Assume whole batch failed
+              console.error(`❌ Batch processing failed for ${source}:`, result.reason);
+              sourceProgress.failed += batchSize;
+              sourceProgress.errors.push(`Batch failed: ${result.reason?.message || 'Unknown error'}`);
             }
           }
           
           // Update progress periodically
-          console.log(`${source} progress: ${sourceProgress.processed}/${sourceProgress.total}`);
+          console.log(`📈 ${source} progress: ${sourceProgress.processed}/${sourceProgress.total} (${sourceProgress.added} added, ${sourceProgress.failed} failed)`);
           
           // Small delay to avoid overwhelming the database
-          await new Promise(resolve => setTimeout(resolve, 100));
+          await new Promise(resolve => setTimeout(resolve, 200));
         }
         
         sourceProgress.status = 'completed';
-        console.log(`Completed ${source}: ${sourceProgress.added} added, ${sourceProgress.updated} updated, ${sourceProgress.failed} failed`);
+        console.log(`✅ Completed ${source}: ${sourceProgress.added} added, ${sourceProgress.updated} updated, ${sourceProgress.failed} failed`);
         
       } catch (error) {
-        console.error(`Error processing source ${source}:`, error);
+        console.error(`❌ Error processing source ${source}:`, error);
         sourceProgress.status = 'error';
         sourceProgress.errorMessage = error.message;
+        sourceProgress.errors.push(`Source error: ${error.message}`);
       }
       
       totalProcessed += sourceProgress.processed;
@@ -187,12 +211,13 @@ serve(async (req) => {
       .eq('id', jobId);
       
     if (updateError) {
-      console.error('Error updating bulk import job:', updateError);
+      console.error('❌ Error updating bulk import job:', updateError);
     }
     
-    console.log(`Massive import completed: ${totalAdded} added, ${totalUpdated} updated, ${totalFailed} failed`);
+    const successRate = totalProcessed > 0 ? Math.round((totalAdded / totalProcessed) * 100) : 0;
+    console.log(`🎯 Massive import completed: ${totalAdded} added (${successRate}% success), ${totalFailed} failed`);
     
-    // Return comprehensive results
+    // Return comprehensive results with debug info
     return new Response(
       JSON.stringify({
         job_id: jobId,
@@ -201,14 +226,16 @@ serve(async (req) => {
         total_added: totalAdded,
         total_updated: totalUpdated,
         total_failed: totalFailed,
+        success_rate: successRate,
         source_progress: progress,
-        message: `Successfully imported ${totalAdded} trails from ${sources.length} sources`
+        message: `Successfully imported ${totalAdded} trails from ${sources.length} sources (${successRate}% success rate)`,
+        debug_enabled: debug
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
     
   } catch (error) {
-    console.error('Unexpected error in massive import:', error);
+    console.error('❌ Unexpected error in massive import:', error);
     
     return new Response(
       JSON.stringify({ error: 'Internal Server Error', details: error.message }),
@@ -217,11 +244,13 @@ serve(async (req) => {
   }
 });
 
-// Helper function to process a batch of trails
+// Enhanced batch processing with detailed error logging
 async function processBatch(
   batch: any[], 
   source: string, 
-  supabase: any
+  supabase: any,
+  debug: boolean = false,
+  errorLog: string[] = []
 ): Promise<{ processed: number; added: number; updated: number; failed: number }> {
   let processed = 0;
   let added = 0;
@@ -232,57 +261,105 @@ async function processBatch(
     try {
       processed++;
       
-      // Normalize the trail data
-      const normalizedTrail = normalizeTrail(trail, source);
+      // Normalize the trail data with validation
+      let normalizedTrail: NormalizedTrail;
+      try {
+        normalizedTrail = normalizeTrail(trail, source);
+        
+        // Validate required fields
+        if (!normalizedTrail.name || normalizedTrail.name.trim() === '') {
+          throw new Error('Trail name is required');
+        }
+        if (!normalizedTrail.latitude || !normalizedTrail.longitude) {
+          throw new Error('Trail coordinates are required');
+        }
+        if (normalizedTrail.latitude < -90 || normalizedTrail.latitude > 90) {
+          throw new Error(`Invalid latitude: ${normalizedTrail.latitude}`);
+        }
+        if (normalizedTrail.longitude < -180 || normalizedTrail.longitude > 180) {
+          throw new Error(`Invalid longitude: ${normalizedTrail.longitude}`);
+        }
+        
+      } catch (normError) {
+        if (debug) {
+          console.error(`❌ Normalization failed for trail:`, normError.message);
+          errorLog.push(`Normalization error: ${normError.message}`);
+        }
+        failed++;
+        continue;
+      }
       
       // Generate tags
       const tags = extractTags(trail, source);
       
-      // Upsert trail
-      const { data, error } = await supabase
-        .from('trails')
-        .upsert([{
-          name: normalizedTrail.name,
-          description: normalizedTrail.description,
-          location: normalizedTrail.location,
-          country: normalizedTrail.country,
-          state_province: normalizedTrail.state_province,
-          length_km: normalizedTrail.length_km,
-          length: normalizedTrail.length,
-          elevation_gain: normalizedTrail.elevation_gain,
-          elevation: normalizedTrail.elevation,
-          difficulty: normalizedTrail.difficulty,
-          geojson: normalizedTrail.geojson,
-          latitude: normalizedTrail.latitude,
-          longitude: normalizedTrail.longitude,
-          surface: normalizedTrail.surface,
-          trail_type: normalizedTrail.trail_type,
-          is_age_restricted: normalizedTrail.is_age_restricted,
-          source: normalizedTrail.source,
-          source_id: normalizedTrail.source_id,
-          last_updated: new Date().toISOString()
-        }], {
-          onConflict: 'source_id',
-          ignoreDuplicates: false
-        })
-        .select('id');
-        
-      if (error) {
-        console.error('Error upserting trail:', error);
-        failed++;
-      } else if (data && data.length > 0) {
-        // Trail was inserted or updated successfully
-        const trailId = data[0].id;
-        
-        // Add tags to trail
-        if (tags.length > 0) {
-          await addTagsToTrail(supabase, trailId, tags);
+      // Upsert trail with proper error handling
+      try {
+        const { data, error } = await supabase
+          .from('trails')
+          .upsert([{
+            name: normalizedTrail.name,
+            description: normalizedTrail.description,
+            location: normalizedTrail.location,
+            country: normalizedTrail.country,
+            state_province: normalizedTrail.state_province,
+            length_km: normalizedTrail.length_km,
+            length: normalizedTrail.length,
+            elevation_gain: normalizedTrail.elevation_gain,
+            elevation: normalizedTrail.elevation,
+            difficulty: normalizedTrail.difficulty,
+            geojson: normalizedTrail.geojson,
+            latitude: normalizedTrail.latitude,
+            longitude: normalizedTrail.longitude,
+            surface: normalizedTrail.surface,
+            trail_type: normalizedTrail.trail_type,
+            is_age_restricted: normalizedTrail.is_age_restricted,
+            source: normalizedTrail.source,
+            source_id: normalizedTrail.source_id,
+            last_updated: new Date().toISOString()
+          }], {
+            onConflict: 'source_id',
+            ignoreDuplicates: false
+          })
+          .select('id');
+          
+        if (error) {
+          throw error;
         }
         
-        added++;
+        if (data && data.length > 0) {
+          const trailId = data[0].id;
+          
+          // Add tags to trail if available
+          if (tags.length > 0) {
+            try {
+              await addTagsToTrail(supabase, trailId, tags);
+            } catch (tagError) {
+              if (debug) {
+                console.warn(`⚠️ Failed to add tags to trail ${trailId}:`, tagError.message);
+              }
+              // Don't fail the entire trail for tag errors
+            }
+          }
+          
+          added++;
+          
+          if (debug && added % 100 === 0) {
+            console.log(`✅ Successfully added ${added} trails from ${source}`);
+          }
+        }
+      } catch (upsertError) {
+        if (debug) {
+          console.error(`❌ Database upsert failed:`, upsertError.message);
+          errorLog.push(`Upsert error: ${upsertError.message}`);
+        }
+        failed++;
       }
+      
     } catch (error) {
-      console.error('Error processing individual trail:', error);
+      if (debug) {
+        console.error(`❌ Error processing individual trail:`, error.message);
+        errorLog.push(`Processing error: ${error.message}`);
+      }
       failed++;
     }
   }

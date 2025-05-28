@@ -4,7 +4,6 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import { AuthProvider } from '@/providers/auth-provider';
 import LoadingFallback from '@/components/LoadingFallback';
-import { Toaster } from "@/components/ui/toaster";
 
 // Lazy load components for better performance
 const HomePage = lazy(() => import('@/pages/HomePage'));
@@ -41,7 +40,6 @@ const AppRoutes: React.FC = () => {
               <Route path="/auto-refresh" element={<AutoImport />} />
             </Routes>
           </Suspense>
-          <Toaster />
         </AuthProvider>
       </Router>
     </HelmetProvider>

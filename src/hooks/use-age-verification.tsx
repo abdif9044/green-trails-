@@ -38,7 +38,7 @@ export function useAgeVerification() {
     }
   };
   
-  const submitAgeVerification = async (birthdate: Date) => {
+  const submitAgeVerification = async (birthYear: string) => {
     if (!user) {
       toast({
         title: "Authentication required",
@@ -50,18 +50,18 @@ export function useAgeVerification() {
     
     setVerifying(true);
     try {
-      const verified = await verifyAge(birthdate);
-      setIsVerified(verified);
+      const result = await verifyAge(birthYear);
+      setIsVerified(result.success);
       
-      if (!verified) {
+      if (!result.success) {
         toast({
           title: "Age verification failed",
-          description: "You must be 21 or older to access all features.",
+          description: result.message || "You must be 21 or older to access all features.",
           variant: "destructive",
         });
       }
       
-      return verified;
+      return result.success;
     } catch (error) {
       console.error('Error during age verification:', error);
       toast({

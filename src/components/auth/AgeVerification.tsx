@@ -16,7 +16,7 @@ interface AgeVerificationProps {
 }
 
 const AgeVerification: React.FC<AgeVerificationProps> = ({ onVerified, onVerify, onSkip }) => {
-  const [birthdate, setBirthdate] = useState('');
+  const [birthYear, setBirthYear] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const { verifyAge } = useAuth();
@@ -26,25 +26,25 @@ const AgeVerification: React.FC<AgeVerificationProps> = ({ onVerified, onVerify,
     e.preventDefault();
     setError('');
     
-    if (!birthdate) {
-      setError('Please enter your birth date');
+    if (!birthYear) {
+      setError('Please enter your birth year');
       return;
     }
     
-    const birthDate = new Date(birthdate);
-    const today = new Date();
+    const year = parseInt(birthYear);
+    const currentYear = new Date().getFullYear();
     
-    if (birthDate > today) {
-      setError('Birth date cannot be in the future');
+    if (year > currentYear || year < 1900) {
+      setError('Please enter a valid birth year');
       return;
     }
     
     setLoading(true);
     
     try {
-      const isVerified = await verifyAge(birthDate);
+      const result = await verifyAge(birthYear);
       
-      if (isVerified) {
+      if (result.success) {
         toast({
           title: "Age verified!",
           description: "Welcome to GreenTrails! You can now access all features.",
@@ -52,7 +52,7 @@ const AgeVerification: React.FC<AgeVerificationProps> = ({ onVerified, onVerify,
         onVerified?.();
         onVerify?.(true);
       } else {
-        setError('You must be 21 or older to use GreenTrails');
+        setError(result.message || 'Age verification failed');
         onVerify?.(false);
       }
     } catch (err) {
@@ -86,13 +86,15 @@ const AgeVerification: React.FC<AgeVerificationProps> = ({ onVerified, onVerify,
           )}
           
           <div className="space-y-2">
-            <Label htmlFor="birthdate">Date of Birth</Label>
+            <Label htmlFor="birthYear">Birth Year</Label>
             <Input
-              id="birthdate"
-              type="date"
-              value={birthdate}
-              onChange={(e) => setBirthdate(e.target.value)}
-              max={new Date().toISOString().split('T')[0]}
+              id="birthYear"
+              type="number"
+              placeholder="e.g., 1990"
+              value={birthYear}
+              onChange={(e) => setBirthYear(e.target.value)}
+              min="1900"
+              max={new Date().getFullYear()}
               required
             />
           </div>

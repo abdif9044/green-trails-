@@ -1,6 +1,6 @@
 
 import React, { Suspense, lazy } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import LoadingFallback from '@/components/LoadingFallback';
 
 // Lazy load components for better performance
@@ -31,7 +31,8 @@ const AppRoutes: React.FC = () => {
         <Route path="/terms" element={<TermsOfService />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/landing" element={<LandingPage />} />
-        <Route path="/admin/import" element={<AdminTrailImport />} />
+        <Route path="/admin/import" element={<Navigate to="/admin-trail-import" replace />} />
+        <Route path="/admin-trail-import" element={<AdminTrailImport />} />
         <Route path="/auto-import" element={<AutoImportPage />} />
         <Route path="/auto-refresh" element={<AutoImport />} />
         <Route path="/trail/:id" element={<Trail />} />

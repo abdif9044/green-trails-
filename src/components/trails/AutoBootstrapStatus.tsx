@@ -24,10 +24,10 @@ const AutoBootstrapStatus: React.FC = () => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Database className="h-5 w-5 text-greentrail-600" />
-          Trail Database Status
+          30K Trail Database System
         </CardTitle>
         <CardDescription>
-          Automatically managing trail database population
+          Automatically managing 30,000 trail database population
         </CardDescription>
       </CardHeader>
       
@@ -39,7 +39,7 @@ const AutoBootstrapStatus: React.FC = () => {
               {status.isBootstrapping && (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
-                  <Badge variant="secondary">Initializing Database</Badge>
+                  <Badge variant="secondary">Initializing 30K Database</Badge>
                 </>
               )}
               
@@ -53,13 +53,13 @@ const AutoBootstrapStatus: React.FC = () => {
               {!status.isBootstrapping && !status.error && status.message && (
                 <>
                   <CheckCircle className="h-4 w-4 text-green-500" />
-                  <Badge variant="default">Active</Badge>
+                  <Badge variant="default">30K System Active</Badge>
                 </>
               )}
             </div>
             
             <div className="text-sm text-gray-600">
-              {status.currentTrailCount.toLocaleString()} trails
+              {status.currentTrailCount.toLocaleString()} / {status.targetTrailCount.toLocaleString()} trails
             </div>
           </div>
 
@@ -67,11 +67,11 @@ const AutoBootstrapStatus: React.FC = () => {
           {status.jobId && !status.isComplete && (
             <div className="space-y-2">
               <Progress 
-                value={Math.min((status.currentTrailCount / 15000) * 100, 100)} 
+                value={status.progressPercent} 
                 className="w-full" 
               />
               <div className="text-xs text-gray-500 text-center">
-                Target: 15,000 trails
+                Target: 30,000 trails across North America
               </div>
             </div>
           )}
@@ -87,6 +87,13 @@ const AutoBootstrapStatus: React.FC = () => {
           {status.error && (
             <div className="text-sm text-red-700 bg-red-50 p-3 rounded-md">
               <strong>Error:</strong> {status.error}
+            </div>
+          )}
+
+          {/* 30K System Features */}
+          {status.currentTrailCount >= 25000 && (
+            <div className="text-sm text-green-700 bg-green-50 p-3 rounded-md">
+              <strong>30K System Active:</strong> Full coverage across US, Canada, and Mexico with premium trail data
             </div>
           )}
         </div>

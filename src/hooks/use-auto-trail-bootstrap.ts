@@ -5,20 +5,24 @@ import { supabase } from '@/integrations/supabase/client';
 interface BootstrapStatus {
   isBootstrapping: boolean;
   currentTrailCount: number;
+  targetTrailCount: number;
   isComplete: boolean;
   error: string | null;
   message: string | null;
   jobId: string | null;
+  progressPercent: number;
 }
 
 export function useAutoTrailBootstrap() {
   const [status, setStatus] = useState<BootstrapStatus>({
     isBootstrapping: false,
     currentTrailCount: 0,
+    targetTrailCount: 30000,
     isComplete: false,
     error: null,
     message: null,
-    jobId: null
+    jobId: null,
+    progressPercent: 0
   });
 
   useEffect(() => {
@@ -30,7 +34,7 @@ export function useAutoTrailBootstrap() {
     try {
       setStatus(prev => ({ ...prev, isBootstrapping: true, error: null }));
       
-      console.log('🔍 Checking if trail database needs bootstrapping...');
+      console.log('🔍 Checking if 30K trail database needs bootstrapping...');
       
       // Call the bootstrap function
       const { data, error } = await supabase.functions.invoke('bootstrap-trail-database');
@@ -41,13 +45,17 @@ export function useAutoTrailBootstrap() {
       
       console.log('Bootstrap response:', data);
       
+      const progressPercent = Math.min((data.current_count / 30000) * 100, 100);
+      
       setStatus({
         isBootstrapping: false,
         currentTrailCount: data.current_count || 0,
+        targetTrailCount: 30000,
         isComplete: data.action === 'none',
         error: null,
         message: data.message,
-        jobId: data.job_id || null
+        jobId: data.job_id || null,
+        progressPercent
       });
       
       // If import was started, monitor progress
@@ -81,13 +89,16 @@ export function useAutoTrailBootstrap() {
           return;
         }
         
+        const progressPercent = Math.min((job.trails_added / 30000) * 100, 100);
+        
         setStatus(prev => ({
           ...prev,
           currentTrailCount: job.trails_added || 0,
           isComplete: job.status === 'completed',
+          progressPercent,
           message: job.status === 'completed' 
-            ? `Import complete! Added ${job.trails_added} trails.`
-            : `Import in progress... ${job.trails_added || 0} trails added so far.`
+            ? `30K import complete! Added ${job.trails_added} trails.`
+            : `30K import in progress... ${job.trails_added || 0} trails added so far.`
         }));
         
         if (job.status === 'completed' || job.status === 'error') {
@@ -100,10 +111,10 @@ export function useAutoTrailBootstrap() {
       }
     }, 10000); // Check every 10 seconds
     
-    // Stop monitoring after 30 minutes
+    // Stop monitoring after 60 minutes (for 30K import)
     setTimeout(() => {
       clearInterval(interval);
-    }, 30 * 60 * 1000);
+    }, 60 * 60 * 1000);
   };
 
   return {

@@ -17,7 +17,7 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
     const supabase = createClient(supabaseUrl, supabaseKey);
     
-    console.log('🔍 Checking trail database status...');
+    console.log('🔍 Checking trail database status for 30K trail system...');
     
     // Check current trail count
     const { count, error: countError } = await supabase
@@ -32,21 +32,22 @@ serve(async (req) => {
     const currentTrailCount = count || 0;
     console.log(`📊 Current trail count: ${currentTrailCount}`);
     
-    // Only trigger import if we have fewer than 1000 trails
-    if (currentTrailCount >= 1000) {
-      console.log('✅ Database already has sufficient trails, skipping import');
+    // Only trigger import if we have fewer than 5000 trails (new threshold for 30K system)
+    if (currentTrailCount >= 5000) {
+      console.log('✅ Database already has sufficient trails for 30K system, skipping import');
       return new Response(
         JSON.stringify({
           success: true,
-          message: 'Database already populated',
+          message: 'Database already populated for 30K system',
           current_count: currentTrailCount,
+          target_count: 30000,
           action: 'none'
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
     
-    console.log('🚀 Trail count below threshold, starting automatic import...');
+    console.log('🚀 Trail count below threshold, starting automatic 30K trail import...');
     
     // Check if there's already an active bulk import job
     const { data: activeJobs, error: jobError } = await supabase
@@ -68,6 +69,7 @@ serve(async (req) => {
           success: true,
           message: 'Import already in progress',
           current_count: currentTrailCount,
+          target_count: 30000,
           action: 'existing_import',
           job_id: activeJobs[0].id
         }),
@@ -75,34 +77,35 @@ serve(async (req) => {
       );
     }
     
-    // Start the massive import by calling the existing import function
-    console.log('📥 Invoking massive trail import...');
+    // Start the massive 30K import by calling the existing import function
+    console.log('📥 Invoking massive 30K trail import...');
     
     const { data: importResult, error: importError } = await supabase.functions.invoke('import-trails-massive', {
       body: {
         sources: ['hiking_project', 'openstreetmap', 'usgs', 'parks_canada', 'inegi_mexico', 'trails_bc'],
-        maxTrailsPerSource: 2500, // 15,000 total across 6 sources
-        batchSize: 200,
-        concurrency: 3,
+        maxTrailsPerSource: 5000, // 30,000 total across 6 sources
+        batchSize: 1000, // Increased batch size for better performance
+        concurrency: 4, // Increased concurrency
         priority: 'bootstrap'
       }
     });
     
     if (importError) {
-      console.error('Error starting massive import:', importError);
+      console.error('Error starting massive 30K import:', importError);
       throw importError;
     }
     
-    console.log('✅ Bootstrap import started successfully:', importResult);
+    console.log('✅ Bootstrap 30K import started successfully:', importResult);
     
     return new Response(
       JSON.stringify({
         success: true,
-        message: 'Automatic trail import started',
+        message: 'Automatic 30K trail import started',
         current_count: currentTrailCount,
+        target_count: 30000,
         action: 'import_started',
         job_id: importResult.job_id,
-        target_trails: 15000
+        estimated_completion: '45-60 minutes'
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

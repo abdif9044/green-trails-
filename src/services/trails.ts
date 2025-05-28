@@ -17,7 +17,7 @@ export interface TrailsResponse {
 }
 
 export const useTrails = () => {
-  // Search trails with filters using Supabase
+  // Search trails with filters using Supabase - NO MOCK DATA
   const useTrailsSearch = (params: TrailSearchParams = {}) => {
     return useQuery({
       queryKey: ['trails', 'search', params],
@@ -34,7 +34,7 @@ export const useTrails = () => {
           limit = 50
         } = params;
 
-        // Handle nearby search with PostGIS function separately
+        // Handle nearby search with PostGIS function
         if (nearbyCoordinates && nearbyCoordinates.length === 2) {
           const [lat, lng] = nearbyCoordinates;
           
@@ -60,7 +60,7 @@ export const useTrails = () => {
           };
         }
 
-        // Regular search without PostGIS
+        // Regular search without PostGIS - ONLY REAL DATABASE TRAILS
         let query = supabase
           .from('trails')
           .select(`
@@ -80,7 +80,7 @@ export const useTrails = () => {
         }
 
         if (lengthRange && lengthRange.length === 2) {
-          query = query.gte('trail_length', lengthRange[0]).lte('trail_length', lengthRange[1]);
+          query = query.gte('length_km', lengthRange[0]).lte('length_km', lengthRange[1]);
         }
 
         if (country) {
@@ -88,13 +88,16 @@ export const useTrails = () => {
         }
 
         if (stateProvince) {
-          query = query.eq('region', stateProvince);
+          query = query.eq('state_province', stateProvince);
         }
 
         // Pagination
         const from = (page - 1) * limit;
         const to = from + limit - 1;
         query = query.range(from, to);
+
+        // Order by creation date to show newest real trails first
+        query = query.order('created_at', { ascending: false });
 
         const { data, error, count } = await query;
 
@@ -115,7 +118,7 @@ export const useTrails = () => {
     });
   };
 
-  // Get single trail by ID
+  // Get single trail by ID - ONLY REAL DATABASE TRAILS
   const useTrail = (trailId: string) => {
     return useQuery({
       queryKey: ['trails', trailId],
@@ -142,7 +145,7 @@ export const useTrails = () => {
     });
   };
 
-  // Get nearby trails using PostGIS
+  // Get nearby trails using PostGIS - ONLY REAL DATABASE TRAILS
   const useNearbyTrails = (lat: number, lng: number, radius: number = 25) => {
     return useQuery({
       queryKey: ['trails', 'nearby', lat, lng, radius],
@@ -165,9 +168,36 @@ export const useTrails = () => {
     });
   };
 
+  // Get popular trails for homepage - ONLY REAL DATABASE TRAILS
+  const usePopularTrails = (limit: number = 6) => {
+    return useQuery({
+      queryKey: ['trails', 'popular', limit],
+      queryFn: async (): Promise<Trail[]> => {
+        const { data, error } = await supabase
+          .from('trails')
+          .select(`
+            *,
+            trail_tags (
+              tag_name
+            )
+          `)
+          .order('created_at', { ascending: false })
+          .limit(limit);
+
+        if (error) {
+          console.error('Error fetching popular trails:', error);
+          throw error;
+        }
+
+        return (data || []).map(formatTrailFromDatabase);
+      }
+    });
+  };
+
   return {
     useTrailsSearch,
     useTrail,
     useNearbyTrails,
+    usePopularTrails,
   };
 };

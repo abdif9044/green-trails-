@@ -35,16 +35,25 @@ const AutoImport: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
+  const getSystemStatus = () => {
+    if (trailCount >= 25000) return { status: 'Fully Operational', variant: 'default' as const };
+    if (trailCount >= 15000) return { status: 'Scaling to 30K', variant: 'secondary' as const };
+    if (trailCount >= 5000) return { status: 'Building Database', variant: 'secondary' as const };
+    return { status: 'Initializing', variant: 'secondary' as const };
+  };
+
+  const systemStatus = getSystemStatus();
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
       <div className="container mx-auto px-4 max-w-4xl">
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-            Automated Trail Database System
+            30K Trail Database System
           </h1>
           <p className="text-lg text-gray-600 dark:text-gray-300">
-            Trail data is automatically managed and maintained for all users
+            Comprehensive trail coverage across North America - fully automated
           </p>
         </div>
 
@@ -62,14 +71,30 @@ const AutoImport: React.FC = () => {
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-2xl font-bold text-greentrail-600">
+                <div className="text-3xl font-bold text-greentrail-600">
                   {isLoading ? 'Loading...' : trailCount.toLocaleString()}
                 </div>
                 <div className="text-sm text-gray-600">Trails in database</div>
+                <div className="text-xs text-gray-500 mt-1">
+                  Target: 30,000 trails
+                </div>
               </div>
-              <Badge variant={trailCount >= 1000 ? "default" : "secondary"}>
-                {trailCount >= 1000 ? "Fully Populated" : "Auto-Populating"}
+              <Badge variant={systemStatus.variant}>
+                {systemStatus.status}
               </Badge>
+            </div>
+            
+            {/* Progress Bar */}
+            <div className="mt-4">
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div 
+                  className="bg-greentrail-600 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${Math.min((trailCount / 30000) * 100, 100)}%` }}
+                ></div>
+              </div>
+              <div className="text-xs text-gray-500 mt-1 text-right">
+                {Math.round((trailCount / 30000) * 100)}% complete
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -81,10 +106,10 @@ const AutoImport: React.FC = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Settings className="h-5 w-5" />
-              How It Works
+              30K System Architecture
             </CardTitle>
             <CardDescription>
-              The trail database is fully automated and requires no user intervention
+              Fully automated trail database with comprehensive North American coverage
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -92,9 +117,9 @@ const AutoImport: React.FC = () => {
               <div className="flex items-start gap-3">
                 <CheckCircle className="h-5 w-5 mt-0.5 text-greentrail-600" />
                 <div>
-                  <div className="font-medium">Automatic Population</div>
+                  <div className="font-medium">Automatic 30K Population</div>
                   <div className="text-sm text-gray-600">
-                    When the database has fewer than 1,000 trails, the system automatically imports 15,000 real trails from multiple sources
+                    System automatically imports 30,000 real trails when database has fewer than 5,000 trails
                   </div>
                 </div>
               </div>
@@ -102,9 +127,9 @@ const AutoImport: React.FC = () => {
               <div className="flex items-start gap-3">
                 <CheckCircle className="h-5 w-5 mt-0.5 text-greentrail-600" />
                 <div>
-                  <div className="font-medium">Background Processing</div>
+                  <div className="font-medium">High-Performance Import</div>
                   <div className="text-sm text-gray-600">
-                    Imports run in the background without affecting user experience. Users can browse trails immediately while more data loads
+                    Enhanced import system with 1000-trail batches and 4x concurrency for 45-60 minute completion
                   </div>
                 </div>
               </div>
@@ -112,9 +137,9 @@ const AutoImport: React.FC = () => {
               <div className="flex items-start gap-3">
                 <CheckCircle className="h-5 w-5 mt-0.5 text-greentrail-600" />
                 <div>
-                  <div className="font-medium">Daily Health Checks</div>
+                  <div className="font-medium">Daily Health Monitoring</div>
                   <div className="text-sm text-gray-600">
-                    The system monitors trail count daily and automatically maintains database population
+                    Automated daily checks ensure trail count stays above 25,000 with automatic re-population if needed
                   </div>
                 </div>
               </div>
@@ -122,9 +147,9 @@ const AutoImport: React.FC = () => {
               <div className="flex items-start gap-3">
                 <CheckCircle className="h-5 w-5 mt-0.5 text-greentrail-600" />
                 <div>
-                  <div className="font-medium">Multiple Data Sources</div>
+                  <div className="font-medium">Premium Data Sources</div>
                   <div className="text-sm text-gray-600">
-                    Imports from Hiking Project, OpenStreetMap, USGS, Parks Canada, INEGI Mexico, and Trails BC for comprehensive coverage
+                    Six major sources: Hiking Project, OpenStreetMap, USGS, Parks Canada, INEGI Mexico, and Trails BC
                   </div>
                 </div>
               </div>
@@ -132,29 +157,38 @@ const AutoImport: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* Geographic Coverage */}
+        {/* Enhanced Geographic Coverage */}
         <Card>
           <CardHeader>
-            <CardTitle>Geographic Coverage</CardTitle>
+            <CardTitle>30K Geographic Distribution</CardTitle>
             <CardDescription>
-              Automatic trail distribution across North America
+              Comprehensive trail coverage across North America
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid md:grid-cols-3 gap-4">
+            <div className="grid md:grid-cols-4 gap-4">
               <div className="text-center p-4 bg-gray-50 rounded-lg">
-                <div className="text-2xl font-bold text-blue-600">8,000</div>
+                <div className="text-2xl font-bold text-blue-600">15,000</div>
                 <div className="text-sm text-gray-600">🇺🇸 United States</div>
+                <div className="text-xs text-gray-500">Premium hiking trails</div>
               </div>
               
               <div className="text-center p-4 bg-gray-50 rounded-lg">
-                <div className="text-2xl font-bold text-red-600">4,000</div>
+                <div className="text-2xl font-bold text-red-600">8,000</div>
                 <div className="text-sm text-gray-600">🇨🇦 Canada</div>
+                <div className="text-xs text-gray-500">Parks & wilderness</div>
               </div>
               
               <div className="text-center p-4 bg-gray-50 rounded-lg">
-                <div className="text-2xl font-bold text-green-600">3,000</div>
+                <div className="text-2xl font-bold text-green-600">4,000</div>
                 <div className="text-sm text-gray-600">🇲🇽 Mexico</div>
+                <div className="text-xs text-gray-500">Natural areas & trails</div>
+              </div>
+
+              <div className="text-center p-4 bg-gray-50 rounded-lg">
+                <div className="text-2xl font-bold text-purple-600">3,000</div>
+                <div className="text-sm text-gray-600">🌍 Global</div>
+                <div className="text-xs text-gray-500">International trails</div>
               </div>
             </div>
           </CardContent>

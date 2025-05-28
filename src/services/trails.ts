@@ -34,6 +34,33 @@ export const useTrails = () => {
           limit = 50
         } = params;
 
+        // Handle nearby search with PostGIS function separately
+        if (nearbyCoordinates && nearbyCoordinates.length === 2) {
+          const [lat, lng] = nearbyCoordinates;
+          
+          const { data, error, count } = await supabase
+            .rpc('trails_within_radius', {
+              center_lat: lat,
+              center_lng: lng,
+              radius_meters: radius * 1000 // Convert km to meters
+            });
+
+          if (error) {
+            console.error('Error fetching nearby trails:', error);
+            throw error;
+          }
+
+          const formattedTrails = (data || []).map(formatTrailFromDatabase);
+          
+          return {
+            data: formattedTrails,
+            count: formattedTrails.length,
+            page,
+            totalPages: Math.ceil(formattedTrails.length / limit)
+          };
+        }
+
+        // Regular search without PostGIS
         let query = supabase
           .from('trails')
           .select(`
@@ -62,17 +89,6 @@ export const useTrails = () => {
 
         if (stateProvince) {
           query = query.eq('region', stateProvince);
-        }
-
-        // Nearby search using coordinates
-        if (nearbyCoordinates && nearbyCoordinates.length === 2) {
-          const [lat, lng] = nearbyCoordinates;
-          // Use ST_DWithin for radius search (radius in meters)
-          query = query.rpc('trails_within_radius', {
-            center_lat: lat,
-            center_lng: lng,
-            radius_meters: radius * 1000 // Convert km to meters
-          });
         }
 
         // Pagination

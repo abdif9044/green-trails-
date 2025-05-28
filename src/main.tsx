@@ -39,12 +39,14 @@ if (!container) {
 
 const root = createRoot(container);
 
-// Single BrowserRouter at the top level
+// Single BrowserRouter at the top level - this is the ONLY Router in the app
 root.render(
   <React.StrictMode>
     <BrowserRouter>
       <HelmetProvider>
-        <App />
+        <QueryClientProvider client={queryClient}>
+          <App />
+        </QueryClientProvider>
       </HelmetProvider>
     </BrowserRouter>
   </React.StrictMode>

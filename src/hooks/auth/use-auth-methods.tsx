@@ -1,6 +1,7 @@
 
 import { User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 export const useAuthMethods = (user: User | null) => {
   const signIn = async (email: string, password: string) => {

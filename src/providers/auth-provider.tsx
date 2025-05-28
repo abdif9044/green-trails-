@@ -5,7 +5,7 @@ import { useAuthState } from '@/hooks/auth/use-auth-state';
 import { useAuthMethods } from '@/hooks/auth/use-auth-methods';
 import { useUserManagement } from '@/hooks/auth/use-user-management';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -16,23 +16,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const authMethods = useAuthMethods(user);
   const { verifyAge } = useUserManagement(user);
   const [authInitialized, setAuthInitialized] = useState(false);
-  const { toast } = useToast();
 
   // Wrap auth methods with toast notifications
   const signIn = async (email: string, password: string) => {
     const result = await authMethods.signIn(email, password);
     
     if (result.success) {
-      toast({
-        title: "Welcome back!",
-        description: "You have successfully signed in.",
-      });
+      toast.success("Welcome back! You have successfully signed in.");
     } else {
-      toast({
-        title: "Sign in failed",
-        description: result.message,
-        variant: "destructive",
-      });
+      toast.error(`Sign in failed: ${result.message}`);
     }
     
     return result;
@@ -42,16 +34,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     const result = await authMethods.signUp(email, password, metadata);
     
     if (result.success) {
-      toast({
-        title: "Account created!",
-        description: "Welcome to GreenTrails! You can now sign in.",
-      });
+      toast.success("Account created! Welcome to GreenTrails! You can now sign in.");
     } else {
-      toast({
-        title: "Sign up failed",
-        description: result.message,
-        variant: "destructive",
-      });
+      toast.error(`Sign up failed: ${result.message}`);
     }
     
     return result;
@@ -61,16 +46,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     const result = await authMethods.signOut();
     
     if (result.success) {
-      toast({
-        title: "Signed out",
-        description: "You have been successfully signed out.",
-      });
+      toast.success("You have been successfully signed out.");
     } else {
-      toast({
-        title: "Sign out failed",
-        description: result.message,
-        variant: "destructive",
-      });
+      toast.error(`Sign out failed: ${result.message}`);
     }
     
     return result;
@@ -80,16 +58,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     const result = await authMethods.resetPassword(email);
     
     if (result.success) {
-      toast({
-        title: "Password reset sent",
-        description: result.message,
-      });
+      toast.success(result.message || "Password reset email sent");
     } else {
-      toast({
-        title: "Password reset failed",
-        description: result.message,
-        variant: "destructive",
-      });
+      toast.error(`Password reset failed: ${result.message}`);
     }
     
     return result;
@@ -99,16 +70,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     const result = await authMethods.updatePassword(password);
     
     if (result.success) {
-      toast({
-        title: "Password updated",
-        description: result.message,
-      });
+      toast.success(result.message || "Password updated successfully");
     } else {
-      toast({
-        title: "Password update failed",
-        description: result.message,
-        variant: "destructive",
-      });
+      toast.error(`Password update failed: ${result.message}`);
     }
     
     return result;

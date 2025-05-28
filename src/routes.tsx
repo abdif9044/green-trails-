@@ -1,7 +1,6 @@
 
 import React, { Suspense, lazy } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { HelmetProvider } from 'react-helmet-async';
+import { Routes, Route } from 'react-router-dom';
 import { AuthProvider } from '@/providers/auth-provider';
 import LoadingFallback from '@/components/LoadingFallback';
 
@@ -21,28 +20,24 @@ const AutoImport = lazy(() => import('@/pages/AutoImport'));
 
 const AppRoutes: React.FC = () => {
   return (
-    <HelmetProvider>
-      <Router>
-        <AuthProvider>
-          <Suspense fallback={<LoadingFallback />}>
-            <Routes>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/discover" element={<Discover />} />
-              <Route path="/social" element={<Social />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/terms" element={<TermsOfService />} />
-              <Route path="/privacy" element={<PrivacyPolicy />} />
-              <Route path="/landing" element={<LandingPage />} />
-              <Route path="/admin/import" element={<AdminTrailImport />} />
-              <Route path="/auto-import" element={<AutoImportPage />} />
-              <Route path="/auto-refresh" element={<AutoImport />} />
-            </Routes>
-          </Suspense>
-        </AuthProvider>
-      </Router>
-    </HelmetProvider>
+    <AuthProvider>
+      <Suspense fallback={<LoadingFallback />}>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/discover" element={<Discover />} />
+          <Route path="/social" element={<Social />} />
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/terms" element={<TermsOfService />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/landing" element={<LandingPage />} />
+          <Route path="/admin/import" element={<AdminTrailImport />} />
+          <Route path="/auto-import" element={<AutoImportPage />} />
+          <Route path="/auto-refresh" element={<AutoImport />} />
+        </Routes>
+      </Suspense>
+    </AuthProvider>
   );
 };
 

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { PlayCircle, AlertCircle } from "lucide-react";
 import QuickImport10K from "@/components/trails/QuickImport10K";
 import DebugImportInterface from "@/components/trails/DebugImportInterface";
+import EnhancedDebugInterface from "@/components/trails/EnhancedDebugInterface";
 
 // Import refactored components
 import { useDBSetup } from "./hooks/useDBSetup";
@@ -21,7 +22,7 @@ import ImportTabs from "./components/ImportTabs";
 
 const AdminTrailImport = () => {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = React.useState("debug"); // Changed default to debug
+  const [activeTab, setActiveTab] = React.useState("enhanced-debug"); // Changed default
   
   const {
     dataSources,
@@ -119,14 +120,15 @@ const AdminTrailImport = () => {
             </div>
           </div>
 
-          {/* Debug Notice */}
+          {/* Critical Issue Alert */}
           <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
             <div className="flex items-center gap-2 text-red-800">
               <AlertCircle className="h-5 w-5" />
-              <strong>Import Pipeline Debug Mode</strong>
+              <strong>CRITICAL: 100% Import Failure Rate Detected</strong>
             </div>
             <p className="text-red-700 mt-1">
-              Recent imports show 0% success rate. Use the debug interface below to identify and fix pipeline issues.
+              Recent imports processed thousands of trails but 0 were actually added to the database. 
+              Use the Enhanced Debug interface below to identify and fix the root cause.
             </p>
           </div>
 
@@ -162,10 +164,20 @@ const AdminTrailImport = () => {
             bulkProgress={bulkProgress}
           />
           
-          {/* Update ImportTabs to include debug tab */}
+          {/* Enhanced Tabs with new debug interface */}
           <div className="bg-white rounded-lg shadow">
             <div className="border-b border-gray-200">
               <nav className="-mb-px flex space-x-8 px-6">
+                <button
+                  onClick={() => setActiveTab('enhanced-debug')}
+                  className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                    activeTab === 'enhanced-debug'
+                      ? 'border-red-500 text-red-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  🚨 Enhanced Debug
+                </button>
                 <button
                   onClick={() => setActiveTab('debug')}
                   className={`py-4 px-1 border-b-2 font-medium text-sm ${
@@ -174,7 +186,7 @@ const AdminTrailImport = () => {
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                   }`}
                 >
-                  🔍 Debug Pipeline
+                  🔍 Basic Debug
                 </button>
                 <button
                   onClick={() => setActiveTab('bulk')}
@@ -200,6 +212,10 @@ const AdminTrailImport = () => {
             </div>
             
             <div className="p-6">
+              {activeTab === 'enhanced-debug' && (
+                <EnhancedDebugInterface />
+              )}
+              
               {activeTab === 'debug' && (
                 <DebugImportInterface />
               )}

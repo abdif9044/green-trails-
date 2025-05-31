@@ -21,6 +21,7 @@ import { EnhancedDebugImportService } from '@/services/trail-import/enhanced-deb
 
 export default function EnhancedDebugInterface() {
   const [isRunning, setIsRunning] = useState(false);
+  const [hasStarted, setHasStarted] = useState(false);
   const [currentPhase, setCurrentPhase] = useState('');
   const [progress, setProgress] = useState(0);
   const [summary, setSummary] = useState(null);
@@ -28,16 +29,26 @@ export default function EnhancedDebugInterface() {
   const [report, setReport] = useState('');
   const { toast } = useToast();
 
-  // Auto-start the 1000 trail import test
+  // Auto-start the 1000 trail import test immediately when component mounts
   useEffect(() => {
-    // Start the import automatically since user gave permission
-    handleEnhancedDebug();
-  }, []);
+    if (!hasStarted) {
+      setHasStarted(true);
+      
+      // Show immediate feedback
+      toast({
+        title: "🚀 Auto-Starting 1000 Trail Import Test",
+        description: "Enhanced debug sequence initiated with user permission.",
+      });
+      
+      // Start immediately (no delay)
+      handleEnhancedDebug();
+    }
+  }, [hasStarted]);
 
   const handleEnhancedDebug = async () => {
     setIsRunning(true);
     setProgress(0);
-    setCurrentPhase('Initializing enhanced debug system...');
+    setCurrentPhase('🔧 Initializing enhanced debug system...');
     setSummary(null);
     setPermissionTest(null);
     setReport('');
@@ -71,12 +82,6 @@ export default function EnhancedDebugInterface() {
       // Phase 2: Enhanced Import Test (20-100%)
       setCurrentPhase('🚀 Starting enhanced 1000-trail import test...');
       setProgress(20);
-
-      // Create progress callback for real-time updates
-      const progressCallback = (phase, percent) => {
-        setCurrentPhase(phase);
-        setProgress(20 + (percent * 0.8)); // Scale to 20-100% range
-      };
 
       // Run the enhanced batch import with progress tracking
       const importSummary = await debugService.runEnhancedBatchImport(1000);
@@ -135,11 +140,12 @@ export default function EnhancedDebugInterface() {
         </p>
       </div>
 
-      {/* Auto-Start Notice */}
+      {/* Auto-Start Status */}
       <Alert className="border-blue-200 bg-blue-50">
         <Zap className="h-4 w-4" />
         <AlertDescription>
-          <strong>Auto-started:</strong> Enhanced debug test is running automatically to verify the RLS fix and import 1000 trails.
+          <strong>Status:</strong> {hasStarted ? 'Enhanced debug test has been auto-started!' : 'Preparing to auto-start...'} 
+          {isRunning ? ' Currently running import test...' : !summary ? ' Initializing...' : ' Test completed!'}
         </AlertDescription>
       </Alert>
 
@@ -149,7 +155,7 @@ export default function EnhancedDebugInterface() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               {permissionTest.hasPermissions ? <CheckCircle className="h-5 w-5 text-green-600" /> : <AlertCircle className="h-5 w-5 text-red-600" />}
-              Database Permission Test
+              Database Permission Test Results
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -173,18 +179,18 @@ export default function EnhancedDebugInterface() {
       )}
 
       {/* Progress Section */}
-      {isRunning && (
+      {(isRunning || currentPhase) && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <PlayCircle className="h-5 w-5 animate-spin" />
+              {isRunning ? <PlayCircle className="h-5 w-5 animate-spin" /> : <CheckCircle className="h-5 w-5" />}
               Import Progress
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
               <div className="flex justify-between text-sm mb-2">
-                <span>{currentPhase}</span>
+                <span>{currentPhase || 'Waiting to start...'}</span>
                 <span>{Math.round(progress)}%</span>
               </div>
               <Progress value={progress} className="w-full" />

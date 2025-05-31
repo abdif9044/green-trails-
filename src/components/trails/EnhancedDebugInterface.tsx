@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -176,6 +175,7 @@ const EnhancedDebugInterface: React.FC = () => {
               onClick={runEnhancedDebugSequence}
               disabled={isRunning}
               className="bg-red-600 hover:bg-red-700"
+              data-enhanced-debug-trigger
             >
               {isRunning ? (
                 <>

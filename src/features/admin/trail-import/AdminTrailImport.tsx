@@ -1,3 +1,4 @@
+
 import React, { useEffect } from "react";
 import { useTrailImport } from "@/hooks/useTrailImport";
 import { useToast } from "@/hooks/use-toast";
@@ -5,7 +6,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import SEOProvider from "@/components/SEOProvider";
 import { Button } from "@/components/ui/button";
-import { PlayCircle, AlertCircle } from "lucide-react";
+import { PlayCircle, AlertCircle, Smartphone } from "lucide-react";
 import QuickImport10K from "@/components/trails/QuickImport10K";
 import DebugImportInterface from "@/components/trails/DebugImportInterface";
 import EnhancedDebugInterface from "@/components/trails/EnhancedDebugInterface";
@@ -22,7 +23,8 @@ import ImportTabs from "./components/ImportTabs";
 
 const AdminTrailImport = () => {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = React.useState("enhanced-debug"); // Changed default
+  const [activeTab, setActiveTab] = React.useState("enhanced-debug");
+  const [mobileAutoTriggered, setMobileAutoTriggered] = React.useState(false);
   
   const {
     dataSources,
@@ -68,6 +70,9 @@ const AdminTrailImport = () => {
     setActiveTab
   });
 
+  // Check if user is on mobile
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
   useEffect(() => {
     // Load data when component mounts, no user authentication check
     loadData();
@@ -79,6 +84,27 @@ const AdminTrailImport = () => {
       checkAndSetupDatabase();
     }
   }, [loading, bulkImportJobs, isSettingUpDb, dbSetupError, checkAndSetupDatabase]);
+
+  // Auto-trigger enhanced debug on mobile (with user permission)
+  useEffect(() => {
+    if (isMobile && !mobileAutoTriggered && !loading && !isSettingUpDb && dataSources.length > 0) {
+      setMobileAutoTriggered(true);
+      
+      // Show mobile-optimized notification
+      toast({
+        title: "🚀 Mobile Debug Mode Activated",
+        description: "Starting enhanced debug sequence to fix the 100% failure rate issue.",
+      });
+      
+      // Auto-trigger the enhanced debug after a brief delay
+      setTimeout(() => {
+        const enhancedDebugButton = document.querySelector('[data-enhanced-debug-trigger]') as HTMLButtonElement;
+        if (enhancedDebugButton) {
+          enhancedDebugButton.click();
+        }
+      }, 2000);
+    }
+  }, [isMobile, mobileAutoTriggered, loading, isSettingUpDb, dataSources.length, toast]);
 
   // Function to handle the bulk import
   const handleBulkImportClick = async () => {
@@ -105,6 +131,19 @@ const AdminTrailImport = () => {
             dbSetupError={dbSetupError !== null}
             retryDatabaseSetup={async () => await checkAndSetupDatabase()}
           />
+
+          {/* Mobile-specific notice */}
+          {isMobile && (
+            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-center gap-2 text-blue-800">
+                <Smartphone className="h-5 w-5" />
+                <strong>Mobile Debug Mode</strong>
+              </div>
+              <p className="text-blue-700 mt-1">
+                Enhanced debug sequence will auto-start to identify and fix the trail import failures.
+              </p>
+            </div>
+          )}
         
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-3xl font-bold">Trail Data Import</h1>

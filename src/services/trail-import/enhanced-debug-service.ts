@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 interface DetailedFailureLog {
@@ -22,6 +21,99 @@ interface EnhancedImportSummary {
 
 export class EnhancedDebugImportService {
   private failureLog: DetailedFailureLog[] = [];
+
+  // Test database permissions and RLS policies
+  async testDatabasePermissions(): Promise<{ hasPermissions: boolean; errors: string[] }> {
+    const errors: string[] = [];
+
+    try {
+      console.log('🔍 Testing database permissions and RLS policies...');
+
+      // Test basic SELECT permission
+      const { data: selectTest, error: selectError } = await supabase
+        .from('trails')
+        .select('id')
+        .limit(1);
+
+      if (selectError) {
+        errors.push(`SELECT permission failed: ${selectError.message}`);
+      } else {
+        console.log('✅ SELECT permission: OK');
+      }
+
+      // Test RLS permission check function
+      const { data: rlsTest, error: rlsError } = await supabase
+        .rpc('test_trail_insert_permissions');
+
+      if (rlsError) {
+        errors.push(`RLS test function failed: ${rlsError.message}`);
+      } else {
+        console.log('✅ RLS test function: OK', rlsTest);
+      }
+
+      // Test INSERT permission with a detailed test record
+      const testTrail = {
+        name: `RLS Permission Test ${Date.now()}`,
+        location: 'Test Location for RLS',
+        country: 'Test Country',
+        difficulty: 'moderate',
+        length: 1.5,
+        elevation: 100,
+        source: 'rls_test',
+        source_id: `rls-test-${Date.now()}`,
+        last_updated: new Date().toISOString(),
+        trail_type: 'hiking',
+        is_age_restricted: false
+      };
+
+      console.log('🧪 Testing INSERT with test trail...', testTrail);
+
+      const { data: insertTest, error: insertError } = await supabase
+        .from('trails')
+        .insert([testTrail])
+        .select('id, name, source')
+        .single();
+
+      if (insertError) {
+        errors.push(`INSERT permission failed: ${insertError.message} (Code: ${insertError.code})`);
+        console.error('❌ INSERT failed:', insertError);
+        
+        // Check if it's an RLS policy violation
+        if (insertError.message.includes('row-level security') || insertError.code === '42501') {
+          errors.push('RLS Policy Issue: The trails table INSERT policy is blocking imports. Run the RLS fix migration.');
+        }
+      } else if (insertTest?.id) {
+        console.log('✅ INSERT permission: OK - Test trail inserted with ID:', insertTest.id);
+        
+        // Clean up test record
+        const { error: deleteError } = await supabase
+          .from('trails')
+          .delete()
+          .eq('id', insertTest.id);
+          
+        if (deleteError) {
+          console.warn('⚠️ Could not clean up test record:', deleteError);
+        } else {
+          console.log('🧹 Test record cleaned up successfully');
+        }
+      } else {
+        errors.push('INSERT succeeded but no data returned');
+      }
+
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      errors.push(`Permission test exception: ${errorMsg}`);
+      console.error('💥 Permission test exception:', error);
+    }
+
+    const hasPermissions = errors.length === 0;
+    console.log(hasPermissions ? '🎉 All permissions tests passed!' : '🚨 Permission issues detected:', errors);
+
+    return {
+      hasPermissions,
+      errors
+    };
+  }
 
   // Core validation with detailed error reporting
   private validateTrailForInsertion(trail: any, source: string): { isValid: boolean; errors: string[] } {
@@ -113,7 +205,7 @@ export class EnhancedDebugImportService {
         last_updated: new Date().toISOString()
       };
 
-      console.log(`Attempting to insert trail: ${trailData.name} from ${source.source_type}`);
+      console.log(`🚀 Attempting to insert trail: ${trailData.name} from ${source.source_type}`);
 
       // Attempt database insertion with explicit error handling
       const { data, error } = await supabase
@@ -131,7 +223,7 @@ export class EnhancedDebugImportService {
           [error.message, error.code || 'unknown', error.details || 'no details'], 
           trailData
         );
-        console.error(`Database insertion failed for trail ${trailData.name}:`, error);
+        console.error(`❌ Database insertion failed for trail ${trailData.name}:`, error);
         return { success: false, error: error.message };
       }
 
@@ -140,13 +232,13 @@ export class EnhancedDebugImportService {
         return { success: false, error: 'No data returned from insert' };
       }
 
-      console.log(`Successfully inserted trail: ${data.name} with ID: ${data.id}`);
+      console.log(`✅ Successfully inserted trail: ${data.name} with ID: ${data.id}`);
       return { success: true, trailId: data.id };
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       this.logFailure(trail.id || 'unknown', source.source_type, 'Exception during insertion', [errorMessage], trail);
-      console.error(`Exception during trail insertion:`, error);
+      console.error(`💥 Exception during trail insertion:`, error);
       return { success: false, error: errorMessage };
     }
   }
@@ -160,55 +252,6 @@ export class EnhancedDebugImportService {
       timestamp: new Date().toISOString(),
       trailData
     });
-  }
-
-  // Test database permissions and constraints
-  async testDatabasePermissions(): Promise<{ hasPermissions: boolean; errors: string[] }> {
-    const errors: string[] = [];
-
-    try {
-      // Test basic SELECT permission
-      const { data: selectTest, error: selectError } = await supabase
-        .from('trails')
-        .select('id')
-        .limit(1);
-
-      if (selectError) {
-        errors.push(`SELECT permission failed: ${selectError.message}`);
-      }
-
-      // Test INSERT permission with a test record
-      const testTrail = {
-        name: `Permission Test ${Date.now()}`,
-        location: 'Test Location',
-        country: 'Test Country',
-        source: 'test',
-        source_id: `permission-test-${Date.now()}`,
-        last_updated: new Date().toISOString()
-      };
-
-      const { data: insertTest, error: insertError } = await supabase
-        .from('trails')
-        .insert([testTrail])
-        .select('id')
-        .single();
-
-      if (insertError) {
-        errors.push(`INSERT permission failed: ${insertError.message}`);
-      } else if (insertTest?.id) {
-        // Clean up test record
-        await supabase.from('trails').delete().eq('id', insertTest.id);
-        console.log('Database permissions test passed');
-      }
-
-    } catch (error) {
-      errors.push(`Permission test exception: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
-
-    return {
-      hasPermissions: errors.length === 0,
-      errors
-    };
   }
 
   // Enhanced batch import with resilience
@@ -229,10 +272,10 @@ export class EnhancedDebugImportService {
 
     try {
       // First, test database permissions
-      console.log('Testing database permissions...');
+      console.log('🔐 Testing database permissions...');
       const permissionTest = await this.testDatabasePermissions();
       if (!permissionTest.hasPermissions) {
-        console.error('Database permission issues detected:', permissionTest.errors);
+        console.error('❌ Database permission issues detected:', permissionTest.errors);
         summary.permissionFailures = 1;
         summary.detailedFailures = [{
           trailId: 'permission-test',
@@ -253,17 +296,17 @@ export class EnhancedDebugImportService {
         .limit(3); // Test with first 3 sources
 
       if (sourcesError || !sources?.length) {
-        console.error('Failed to fetch data sources:', sourcesError);
+        console.error('❌ Failed to fetch data sources:', sourcesError);
         return summary;
       }
 
-      console.log(`Found ${sources.length} active sources`);
+      console.log(`📋 Found ${sources.length} active sources`);
 
       // Process each source with resilience
       const trailsPerSource = Math.ceil(targetCount / sources.length);
 
       for (const source of sources) {
-        console.log(`Processing source: ${source.name} (${source.source_type})`);
+        console.log(`⚙️ Processing source: ${source.name} (${source.source_type})`);
         
         try {
           // Generate realistic test trails for this source
@@ -289,7 +332,7 @@ export class EnhancedDebugImportService {
           }
 
         } catch (sourceError) {
-          console.error(`Error processing source ${source.name}:`, sourceError);
+          console.error(`💥 Error processing source ${source.name}:`, sourceError);
           this.logFailure('source-error', source.source_type, 'Source processing failed', [sourceError instanceof Error ? sourceError.message : 'Unknown error'], null);
         }
       }
@@ -298,7 +341,7 @@ export class EnhancedDebugImportService {
       summary.successRate = summary.totalProcessed > 0 ? (summary.successfullyInserted / summary.totalProcessed) * 100 : 0;
       summary.detailedFailures = this.failureLog;
 
-      console.log(`✅ Enhanced import completed:`, {
+      console.log(`🎉 Enhanced import completed:`, {
         processed: summary.totalProcessed,
         inserted: summary.successfullyInserted,
         successRate: `${summary.successRate.toFixed(1)}%`,
@@ -306,7 +349,7 @@ export class EnhancedDebugImportService {
       });
 
     } catch (error) {
-      console.error('Enhanced batch import failed:', error);
+      console.error('💥 Enhanced batch import failed:', error);
     }
 
     return summary;
@@ -418,6 +461,11 @@ ${summary.detailedFailures.slice(-10).map((failure, i) =>
 ${summary.successRate >= 80 
   ? '✅ SUCCESS! Ready for scale-up to 30K trails' 
   : '❌ ISSUES DETECTED - Address the critical issues above before scaling'}
+
+🔧 RLS FIX STATUS:
+${summary.permissionFailures === 0 
+  ? '✅ RLS policies are working correctly for imports' 
+  : '❌ RLS policies need to be updated - run the RLS fix migration'}
     `;
 
     return report;
@@ -440,7 +488,7 @@ ${summary.successRate >= 80
     const issues = [];
     
     if (summary.permissionFailures > 0) {
-      issues.push('🔒 Database permission issues detected');
+      issues.push('🔒 RLS Policy blocking imports - need to run RLS fix migration');
     }
     
     if (summary.databaseFailures > summary.validationFailures) {
@@ -458,7 +506,7 @@ ${summary.successRate >= 80
     const fixes = [];
     
     if (summary.permissionFailures > 0) {
-      fixes.push('1. Check Supabase service role permissions for trails table');
+      fixes.push('1. Apply the RLS fix migration to allow service role access');
     }
     
     if (summary.databaseFailures > 0) {
@@ -469,8 +517,8 @@ ${summary.successRate >= 80
       fixes.push('3. Implement more flexible validation for optional fields');
     }
     
-    fixes.push('4. Add retry logic for transient failures');
-    fixes.push('5. Implement batch insertions with partial commit support');
+    fixes.push('4. Verify edge function service role authentication');
+    fixes.push('5. Test with smaller batches before scaling to 30K trails');
 
     return fixes.join('\n');
   }

@@ -1399,6 +1399,10 @@ export type Database = {
         Args: { "": unknown }
         Returns: unknown
       }
+      is_service_role: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       json: {
         Args: { "": unknown }
         Returns: Json
@@ -2678,6 +2682,15 @@ export type Database = {
       st_zmin: {
         Args: { "": unknown }
         Returns: number
+      }
+      test_trail_insert_permissions: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          can_insert: boolean
+          user_role: string
+          auth_uid: string
+          is_service_role: boolean
+        }[]
       }
       text: {
         Args: { "": unknown }

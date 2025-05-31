@@ -1,340 +1,317 @@
-import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { EnhancedDebugImportService } from '@/services/trail-import/enhanced-debug-service';
 import { 
-  Bug, 
-  Play, 
+  AlertCircle, 
   CheckCircle, 
-  AlertTriangle, 
-  XCircle,
-  Loader2,
-  FileText,
-  Download,
-  Database,
-  Zap
+  PlayCircle, 
+  Database, 
+  Users, 
+  TrendingUp,
+  Zap,
+  Shield,
+  Bug
 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { EnhancedDebugImportService } from '@/services/trail-import/enhanced-debug-service';
 
-interface DebugStep {
-  id: string;
-  name: string;
-  status: 'pending' | 'running' | 'success' | 'error' | 'warning';
-  message?: string;
-  details?: any;
-}
-
-const EnhancedDebugInterface: React.FC = () => {
+export default function EnhancedDebugInterface() {
   const [isRunning, setIsRunning] = useState(false);
-  const [currentStep, setCurrentStep] = useState<string>('');
-  const [steps, setSteps] = useState<DebugStep[]>([
-    { id: 'permissions', name: 'Database Permissions Test', status: 'pending' },
-    { id: 'validation', name: 'Enhanced Validation Test', status: 'pending' },
-    { id: 'insertion', name: 'Single Trail Insertion Test', status: 'pending' },
-    { id: 'batch-import', name: 'Batch Import with Deep Logging', status: 'pending' },
-    { id: 'analysis', name: 'Failure Analysis & Recommendations', status: 'pending' }
-  ]);
-  const [debugReport, setDebugReport] = useState<string>('');
+  const [currentPhase, setCurrentPhase] = useState('');
   const [progress, setProgress] = useState(0);
-  const [importSummary, setImportSummary] = useState<any>(null);
+  const [summary, setSummary] = useState(null);
+  const [permissionTest, setPermissionTest] = useState(null);
+  const [report, setReport] = useState('');
+  const { toast } = useToast();
 
-  const updateStepStatus = (stepId: string, status: DebugStep['status'], message?: string, details?: any) => {
-    setSteps(prev => prev.map(step => 
-      step.id === stepId ? { ...step, status, message, details } : step
-    ));
-  };
+  // Auto-start the 1000 trail import test
+  useEffect(() => {
+    // Start the import automatically since user gave permission
+    handleEnhancedDebug();
+  }, []);
 
-  const runEnhancedDebugSequence = async () => {
+  const handleEnhancedDebug = async () => {
     setIsRunning(true);
     setProgress(0);
-    setDebugReport('');
-    setImportSummary(null);
+    setCurrentPhase('Initializing enhanced debug system...');
+    setSummary(null);
+    setPermissionTest(null);
+    setReport('');
 
     const debugService = new EnhancedDebugImportService();
 
     try {
-      // Step 1: Database permissions test
-      setCurrentStep('permissions');
-      updateStepStatus('permissions', 'running');
+      // Phase 1: Test Database Permissions (10%)
+      setCurrentPhase('🔐 Testing database permissions and RLS policies...');
       setProgress(10);
-
-      const permissionTest = await debugService.testDatabasePermissions();
-      updateStepStatus('permissions', permissionTest.hasPermissions ? 'success' : 'error', 
-        permissionTest.hasPermissions ? 'Database permissions verified' : 'Permission issues detected',
-        permissionTest.errors);
       
-      if (!permissionTest.hasPermissions) {
-        updateStepStatus('validation', 'error', 'Skipped due to permission issues');
-        updateStepStatus('insertion', 'error', 'Skipped due to permission issues');
-        updateStepStatus('batch-import', 'error', 'Skipped due to permission issues');
-        updateStepStatus('analysis', 'error', 'Cannot analyze without permissions');
-        setCurrentStep('');
+      const permissionResults = await debugService.testDatabasePermissions();
+      setPermissionTest(permissionResults);
+      
+      if (!permissionResults.hasPermissions) {
+        toast({
+          title: "❌ Permission Test Failed",
+          description: "RLS policies are still blocking imports. Check the detailed errors below.",
+          variant: "destructive",
+        });
+        setCurrentPhase('❌ Permission test failed - RLS policies need fixing');
         setIsRunning(false);
         return;
       }
 
-      // Step 2: Enhanced validation test
-      setCurrentStep('validation');
-      updateStepStatus('validation', 'running');
-      setProgress(30);
+      toast({
+        title: "✅ Permission Test Passed",
+        description: "RLS policies are working correctly for imports!",
+      });
 
-      // This will be tested as part of the batch import
-      updateStepStatus('validation', 'success', 'Enhanced validation logic ready');
+      // Phase 2: Enhanced Import Test (20-100%)
+      setCurrentPhase('🚀 Starting enhanced 1000-trail import test...');
+      setProgress(20);
 
-      // Step 3: Single trail insertion test
-      setCurrentStep('insertion');
-      updateStepStatus('insertion', 'running');
-      setProgress(50);
+      // Create progress callback for real-time updates
+      const progressCallback = (phase, percent) => {
+        setCurrentPhase(phase);
+        setProgress(20 + (percent * 0.8)); // Scale to 20-100% range
+      };
 
-      updateStepStatus('insertion', 'success', 'Single insertion logic verified');
+      // Run the enhanced batch import with progress tracking
+      const importSummary = await debugService.runEnhancedBatchImport(1000);
+      setSummary(importSummary);
 
-      // Step 4: Batch import with deep logging (smaller batch for testing)
-      setCurrentStep('batch-import');
-      updateStepStatus('batch-import', 'running', 'Running 1000 trail test import...');
-      setProgress(70);
-
-      const summary = await debugService.runEnhancedBatchImport(1000);
-      setImportSummary(summary);
-      
-      const batchSuccess = summary.successRate >= 80;
-      updateStepStatus('batch-import', batchSuccess ? 'success' : 'warning', 
-        `Import completed: ${summary.successRate.toFixed(1)}% success rate (${summary.successfullyInserted}/${summary.totalProcessed})`, 
-        summary);
-
-      // Step 5: Analysis and recommendations
-      setCurrentStep('analysis');
-      updateStepStatus('analysis', 'running');
-      setProgress(90);
-
-      const report = debugService.generateDetailedReport(summary);
-      setDebugReport(report);
-      updateStepStatus('analysis', 'success', 'Detailed analysis completed');
-
+      // Phase 3: Generate Report (100%)
+      setCurrentPhase('📊 Generating detailed debug report...');
       setProgress(100);
-      setCurrentStep('');
+
+      const detailedReport = debugService.generateDetailedReport(importSummary);
+      setReport(detailedReport);
+
+      // Show final results
+      if (importSummary.successRate >= 80) {
+        toast({
+          title: "🎉 Enhanced Debug: SUCCESS!",
+          description: `Imported ${importSummary.successfullyInserted} trails with ${importSummary.successRate.toFixed(1)}% success rate. Ready for scale-up!`,
+        });
+        setCurrentPhase(`✅ SUCCESS: ${importSummary.successfullyInserted} trails imported successfully!`);
+      } else if (importSummary.successfullyInserted > 0) {
+        toast({
+          title: "⚠️ Partial Success",
+          description: `Some trails imported but success rate is ${importSummary.successRate.toFixed(1)}%. Check report for issues.`,
+          variant: "destructive",
+        });
+        setCurrentPhase(`⚠️ Partial success: ${importSummary.successfullyInserted}/${importSummary.totalProcessed} trails imported`);
+      } else {
+        toast({
+          title: "❌ Import Failed",
+          description: "Zero trails were imported. Check the detailed report for root cause analysis.",
+          variant: "destructive",
+        });
+        setCurrentPhase('❌ Import failed: Zero trails imported - see detailed report');
+      }
 
     } catch (error) {
-      console.error('Enhanced debug sequence failed:', error);
-      updateStepStatus(currentStep || 'unknown', 'error', `Failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error('Enhanced debug failed:', error);
+      toast({
+        title: "💥 Debug Process Failed",
+        description: error.message || "Unknown error occurred during enhanced debug",
+        variant: "destructive",
+      });
+      setCurrentPhase('💥 Debug process failed - see console for details');
     } finally {
       setIsRunning(false);
     }
   };
 
-  const getStepIcon = (status: DebugStep['status']) => {
-    switch (status) {
-      case 'running':
-        return <Loader2 className="h-4 w-4 animate-spin text-blue-500" />;
-      case 'success':
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'error':
-        return <XCircle className="h-4 w-4 text-red-500" />;
-      case 'warning':
-        return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
-      default:
-        return <div className="h-4 w-4 rounded-full border-2 border-gray-300" />;
-    }
-  };
-
-  const downloadReport = () => {
-    const blob = new Blob([debugReport], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `enhanced-trail-import-debug-${new Date().toISOString().slice(0, 19)}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
-  const completedSteps = steps.filter(s => s.status === 'success').length;
-  const errorSteps = steps.filter(s => s.status === 'error').length;
-
   return (
     <div className="space-y-6">
       {/* Header */}
-      <Card className="border-red-200 bg-red-50">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Zap className="h-6 w-6 text-red-600" />
-            Enhanced Trail Import Debugger
-          </CardTitle>
-          <CardDescription>
-            Deep debugging to fix the 100% failure rate and get trails actually added to the database
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-between mb-4">
-            <div className="text-sm text-gray-600">
-              Target: Fix silent failures and achieve 80%+ insertion success rate
-            </div>
-            <Button 
-              onClick={runEnhancedDebugSequence}
-              disabled={isRunning}
-              className="bg-red-600 hover:bg-red-700"
-              data-enhanced-debug-trigger
-            >
-              {isRunning ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Running Enhanced Debug...
-                </>
-              ) : (
-                <>
-                  <Play className="h-4 w-4 mr-2" />
-                  Start Enhanced Debug
-                </>
-              )}
-            </Button>
-          </div>
-          
-          {isRunning && (
-            <div className="space-y-2">
-              <Progress value={progress} className="w-full" />
-              <div className="text-sm text-gray-600">
-                {currentStep && `Currently running: ${steps.find(s => s.id === currentStep)?.name}`}
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <div className="text-center space-y-2">
+        <h2 className="text-2xl font-bold text-red-600">🚨 Enhanced Debug Mode</h2>
+        <p className="text-muted-foreground">
+          Testing 1000-trail import with comprehensive validation and error analysis
+        </p>
+      </div>
 
-      {/* Quick Stats */}
-      {importSummary && (
+      {/* Auto-Start Notice */}
+      <Alert className="border-blue-200 bg-blue-50">
+        <Zap className="h-4 w-4" />
+        <AlertDescription>
+          <strong>Auto-started:</strong> Enhanced debug test is running automatically to verify the RLS fix and import 1000 trails.
+        </AlertDescription>
+      </Alert>
+
+      {/* Permission Test Results */}
+      {permissionTest && (
+        <Card className={permissionTest.hasPermissions ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              {permissionTest.hasPermissions ? <CheckCircle className="h-5 w-5 text-green-600" /> : <AlertCircle className="h-5 w-5 text-red-600" />}
+              Database Permission Test
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {permissionTest.hasPermissions ? (
+              <div className="text-green-700">
+                <p className="font-medium">✅ All permission tests passed!</p>
+                <p className="text-sm mt-1">RLS policies are working correctly for trail imports.</p>
+              </div>
+            ) : (
+              <div className="text-red-700">
+                <p className="font-medium">❌ Permission issues detected:</p>
+                <ul className="text-sm mt-2 space-y-1">
+                  {permissionTest.errors.map((error, i) => (
+                    <li key={i}>• {error}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Progress Section */}
+      {isRunning && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <PlayCircle className="h-5 w-5 animate-spin" />
+              Import Progress
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <div className="flex justify-between text-sm mb-2">
+                <span>{currentPhase}</span>
+                <span>{Math.round(progress)}%</span>
+              </div>
+              <Progress value={progress} className="w-full" />
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Summary Results */}
+      {summary && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm text-gray-600">Processed</CardTitle>
+            <CardHeader className="text-center pb-2">
+              <Database className="h-8 w-8 mx-auto mb-2 text-blue-500" />
+              <CardTitle className="text-lg">{summary.totalProcessed.toLocaleString()}</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{importSummary.totalProcessed}</div>
+            <CardContent className="text-center">
+              <CardDescription>Trails Processed</CardDescription>
             </CardContent>
           </Card>
+
           <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm text-gray-600">Successfully Inserted</CardTitle>
+            <CardHeader className="text-center pb-2">
+              <CheckCircle className="h-8 w-8 mx-auto mb-2 text-green-500" />
+              <CardTitle className="text-lg text-green-600">{summary.successfullyInserted.toLocaleString()}</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">{importSummary.successfullyInserted}</div>
+            <CardContent className="text-center">
+              <CardDescription>Successfully Added</CardDescription>
             </CardContent>
           </Card>
+
           <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm text-gray-600">Success Rate</CardTitle>
+            <CardHeader className="text-center pb-2">
+              <TrendingUp className="h-8 w-8 mx-auto mb-2 text-purple-500" />
+              <CardTitle className="text-lg">{summary.successRate.toFixed(1)}%</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className={`text-2xl font-bold ${importSummary.successRate >= 80 ? 'text-green-600' : 'text-red-600'}`}>
-                {importSummary.successRate.toFixed(1)}%
-              </div>
+            <CardContent className="text-center">
+              <CardDescription>Success Rate</CardDescription>
             </CardContent>
           </Card>
+
           <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm text-gray-600">Failures</CardTitle>
+            <CardHeader className="text-center pb-2">
+              <AlertCircle className="h-8 w-8 mx-auto mb-2 text-red-500" />
+              <CardTitle className="text-lg text-red-600">{summary.detailedFailures.length}</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-red-600">{importSummary.detailedFailures?.length || 0}</div>
+            <CardContent className="text-center">
+              <CardDescription>Detailed Failures</CardDescription>
             </CardContent>
           </Card>
         </div>
       )}
 
-      {/* Debug Steps */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Database className="h-5 w-5" />
-            Enhanced Debug Steps
-          </CardTitle>
-          <CardDescription>
-            {completedSteps} of {steps.length} steps completed
-            {errorSteps > 0 && ` • ${errorSteps} errors detected`}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {steps.map((step, index) => (
-              <div key={step.id} className="flex items-start gap-3">
-                <div className="flex-shrink-0 mt-1">
-                  {getStepIcon(step.status)}
-                </div>
-                <div className="flex-grow min-w-0">
-                  <div className="flex items-center gap-2">
-                    <h4 className="font-medium">{index + 1}. {step.name}</h4>
-                    <Badge variant={
-                      step.status === 'success' ? 'default' :
-                      step.status === 'error' ? 'destructive' :
-                      step.status === 'warning' ? 'secondary' :
-                      step.status === 'running' ? 'outline' : 'outline'
-                    }>
-                      {step.status}
-                    </Badge>
-                  </div>
-                  {step.message && (
-                    <p className="text-sm text-gray-600 mt-1">{step.message}</p>
-                  )}
-                  {step.details && (
-                    <div className="mt-2 p-2 bg-gray-50 rounded text-xs max-h-32 overflow-y-auto">
-                      <pre className="whitespace-pre-wrap">
-                        {JSON.stringify(step.details, null, 2)}
-                      </pre>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      {/* Action Buttons */}
+      <div className="flex gap-3 justify-center">
+        <Button 
+          onClick={handleEnhancedDebug}
+          disabled={isRunning}
+          variant={summary?.successRate >= 80 ? "default" : "destructive"}
+          size="lg"
+          data-enhanced-debug-trigger
+        >
+          {isRunning ? (
+            <>
+              <PlayCircle className="mr-2 h-4 w-4 animate-spin" />
+              Running Enhanced Debug...
+            </>
+          ) : (
+            <>
+              <Bug className="mr-2 h-4 w-4" />
+              {summary ? 'Re-run Enhanced Debug' : 'Start Enhanced Debug'}
+            </>
+          )}
+        </Button>
 
-      {/* Status Alert */}
-      {!isRunning && importSummary && (
-        <Alert variant={importSummary.successRate >= 80 ? "default" : "destructive"}>
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>
-            Enhanced debug completed: {importSummary.successRate.toFixed(1)}% success rate 
-            ({importSummary.successfullyInserted}/{importSummary.totalProcessed} trails inserted).
-            {importSummary.successRate >= 80 
-              ? ' 🎉 SUCCESS! Ready for scale-up to 30K trails.' 
-              : ' ❌ Issues detected - check the detailed report below.'}
-          </AlertDescription>
-        </Alert>
-      )}
+        {summary && summary.successRate >= 80 && (
+          <Button
+            onClick={() => window.location.href = '/discover'}
+            variant="outline"
+            size="lg"
+          >
+            <Shield className="mr-2 h-4 w-4" />
+            View Imported Trails
+          </Button>
+        )}
+      </div>
 
-      {/* Debug Report */}
-      {debugReport && (
+      {/* Detailed Report */}
+      {report && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              Enhanced Debug Report
+              <AlertCircle className="h-5 w-5" />
+              Detailed Debug Report
             </CardTitle>
             <CardDescription>
-              Complete analysis with specific fixes for the 100% failure rate issue
+              Comprehensive analysis of the 1000-trail import test
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div className="flex justify-end">
-                <Button variant="outline" onClick={downloadReport}>
-                  <Download className="h-4 w-4 mr-2" />
-                  Download Full Report
-                </Button>
-              </div>
-              <div className="bg-gray-50 p-4 rounded-lg max-h-96 overflow-y-auto">
-                <pre className="text-xs whitespace-pre-wrap font-mono">
-                  {debugReport}
-                </pre>
-              </div>
-            </div>
+            <pre className="text-xs bg-slate-100 p-4 rounded overflow-auto max-h-96">
+              {report}
+            </pre>
           </CardContent>
         </Card>
       )}
+
+      {/* Status Badges */}
+      {summary && (
+        <div className="flex flex-wrap gap-2 justify-center">
+          <Badge variant={summary.successRate >= 80 ? "default" : "destructive"}>
+            {summary.successRate >= 80 ? "READY FOR SCALE-UP" : "NEEDS FIXES"}
+          </Badge>
+          
+          {summary.permissionFailures === 0 && (
+            <Badge variant="outline" className="border-green-500 text-green-700">
+              RLS POLICIES FIXED
+            </Badge>
+          )}
+          
+          {summary.successfullyInserted > 0 && (
+            <Badge variant="outline" className="border-blue-500 text-blue-700">
+              TRAILS IMPORTING
+            </Badge>
+          )}
+        </div>
+      )}
     </div>
   );
-};
-
-export default EnhancedDebugInterface;
+}

@@ -74,7 +74,7 @@ const AdminTrailImport = () => {
   const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
   useEffect(() => {
-    // Load data when component mounts, no user authentication check
+    // Load data when component mounts - no authentication required for admin import
     loadData();
   }, [loadData]);
   
@@ -144,6 +144,17 @@ const AdminTrailImport = () => {
               </p>
             </div>
           )}
+
+          {/* Success notice for no authentication required */}
+          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+            <div className="flex items-center gap-2 text-green-800">
+              <AlertCircle className="h-5 w-5" />
+              <strong>Admin Access Enabled</strong>
+            </div>
+            <p className="text-green-700 mt-1">
+              No authentication required for trail import operations. Ready to test 1000-trail import!
+            </p>
+          </div>
         
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-3xl font-bold">Trail Data Import</h1>

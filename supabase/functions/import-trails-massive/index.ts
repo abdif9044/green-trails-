@@ -23,6 +23,10 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
     
+    if (!supabaseServiceKey) {
+      throw new Error('SUPABASE_SERVICE_ROLE_KEY not found in environment');
+    }
+    
     // Use SERVICE ROLE KEY to bypass RLS
     const supabase = createClient(supabaseUrl, supabaseServiceKey, {
       auth: {
@@ -54,7 +58,7 @@ serve(async (req) => {
       );
     }
     
-    // Create bulk import job
+    // Create bulk import job with proper schema
     const { data: bulkJob, error: bulkJobError } = await supabase
       .from('bulk_import_jobs')
       .insert([{
@@ -81,9 +85,9 @@ serve(async (req) => {
       .select('*')
       .single();
       
-    if (bulkJobError || !bulkJob) {
+    if (bulkJobError) {
       console.error('Failed to create bulk import job:', bulkJobError);
-      throw new Error('Failed to create bulk import job');
+      throw new Error(`Failed to create bulk import job: ${bulkJobError.message}`);
     }
     
     console.log(`✅ Created bulk job ${bulkJob.id} with service role authentication`);
@@ -92,6 +96,7 @@ serve(async (req) => {
     let totalAdded = 0;
     let totalFailed = 0;
     let totalProcessed = 0;
+    let insertErrors: string[] = [];
     
     const sourceResults = [];
     
@@ -105,7 +110,7 @@ serve(async (req) => {
         
         console.log(`📋 Generated ${trails.length} trails for ${sourceType}`);
         
-        // Insert trails in batches using service role
+        // Insert trails in batches using service role with proper error handling
         let addedCount = 0;
         let failedCount = 0;
         
@@ -113,26 +118,51 @@ serve(async (req) => {
           const batch = trails.slice(i, i + batchSize);
           
           try {
+            // Format trails properly for database insertion
+            const formattedTrails = batch.map(trail => ({
+              name: trail.name || `Trail ${i + 1}`,
+              description: trail.description || `A beautiful trail offering stunning views.`,
+              location: trail.location || 'Unknown Location',
+              country: trail.country || 'Unknown',
+              state_province: trail.state_province || null,
+              latitude: Number(trail.latitude) || 0,
+              longitude: Number(trail.longitude) || 0,
+              length_km: Number(trail.length_km) || Number(trail.length) || 0,
+              length: Number(trail.length) || Number(trail.length_km) || 0,
+              elevation_gain: Number(trail.elevation_gain) || 0,
+              elevation: Number(trail.elevation) || 0,
+              difficulty: trail.difficulty || 'moderate',
+              surface: trail.surface || 'dirt',
+              trail_type: trail.trail_type || 'hiking',
+              is_age_restricted: Boolean(trail.is_age_restricted) || false,
+              source: sourceType,
+              source_id: trail.source_id || `${sourceType}-${Date.now()}-${i}`,
+              last_updated: new Date().toISOString(),
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            }));
+            
             const { data, error } = await supabase
               .from('trails')
-              .insert(batch)
-              .select('id')
-              .throwOnError();
+              .insert(formattedTrails)
+              .select('id');
             
             if (error) {
-              console.error(`❌ Batch insert failed:`, error);
+              console.error(`❌ Batch insert failed for ${sourceType}:`, error);
+              insertErrors.push(`${sourceType} batch ${i}: ${error.message}`);
               failedCount += batch.length;
-            } else {
-              addedCount += data?.length || 0;
-              console.log(`✅ Inserted batch of ${data?.length || 0} trails`);
+            } else if (data) {
+              addedCount += data.length;
+              console.log(`✅ Inserted batch of ${data.length} trails from ${sourceType}`);
             }
           } catch (batchError) {
-            console.error(`💥 Exception during batch insert:`, batchError);
+            console.error(`💥 Exception during batch insert for ${sourceType}:`, batchError);
+            insertErrors.push(`${sourceType} batch ${i}: ${batchError instanceof Error ? batchError.message : 'Unknown error'}`);
             failedCount += batch.length;
           }
           
-          // Small delay between batches
-          await new Promise(resolve => setTimeout(resolve, 100));
+          // Small delay between batches to prevent overwhelming the database
+          await new Promise(resolve => setTimeout(resolve, 200));
         }
         
         totalAdded += addedCount;
@@ -140,24 +170,28 @@ serve(async (req) => {
         
         sourceResults.push({
           source: sourceType,
-          success: true,
+          success: addedCount > 0,
           trails_added: addedCount,
           trails_failed: failedCount,
-          trails_processed: trails.length
+          trails_processed: trails.length,
+          error_details: failedCount > 0 ? insertErrors.filter(e => e.includes(sourceType)) : []
         });
         
         console.log(`✅ ${sourceType}: ${addedCount} added, ${failedCount} failed`);
         
       } catch (sourceError) {
         console.error(`💥 Source processing failed for ${sourceType}:`, sourceError);
+        const errorMsg = sourceError instanceof Error ? sourceError.message : 'Unknown error';
+        insertErrors.push(`${sourceType}: ${errorMsg}`);
         totalFailed += maxTrailsPerSource;
         
         sourceResults.push({
           source: sourceType,
           success: false,
-          error: sourceError instanceof Error ? sourceError.message : 'Unknown error',
+          error: errorMsg,
           trails_added: 0,
-          trails_failed: maxTrailsPerSource
+          trails_failed: maxTrailsPerSource,
+          trails_processed: 0
         });
       }
     }
@@ -180,7 +214,8 @@ serve(async (req) => {
           source_results: sourceResults,
           success_rate: successRate,
           total_requested: sources.length * maxTrailsPerSource,
-          service_role_used: true
+          service_role_used: true,
+          insert_errors: insertErrors.slice(-10) // Keep last 10 errors for debugging
         }
       })
       .eq('id', bulkJob.id);
@@ -189,9 +224,14 @@ serve(async (req) => {
       console.error('Error updating bulk job:', updateError);
     }
     
+    // Log comprehensive results
     console.log(`🎉 ${target} Import Complete!`);
-    console.log(`📊 Results: ${totalAdded} added, ${totalFailed} failed`);
+    console.log(`📊 Results: ${totalAdded} added, ${totalFailed} failed, ${totalProcessed} processed`);
     console.log(`📈 Success rate: ${successRate}%`);
+    
+    if (insertErrors.length > 0) {
+      console.error(`💥 Insert errors encountered:`, insertErrors.slice(-5));
+    }
     
     return new Response(
       JSON.stringify({
@@ -205,6 +245,7 @@ serve(async (req) => {
         success_rate: successRate,
         source_results: sourceResults,
         service_role_used: true,
+        insert_errors: insertErrors.slice(-5),
         message: `${target} import completed: ${totalAdded} trails added with ${successRate}% success rate using service role`
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -217,34 +258,37 @@ serve(async (req) => {
       JSON.stringify({ 
         error: 'Massive import failed', 
         details: error instanceof Error ? error.message : 'Unknown error',
-        target: '30K'
+        target: '30K',
+        service_role_configured: !!Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
   }
 });
 
-// Generate realistic trail data for different sources
+// Generate realistic trail data for different sources with proper validation
 function generateTrailsForSource(sourceType: string, count: number): any[] {
   const trails = [];
   
   for (let i = 0; i < count; i++) {
+    const baseData = getBaseDataForSource(sourceType, i);
+    
     const trail = {
-      name: `${getSourceDisplayName(sourceType)} Trail ${i + 1}`,
-      description: `A beautiful trail from ${getSourceDisplayName(sourceType)} offering stunning views and great hiking opportunities.`,
-      location: getLocationForSource(sourceType, i),
-      country: getCountryForSource(sourceType),
-      state_province: getStateProvinceForSource(sourceType, i),
-      length_km: Number((1 + Math.random() * 15).toFixed(2)),
-      length: Number((1 + Math.random() * 15).toFixed(2)),
-      elevation_gain: Math.floor(Math.random() * 1000) + 50,
-      elevation: Math.floor(Math.random() * 3000) + 100,
-      difficulty: ['easy', 'moderate', 'hard'][Math.floor(Math.random() * 3)],
-      latitude: getLatitudeForSource(sourceType) + (Math.random() - 0.5) * 2,
-      longitude: getLongitudeForSource(sourceType) + (Math.random() - 0.5) * 4,
-      surface: ['dirt', 'gravel', 'paved', 'rock'][Math.floor(Math.random() * 4)],
+      name: `${getSourceDisplayName(sourceType)} Trail ${String(i + 1).padStart(4, '0')}`,
+      description: `A ${baseData.difficulty} trail from ${getSourceDisplayName(sourceType)} offering ${baseData.features.join(', ')}.`,
+      location: baseData.location,
+      country: baseData.country,
+      state_province: baseData.state_province,
+      length_km: Number((1 + Math.random() * 20).toFixed(2)),
+      length: Number((1 + Math.random() * 20).toFixed(2)),
+      elevation_gain: Math.floor(Math.random() * 1200) + 50,
+      elevation: Math.floor(Math.random() * 3500) + 100,
+      difficulty: baseData.difficulty,
+      latitude: baseData.latitude + (Math.random() - 0.5) * 2,
+      longitude: baseData.longitude + (Math.random() - 0.5) * 4,
+      surface: baseData.surfaces[Math.floor(Math.random() * baseData.surfaces.length)],
       trail_type: 'hiking',
-      is_age_restricted: Math.random() < 0.1, // 10% age restricted
+      is_age_restricted: Math.random() < 0.08, // 8% age restricted
       source: sourceType,
       source_id: `${sourceType}-${Date.now()}-${i}`,
       last_updated: new Date().toISOString()
@@ -254,6 +298,64 @@ function generateTrailsForSource(sourceType: string, count: number): any[] {
   }
   
   return trails;
+}
+
+function getBaseDataForSource(sourceType: string, index: number) {
+  const sources = {
+    'hiking_project': {
+      locations: ['Yosemite Valley, CA', 'Grand Canyon, AZ', 'Zion National Park, UT', 'Rocky Mountain NP, CO'],
+      country: 'United States',
+      state_provinces: ['California', 'Arizona', 'Utah', 'Colorado'],
+      difficulties: ['easy', 'moderate', 'hard'],
+      latitude: 39.0,
+      longitude: -120.0,
+      surfaces: ['dirt', 'rock', 'gravel'],
+      features: ['scenic views', 'wildlife viewing', 'photography opportunities']
+    },
+    'openstreetmap': {
+      locations: ['Pacific Northwest Trail', 'Appalachian Trail Section', 'Continental Divide', 'Great Lakes Trail'],
+      country: 'United States',
+      state_provinces: ['Washington', 'Virginia', 'Montana', 'Michigan'],
+      difficulties: ['easy', 'moderate', 'hard'],
+      latitude: 45.0,
+      longitude: -110.0,
+      surfaces: ['dirt', 'gravel', 'paved'],
+      features: ['well-marked trails', 'historic sites', 'diverse ecosystems']
+    },
+    'usgs': {
+      locations: ['Yellowstone Backcountry', 'Grand Teton NP', 'Glacier National Park', 'Olympic Peninsula'],
+      country: 'United States',
+      state_provinces: ['Wyoming', 'Wyoming', 'Montana', 'Washington'],
+      difficulties: ['moderate', 'hard'],
+      latitude: 44.5,
+      longitude: -110.5,
+      surfaces: ['dirt', 'rock'],
+      features: ['wilderness experience', 'geological features', 'pristine nature']
+    },
+    'parks_canada': {
+      locations: ['Banff National Park, AB', 'Jasper National Park, AB', 'Algonquin Park, ON', 'Whistler, BC'],
+      country: 'Canada',
+      state_provinces: ['Alberta', 'Alberta', 'Ontario', 'British Columbia'],
+      difficulties: ['easy', 'moderate', 'hard'],
+      latitude: 53.0,
+      longitude: -116.0,
+      surfaces: ['dirt', 'gravel', 'boardwalk'],
+      features: ['mountain views', 'wildlife corridors', 'alpine meadows']
+    }
+  };
+  
+  const source = sources[sourceType] || sources['openstreetmap'];
+  
+  return {
+    location: source.locations[index % source.locations.length],
+    country: source.country,
+    state_province: source.state_provinces[index % source.state_provinces.length],
+    difficulty: source.difficulties[index % source.difficulties.length],
+    latitude: source.latitude,
+    longitude: source.longitude,
+    surfaces: source.surfaces,
+    features: source.features
+  };
 }
 
 function getSourceDisplayName(sourceType: string): string {
@@ -266,68 +368,4 @@ function getSourceDisplayName(sourceType: string): string {
     'trails_bc': 'Trails BC'
   };
   return names[sourceType] || sourceType;
-}
-
-function getLocationForSource(sourceType: string, index: number): string {
-  const locations = {
-    'hiking_project': [`Yosemite National Park, CA`, `Rocky Mountain National Park, CO`, `Great Smoky Mountains, TN`, `Zion National Park, UT`],
-    'openstreetmap': [`Pacific Northwest Trail`, `Appalachian Trail Section`, `Continental Divide Trail`, `John Muir Trail`],
-    'usgs': [`Yellowstone Backcountry`, `Grand Canyon Rim`, `Glacier National Park`, `Olympic National Park`],
-    'parks_canada': [`Banff National Park, AB`, `Jasper National Park, AB`, `Algonquin Provincial Park, ON`, `Pacific Rim National Park, BC`],
-    'inegi_mexico': [`Sierra Madre Occidental`, `Pico de Orizaba`, `Nevado de Toluca`, `La Malinche`],
-    'trails_bc': [`Whistler Trail Network`, `North Shore Mountains`, `Gulf Islands`, `Vancouver Island Trails`]
-  };
-  
-  const sourceLocations = locations[sourceType] || ['Unknown Location'];
-  return sourceLocations[index % sourceLocations.length];
-}
-
-function getCountryForSource(sourceType: string): string {
-  const countries = {
-    'hiking_project': 'United States',
-    'openstreetmap': 'United States', 
-    'usgs': 'United States',
-    'parks_canada': 'Canada',
-    'inegi_mexico': 'Mexico',
-    'trails_bc': 'Canada'
-  };
-  return countries[sourceType] || 'Unknown';
-}
-
-function getStateProvinceForSource(sourceType: string, index: number): string {
-  const states = {
-    'hiking_project': ['California', 'Colorado', 'Tennessee', 'Utah', 'Washington', 'Montana'],
-    'openstreetmap': ['California', 'Colorado', 'Tennessee', 'Utah', 'Washington', 'Montana'],
-    'usgs': ['Wyoming', 'Arizona', 'Montana', 'Washington'],
-    'parks_canada': ['Alberta', 'British Columbia', 'Ontario', 'Quebec'],
-    'inegi_mexico': ['Jalisco', 'Veracruz', 'Estado de México', 'Tlaxcala'],
-    'trails_bc': ['British Columbia']
-  };
-  
-  const sourceStates = states[sourceType] || ['Unknown'];
-  return sourceStates[index % sourceStates.length];
-}
-
-function getLatitudeForSource(sourceType: string): number {
-  const baseLats = {
-    'hiking_project': 39.0,
-    'openstreetmap': 40.0,
-    'usgs': 44.0,
-    'parks_canada': 53.0,
-    'inegi_mexico': 20.0,
-    'trails_bc': 49.0
-  };
-  return baseLats[sourceType] || 45.0;
-}
-
-function getLongitudeForSource(sourceType: string): number {
-  const baseLngs = {
-    'hiking_project': -120.0,
-    'openstreetmap': -105.0,
-    'usgs': -110.0,
-    'parks_canada': -116.0,
-    'inegi_mexico': -99.0,
-    'trails_bc': -123.0
-  };
-  return baseLngs[sourceType] || -100.0;
 }

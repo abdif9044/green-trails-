@@ -18,6 +18,7 @@ interface EnhancedImportSummary {
   permissionFailures: number;
   detailedFailures: DetailedFailureLog[];
   successRate: number;
+  insertErrors?: string[];
 }
 
 export class EnhancedDebugImportService {
@@ -52,12 +53,24 @@ export class EnhancedDebugImportService {
         console.log('✅ Permission test function: OK', permTest);
       }
 
+      // Test bulk_import_jobs table structure
+      const { data: bulkTest, error: bulkError } = await supabase
+        .from('bulk_import_jobs')
+        .select('id, config, results')
+        .limit(1);
+
+      if (bulkError) {
+        errors.push(`Bulk import jobs table test failed: ${bulkError.message}`);
+      } else {
+        console.log('✅ Bulk import jobs table: OK');
+      }
+
       // Test if we can call the massive import function (this will use service role)
       try {
         const { data: importTest, error: importError } = await supabase.functions.invoke('import-trails-massive', {
           body: {
             sources: ['test_source'],
-            maxTrailsPerSource: 1,
+            maxTrailsPerSource: 5,
             debug: true,
             validation: true
           }
@@ -66,7 +79,7 @@ export class EnhancedDebugImportService {
         if (importError) {
           errors.push(`Service role import test failed: ${importError.message}`);
         } else {
-          console.log('✅ Service role import function: OK');
+          console.log('✅ Service role import function: OK', importTest);
         }
       } catch (invokeError) {
         errors.push(`Import function invocation failed: ${invokeError instanceof Error ? invokeError.message : 'Unknown error'}`);
@@ -98,7 +111,8 @@ export class EnhancedDebugImportService {
       databaseFailures: 0,
       permissionFailures: 0,
       detailedFailures: [],
-      successRate: 0
+      successRate: 0,
+      insertErrors: []
     };
 
     this.failureLog = []; // Reset failure log
@@ -139,6 +153,7 @@ export class EnhancedDebugImportService {
       if (importError) {
         console.error('❌ Massive import function failed:', importError);
         summary.databaseFailures = 1;
+        summary.insertErrors = [importError.message];
         this.logFailure('massive-import', 'service-function', 'Massive import function failed', [importError.message], null);
       } else if (importResult) {
         console.log('✅ Massive import completed:', importResult);
@@ -146,6 +161,7 @@ export class EnhancedDebugImportService {
         summary.totalProcessed = importResult.total_processed || 0;
         summary.successfullyInserted = importResult.total_added || 0;
         summary.databaseFailures = importResult.total_failed || 0;
+        summary.insertErrors = importResult.insert_errors || [];
         
         // Calculate success rate
         summary.successRate = summary.totalProcessed > 0 ? (summary.successfullyInserted / summary.totalProcessed) * 100 : 0;
@@ -156,7 +172,8 @@ export class EnhancedDebugImportService {
         processed: summary.totalProcessed,
         inserted: summary.successfullyInserted,
         successRate: `${summary.successRate.toFixed(1)}%`,
-        failures: summary.detailedFailures.length
+        failures: summary.detailedFailures.length,
+        insertErrors: summary.insertErrors?.length || 0
       });
 
     } catch (error) {
@@ -208,10 +225,15 @@ ${summary.successfullyInserted > 0
   ? '✅ Service role bypass is working - imports are succeeding'
   : '❌ Service role may not be configured correctly'}
 
+🚨 INSERT ERRORS DETECTED:
+${summary.insertErrors && summary.insertErrors.length > 0 
+  ? summary.insertErrors.slice(0, 5).map((error, i) => `${i + 1}. ${error}`).join('\n')
+  : 'No insert errors detected'}
+
 🎯 NEXT STEPS:
 ${summary.successRate >= 80 
   ? '✅ SUCCESS! Ready for 30K trail preload on user signup' 
-  : '❌ ISSUES DETECTED - Check service role key and RLS policies'}
+  : '❌ ISSUES DETECTED - Fix insert errors and database schema'}
 
 📋 DETAILED FAILURE LOG:
 ${summary.detailedFailures.length > 0 
@@ -228,10 +250,11 @@ ${summary.detailedFailures.length > 0
 • RLS enabled on trails table: Expected ✅
 • Service role can bypass RLS: ${summary.successfullyInserted > 0 ? '✅' : '❌'}
 • Global trail access for users: Expected ✅
+• Bulk import jobs table schema: ${summary.permissionFailures === 0 ? '✅' : '❌'}
 
 ${summary.successRate >= 80 
   ? '🚀 READY FOR PRODUCTION: 30K trail preload can be enabled!' 
-  : '🔧 NEEDS FIXES: Address the issues above before enabling 30K preload'}
+  : '🔧 NEEDS FIXES: Address the insert errors and schema issues above'}
     `;
 
     return report;

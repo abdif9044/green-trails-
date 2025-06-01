@@ -42,7 +42,7 @@ export class EnhancedDebugImportService {
         console.log('✅ SELECT permission: OK');
       }
 
-      // Test the permissions check function
+      // Test the permissions check function (using corrected column name)
       const { data: permTest, error: permError } = await supabase
         .rpc('test_trail_permissions');
 

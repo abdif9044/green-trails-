@@ -61,19 +61,19 @@ EXCEPTION
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER STABLE;
 
--- Test function to verify permissions work
+-- Test function to verify permissions work (fixed syntax error)
 CREATE OR REPLACE FUNCTION public.test_trail_permissions()
 RETURNS TABLE(
   can_select boolean,
   can_insert boolean,
-  current_role text,
+  user_role text,
   rls_enabled boolean
 ) AS $$
 BEGIN
   RETURN QUERY SELECT 
     (SELECT count(*) FROM public.trails LIMIT 1) >= 0 as can_select,
     true as can_insert, -- Will be tested by actual insert
-    current_setting('role') as current_role,
+    current_setting('role') as user_role,
     (SELECT relrowsecurity FROM pg_class WHERE relname = 'trails') as rls_enabled;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

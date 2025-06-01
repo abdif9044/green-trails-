@@ -14,10 +14,12 @@ import {
   TrendingUp,
   Zap,
   Shield,
-  Bug
+  Bug,
+  RefreshCw
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { EnhancedDebugImportService } from '@/services/trail-import/enhanced-debug-service';
+import { autoBootstrapService } from '@/services/trail-import/auto-bootstrap-service';
 
 export default function EnhancedDebugInterface() {
   const [isRunning, setIsRunning] = useState(false);
@@ -27,28 +29,45 @@ export default function EnhancedDebugInterface() {
   const [summary, setSummary] = useState(null);
   const [permissionTest, setPermissionTest] = useState(null);
   const [report, setReport] = useState('');
+  const [bootstrapProgress, setBootstrapProgress] = useState({
+    isActive: false,
+    currentCount: 0,
+    targetCount: 30000,
+    progressPercent: 0
+  });
   const { toast } = useToast();
 
-  // Auto-start the 1000 trail import test immediately when component mounts
+  // Auto-start the import test and monitor bootstrap progress
   useEffect(() => {
     if (!hasStarted) {
       setHasStarted(true);
       
-      // Show immediate feedback
       toast({
-        title: "🚀 Auto-Starting 1000 Trail Import Test",
-        description: "Enhanced debug sequence initiated with user permission.",
+        title: "🚀 Enhanced Debug Started",
+        description: "Testing fixed import system with schema corrections.",
       });
       
-      // Start immediately (no delay)
       handleEnhancedDebug();
     }
+    
+    // Monitor bootstrap progress
+    const interval = setInterval(updateBootstrapProgress, 5000);
+    return () => clearInterval(interval);
   }, [hasStarted]);
+
+  const updateBootstrapProgress = async () => {
+    try {
+      const progress = await autoBootstrapService.getBootstrapProgress();
+      setBootstrapProgress(progress);
+    } catch (error) {
+      console.error('Error updating bootstrap progress:', error);
+    }
+  };
 
   const handleEnhancedDebug = async () => {
     setIsRunning(true);
     setProgress(0);
-    setCurrentPhase('🔧 Initializing enhanced debug system...');
+    setCurrentPhase('🔧 Initializing FIXED import system...');
     setSummary(null);
     setPermissionTest(null);
     setReport('');
@@ -66,7 +85,7 @@ export default function EnhancedDebugInterface() {
       if (!permissionResults.hasPermissions) {
         toast({
           title: "❌ Permission Test Failed",
-          description: "RLS policies are still blocking imports. Check the detailed errors below.",
+          description: "RLS policies are blocking imports. Check the detailed errors below.",
           variant: "destructive",
         });
         setCurrentPhase('❌ Permission test failed - RLS policies need fixing');
@@ -79,8 +98,8 @@ export default function EnhancedDebugInterface() {
         description: "RLS policies are working correctly for imports!",
       });
 
-      // Phase 2: Enhanced Import Test (20-100%)
-      setCurrentPhase('🚀 Starting enhanced 1000-trail import test...');
+      // Phase 2: Enhanced Import Test with FIXED schema (20-100%)
+      setCurrentPhase('🚀 Starting FIXED 1000-trail import test...');
       setProgress(20);
 
       // Run the enhanced batch import with progress tracking
@@ -97,34 +116,67 @@ export default function EnhancedDebugInterface() {
       // Show final results
       if (importSummary.successRate >= 80) {
         toast({
-          title: "🎉 Enhanced Debug: SUCCESS!",
-          description: `Imported ${importSummary.successfullyInserted} trails with ${importSummary.successRate.toFixed(1)}% success rate. Ready for scale-up!`,
+          title: "🎉 SCHEMA FIX: SUCCESS!",
+          description: `Imported ${importSummary.successfullyInserted} trails with ${importSummary.successRate.toFixed(1)}% success rate. Fixed schema issues!`,
         });
-        setCurrentPhase(`✅ SUCCESS: ${importSummary.successfullyInserted} trails imported successfully!`);
+        setCurrentPhase(`✅ SCHEMA FIXED: ${importSummary.successfullyInserted} trails imported successfully!`);
       } else if (importSummary.successfullyInserted > 0) {
         toast({
           title: "⚠️ Partial Success",
-          description: `Some trails imported but success rate is ${importSummary.successRate.toFixed(1)}%. Check report for issues.`,
+          description: `${importSummary.successfullyInserted} trails imported. Success rate: ${importSummary.successRate.toFixed(1)}%. Check report.`,
           variant: "destructive",
         });
         setCurrentPhase(`⚠️ Partial success: ${importSummary.successfullyInserted}/${importSummary.totalProcessed} trails imported`);
       } else {
         toast({
-          title: "❌ Import Failed",
-          description: "Zero trails were imported. Check the detailed report for root cause analysis.",
+          title: "❌ Import Still Failing",
+          description: "Zero trails imported. Check the detailed report for remaining issues.",
           variant: "destructive",
         });
-        setCurrentPhase('❌ Import failed: Zero trails imported - see detailed report');
+        setCurrentPhase('❌ Import failed: Zero trails imported - check report for remaining issues');
       }
 
     } catch (error) {
       console.error('Enhanced debug failed:', error);
       toast({
         title: "💥 Debug Process Failed",
-        description: error.message || "Unknown error occurred during enhanced debug",
+        description: error.message || "Unknown error occurred during debug",
         variant: "destructive",
       });
       setCurrentPhase('💥 Debug process failed - see console for details');
+    } finally {
+      setIsRunning(false);
+    }
+  };
+
+  const handleForceBootstrap = async () => {
+    try {
+      setIsRunning(true);
+      setCurrentPhase('🚀 Force triggering 30K bootstrap...');
+      
+      const success = await autoBootstrapService.forceBootstrap();
+      
+      if (success) {
+        toast({
+          title: "🚀 30K Bootstrap Started",
+          description: "Loading 30,000 trails with fixed import system",
+        });
+        setCurrentPhase('✅ 30K bootstrap initiated successfully');
+      } else {
+        toast({
+          title: "❌ Bootstrap Failed",
+          description: "Could not start 30K trail bootstrap",
+          variant: "destructive",
+        });
+        setCurrentPhase('❌ 30K bootstrap failed to start');
+      }
+    } catch (error) {
+      console.error('Force bootstrap error:', error);
+      toast({
+        title: "💥 Bootstrap Error",
+        description: "Error during 30K bootstrap trigger",
+        variant: "destructive",
+      });
     } finally {
       setIsRunning(false);
     }
@@ -134,18 +186,42 @@ export default function EnhancedDebugInterface() {
     <div className="space-y-6">
       {/* Header */}
       <div className="text-center space-y-2">
-        <h2 className="text-2xl font-bold text-red-600">🚨 Enhanced Debug Mode</h2>
+        <h2 className="text-2xl font-bold text-red-600">🔧 FIXED Import System Debug</h2>
         <p className="text-muted-foreground">
-          Testing 1000-trail import with comprehensive validation and error analysis
+          Testing with schema corrections: trail_length, terrain_type, proper validation
         </p>
       </div>
+
+      {/* Bootstrap Progress */}
+      <Card className="border-blue-200 bg-blue-50">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Database className="h-5 w-5" />
+            30K Bootstrap Status
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="font-medium">Current Trails: {bootstrapProgress.currentCount.toLocaleString()}</span>
+              <Badge variant={bootstrapProgress.isActive ? "default" : "secondary"}>
+                {bootstrapProgress.isActive ? "Loading..." : "Ready"}
+              </Badge>
+            </div>
+            <Progress value={bootstrapProgress.progressPercent} className="w-full" />
+            <div className="text-xs text-gray-600 text-right">
+              {bootstrapProgress.progressPercent}% of 30K target
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Auto-Start Status */}
       <Alert className="border-blue-200 bg-blue-50">
         <Zap className="h-4 w-4" />
         <AlertDescription>
-          <strong>Status:</strong> {hasStarted ? 'Enhanced debug test has been auto-started!' : 'Preparing to auto-start...'} 
-          {isRunning ? ' Currently running import test...' : !summary ? ' Initializing...' : ' Test completed!'}
+          <strong>Status:</strong> {hasStarted ? 'FIXED import system test auto-started!' : 'Preparing to test fixes...'} 
+          {isRunning ? ' Testing schema corrections...' : !summary ? ' Initializing...' : ' Test completed!'}
         </AlertDescription>
       </Alert>
 
@@ -162,7 +238,7 @@ export default function EnhancedDebugInterface() {
             {permissionTest.hasPermissions ? (
               <div className="text-green-700">
                 <p className="font-medium">✅ All permission tests passed!</p>
-                <p className="text-sm mt-1">RLS policies are working correctly for trail imports.</p>
+                <p className="text-sm mt-1">RLS policies and service role working correctly.</p>
               </div>
             ) : (
               <div className="text-red-700">
@@ -184,7 +260,7 @@ export default function EnhancedDebugInterface() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               {isRunning ? <PlayCircle className="h-5 w-5 animate-spin" /> : <CheckCircle className="h-5 w-5" />}
-              Import Progress
+              FIXED Import Progress
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -251,32 +327,65 @@ export default function EnhancedDebugInterface() {
           disabled={isRunning}
           variant={summary?.successRate >= 80 ? "default" : "destructive"}
           size="lg"
-          data-enhanced-debug-trigger
         >
           {isRunning ? (
             <>
               <PlayCircle className="mr-2 h-4 w-4 animate-spin" />
-              Running Enhanced Debug...
+              Testing FIXED System...
             </>
           ) : (
             <>
               <Bug className="mr-2 h-4 w-4" />
-              {summary ? 'Re-run Enhanced Debug' : 'Start Enhanced Debug'}
+              {summary ? 'Re-test FIXED System' : 'Test FIXED Import'}
             </>
           )}
         </Button>
 
-        {summary && summary.successRate >= 80 && (
-          <Button
-            onClick={() => window.location.href = '/discover'}
-            variant="outline"
-            size="lg"
-          >
-            <Shield className="mr-2 h-4 w-4" />
-            View Imported Trails
-          </Button>
-        )}
+        <Button
+          onClick={handleForceBootstrap}
+          disabled={isRunning || bootstrapProgress.isActive}
+          variant="outline"
+          size="lg"
+        >
+          <Database className="mr-2 h-4 w-4" />
+          Force 30K Bootstrap
+        </Button>
+
+        <Button
+          onClick={updateBootstrapProgress}
+          disabled={isRunning}
+          variant="outline"
+          size="lg"
+        >
+          <RefreshCw className="mr-2 h-4 w-4" />
+          Refresh Status
+        </Button>
       </div>
+
+      {/* Status Badges */}
+      {summary && (
+        <div className="flex flex-wrap gap-2 justify-center">
+          <Badge variant={summary.successRate >= 80 ? "default" : "destructive"}>
+            {summary.successRate >= 80 ? "SCHEMA ISSUES FIXED" : "STILL HAS ISSUES"}
+          </Badge>
+          
+          {summary.permissionFailures === 0 && (
+            <Badge variant="outline" className="border-green-500 text-green-700">
+              RLS WORKING
+            </Badge>
+          )}
+          
+          {summary.successfullyInserted > 0 && (
+            <Badge variant="outline" className="border-blue-500 text-blue-700">
+              IMPORTS WORKING
+            </Badge>
+          )}
+
+          <Badge variant="outline" className="border-purple-500 text-purple-700">
+            CURRENT DB: {bootstrapProgress.currentCount.toLocaleString()} TRAILS
+          </Badge>
+        </div>
+      )}
 
       {/* Detailed Report */}
       {report && (
@@ -284,10 +393,10 @@ export default function EnhancedDebugInterface() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <AlertCircle className="h-5 w-5" />
-              Detailed Debug Report
+              FIXED System Debug Report
             </CardTitle>
             <CardDescription>
-              Comprehensive analysis of the 1000-trail import test
+              Comprehensive analysis with schema corrections applied
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -296,27 +405,6 @@ export default function EnhancedDebugInterface() {
             </pre>
           </CardContent>
         </Card>
-      )}
-
-      {/* Status Badges */}
-      {summary && (
-        <div className="flex flex-wrap gap-2 justify-center">
-          <Badge variant={summary.successRate >= 80 ? "default" : "destructive"}>
-            {summary.successRate >= 80 ? "READY FOR SCALE-UP" : "NEEDS FIXES"}
-          </Badge>
-          
-          {summary.permissionFailures === 0 && (
-            <Badge variant="outline" className="border-green-500 text-green-700">
-              RLS POLICIES FIXED
-            </Badge>
-          )}
-          
-          {summary.successfullyInserted > 0 && (
-            <Badge variant="outline" className="border-blue-500 text-blue-700">
-              TRAILS IMPORTING
-            </Badge>
-          )}
-        </div>
       )}
     </div>
   );

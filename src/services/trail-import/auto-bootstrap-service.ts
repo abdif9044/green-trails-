@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -69,7 +68,7 @@ export class AutoBootstrapService {
         return { needed: true, triggered: false, currentCount: trailCount };
       }
 
-      // Trigger bootstrap
+      // Trigger bootstrap with fixed import system
       const triggered = await this.triggerBootstrap();
       return { needed: true, triggered, currentCount: trailCount };
 
@@ -80,7 +79,7 @@ export class AutoBootstrapService {
   }
 
   /**
-   * Trigger the 30K trail bootstrap process
+   * Trigger the 30K trail bootstrap process with fixed schema
    */
   async triggerBootstrap(): Promise<boolean> {
     if (this.isBootstrapping) {
@@ -90,40 +89,40 @@ export class AutoBootstrapService {
 
     try {
       this.isBootstrapping = true;
-      console.log('🚀 Starting 30K trail bootstrap...');
+      console.log('🚀 Starting FIXED 30K trail bootstrap...');
 
-      toast.success('Auto-loading 30,000 trails for the best experience!');
+      toast.success('🔧 Auto-loading 30,000 trails with FIXED schema!');
 
       // Calculate trails per source
       const trailsPerSource = Math.ceil(this.config.targetTrailCount / this.config.sources.length);
 
-      // Call the massive import function
+      // Call the FIXED massive import function
       const { data, error } = await supabase.functions.invoke('import-trails-massive', {
         body: {
           sources: this.config.sources,
           maxTrailsPerSource: trailsPerSource,
-          batchSize: 100,
-          concurrency: 2,
-          target: '30K Bootstrap',
+          batchSize: 25, // Smaller batches for reliability
+          concurrency: 1,
+          target: 'FIXED 30K Bootstrap',
           debug: true,
           validation: true
         }
       });
 
       if (error) {
-        console.error('❌ Bootstrap failed:', error);
-        toast.error('Failed to auto-load trails. Please try manually.');
+        console.error('❌ FIXED Bootstrap failed:', error);
+        toast.error('Schema fixes applied but bootstrap failed. Check console.');
         return false;
       }
 
-      console.log('✅ Bootstrap initiated successfully:', data);
-      toast.success(`Trail loading started! Target: ${this.config.targetTrailCount.toLocaleString()} trails`);
+      console.log('✅ FIXED Bootstrap initiated successfully:', data);
+      toast.success(`🎉 FIXED trail loading started! Target: ${this.config.targetTrailCount.toLocaleString()} trails`);
       
       return true;
 
     } catch (error) {
-      console.error('💥 Bootstrap exception:', error);
-      toast.error('Bootstrap failed with an error');
+      console.error('💥 FIXED Bootstrap exception:', error);
+      toast.error('FIXED Bootstrap failed with an error');
       return false;
     } finally {
       this.isBootstrapping = false;
@@ -176,10 +175,10 @@ export class AutoBootstrapService {
   }
 
   /**
-   * Force trigger bootstrap (for manual use)
+   * Force trigger bootstrap with FIXED schema (for manual use)
    */
   async forceBootstrap(): Promise<boolean> {
-    console.log('🔧 Force triggering bootstrap...');
+    console.log('🔧 Force triggering FIXED bootstrap...');
     this.isBootstrapping = false; // Reset state
     return this.triggerBootstrap();
   }

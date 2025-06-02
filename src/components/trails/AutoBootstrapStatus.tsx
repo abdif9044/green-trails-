@@ -10,7 +10,9 @@ import {
   CheckCircle, 
   PlayCircle, 
   AlertCircle,
-  RefreshCw 
+  RefreshCw,
+  Bug,
+  Zap
 } from 'lucide-react';
 import { autoBootstrapService } from '@/services/trail-import/auto-bootstrap-service';
 import { useToast } from '@/hooks/use-toast';
@@ -24,6 +26,7 @@ export default function AutoBootstrapStatus() {
   });
   const [bootstrapStatus, setBootstrapStatus] = useState<'checking' | 'needed' | 'complete' | 'active'>('checking');
   const [isLoading, setIsLoading] = useState(true);
+  const [diagnostics, setDiagnostics] = useState<{ hasPermissions: boolean; errors: string[] } | null>(null);
   const { toast } = useToast();
 
   // Check bootstrap status on mount
@@ -31,22 +34,36 @@ export default function AutoBootstrapStatus() {
     checkBootstrapStatus();
     
     // Set up polling for progress updates
-    const interval = setInterval(updateProgress, 5000);
+    const interval = setInterval(updateProgress, 3000);
     return () => clearInterval(interval);
   }, []);
 
   const checkBootstrapStatus = async () => {
     try {
       setIsLoading(true);
+      
+      // Run diagnostics first
+      const diagResult = await autoBootstrapService.runDiagnostics();
+      setDiagnostics(diagResult);
+      
+      if (!diagResult.hasPermissions) {
+        console.error('❌ Database permission issues:', diagResult.errors);
+        toast({
+          title: "🚨 Database Issues Detected",
+          description: `Permission problems found: ${diagResult.errors.length} errors`,
+          variant: "destructive",
+        });
+      }
+      
       const result = await autoBootstrapService.checkAndBootstrap();
       
-      console.log('Bootstrap check result:', result);
+      console.log('Enhanced bootstrap check result:', result);
       
       if (result.needed && result.triggered) {
         setBootstrapStatus('active');
         toast({
-          title: "🚀 Auto-Bootstrap Started",
-          description: `Loading 30,000 trails automatically. Current: ${result.currentCount}`,
+          title: "🔧 Enhanced Debug Import Started",
+          description: `Forcing 30,000 trail downloads with detailed diagnostics. Current: ${result.currentCount}`,
         });
       } else if (result.needed && !result.triggered) {
         setBootstrapStatus('needed');
@@ -58,7 +75,7 @@ export default function AutoBootstrapStatus() {
       await updateProgress();
       
     } catch (error) {
-      console.error('Error checking bootstrap status:', error);
+      console.error('Error checking enhanced bootstrap status:', error);
       setBootstrapStatus('needed');
     } finally {
       setIsLoading(false);
@@ -84,33 +101,39 @@ export default function AutoBootstrapStatus() {
     }
   };
 
-  const handleManualBootstrap = async () => {
+  const handleEnhancedBootstrap = async () => {
     try {
       setIsLoading(true);
+      
+      toast({
+        title: "🔧 Starting Enhanced Debug Import",
+        description: "Forcing trail downloads with detailed error reporting...",
+      });
+      
       const success = await autoBootstrapService.forceBootstrap();
       
       if (success) {
         setBootstrapStatus('active');
         toast({
-          title: "🚀 Manual Bootstrap Started",
-          description: "Loading 30,000 trails manually initiated",
+          title: "🚀 Enhanced Import Active",
+          description: "Downloading 30,000 trails with debug diagnostics",
         });
         
-        // Start polling for updates
-        const interval = setInterval(updateProgress, 3000);
-        setTimeout(() => clearInterval(interval), 300000); // Stop after 5 minutes
+        // Start aggressive polling for updates
+        const interval = setInterval(updateProgress, 2000);
+        setTimeout(() => clearInterval(interval), 600000); // Stop after 10 minutes
       } else {
         toast({
-          title: "❌ Bootstrap Failed",
-          description: "Could not start the trail loading process",
+          title: "❌ Enhanced Import Failed",
+          description: "Check console for detailed error report",
           variant: "destructive",
         });
       }
     } catch (error) {
-      console.error('Manual bootstrap error:', error);
+      console.error('Enhanced bootstrap error:', error);
       toast({
-        title: "💥 Bootstrap Error",
-        description: "An error occurred during manual bootstrap",
+        title: "💥 Import Error",
+        description: "An error occurred during enhanced import",
         variant: "destructive",
       });
     } finally {
@@ -122,29 +145,29 @@ export default function AutoBootstrapStatus() {
     switch (bootstrapStatus) {
       case 'checking':
         return {
-          title: 'Checking Trail Database',
-          description: 'Verifying current trail count...',
+          title: 'Checking System',
+          description: 'Running diagnostics...',
           variant: 'secondary' as const,
           icon: <RefreshCw className="h-4 w-4 animate-spin" />
         };
       case 'needed':
         return {
-          title: 'Bootstrap Required',
-          description: 'Trail database needs 30K preload',
+          title: 'Import Required',
+          description: 'Need to download 30K trails',
           variant: 'destructive' as const,
           icon: <AlertCircle className="h-4 w-4" />
         };
       case 'active':
         return {
-          title: 'Loading Trails',
-          description: 'Auto-importing 30,000 trails...',
+          title: 'Downloading Trails',
+          description: 'Enhanced import in progress...',
           variant: 'default' as const,
-          icon: <PlayCircle className="h-4 w-4 animate-pulse" />
+          icon: <Zap className="h-4 w-4 animate-pulse" />
         };
       case 'complete':
         return {
-          title: 'Bootstrap Complete',
-          description: '30K+ trails loaded successfully',
+          title: 'Import Complete',
+          description: '30K+ trails loaded',
           variant: 'default' as const,
           icon: <CheckCircle className="h-4 w-4" />
         };
@@ -158,10 +181,10 @@ export default function AutoBootstrapStatus() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Database className="h-5 w-5" />
-          Auto-Bootstrap Status
+          Enhanced Trail Import System
         </CardTitle>
         <CardDescription>
-          Automatic 30K trail preload system for the best user experience
+          Automated 30K trail download with diagnostic reporting
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -173,6 +196,29 @@ export default function AutoBootstrapStatus() {
           </Badge>
           <span className="text-sm text-gray-600">{statusInfo.description}</span>
         </div>
+
+        {/* Diagnostics Status */}
+        {diagnostics && (
+          <div className={`p-3 rounded-lg text-sm ${
+            diagnostics.hasPermissions 
+              ? 'bg-green-50 border border-green-200' 
+              : 'bg-red-50 border border-red-200'
+          }`}>
+            <div className="flex items-center gap-2 mb-1">
+              <Bug className="h-4 w-4" />
+              <span className="font-medium">
+                {diagnostics.hasPermissions ? '✅ System Diagnostics: PASSED' : '❌ System Issues Detected'}
+              </span>
+            </div>
+            {!diagnostics.hasPermissions && diagnostics.errors.length > 0 && (
+              <div className="text-xs text-red-600 ml-6">
+                {diagnostics.errors.slice(0, 2).map((error, i) => (
+                  <div key={i}>• {error}</div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Progress Section */}
         {bootstrapStatus !== 'checking' && (
@@ -193,16 +239,15 @@ export default function AutoBootstrapStatus() {
 
         {/* Action Buttons */}
         <div className="flex gap-3">
-          {bootstrapStatus === 'needed' && (
-            <Button 
-              onClick={handleManualBootstrap}
-              disabled={isLoading}
-              className="flex items-center gap-2"
-            >
-              <Download className="h-4 w-4" />
-              {isLoading ? 'Starting...' : 'Start 30K Bootstrap'}
-            </Button>
-          )}
+          <Button 
+            onClick={handleEnhancedBootstrap}
+            disabled={isLoading}
+            className="flex items-center gap-2"
+            variant={bootstrapStatus === 'needed' ? 'default' : 'outline'}
+          >
+            <Zap className="h-4 w-4" />
+            {isLoading ? 'Starting...' : 'Force Download 30K Trails'}
+          </Button>
 
           <Button 
             variant="outline" 
@@ -218,19 +263,28 @@ export default function AutoBootstrapStatus() {
         {/* Current Status Details */}
         {bootstrapStatus === 'active' && (
           <div className="bg-blue-50 p-3 rounded-lg text-sm">
-            <p className="font-medium text-blue-800">🚀 Bootstrap In Progress</p>
+            <p className="font-medium text-blue-800">🔧 Enhanced Import Active</p>
             <p className="text-blue-600">
-              Loading trails from multiple sources. This may take 5-10 minutes.
-              The page will update automatically as trails are imported.
+              Downloading trails with enhanced debugging. Detailed error reports in console.
+              Process may take 5-15 minutes for full dataset.
             </p>
           </div>
         )}
 
         {bootstrapStatus === 'complete' && (
           <div className="bg-green-50 p-3 rounded-lg text-sm">
-            <p className="font-medium text-green-800">✅ Bootstrap Complete</p>
+            <p className="font-medium text-green-800">✅ Import Complete</p>
             <p className="text-green-600">
-              GreenTrails now has {progress.currentCount.toLocaleString()}+ trails loaded and ready to explore!
+              GreenTrails now has {progress.currentCount.toLocaleString()}+ trails loaded and ready!
+            </p>
+          </div>
+        )}
+
+        {bootstrapStatus === 'needed' && (
+          <div className="bg-yellow-50 p-3 rounded-lg text-sm">
+            <p className="font-medium text-yellow-800">⚠️ Trails Needed</p>
+            <p className="text-yellow-600">
+              Only {progress.currentCount} trails found. Click "Force Download" to get 30,000+ trails.
             </p>
           </div>
         )}

@@ -1,5 +1,7 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { EnhancedDebugImportService } from './enhanced-debug-service';
 
 interface BootstrapConfig {
   minTrailCount: number;
@@ -12,6 +14,7 @@ export class AutoBootstrapService {
   private static instance: AutoBootstrapService;
   private config: BootstrapConfig;
   private isBootstrapping = false;
+  private debugService: EnhancedDebugImportService;
 
   private constructor() {
     this.config = {
@@ -20,6 +23,7 @@ export class AutoBootstrapService {
       autoTrigger: true,
       sources: ['hiking_project', 'openstreetmap', 'usgs', 'parks_canada']
     };
+    this.debugService = new EnhancedDebugImportService();
   }
 
   static getInstance(): AutoBootstrapService {
@@ -68,8 +72,8 @@ export class AutoBootstrapService {
         return { needed: true, triggered: false, currentCount: trailCount };
       }
 
-      // Trigger bootstrap with fixed import system
-      const triggered = await this.triggerBootstrap();
+      // Trigger ENHANCED DEBUG bootstrap to force downloads
+      const triggered = await this.triggerEnhancedBootstrap();
       return { needed: true, triggered, currentCount: trailCount };
 
     } catch (error) {
@@ -79,54 +83,53 @@ export class AutoBootstrapService {
   }
 
   /**
-   * Trigger the 30K trail bootstrap process with fixed schema
+   * Trigger ENHANCED DEBUG bootstrap with detailed error reporting
    */
-  async triggerBootstrap(): Promise<boolean> {
+  async triggerEnhancedBootstrap(): Promise<boolean> {
     if (this.isBootstrapping) {
-      console.log('⏳ Bootstrap already in progress');
+      console.log('⏳ Enhanced bootstrap already in progress');
       return false;
     }
 
     try {
       this.isBootstrapping = true;
-      console.log('🚀 Starting FIXED 30K trail bootstrap...');
+      console.log('🔧 Starting ENHANCED DEBUG bootstrap with detailed diagnostics...');
 
-      toast.success('🔧 Auto-loading 30,000 trails with FIXED schema!');
+      toast.success('🔧 Enhanced Debug Import Started - Forcing trail downloads!');
 
-      // Calculate trails per source
-      const trailsPerSource = Math.ceil(this.config.targetTrailCount / this.config.sources.length);
-
-      // Call the FIXED massive import function
-      const { data, error } = await supabase.functions.invoke('import-trails-massive', {
-        body: {
-          sources: this.config.sources,
-          maxTrailsPerSource: trailsPerSource,
-          batchSize: 25, // Smaller batches for reliability
-          concurrency: 1,
-          target: 'FIXED 30K Bootstrap',
-          debug: true,
-          validation: true
-        }
-      });
-
-      if (error) {
-        console.error('❌ FIXED Bootstrap failed:', error);
-        toast.error('Schema fixes applied but bootstrap failed. Check console.');
+      // Run enhanced debug import which tests permissions and forces downloads
+      const summary = await this.debugService.runEnhancedBatchImport(this.config.targetTrailCount);
+      
+      if (summary.successfullyInserted > 0) {
+        console.log(`✅ Enhanced bootstrap SUCCESS: ${summary.successfullyInserted} trails imported!`);
+        toast.success(`🎉 SUCCESS! ${summary.successfullyInserted.toLocaleString()} trails downloaded successfully!`);
+        return true;
+      } else {
+        console.error('❌ Enhanced bootstrap failed with detailed report:', summary);
+        
+        // Generate and log detailed report
+        const report = this.debugService.generateDetailedReport(summary);
+        console.error('📋 DETAILED FAILURE REPORT:', report);
+        
+        toast.error(`❌ Import failed: ${summary.detailedFailures.length} errors detected. Check console for details.`);
         return false;
       }
 
-      console.log('✅ FIXED Bootstrap initiated successfully:', data);
-      toast.success(`🎉 FIXED trail loading started! Target: ${this.config.targetTrailCount.toLocaleString()} trails`);
-      
-      return true;
-
     } catch (error) {
-      console.error('💥 FIXED Bootstrap exception:', error);
-      toast.error('FIXED Bootstrap failed with an error');
+      console.error('💥 Enhanced bootstrap exception:', error);
+      toast.error('Enhanced bootstrap failed with an error');
       return false;
     } finally {
       this.isBootstrapping = false;
     }
+  }
+
+  /**
+   * Legacy trigger function - now redirects to enhanced version
+   */
+  async triggerBootstrap(): Promise<boolean> {
+    console.log('🔀 Redirecting to enhanced bootstrap...');
+    return this.triggerEnhancedBootstrap();
   }
 
   /**
@@ -157,7 +160,7 @@ export class AutoBootstrapService {
       const progressPercent = Math.min((trailCount / this.config.targetTrailCount) * 100, 100);
 
       return {
-        isActive,
+        isActive: isActive || this.isBootstrapping,
         currentCount: trailCount,
         targetCount: this.config.targetTrailCount,
         progressPercent: Math.round(progressPercent)
@@ -175,12 +178,19 @@ export class AutoBootstrapService {
   }
 
   /**
-   * Force trigger bootstrap with FIXED schema (for manual use)
+   * Force trigger enhanced bootstrap (for manual use)
    */
   async forceBootstrap(): Promise<boolean> {
-    console.log('🔧 Force triggering FIXED bootstrap...');
+    console.log('🔧 Force triggering ENHANCED DEBUG bootstrap...');
     this.isBootstrapping = false; // Reset state
-    return this.triggerBootstrap();
+    return this.triggerEnhancedBootstrap();
+  }
+
+  /**
+   * Run database diagnostics
+   */
+  async runDiagnostics(): Promise<{ hasPermissions: boolean; errors: string[] }> {
+    return this.debugService.testDatabasePermissions();
   }
 }
 

@@ -40,7 +40,7 @@ serve(async (req) => {
     const { 
       sources, 
       maxTrailsPerSource, 
-      batchSize = 20, // REDUCED from 50 to avoid timeouts
+      batchSize = 15, // REDUCED batch size for reliability
       concurrency = 1,
       priority = 'normal',
       target = '30K',
@@ -48,7 +48,7 @@ serve(async (req) => {
       validation = false
     } = await req.json() as ImportRequest;
     
-    console.log(`🎯 Starting ${target} trail import with FIXED SCHEMA`);
+    console.log(`🎯 Starting ${target} FIXED trail import with validated schema`);
     console.log(`📊 Configuration: ${sources.length} sources, ${maxTrailsPerSource} trails per source, batch size: ${batchSize}`);
     
     if (!sources || sources.length === 0) {
@@ -58,50 +58,69 @@ serve(async (req) => {
       );
     }
     
-    // Test single insert first
-    console.log('🧪 Testing single trail insert...');
+    // CRITICAL FIX: Test single insert with proper schema validation
+    console.log('🧪 Testing single trail insert with FIXED schema...');
     const testTrail = {
       id: crypto.randomUUID(),
-      name: 'Test Trail Import',
-      location: 'Test Location',
+      name: 'Schema Test Trail',
+      location: 'Test Location, CA',
       difficulty: 'moderate',
-      length: 5.5, // FIXED: Use 'length' not 'trail_length'
-      elevation: 150, // FIXED: Required field
-      longitude: -123.456,
-      latitude: 49.123,
-      country: 'Test Country',
-      state_province: 'Test Province',
-      surface: 'dirt', // FIXED: Use 'surface' not 'terrain_type'
+      length: 5.5,
+      elevation: 150,
+      longitude: -123.456789,
+      latitude: 49.123456,
+      country: 'United States',
+      state_province: 'California',
+      surface: 'dirt',
       trail_type: 'hiking',
       source: 'test',
       source_id: `test-${Date.now()}`,
       is_age_restricted: false,
-      is_verified: true
+      is_verified: true,
+      description: 'Test trail for schema validation',
+      length_km: 5.5,
+      elevation_gain: 150,
+      geojson: {
+        type: 'Point',
+        coordinates: [-123.456789, 49.123456]
+      },
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      user_id: null
     };
     
+    // CRITICAL: Use INSERT instead of UPSERT to avoid constraint issues
     const { data: testData, error: testError } = await supabase
       .from('trails')
       .insert([testTrail])
       .select('id');
     
     if (testError) {
-      console.error('❌ Single trail test FAILED:', testError);
+      console.error('❌ Schema test FAILED:', {
+        code: testError.code,
+        message: testError.message,
+        details: testError.details,
+        hint: testError.hint,
+        testTrail: testTrail
+      });
       return new Response(
         JSON.stringify({ 
           error: 'Schema validation failed', 
           details: testError.message,
+          code: testError.code,
+          hint: testError.hint,
           schema_test: 'failed'
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       );
     } else {
-      console.log('✅ Single trail test PASSED:', testData);
+      console.log('✅ Schema test PASSED:', testData);
       
       // Clean up test trail
       await supabase.from('trails').delete().eq('id', testTrail.id);
     }
     
-    // Create bulk import job with proper schema
+    // Create bulk import job
     const { data: bulkJob, error: bulkJobError } = await supabase
       .from('bulk_import_jobs')
       .insert([{
@@ -112,19 +131,7 @@ serve(async (req) => {
         trails_processed: 0,
         trails_added: 0,
         trails_updated: 0,
-        trails_failed: 0,
-        config: {
-          sources,
-          maxTrailsPerSource,
-          batchSize,
-          concurrency,
-          priority,
-          target,
-          debug,
-          validation,
-          service_role: true,
-          schema_fixed: true
-        }
+        trails_failed: 0
       }])
       .select('*')
       .single();
@@ -154,7 +161,7 @@ serve(async (req) => {
         
         console.log(`📋 Generated ${trails.length} trails for ${sourceType}`);
         
-        // Insert trails in smaller batches with improved error handling
+        // Insert trails in smaller batches with FIXED schema
         let addedCount = 0;
         let failedCount = 0;
         
@@ -162,32 +169,35 @@ serve(async (req) => {
           const batch = trails.slice(i, i + batchSize);
           
           try {
-            // FIXED: Format trails with correct schema mapping
+            // CRITICAL FIX: Format trails with EXACT schema matching
             const formattedTrails = batch.map((trail, batchIndex) => {
+              const uniqueId = crypto.randomUUID();
               const uniqueSourceId = `${sourceType}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${i + batchIndex}`;
               
-              // COMPREHENSIVE VALIDATION - ensure all required fields are present
+              // COMPREHENSIVE SCHEMA VALIDATION
               const formattedTrail = {
-                id: crypto.randomUUID(), // Always generate new UUID
+                // REQUIRED FIELDS WITH VALIDATION
+                id: uniqueId,
                 name: validateString(trail.name, `${getSourceDisplayName(sourceType)} Trail ${String(i + batchIndex + 1).padStart(4, '0')}`),
-                description: validateString(trail.description, `A beautiful trail offering stunning views and outdoor adventure.`),
                 location: validateString(trail.location, `${getSourceDisplayName(sourceType)} Area`),
+                difficulty: validateDifficulty(trail.difficulty),
+                length: ensureValidNumber(trail.length || trail.length_km, Math.random() * 15 + 1),
+                elevation: ensureValidInteger(trail.elevation, Math.floor(Math.random() * 2000) + 100),
+                longitude: ensureValidLongitude(trail.longitude),
+                latitude: ensureValidLatitude(trail.latitude),
+                
+                // OPTIONAL FIELDS WITH SAFE DEFAULTS
+                description: validateString(trail.description, `A beautiful ${trail.difficulty || 'moderate'} trail offering stunning outdoor adventure.`),
                 country: validateString(trail.country, 'United States'),
                 state_province: validateString(trail.state_province, getDefaultStateForSource(sourceType)),
-                region: trail.region || getDefaultRegionForSource(sourceType),
-                latitude: ensureValidLatitude(trail.latitude),
-                longitude: ensureValidLongitude(trail.longitude),
-                // CRITICAL FIX: Use correct database column names
-                length: ensureValidNumber(trail.length_km || trail.length, Math.random() * 15 + 1), // NOT trail_length
-                elevation_gain: ensureValidNumber(trail.elevation_gain, Math.floor(Math.random() * 800) + 50),
-                elevation: ensureValidNumber(trail.elevation, Math.floor(Math.random() * 2000) + 100), // REQUIRED FIELD
-                difficulty: validateDifficulty(trail.difficulty), // REQUIRED FIELD
-                surface: validateSurface(trail.surface || 'dirt'), // NOT terrain_type
-                trail_type: 'hiking', // Always set trail_type
-                is_age_restricted: false,
-                is_verified: true,
+                surface: validateSurface(trail.surface),
+                trail_type: 'hiking',
                 source: sourceType,
                 source_id: uniqueSourceId,
+                length_km: ensureValidNumber(trail.length_km || trail.length, Math.random() * 15 + 1),
+                elevation_gain: ensureValidNumber(trail.elevation_gain, Math.floor(Math.random() * 800) + 50),
+                is_age_restricted: false,
+                is_verified: true,
                 user_id: null,
                 geojson: generateSimpleGeojson(
                   ensureValidLatitude(trail.latitude), 
@@ -200,48 +210,15 @@ serve(async (req) => {
               return formattedTrail;
             });
             
-            // COMPREHENSIVE VALIDATION before insert
+            // COMPREHENSIVE PRE-INSERT VALIDATION
             const validTrails = formattedTrails.filter(trail => {
-              const issues = [];
-              
-              if (!trail.name || trail.name.trim().length === 0) {
-                issues.push('missing/empty name');
-              }
-              if (!trail.location || trail.location.trim().length === 0) {
-                issues.push('missing/empty location');
-              }
-              if (!trail.difficulty || !['easy', 'moderate', 'hard'].includes(trail.difficulty)) {
-                issues.push('invalid difficulty');
-              }
-              if (!isValidCoordinate(trail.latitude, 'latitude')) {
-                issues.push(`invalid latitude: ${trail.latitude}`);
-              }
-              if (!isValidCoordinate(trail.longitude, 'longitude')) {
-                issues.push(`invalid longitude: ${trail.longitude}`);
-              }
-              if (!isValidNumber(trail.length) || trail.length <= 0) {
-                issues.push(`invalid length: ${trail.length}`);
-              }
-              if (!isValidNumber(trail.elevation)) {
-                issues.push(`invalid elevation: ${trail.elevation}`);
-              }
-              if (!trail.surface || !['dirt', 'gravel', 'paved', 'rock', 'sand', 'grass'].includes(trail.surface)) {
-                issues.push(`invalid surface: ${trail.surface}`);
-              }
-              if (!trail.source_id || trail.source_id.length === 0) {
-                issues.push('missing source_id');
-              }
+              const issues = validateTrailSchema(trail);
               
               if (issues.length > 0) {
                 console.error(`❌ Trail validation failed: ${issues.join(', ')}`, {
                   name: trail.name,
                   location: trail.location,
-                  difficulty: trail.difficulty,
-                  lat: trail.latitude,
-                  lng: trail.longitude,
-                  length: trail.length,
-                  elevation: trail.elevation,
-                  surface: trail.surface
+                  id: trail.id
                 });
                 return false;
               }
@@ -257,7 +234,7 @@ serve(async (req) => {
               continue;
             }
             
-            // Insert with detailed error handling
+            // CRITICAL FIX: Use INSERT instead of UPSERT to avoid constraint conflicts
             const { data, error } = await supabase
               .from('trails')
               .insert(validTrails)
@@ -270,7 +247,7 @@ serve(async (req) => {
                 error_details: error.details,
                 error_hint: error.hint,
                 batch_size: validTrails.length,
-                first_trail: validTrails[0]
+                sample_trail: validTrails[0]
               });
               
               insertErrors.push(`${sourceType} batch ${Math.floor(i/batchSize) + 1}: ${error.message} (${error.code || 'UNKNOWN'})`);
@@ -284,12 +261,12 @@ serve(async (req) => {
             }
           } catch (batchError) {
             console.error(`💥 Exception during batch insert for ${sourceType} batch ${Math.floor(i/batchSize) + 1}:`, batchError);
-            insertErrors.push(`${sourceType} batch ${Math.floor(i/batchSize) + 1}: ${batchError instanceof Error ? batchError.message : 'Unknown error'}`);
+            insertErrors.push(`${sourceType} batch ${Math.floor(i/batchIndex) + 1}: ${batchError instanceof Error ? batchError.message : 'Unknown error'}`);
             failedCount += batch.length;
           }
           
           // Small delay between batches to prevent overwhelming the database
-          await new Promise(resolve => setTimeout(resolve, 100));
+          await new Promise(resolve => setTimeout(resolve, 200));
         }
         
         totalAdded += addedCount;
@@ -337,17 +314,7 @@ serve(async (req) => {
         trails_processed: totalProcessed,
         trails_added: totalAdded,
         trails_updated: 0,
-        trails_failed: totalFailed,
-        results: {
-          target: target,
-          source_results: sourceResults,
-          success_rate: successRate,
-          total_requested: sources.length * maxTrailsPerSource,
-          service_role_used: true,
-          insert_errors: insertErrors.slice(-10),
-          schema_fixes_applied: true,
-          validation_improvements: true
-        }
+        trails_failed: totalFailed
       })
       .eq('id', bulkJob.id);
       
@@ -355,21 +322,19 @@ serve(async (req) => {
       console.error('Error updating bulk job:', updateError);
     }
     
-    // Log comprehensive results
-    console.log(`🎉 ${target} Import COMPLETE!`);
-    console.log(`📊 Final Results: ${totalAdded} added, ${totalFailed} failed, ${totalProcessed} processed`);
-    console.log(`📈 Success rate: ${successRate}%`);
-    
-    if (insertErrors.length > 0) {
-      console.error(`💥 Insert errors encountered:`, insertErrors.slice(-5));
-    }
-    
     // Verify the final count in the database
     const { count: finalCount } = await supabase
       .from('trails')
       .select('*', { count: 'exact', head: true });
     
+    console.log(`🎉 ${target} Import COMPLETE!`);
+    console.log(`📊 Final Results: ${totalAdded} added, ${totalFailed} failed, ${totalProcessed} processed`);
+    console.log(`📈 Success rate: ${successRate}%`);
     console.log(`🗄️ Total trails now in database: ${finalCount}`);
+    
+    if (insertErrors.length > 0) {
+      console.error(`💥 Insert errors encountered:`, insertErrors.slice(-5));
+    }
     
     return new Response(
       JSON.stringify({
@@ -413,11 +378,16 @@ function validateString(value: any, fallback: string): string {
   if (!value || typeof value !== 'string' || value.trim().length === 0) {
     return fallback;
   }
-  return value.trim();
+  return value.trim().substring(0, 255); // Prevent overly long strings
 }
 
 function ensureValidNumber(value: any, fallback: number): number {
   const num = parseFloat(String(value));
+  return isNaN(num) || !isFinite(num) ? fallback : num;
+}
+
+function ensureValidInteger(value: any, fallback: number): number {
+  const num = parseInt(String(value));
   return isNaN(num) || !isFinite(num) ? fallback : num;
 }
 
@@ -437,22 +407,6 @@ function ensureValidLongitude(value: any): number {
   return Math.max(-180, Math.min(180, num)); // Clamp to valid range
 }
 
-function isValidNumber(value: any): boolean {
-  const num = parseFloat(String(value));
-  return !isNaN(num) && isFinite(num);
-}
-
-function isValidCoordinate(value: any, type: 'latitude' | 'longitude'): boolean {
-  const num = parseFloat(String(value));
-  if (isNaN(num) || !isFinite(num)) return false;
-  
-  if (type === 'latitude') {
-    return num >= -90 && num <= 90;
-  } else {
-    return num >= -180 && num <= 180;
-  }
-}
-
 function validateDifficulty(difficulty: any): string {
   const valid = ['easy', 'moderate', 'hard'];
   if (typeof difficulty === 'string' && valid.includes(difficulty.toLowerCase())) {
@@ -469,6 +423,40 @@ function validateSurface(surface: any): string {
   return 'dirt'; // Safe default
 }
 
+function validateTrailSchema(trail: any): string[] {
+  const issues: string[] = [];
+  
+  if (!trail.id || typeof trail.id !== 'string') {
+    issues.push('missing/invalid id');
+  }
+  if (!trail.name || typeof trail.name !== 'string' || trail.name.trim().length === 0) {
+    issues.push('missing/empty name');
+  }
+  if (!trail.location || typeof trail.location !== 'string' || trail.location.trim().length === 0) {
+    issues.push('missing/empty location');
+  }
+  if (!trail.difficulty || !['easy', 'moderate', 'hard'].includes(trail.difficulty)) {
+    issues.push('invalid difficulty');
+  }
+  if (typeof trail.length !== 'number' || trail.length <= 0 || !isFinite(trail.length)) {
+    issues.push(`invalid length: ${trail.length}`);
+  }
+  if (typeof trail.elevation !== 'number' || !isFinite(trail.elevation)) {
+    issues.push(`invalid elevation: ${trail.elevation}`);
+  }
+  if (typeof trail.latitude !== 'number' || trail.latitude < -90 || trail.latitude > 90) {
+    issues.push(`invalid latitude: ${trail.latitude}`);
+  }
+  if (typeof trail.longitude !== 'number' || trail.longitude < -180 || trail.longitude > 180) {
+    issues.push(`invalid longitude: ${trail.longitude}`);
+  }
+  if (!trail.source_id || typeof trail.source_id !== 'string' || trail.source_id.length === 0) {
+    issues.push('missing source_id');
+  }
+  
+  return issues;
+}
+
 function generateSimpleGeojson(lat: number, lng: number): any {
   return {
     type: 'Point',
@@ -483,17 +471,7 @@ function getDefaultStateForSource(sourceType: string): string {
     'usgs': 'Wyoming',
     'parks_canada': 'Alberta'
   };
-  return defaults[sourceType] || 'Unknown';
-}
-
-function getDefaultRegionForSource(sourceType: string): string {
-  const defaults: Record<string, string> = {
-    'hiking_project': 'Western US',
-    'openstreetmap': 'Mountain West',
-    'usgs': 'National Parks',
-    'parks_canada': 'Canadian Rockies'
-  };
-  return defaults[sourceType] || 'Unknown';
+  return defaults[sourceType] || 'California';
 }
 
 // Generate realistic trail data for different sources with proper validation
@@ -509,9 +487,8 @@ function generateTrailsForSource(sourceType: string, count: number): any[] {
       location: baseData.location,
       country: baseData.country,
       state_province: baseData.state_province,
-      region: baseData.region,
-      length_km: Number((1 + Math.random() * 20).toFixed(2)),
       length: Number((1 + Math.random() * 20).toFixed(2)),
+      length_km: Number((1 + Math.random() * 20).toFixed(2)),
       elevation_gain: Math.floor(Math.random() * 1200) + 50,
       elevation: Math.floor(Math.random() * 3500) + 100,
       difficulty: baseData.difficulty,
@@ -519,7 +496,6 @@ function generateTrailsForSource(sourceType: string, count: number): any[] {
       longitude: baseData.longitude + (Math.random() - 0.5) * 4,
       surface: baseData.surfaces[Math.floor(Math.random() * baseData.surfaces.length)],
       trail_type: 'hiking',
-      is_age_restricted: false,
       source: sourceType,
       source_id: `${sourceType}-${Date.now()}-${i}`,
       last_updated: new Date().toISOString()
@@ -537,7 +513,6 @@ function getBaseDataForSource(sourceType: string, index: number) {
       locations: ['Yosemite Valley, CA', 'Grand Canyon, AZ', 'Zion National Park, UT', 'Rocky Mountain NP, CO'],
       country: 'United States',
       state_provinces: ['California', 'Arizona', 'Utah', 'Colorado'],
-      region: 'Western US',
       difficulties: ['easy', 'moderate', 'hard'],
       latitude: 39.0,
       longitude: -120.0,
@@ -548,7 +523,6 @@ function getBaseDataForSource(sourceType: string, index: number) {
       locations: ['Pacific Northwest Trail', 'Appalachian Trail Section', 'Continental Divide', 'Great Lakes Trail'],
       country: 'United States',
       state_provinces: ['Washington', 'Virginia', 'Montana', 'Michigan'],
-      region: 'Various US Regions',
       difficulties: ['easy', 'moderate', 'hard'],
       latitude: 45.0,
       longitude: -110.0,
@@ -559,23 +533,11 @@ function getBaseDataForSource(sourceType: string, index: number) {
       locations: ['Yellowstone Backcountry', 'Grand Teton NP', 'Glacier National Park', 'Olympic Peninsula'],
       country: 'United States',
       state_provinces: ['Wyoming', 'Wyoming', 'Montana', 'Washington'],
-      region: 'National Parks',
       difficulties: ['moderate', 'hard'],
       latitude: 44.5,
       longitude: -110.5,
       surfaces: ['dirt', 'rock'],
       features: ['wilderness experience', 'geological features', 'pristine nature']
-    },
-    'parks_canada': {
-      locations: ['Banff National Park, AB', 'Jasper National Park, AB', 'Algonquin Park, ON', 'Whistler, BC'],
-      country: 'Canada',
-      state_provinces: ['Alberta', 'Alberta', 'Ontario', 'British Columbia'],
-      region: 'Canadian Parks',
-      difficulties: ['easy', 'moderate', 'hard'],
-      latitude: 53.0,
-      longitude: -116.0,
-      surfaces: ['dirt', 'gravel'],
-      features: ['mountain views', 'wildlife corridors', 'alpine meadows']
     }
   };
   
@@ -585,7 +547,6 @@ function getBaseDataForSource(sourceType: string, index: number) {
     location: source.locations[index % source.locations.length],
     country: source.country,
     state_province: source.state_provinces[index % source.state_provinces.length],
-    region: source.region,
     difficulty: source.difficulties[index % source.difficulties.length],
     latitude: source.latitude,
     longitude: source.longitude,
@@ -598,10 +559,7 @@ function getSourceDisplayName(sourceType: string): string {
   const names: Record<string, string> = {
     'hiking_project': 'Hiking Project',
     'openstreetmap': 'OpenStreetMap', 
-    'usgs': 'USGS',
-    'parks_canada': 'Parks Canada',
-    'inegi_mexico': 'INEGI Mexico',
-    'trails_bc': 'Trails BC'
+    'usgs': 'USGS'
   };
   return names[sourceType] || sourceType;
 }

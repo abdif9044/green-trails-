@@ -87,20 +87,13 @@ export class ImageCompressionService {
    * Validate image file
    */
   static validateImageFile(file: File): { isValid: boolean; error?: string } {
-    const maxSize = 10 * 1024 * 1024; // 10MB
+    // Removed size restriction - allow any size
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
 
     if (!allowedTypes.includes(file.type)) {
       return {
         isValid: false,
         error: 'Invalid file type. Please upload JPEG, PNG, or WebP images.'
-      };
-    }
-
-    if (file.size > maxSize) {
-      return {
-        isValid: false,
-        error: 'File size too large. Please upload images smaller than 10MB.'
       };
     }
 

@@ -47,11 +47,7 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({ profile, onClose, ope
       return;
     }
     
-    // Validate file size (max 2MB)
-    if (file.size > 2 * 1024 * 1024) {
-      setError('Image size must be less than 2MB.');
-      return;
-    }
+    // Removed file size validation to allow any size photo
     
     setAvatarFile(file);
     setAvatarUrl(URL.createObjectURL(file));

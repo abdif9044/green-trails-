@@ -35,16 +35,6 @@ const TrailImageUpload = ({ trailId, onSuccess, hasPrimaryImage = false }: Trail
   const handleFile = (file?: File) => {
     if (!file) return;
     
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      toast({
-        title: "File too large",
-        description: "Image must be less than 5MB",
-        variant: "destructive"
-      });
-      return;
-    }
-    
     // Validate file type
     if (!file.type.startsWith('image/')) {
       toast({
@@ -54,6 +44,8 @@ const TrailImageUpload = ({ trailId, onSuccess, hasPrimaryImage = false }: Trail
       });
       return;
     }
+    
+    // Removed file size validation to allow any size image
     
     // Create preview
     const objectUrl = URL.createObjectURL(file);
@@ -174,7 +166,7 @@ const TrailImageUpload = ({ trailId, onSuccess, hasPrimaryImage = false }: Trail
               </span> or drag and drop
             </div>
             <div className="text-xs text-gray-400 dark:text-gray-600">
-              PNG, JPG or WEBP (max 5MB)
+              PNG, JPG or WEBP (any size)
             </div>
             <Button
               type="button"

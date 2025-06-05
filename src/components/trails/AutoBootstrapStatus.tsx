@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,7 +10,8 @@ import {
   AlertCircle,
   RefreshCw,
   Zap,
-  Settings
+  Settings,
+  MapPin
 } from 'lucide-react';
 import { autoBootstrapService } from '@/services/trail-import/auto-bootstrap-service';
 import { useToast } from '@/hooks/use-toast';
@@ -27,6 +27,7 @@ export default function AutoBootstrapStatus() {
   const [isLoading, setIsLoading] = useState(true);
   const [diagnostics, setDiagnostics] = useState<{ hasPermissions: boolean; errors: string[] } | null>(null);
   const [autoTriggered, setAutoTriggered] = useState(false);
+  const [rochesterImporting, setRochesterImporting] = useState(false);
   const { toast } = useToast();
 
   // Check bootstrap status on mount
@@ -157,6 +158,45 @@ export default function AutoBootstrapStatus() {
     }
   };
 
+  const handleRochesterImport = async () => {
+    try {
+      setRochesterImporting(true);
+      
+      toast({
+        title: "🎯 Starting Rochester Import",
+        description: "Importing 5,555 trails near Rochester, MN...",
+      });
+      
+      const success = await autoBootstrapService.forceRochesterImport();
+      
+      if (success) {
+        toast({
+          title: "🚀 Rochester Import Started",
+          description: "Downloading 5,555 trails near Rochester, MN with location targeting",
+        });
+        
+        // Start polling for updates
+        const interval = setInterval(updateProgress, 2000);
+        setTimeout(() => clearInterval(interval), 300000); // Stop after 5 minutes
+      } else {
+        toast({
+          title: "❌ Rochester Import Failed",
+          description: "Check console for detailed error report",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Rochester import error:', error);
+      toast({
+        title: "💥 Rochester Import Error",
+        description: "An error occurred during Rochester import",
+        variant: "destructive",
+      });
+    } finally {
+      setRochesterImporting(false);
+    }
+  };
+
   const getStatusInfo = () => {
     switch (bootstrapStatus) {
       case 'checking':
@@ -200,7 +240,7 @@ export default function AutoBootstrapStatus() {
           Fixed Schema Trail Import System
         </CardTitle>
         <CardDescription>
-          Automated 30K trail download with corrected database schema
+          Automated trail download with corrected database schema
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -212,6 +252,32 @@ export default function AutoBootstrapStatus() {
           </Badge>
           <span className="text-sm text-gray-600">{statusInfo.description}</span>
         </div>
+
+        {/* Rochester Import Section */}
+        <Card className="bg-blue-50 border border-blue-200">
+          <CardContent className="pt-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <MapPin className="h-5 w-5 text-blue-600" />
+                <span className="font-medium text-blue-800">Rochester, MN Import</span>
+              </div>
+              <Badge variant="outline" className="text-blue-600 border-blue-300">
+                5,555 Trails
+              </Badge>
+            </div>
+            <p className="text-sm text-blue-600 mb-3">
+              Import location-specific trails for Rochester, Minnesota area within 100-mile radius
+            </p>
+            <Button 
+              onClick={handleRochesterImport}
+              disabled={rochesterImporting || isLoading}
+              className="w-full bg-blue-600 hover:bg-blue-700"
+            >
+              <MapPin className="h-4 w-4 mr-2" />
+              {rochesterImporting ? 'Importing Rochester Trails...' : 'Import 5,555 Rochester Trails'}
+            </Button>
+          </CardContent>
+        </Card>
 
         {/* Auto-trigger notice */}
         {autoTriggered && bootstrapStatus !== 'active' && (

@@ -236,8 +236,7 @@ export class AutoBootstrapService {
 (async () => {
   try {
     console.log('🎯 GreenTrails: Auto-executing Rochester trail import...');
-    const service = new AutoBootstrapService();
-    const success = await service.autoTriggerRochesterImport();
+    const success = await AutoBootstrapService.autoTriggerRochesterImport();
     
     if (success) {
       console.log('🚀 Rochester import started successfully! 5,555 trails incoming...');

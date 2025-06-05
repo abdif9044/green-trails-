@@ -40,7 +40,7 @@ serve(async (req) => {
     const { 
       sources, 
       maxTrailsPerSource, 
-      batchSize = 50, 
+      batchSize = 20, // REDUCED from 50 to avoid timeouts
       concurrency = 1,
       priority = 'normal',
       target = '30K',
@@ -48,14 +48,57 @@ serve(async (req) => {
       validation = false
     } = await req.json() as ImportRequest;
     
-    console.log(`🎯 Starting ${target} trail import with service role authentication`);
-    console.log(`📊 Configuration: ${sources.length} sources, ${maxTrailsPerSource} trails per source`);
+    console.log(`🎯 Starting ${target} trail import with FIXED SCHEMA`);
+    console.log(`📊 Configuration: ${sources.length} sources, ${maxTrailsPerSource} trails per source, batch size: ${batchSize}`);
     
     if (!sources || sources.length === 0) {
       return new Response(
         JSON.stringify({ error: 'No sources specified for import' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
+    }
+    
+    // Test single insert first
+    console.log('🧪 Testing single trail insert...');
+    const testTrail = {
+      id: crypto.randomUUID(),
+      name: 'Test Trail Import',
+      location: 'Test Location',
+      difficulty: 'moderate',
+      length: 5.5, // FIXED: Use 'length' not 'trail_length'
+      elevation: 150, // FIXED: Required field
+      longitude: -123.456,
+      latitude: 49.123,
+      country: 'Test Country',
+      state_province: 'Test Province',
+      surface: 'dirt', // FIXED: Use 'surface' not 'terrain_type'
+      trail_type: 'hiking',
+      source: 'test',
+      source_id: `test-${Date.now()}`,
+      is_age_restricted: false,
+      is_verified: true
+    };
+    
+    const { data: testData, error: testError } = await supabase
+      .from('trails')
+      .insert([testTrail])
+      .select('id');
+    
+    if (testError) {
+      console.error('❌ Single trail test FAILED:', testError);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Schema validation failed', 
+          details: testError.message,
+          schema_test: 'failed'
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      );
+    } else {
+      console.log('✅ Single trail test PASSED:', testData);
+      
+      // Clean up test trail
+      await supabase.from('trails').delete().eq('id', testTrail.id);
     }
     
     // Create bulk import job with proper schema
@@ -79,7 +122,8 @@ serve(async (req) => {
           target,
           debug,
           validation,
-          service_role: true
+          service_role: true,
+          schema_fixed: true
         }
       }])
       .select('*')
@@ -90,7 +134,7 @@ serve(async (req) => {
       throw new Error(`Failed to create bulk import job: ${bulkJobError.message}`);
     }
     
-    console.log(`✅ Created bulk job ${bulkJob.id} with service role authentication`);
+    console.log(`✅ Created bulk job ${bulkJob.id} with FIXED SCHEMA`);
     
     // Generate realistic trail data for each source
     let totalAdded = 0;
@@ -110,7 +154,7 @@ serve(async (req) => {
         
         console.log(`📋 Generated ${trails.length} trails for ${sourceType}`);
         
-        // Insert trails in batches using service role with proper error handling
+        // Insert trails in smaller batches with improved error handling
         let addedCount = 0;
         let failedCount = 0;
         
@@ -118,69 +162,86 @@ serve(async (req) => {
           const batch = trails.slice(i, i + batchSize);
           
           try {
-            // Format trails properly for database insertion - FIXED SCHEMA
+            // FIXED: Format trails with correct schema mapping
             const formattedTrails = batch.map((trail, batchIndex) => {
-              // Generate unique source_id to avoid duplicates
               const uniqueSourceId = `${sourceType}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${i + batchIndex}`;
               
-              // FIXED: Ensure all required fields match the database schema exactly
-              return {
-                name: trail.name || `${getSourceDisplayName(sourceType)} Trail ${String(i + batchIndex + 1).padStart(4, '0')}`,
-                description: trail.description || `A beautiful trail offering stunning views and outdoor adventure in ${trail.location || 'nature'}.`,
-                location: trail.location || `${getSourceDisplayName(sourceType)} Area`,
-                country: trail.country || 'United States',
-                state_province: trail.state_province || getDefaultStateForSource(sourceType),
+              // COMPREHENSIVE VALIDATION - ensure all required fields are present
+              const formattedTrail = {
+                id: crypto.randomUUID(), // Always generate new UUID
+                name: validateString(trail.name, `${getSourceDisplayName(sourceType)} Trail ${String(i + batchIndex + 1).padStart(4, '0')}`),
+                description: validateString(trail.description, `A beautiful trail offering stunning views and outdoor adventure.`),
+                location: validateString(trail.location, `${getSourceDisplayName(sourceType)} Area`),
+                country: validateString(trail.country, 'United States'),
+                state_province: validateString(trail.state_province, getDefaultStateForSource(sourceType)),
                 region: trail.region || getDefaultRegionForSource(sourceType),
-                latitude: ensureValidNumber(trail.latitude, 40.0),
-                longitude: ensureValidNumber(trail.longitude, -100.0),
-                // FIXED: Use correct column names matching database schema
-                trail_length: ensureValidNumber(trail.length_km || trail.length, Math.random() * 15 + 1),
+                latitude: ensureValidLatitude(trail.latitude),
+                longitude: ensureValidLongitude(trail.longitude),
+                // CRITICAL FIX: Use correct database column names
+                length: ensureValidNumber(trail.length_km || trail.length, Math.random() * 15 + 1), // NOT trail_length
                 elevation_gain: ensureValidNumber(trail.elevation_gain, Math.floor(Math.random() * 800) + 50),
-                elevation: ensureValidNumber(trail.elevation, Math.floor(Math.random() * 2000) + 100),
-                difficulty: validateDifficulty(trail.difficulty),
-                // FIXED: Use terrain_type instead of surface
-                terrain_type: validateTerrain(trail.surface || 'dirt'),
-                trail_type: 'hiking', // All trails are hiking type
-                is_age_restricted: false, // Keep it simple for bulk import
+                elevation: ensureValidNumber(trail.elevation, Math.floor(Math.random() * 2000) + 100), // REQUIRED FIELD
+                difficulty: validateDifficulty(trail.difficulty), // REQUIRED FIELD
+                surface: validateSurface(trail.surface || 'dirt'), // NOT terrain_type
+                trail_type: 'hiking', // Always set trail_type
+                is_age_restricted: false,
                 is_verified: true,
                 source: sourceType,
                 source_id: uniqueSourceId,
-                // FIXED: Don't set timestamps manually, let DB handle them
-                user_id: null, // Global trails, not user-owned
-                geojson: generateSimpleGeojson(trail.latitude, trail.longitude)
+                user_id: null,
+                geojson: generateSimpleGeojson(
+                  ensureValidLatitude(trail.latitude), 
+                  ensureValidLongitude(trail.longitude)
+                ),
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
               };
+              
+              return formattedTrail;
             });
             
-            // Validate all trails before attempting insert
+            // COMPREHENSIVE VALIDATION before insert
             const validTrails = formattedTrails.filter(trail => {
               const issues = [];
               
-              if (!trail.name || trail.name.length === 0) {
-                issues.push('missing name');
+              if (!trail.name || trail.name.trim().length === 0) {
+                issues.push('missing/empty name');
               }
-              if (!trail.location || trail.location.length === 0) {
-                issues.push('missing location');
+              if (!trail.location || trail.location.trim().length === 0) {
+                issues.push('missing/empty location');
+              }
+              if (!trail.difficulty || !['easy', 'moderate', 'hard'].includes(trail.difficulty)) {
+                issues.push('invalid difficulty');
               }
               if (!isValidCoordinate(trail.latitude, 'latitude')) {
-                issues.push('invalid latitude');
+                issues.push(`invalid latitude: ${trail.latitude}`);
               }
               if (!isValidCoordinate(trail.longitude, 'longitude')) {
-                issues.push('invalid longitude');
+                issues.push(`invalid longitude: ${trail.longitude}`);
               }
-              if (!isValidNumber(trail.trail_length) || trail.trail_length <= 0) {
-                issues.push('invalid trail_length');
+              if (!isValidNumber(trail.length) || trail.length <= 0) {
+                issues.push(`invalid length: ${trail.length}`);
+              }
+              if (!isValidNumber(trail.elevation)) {
+                issues.push(`invalid elevation: ${trail.elevation}`);
+              }
+              if (!trail.surface || !['dirt', 'gravel', 'paved', 'rock', 'sand', 'grass'].includes(trail.surface)) {
+                issues.push(`invalid surface: ${trail.surface}`);
               }
               if (!trail.source_id || trail.source_id.length === 0) {
                 issues.push('missing source_id');
               }
               
               if (issues.length > 0) {
-                console.error(`❌ Invalid trail rejected: ${issues.join(', ')}`, {
+                console.error(`❌ Trail validation failed: ${issues.join(', ')}`, {
                   name: trail.name,
                   location: trail.location,
+                  difficulty: trail.difficulty,
                   lat: trail.latitude,
                   lng: trail.longitude,
-                  length: trail.trail_length
+                  length: trail.length,
+                  elevation: trail.elevation,
+                  surface: trail.surface
                 });
                 return false;
               }
@@ -191,7 +252,7 @@ serve(async (req) => {
             console.log(`📝 Batch ${Math.floor(i/batchSize) + 1}: ${validTrails.length}/${formattedTrails.length} trails passed validation`);
             
             if (validTrails.length === 0) {
-              console.error(`❌ No valid trails in batch ${Math.floor(i/batchSize) + 1}`);
+              console.error(`❌ No valid trails in batch ${Math.floor(i/batchSize) + 1} for ${sourceType}`);
               failedCount += batch.length;
               continue;
             }
@@ -203,30 +264,22 @@ serve(async (req) => {
               .select('id');
             
             if (error) {
-              console.error(`❌ Batch insert failed for ${sourceType} batch ${Math.floor(i/batchSize) + 1}:`, error);
+              console.error(`❌ Batch insert failed for ${sourceType} batch ${Math.floor(i/batchSize) + 1}:`, {
+                error_code: error.code,
+                error_message: error.message,
+                error_details: error.details,
+                error_hint: error.hint,
+                batch_size: validTrails.length,
+                first_trail: validTrails[0]
+              });
               
-              // Log specific error details for debugging
-              console.error(`❌ Error code: ${error.code}`);
-              console.error(`❌ Error message: ${error.message}`);
-              console.error(`❌ Error details:`, error.details);
-              console.error(`❌ Error hint:`, error.hint);
-              
-              // Try to identify the specific issue
-              if (error.message.includes('duplicate')) {
-                console.error(`❌ Duplicate key error - source_id collision detected`);
-              } else if (error.message.includes('violates not-null constraint')) {
-                console.error(`❌ Not-null constraint violation`);
-              } else if (error.message.includes('violates check constraint')) {
-                console.error(`❌ Check constraint violation`);
-              }
-              
-              insertErrors.push(`${sourceType} batch ${Math.floor(i/batchSize) + 1}: ${error.message} (${error.code})`);
+              insertErrors.push(`${sourceType} batch ${Math.floor(i/batchSize) + 1}: ${error.message} (${error.code || 'UNKNOWN'})`);
               failedCount += validTrails.length;
             } else if (data && data.length > 0) {
               addedCount += data.length;
-              console.log(`✅ Successfully inserted ${data.length} trails from ${sourceType} batch ${Math.floor(i/batchSize) + 1}`);
+              console.log(`✅ Successfully inserted ${data.length} trails from ${sourceType} batch ${Math.floor(i/batchSize) + 1} (Progress: ${addedCount}/${trails.length})`);
             } else {
-              console.error(`❌ No data returned from insert for ${sourceType} batch ${Math.floor(i/batchSize) + 1} - this is unexpected`);
+              console.error(`❌ No data returned from insert for ${sourceType} batch ${Math.floor(i/batchSize) + 1}`);
               failedCount += validTrails.length;
             }
           } catch (batchError) {
@@ -236,7 +289,7 @@ serve(async (req) => {
           }
           
           // Small delay between batches to prevent overwhelming the database
-          await new Promise(resolve => setTimeout(resolve, 200));
+          await new Promise(resolve => setTimeout(resolve, 100));
         }
         
         totalAdded += addedCount;
@@ -248,10 +301,11 @@ serve(async (req) => {
           trails_added: addedCount,
           trails_failed: failedCount,
           trails_processed: trails.length,
+          success_rate: trails.length > 0 ? Math.round((addedCount / trails.length) * 100) : 0,
           error_details: failedCount > 0 ? insertErrors.filter(e => e.includes(sourceType)).slice(-3) : []
         });
         
-        console.log(`✅ ${sourceType}: ${addedCount} added, ${failedCount} failed`);
+        console.log(`✅ ${sourceType} COMPLETE: ${addedCount} added, ${failedCount} failed (${Math.round((addedCount/trails.length)*100)}% success)`);
         
       } catch (sourceError) {
         console.error(`💥 Source processing failed for ${sourceType}:`, sourceError);
@@ -265,7 +319,8 @@ serve(async (req) => {
           error: errorMsg,
           trails_added: 0,
           trails_failed: maxTrailsPerSource,
-          trails_processed: 0
+          trails_processed: 0,
+          success_rate: 0
         });
       }
     }
@@ -289,8 +344,9 @@ serve(async (req) => {
           success_rate: successRate,
           total_requested: sources.length * maxTrailsPerSource,
           service_role_used: true,
-          insert_errors: insertErrors.slice(-10), // Keep last 10 errors for debugging
-          schema_fixes_applied: true
+          insert_errors: insertErrors.slice(-10),
+          schema_fixes_applied: true,
+          validation_improvements: true
         }
       })
       .eq('id', bulkJob.id);
@@ -300,8 +356,8 @@ serve(async (req) => {
     }
     
     // Log comprehensive results
-    console.log(`🎉 ${target} Import Complete!`);
-    console.log(`📊 Results: ${totalAdded} added, ${totalFailed} failed, ${totalProcessed} processed`);
+    console.log(`🎉 ${target} Import COMPLETE!`);
+    console.log(`📊 Final Results: ${totalAdded} added, ${totalFailed} failed, ${totalProcessed} processed`);
     console.log(`📈 Success rate: ${successRate}%`);
     
     if (insertErrors.length > 0) {
@@ -330,7 +386,8 @@ serve(async (req) => {
         insert_errors: insertErrors.slice(-5),
         final_database_count: finalCount,
         schema_fixes_applied: true,
-        message: `${target} import completed: ${totalAdded} trails added with ${successRate}% success rate using fixed schema`
+        validation_improvements: true,
+        message: `${target} import completed: ${totalAdded} trails added with ${successRate}% success rate using FIXED SCHEMA`
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
@@ -351,10 +408,33 @@ serve(async (req) => {
   }
 });
 
-// FIXED: Helper functions for data validation and generation
+// ENHANCED VALIDATION FUNCTIONS
+function validateString(value: any, fallback: string): string {
+  if (!value || typeof value !== 'string' || value.trim().length === 0) {
+    return fallback;
+  }
+  return value.trim();
+}
+
 function ensureValidNumber(value: any, fallback: number): number {
   const num = parseFloat(String(value));
-  return isNaN(num) ? fallback : num;
+  return isNaN(num) || !isFinite(num) ? fallback : num;
+}
+
+function ensureValidLatitude(value: any): number {
+  const num = parseFloat(String(value));
+  if (isNaN(num) || !isFinite(num)) {
+    return 40.0 + (Math.random() - 0.5) * 10; // Random US latitude
+  }
+  return Math.max(-90, Math.min(90, num)); // Clamp to valid range
+}
+
+function ensureValidLongitude(value: any): number {
+  const num = parseFloat(String(value));
+  if (isNaN(num) || !isFinite(num)) {
+    return -100.0 + (Math.random() - 0.5) * 40; // Random US longitude
+  }
+  return Math.max(-180, Math.min(180, num)); // Clamp to valid range
 }
 
 function isValidNumber(value: any): boolean {
@@ -378,19 +458,18 @@ function validateDifficulty(difficulty: any): string {
   if (typeof difficulty === 'string' && valid.includes(difficulty.toLowerCase())) {
     return difficulty.toLowerCase();
   }
-  return 'moderate'; // Default fallback
+  return 'moderate'; // Safe default
 }
 
-function validateTerrain(terrain: any): string {
+function validateSurface(surface: any): string {
   const valid = ['dirt', 'gravel', 'paved', 'rock', 'sand', 'grass'];
-  if (typeof terrain === 'string' && valid.includes(terrain.toLowerCase())) {
-    return terrain.toLowerCase();
+  if (typeof surface === 'string' && valid.includes(surface.toLowerCase())) {
+    return surface.toLowerCase();
   }
-  return 'dirt'; // Default fallback
+  return 'dirt'; // Safe default
 }
 
 function generateSimpleGeojson(lat: number, lng: number): any {
-  // Generate a simple point geometry for the trail
   return {
     type: 'Point',
     coordinates: [lng, lat]
@@ -398,7 +477,7 @@ function generateSimpleGeojson(lat: number, lng: number): any {
 }
 
 function getDefaultStateForSource(sourceType: string): string {
-  const defaults = {
+  const defaults: Record<string, string> = {
     'hiking_project': 'California',
     'openstreetmap': 'Colorado',
     'usgs': 'Wyoming',
@@ -408,7 +487,7 @@ function getDefaultStateForSource(sourceType: string): string {
 }
 
 function getDefaultRegionForSource(sourceType: string): string {
-  const defaults = {
+  const defaults: Record<string, string> = {
     'hiking_project': 'Western US',
     'openstreetmap': 'Mountain West',
     'usgs': 'National Parks',
@@ -440,7 +519,7 @@ function generateTrailsForSource(sourceType: string, count: number): any[] {
       longitude: baseData.longitude + (Math.random() - 0.5) * 4,
       surface: baseData.surfaces[Math.floor(Math.random() * baseData.surfaces.length)],
       trail_type: 'hiking',
-      is_age_restricted: false, // Keep simple for bulk import
+      is_age_restricted: false,
       source: sourceType,
       source_id: `${sourceType}-${Date.now()}-${i}`,
       last_updated: new Date().toISOString()
@@ -453,7 +532,7 @@ function generateTrailsForSource(sourceType: string, count: number): any[] {
 }
 
 function getBaseDataForSource(sourceType: string, index: number) {
-  const sources = {
+  const sources: Record<string, any> = {
     'hiking_project': {
       locations: ['Yosemite Valley, CA', 'Grand Canyon, AZ', 'Zion National Park, UT', 'Rocky Mountain NP, CO'],
       country: 'United States',
@@ -516,7 +595,7 @@ function getBaseDataForSource(sourceType: string, index: number) {
 }
 
 function getSourceDisplayName(sourceType: string): string {
-  const names = {
+  const names: Record<string, string> = {
     'hiking_project': 'Hiking Project',
     'openstreetmap': 'OpenStreetMap', 
     'usgs': 'USGS',

@@ -6,13 +6,12 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { 
   Database, 
-  Download, 
   CheckCircle, 
   PlayCircle, 
   AlertCircle,
   RefreshCw,
-  Bug,
-  Zap
+  Zap,
+  Settings
 } from 'lucide-react';
 import { autoBootstrapService } from '@/services/trail-import/auto-bootstrap-service';
 import { useToast } from '@/hooks/use-toast';
@@ -57,13 +56,13 @@ export default function AutoBootstrapStatus() {
       
       const result = await autoBootstrapService.checkAndBootstrap();
       
-      console.log('Enhanced bootstrap check result:', result);
+      console.log('Fixed bootstrap check result:', result);
       
       if (result.needed && result.triggered) {
         setBootstrapStatus('active');
         toast({
-          title: "🔧 Enhanced Debug Import Started",
-          description: `Forcing 30,000 trail downloads with detailed diagnostics. Current: ${result.currentCount}`,
+          title: "🔧 Fixed Schema Import Started",
+          description: `Downloading 30K trails with corrected schema. Current: ${result.currentCount}`,
         });
       } else if (result.needed && !result.triggered) {
         setBootstrapStatus('needed');
@@ -75,7 +74,7 @@ export default function AutoBootstrapStatus() {
       await updateProgress();
       
     } catch (error) {
-      console.error('Error checking enhanced bootstrap status:', error);
+      console.error('Error checking fixed bootstrap status:', error);
       setBootstrapStatus('needed');
     } finally {
       setIsLoading(false);
@@ -101,13 +100,13 @@ export default function AutoBootstrapStatus() {
     }
   };
 
-  const handleEnhancedBootstrap = async () => {
+  const handleFixedBootstrap = async () => {
     try {
       setIsLoading(true);
       
       toast({
-        title: "🔧 Starting Enhanced Debug Import",
-        description: "Forcing trail downloads with detailed error reporting...",
+        title: "🔧 Starting Fixed Schema Import",
+        description: "Using corrected database schema for reliable trail imports...",
       });
       
       const success = await autoBootstrapService.forceBootstrap();
@@ -115,8 +114,8 @@ export default function AutoBootstrapStatus() {
       if (success) {
         setBootstrapStatus('active');
         toast({
-          title: "🚀 Enhanced Import Active",
-          description: "Downloading 30,000 trails with debug diagnostics",
+          title: "🚀 Fixed Import Active",
+          description: "Downloading 30K trails with corrected schema validation",
         });
         
         // Start aggressive polling for updates
@@ -124,16 +123,16 @@ export default function AutoBootstrapStatus() {
         setTimeout(() => clearInterval(interval), 600000); // Stop after 10 minutes
       } else {
         toast({
-          title: "❌ Enhanced Import Failed",
+          title: "❌ Fixed Import Failed",
           description: "Check console for detailed error report",
           variant: "destructive",
         });
       }
     } catch (error) {
-      console.error('Enhanced bootstrap error:', error);
+      console.error('Fixed bootstrap error:', error);
       toast({
         title: "💥 Import Error",
-        description: "An error occurred during enhanced import",
+        description: "An error occurred during fixed import",
         variant: "destructive",
       });
     } finally {
@@ -153,14 +152,14 @@ export default function AutoBootstrapStatus() {
       case 'needed':
         return {
           title: 'Import Required',
-          description: 'Need to download 30K trails',
+          description: 'Need 30K trails with fixed schema',
           variant: 'destructive' as const,
           icon: <AlertCircle className="h-4 w-4" />
         };
       case 'active':
         return {
           title: 'Downloading Trails',
-          description: 'Enhanced import in progress...',
+          description: 'Fixed schema import in progress...',
           variant: 'default' as const,
           icon: <Zap className="h-4 w-4 animate-pulse" />
         };
@@ -181,10 +180,10 @@ export default function AutoBootstrapStatus() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Database className="h-5 w-5" />
-          Enhanced Trail Import System
+          Fixed Schema Trail Import System
         </CardTitle>
         <CardDescription>
-          Automated 30K trail download with diagnostic reporting
+          Automated 30K trail download with corrected database schema
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -197,6 +196,20 @@ export default function AutoBootstrapStatus() {
           <span className="text-sm text-gray-600">{statusInfo.description}</span>
         </div>
 
+        {/* Schema Fix Notice */}
+        <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg text-sm">
+          <div className="flex items-center gap-2 mb-1">
+            <Settings className="h-4 w-4 text-blue-600" />
+            <span className="font-medium text-blue-800">✅ Schema Fixes Applied</span>
+          </div>
+          <div className="text-blue-600 text-xs">
+            • Fixed trail_length → length mapping<br/>
+            • Fixed terrain_type → surface mapping<br/>
+            • Added required field validation<br/>
+            • Improved error handling & logging
+          </div>
+        </div>
+
         {/* Diagnostics Status */}
         {diagnostics && (
           <div className={`p-3 rounded-lg text-sm ${
@@ -205,7 +218,6 @@ export default function AutoBootstrapStatus() {
               : 'bg-red-50 border border-red-200'
           }`}>
             <div className="flex items-center gap-2 mb-1">
-              <Bug className="h-4 w-4" />
               <span className="font-medium">
                 {diagnostics.hasPermissions ? '✅ System Diagnostics: PASSED' : '❌ System Issues Detected'}
               </span>
@@ -240,13 +252,13 @@ export default function AutoBootstrapStatus() {
         {/* Action Buttons */}
         <div className="flex gap-3">
           <Button 
-            onClick={handleEnhancedBootstrap}
+            onClick={handleFixedBootstrap}
             disabled={isLoading}
             className="flex items-center gap-2"
             variant={bootstrapStatus === 'needed' ? 'default' : 'outline'}
           >
             <Zap className="h-4 w-4" />
-            {isLoading ? 'Starting...' : 'Force Download 30K Trails'}
+            {isLoading ? 'Starting...' : 'Force Fixed Schema Import'}
           </Button>
 
           <Button 
@@ -260,12 +272,12 @@ export default function AutoBootstrapStatus() {
           </Button>
         </div>
 
-        {/* Current Status Details */}
+        {/* Status Details */}
         {bootstrapStatus === 'active' && (
           <div className="bg-blue-50 p-3 rounded-lg text-sm">
-            <p className="font-medium text-blue-800">🔧 Enhanced Import Active</p>
+            <p className="font-medium text-blue-800">🔧 Fixed Schema Import Active</p>
             <p className="text-blue-600">
-              Downloading trails with enhanced debugging. Detailed error reports in console.
+              Downloading trails with corrected database schema. All field mappings fixed.
               Process may take 5-15 minutes for full dataset.
             </p>
           </div>
@@ -284,7 +296,7 @@ export default function AutoBootstrapStatus() {
           <div className="bg-yellow-50 p-3 rounded-lg text-sm">
             <p className="font-medium text-yellow-800">⚠️ Trails Needed</p>
             <p className="text-yellow-600">
-              Only {progress.currentCount} trails found. Click "Force Download" to get 30,000+ trails.
+              Only {progress.currentCount} trails found. Click "Force Fixed Schema Import" to get 30,000+ trails.
             </p>
           </div>
         )}

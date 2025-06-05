@@ -1,7 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { EnhancedDebugImportService } from './enhanced-debug-service';
 
 interface BootstrapConfig {
   minTrailCount: number;
@@ -14,16 +13,14 @@ export class AutoBootstrapService {
   private static instance: AutoBootstrapService;
   private config: BootstrapConfig;
   private isBootstrapping = false;
-  private debugService: EnhancedDebugImportService;
 
   private constructor() {
     this.config = {
       minTrailCount: 5000,
       targetTrailCount: 30000,
       autoTrigger: true,
-      sources: ['hiking_project', 'openstreetmap', 'usgs', 'parks_canada']
+      sources: ['hiking_project', 'openstreetmap', 'usgs']
     };
-    this.debugService = new EnhancedDebugImportService();
   }
 
   static getInstance(): AutoBootstrapService {
@@ -72,8 +69,8 @@ export class AutoBootstrapService {
         return { needed: true, triggered: false, currentCount: trailCount };
       }
 
-      // Trigger ENHANCED DEBUG bootstrap to force downloads
-      const triggered = await this.triggerEnhancedBootstrap();
+      // Trigger FIXED bootstrap with improved error handling
+      const triggered = await this.triggerFixedBootstrap();
       return { needed: true, triggered, currentCount: trailCount };
 
     } catch (error) {
@@ -83,53 +80,54 @@ export class AutoBootstrapService {
   }
 
   /**
-   * Trigger ENHANCED DEBUG bootstrap with detailed error reporting
+   * Trigger FIXED bootstrap with schema corrections
    */
-  async triggerEnhancedBootstrap(): Promise<boolean> {
+  async triggerFixedBootstrap(): Promise<boolean> {
     if (this.isBootstrapping) {
-      console.log('⏳ Enhanced bootstrap already in progress');
+      console.log('⏳ Fixed bootstrap already in progress');
       return false;
     }
 
     try {
       this.isBootstrapping = true;
-      console.log('🔧 Starting ENHANCED DEBUG bootstrap with detailed diagnostics...');
+      console.log('🔧 Starting FIXED bootstrap with corrected schema...');
 
-      toast.success('🔧 Enhanced Debug Import Started - Forcing trail downloads!');
+      toast.success('🔧 Fixed Schema Import Started - Downloading 30K trails!');
 
-      // Run enhanced debug import which tests permissions and forces downloads
-      const summary = await this.debugService.runEnhancedBatchImport(this.config.targetTrailCount);
-      
-      if (summary.successfullyInserted > 0) {
-        console.log(`✅ Enhanced bootstrap SUCCESS: ${summary.successfullyInserted} trails imported!`);
-        toast.success(`🎉 SUCCESS! ${summary.successfullyInserted.toLocaleString()} trails downloaded successfully!`);
+      // Call the FIXED massive import function
+      const { data: importResult, error: importError } = await supabase.functions.invoke('import-trails-massive', {
+        body: {
+          sources: this.config.sources,
+          maxTrailsPerSource: Math.ceil(this.config.targetTrailCount / this.config.sources.length),
+          batchSize: 20, // Smaller batches for reliability
+          concurrency: 1,
+          target: '30K Fixed Schema',
+          debug: true,
+          validation: true
+        }
+      });
+
+      if (importError) {
+        console.error('❌ Fixed bootstrap failed:', importError);
+        toast.error(`❌ Import failed: ${importError.message}`);
+        return false;
+      } else if (importResult && importResult.total_added > 0) {
+        console.log(`✅ Fixed bootstrap SUCCESS: ${importResult.total_added} trails imported!`);
+        toast.success(`🎉 SUCCESS! ${importResult.total_added.toLocaleString()} trails downloaded with ${importResult.success_rate}% success rate!`);
         return true;
       } else {
-        console.error('❌ Enhanced bootstrap failed with detailed report:', summary);
-        
-        // Generate and log detailed report
-        const report = this.debugService.generateDetailedReport(summary);
-        console.error('📋 DETAILED FAILURE REPORT:', report);
-        
-        toast.error(`❌ Import failed: ${summary.detailedFailures.length} errors detected. Check console for details.`);
+        console.error('❌ Fixed bootstrap completed but no trails added:', importResult);
+        toast.error('❌ Import completed but no trails were added. Check console for details.');
         return false;
       }
 
     } catch (error) {
-      console.error('💥 Enhanced bootstrap exception:', error);
-      toast.error('Enhanced bootstrap failed with an error');
+      console.error('💥 Fixed bootstrap exception:', error);
+      toast.error('Fixed bootstrap failed with an error');
       return false;
     } finally {
       this.isBootstrapping = false;
     }
-  }
-
-  /**
-   * Legacy trigger function - now redirects to enhanced version
-   */
-  async triggerBootstrap(): Promise<boolean> {
-    console.log('🔀 Redirecting to enhanced bootstrap...');
-    return this.triggerEnhancedBootstrap();
   }
 
   /**
@@ -178,19 +176,50 @@ export class AutoBootstrapService {
   }
 
   /**
-   * Force trigger enhanced bootstrap (for manual use)
+   * Force trigger fixed bootstrap (for manual use)
    */
   async forceBootstrap(): Promise<boolean> {
-    console.log('🔧 Force triggering ENHANCED DEBUG bootstrap...');
+    console.log('🔧 Force triggering FIXED bootstrap...');
     this.isBootstrapping = false; // Reset state
-    return this.triggerEnhancedBootstrap();
+    return this.triggerFixedBootstrap();
   }
 
   /**
    * Run database diagnostics
    */
   async runDiagnostics(): Promise<{ hasPermissions: boolean; errors: string[] }> {
-    return this.debugService.testDatabasePermissions();
+    const errors: string[] = [];
+
+    try {
+      // Test basic SELECT permission
+      const { data: selectTest, error: selectError } = await supabase
+        .from('trails')
+        .select('id')
+        .limit(1);
+
+      if (selectError) {
+        errors.push(`SELECT permission failed: ${selectError.message}`);
+      }
+
+      // Test bulk_import_jobs table
+      const { data: bulkTest, error: bulkError } = await supabase
+        .from('bulk_import_jobs')
+        .select('id')
+        .limit(1);
+
+      if (bulkError) {
+        errors.push(`Bulk import jobs table failed: ${bulkError.message}`);
+      }
+
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      errors.push(`Permission test exception: ${errorMsg}`);
+    }
+
+    return {
+      hasPermissions: errors.length === 0,
+      errors
+    };
   }
 }
 

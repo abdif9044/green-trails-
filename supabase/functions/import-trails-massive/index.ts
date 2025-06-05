@@ -12,6 +12,13 @@ interface ImportRequest {
   target?: string;
   debug?: boolean;
   validation?: boolean;
+  location?: {
+    lat: number;
+    lng: number;
+    radius: number;
+    city?: string;
+    state?: string;
+  };
 }
 
 serve(async (req) => {
@@ -40,16 +47,24 @@ serve(async (req) => {
     const { 
       sources, 
       maxTrailsPerSource, 
-      batchSize = 15, // REDUCED batch size for reliability
+      batchSize = 15,
       concurrency = 1,
       priority = 'normal',
       target = '30K',
       debug = false,
-      validation = false
+      validation = false,
+      location
     } = await req.json() as ImportRequest;
     
-    console.log(`🎯 Starting ${target} FIXED trail import with validated schema`);
+    const isLocationSpecific = !!location;
+    const locationName = location ? `${location.city || 'Location'}, ${location.state || 'Area'}` : 'General';
+    
+    console.log(`🎯 Starting ${target} trail import${isLocationSpecific ? ` for ${locationName}` : ''} with validated schema`);
     console.log(`📊 Configuration: ${sources.length} sources, ${maxTrailsPerSource} trails per source, batch size: ${batchSize}`);
+    
+    if (location) {
+      console.log(`📍 Location targeting: ${location.lat}, ${location.lng} within ${location.radius} miles`);
+    }
     
     if (!sources || sources.length === 0) {
       return new Response(
@@ -60,34 +75,7 @@ serve(async (req) => {
     
     // CRITICAL FIX: Test single insert with proper schema validation
     console.log('🧪 Testing single trail insert with FIXED schema...');
-    const testTrail = {
-      id: crypto.randomUUID(),
-      name: 'Schema Test Trail',
-      location: 'Test Location, CA',
-      difficulty: 'moderate',
-      length: 5.5,
-      elevation: 150,
-      longitude: -123.456789,
-      latitude: 49.123456,
-      country: 'United States',
-      state_province: 'California',
-      surface: 'dirt',
-      trail_type: 'hiking',
-      source: 'test',
-      source_id: `test-${Date.now()}`,
-      is_age_restricted: false,
-      is_verified: true,
-      description: 'Test trail for schema validation',
-      length_km: 5.5,
-      elevation_gain: 150,
-      geojson: {
-        type: 'Point',
-        coordinates: [-123.456789, 49.123456]
-      },
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      user_id: null
-    };
+    const testTrail = createTestTrail(location);
     
     // CRITICAL: Use INSERT instead of UPSERT to avoid constraint issues
     const { data: testData, error: testError } = await supabase
@@ -141,9 +129,9 @@ serve(async (req) => {
       throw new Error(`Failed to create bulk import job: ${bulkJobError.message}`);
     }
     
-    console.log(`✅ Created bulk job ${bulkJob.id} with FIXED SCHEMA`);
+    console.log(`✅ Created bulk job ${bulkJob.id} for ${locationName} with FIXED SCHEMA`);
     
-    // Generate realistic trail data for each source
+    // Generate trail data for each source
     let totalAdded = 0;
     let totalFailed = 0;
     let totalProcessed = 0;
@@ -153,13 +141,13 @@ serve(async (req) => {
     
     for (const sourceType of sources) {
       try {
-        console.log(`🚀 Processing source: ${sourceType}`);
+        console.log(`🚀 Processing source: ${sourceType} for ${locationName}`);
         
-        // Generate realistic trails for this source
-        const trails = generateTrailsForSource(sourceType, maxTrailsPerSource);
+        // Generate location-specific trails for this source
+        const trails = generateTrailsForSource(sourceType, maxTrailsPerSource, location);
         totalProcessed += trails.length;
         
-        console.log(`📋 Generated ${trails.length} trails for ${sourceType}`);
+        console.log(`📋 Generated ${trails.length} trails for ${sourceType} near ${locationName}`);
         
         // Insert trails in smaller batches with FIXED schema
         let addedCount = 0;
@@ -174,12 +162,12 @@ serve(async (req) => {
               const uniqueId = crypto.randomUUID();
               const uniqueSourceId = `${sourceType}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${i + batchIndex}`;
               
-              // COMPREHENSIVE SCHEMA VALIDATION
+              // COMPREHENSIVE SCHEMA VALIDATION with location awareness
               const formattedTrail = {
                 // REQUIRED FIELDS WITH VALIDATION
                 id: uniqueId,
                 name: validateString(trail.name, `${getSourceDisplayName(sourceType)} Trail ${String(i + batchIndex + 1).padStart(4, '0')}`),
-                location: validateString(trail.location, `${getSourceDisplayName(sourceType)} Area`),
+                location: validateString(trail.location, `${locationName} Area`),
                 difficulty: validateDifficulty(trail.difficulty),
                 length: ensureValidNumber(trail.length || trail.length_km, Math.random() * 15 + 1),
                 elevation: ensureValidInteger(trail.elevation, Math.floor(Math.random() * 2000) + 100),
@@ -187,9 +175,9 @@ serve(async (req) => {
                 latitude: ensureValidLatitude(trail.latitude),
                 
                 // OPTIONAL FIELDS WITH SAFE DEFAULTS
-                description: validateString(trail.description, `A beautiful ${trail.difficulty || 'moderate'} trail offering stunning outdoor adventure.`),
+                description: validateString(trail.description, `A beautiful ${trail.difficulty || 'moderate'} trail offering stunning outdoor adventure near ${locationName}.`),
                 country: validateString(trail.country, 'United States'),
-                state_province: validateString(trail.state_province, getDefaultStateForSource(sourceType)),
+                state_province: validateString(trail.state_province, location?.state || getDefaultStateForSource(sourceType)),
                 surface: validateSurface(trail.surface),
                 trail_type: 'hiking',
                 source: sourceType,
@@ -199,7 +187,7 @@ serve(async (req) => {
                 is_age_restricted: false,
                 is_verified: true,
                 user_id: null,
-                geojson: generateSimpleGeojson(
+                geojson: generateLocationAwareGeojson(
                   ensureValidLatitude(trail.latitude), 
                   ensureValidLongitude(trail.longitude)
                 ),
@@ -226,7 +214,7 @@ serve(async (req) => {
               return true;
             });
             
-            console.log(`📝 Batch ${Math.floor(i/batchSize) + 1}: ${validTrails.length}/${formattedTrails.length} trails passed validation`);
+            console.log(`📝 Batch ${Math.floor(i/batchSize) + 1}: ${validTrails.length}/${formattedTrails.length} trails passed validation for ${locationName}`);
             
             if (validTrails.length === 0) {
               console.error(`❌ No valid trails in batch ${Math.floor(i/batchSize) + 1} for ${sourceType}`);
@@ -254,7 +242,7 @@ serve(async (req) => {
               failedCount += validTrails.length;
             } else if (data && data.length > 0) {
               addedCount += data.length;
-              console.log(`✅ Successfully inserted ${data.length} trails from ${sourceType} batch ${Math.floor(i/batchSize) + 1} (Progress: ${addedCount}/${trails.length})`);
+              console.log(`✅ Successfully inserted ${data.length} trails from ${sourceType} batch ${Math.floor(i/batchSize) + 1} near ${locationName} (Progress: ${addedCount}/${trails.length})`);
             } else {
               console.error(`❌ No data returned from insert for ${sourceType} batch ${Math.floor(i/batchSize) + 1}`);
               failedCount += validTrails.length;
@@ -279,10 +267,11 @@ serve(async (req) => {
           trails_failed: failedCount,
           trails_processed: trails.length,
           success_rate: trails.length > 0 ? Math.round((addedCount / trails.length) * 100) : 0,
-          error_details: failedCount > 0 ? insertErrors.filter(e => e.includes(sourceType)).slice(-3) : []
+          error_details: failedCount > 0 ? insertErrors.filter(e => e.includes(sourceType)).slice(-3) : [],
+          location: locationName
         });
         
-        console.log(`✅ ${sourceType} COMPLETE: ${addedCount} added, ${failedCount} failed (${Math.round((addedCount/trails.length)*100)}% success)`);
+        console.log(`✅ ${sourceType} COMPLETE for ${locationName}: ${addedCount} added, ${failedCount} failed (${Math.round((addedCount/trails.length)*100)}% success)`);
         
       } catch (sourceError) {
         console.error(`💥 Source processing failed for ${sourceType}:`, sourceError);
@@ -297,7 +286,8 @@ serve(async (req) => {
           trails_added: 0,
           trails_failed: maxTrailsPerSource,
           trails_processed: 0,
-          success_rate: 0
+          success_rate: 0,
+          location: locationName
         });
       }
     }
@@ -327,7 +317,7 @@ serve(async (req) => {
       .from('trails')
       .select('*', { count: 'exact', head: true });
     
-    console.log(`🎉 ${target} Import COMPLETE!`);
+    console.log(`🎉 ${target} Import COMPLETE for ${locationName}!`);
     console.log(`📊 Final Results: ${totalAdded} added, ${totalFailed} failed, ${totalProcessed} processed`);
     console.log(`📈 Success rate: ${successRate}%`);
     console.log(`🗄️ Total trails now in database: ${finalCount}`);
@@ -341,6 +331,7 @@ serve(async (req) => {
         job_id: bulkJob.id,
         status: finalStatus,
         target: target,
+        location: locationName,
         total_processed: totalProcessed,
         total_added: totalAdded,
         total_updated: 0,
@@ -351,8 +342,8 @@ serve(async (req) => {
         insert_errors: insertErrors.slice(-5),
         final_database_count: finalCount,
         schema_fixes_applied: true,
-        validation_improvements: true,
-        message: `${target} import completed: ${totalAdded} trails added with ${successRate}% success rate using FIXED SCHEMA`
+        location_targeting: isLocationSpecific,
+        message: `${target} import completed for ${locationName}: ${totalAdded} trails added with ${successRate}% success rate using LOCATION-AWARE SCHEMA`
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
@@ -378,7 +369,7 @@ function validateString(value: any, fallback: string): string {
   if (!value || typeof value !== 'string' || value.trim().length === 0) {
     return fallback;
   }
-  return value.trim().substring(0, 255); // Prevent overly long strings
+  return value.trim().substring(0, 255);
 }
 
 function ensureValidNumber(value: any, fallback: number): number {
@@ -391,20 +382,20 @@ function ensureValidInteger(value: any, fallback: number): number {
   return isNaN(num) || !isFinite(num) ? fallback : num;
 }
 
-function ensureValidLatitude(value: any): number {
+function ensureValidLatitude(value: any, location?: { lat: number; lng: number; radius: number }): number {
   const num = parseFloat(String(value));
   if (isNaN(num) || !isFinite(num)) {
-    return 40.0 + (Math.random() - 0.5) * 10; // Random US latitude
+    return location ? location.lat + (Math.random() - 0.5) * 2 : 40.0 + (Math.random() - 0.5) * 10;
   }
-  return Math.max(-90, Math.min(90, num)); // Clamp to valid range
+  return Math.max(-90, Math.min(90, num));
 }
 
-function ensureValidLongitude(value: any): number {
+function ensureValidLongitude(value: any, location?: { lat: number; lng: number; radius: number }): number {
   const num = parseFloat(String(value));
   if (isNaN(num) || !isFinite(num)) {
-    return -100.0 + (Math.random() - 0.5) * 40; // Random US longitude
+    return location ? location.lng + (Math.random() - 0.5) * 2 : -100.0 + (Math.random() - 0.5) * 40;
   }
-  return Math.max(-180, Math.min(180, num)); // Clamp to valid range
+  return Math.max(-180, Math.min(180, num));
 }
 
 function validateDifficulty(difficulty: any): string {
@@ -412,7 +403,7 @@ function validateDifficulty(difficulty: any): string {
   if (typeof difficulty === 'string' && valid.includes(difficulty.toLowerCase())) {
     return difficulty.toLowerCase();
   }
-  return 'moderate'; // Safe default
+  return 'moderate';
 }
 
 function validateSurface(surface: any): string {
@@ -420,7 +411,7 @@ function validateSurface(surface: any): string {
   if (typeof surface === 'string' && valid.includes(surface.toLowerCase())) {
     return surface.toLowerCase();
   }
-  return 'dirt'; // Safe default
+  return 'dirt';
 }
 
 function validateTrailSchema(trail: any): string[] {
@@ -457,33 +448,71 @@ function validateTrailSchema(trail: any): string[] {
   return issues;
 }
 
-function generateSimpleGeojson(lat: number, lng: number): any {
+function generateLocationAwareGeojson(lat: number, lng: number): any {
   return {
     type: 'Point',
     coordinates: [lng, lat]
   };
 }
 
+function createTestTrail(location?: { lat: number; lng: number; radius: number; city?: string; state?: string }): any {
+  const lat = location ? location.lat + (Math.random() - 0.5) * 0.1 : 44.0223;
+  const lng = location ? location.lng + (Math.random() - 0.5) * 0.1 : -92.4695;
+  const locationName = location ? `${location.city || 'Test Location'}, ${location.state || 'MN'}` : 'Test Location, CA';
+  
+  return {
+    id: crypto.randomUUID(),
+    name: 'Schema Test Trail',
+    location: locationName,
+    difficulty: 'moderate',
+    length: 5.5,
+    elevation: 150,
+    longitude: lng,
+    latitude: lat,
+    country: 'United States',
+    state_province: location?.state || 'Minnesota',
+    surface: 'dirt',
+    trail_type: 'hiking',
+    source: 'test',
+    source_id: `test-${Date.now()}`,
+    is_age_restricted: false,
+    is_verified: true,
+    description: `Test trail for schema validation near ${locationName}`,
+    length_km: 5.5,
+    elevation_gain: 150,
+    geojson: {
+      type: 'Point',
+      coordinates: [lng, lat]
+    },
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    user_id: null
+  };
+}
+
 function getDefaultStateForSource(sourceType: string): string {
   const defaults: Record<string, string> = {
+    'rochester_osm': 'Minnesota',
+    'minnesota_usgs': 'Minnesota',
+    'local_trails': 'Minnesota',
     'hiking_project': 'California',
     'openstreetmap': 'Colorado',
     'usgs': 'Wyoming',
     'parks_canada': 'Alberta'
   };
-  return defaults[sourceType] || 'California';
+  return defaults[sourceType] || 'Minnesota';
 }
 
-// Generate realistic trail data for different sources with proper validation
-function generateTrailsForSource(sourceType: string, count: number): any[] {
+// Generate location-aware trail data for different sources
+function generateTrailsForSource(sourceType: string, count: number, location?: { lat: number; lng: number; radius: number; city?: string; state?: string }): any[] {
   const trails = [];
   
   for (let i = 0; i < count; i++) {
-    const baseData = getBaseDataForSource(sourceType, i);
+    const baseData = getLocationAwareBaseData(sourceType, i, location);
     
     const trail = {
-      name: `${getSourceDisplayName(sourceType)} Trail ${String(i + 1).padStart(4, '0')}`,
-      description: `A ${baseData.difficulty} trail from ${getSourceDisplayName(sourceType)} offering ${baseData.features.join(', ')}.`,
+      name: `${baseData.displayName} Trail ${String(i + 1).padStart(4, '0')}`,
+      description: `A ${baseData.difficulty} trail from ${baseData.displayName} offering ${baseData.features.join(', ')} near ${location?.city || 'the area'}.`,
       location: baseData.location,
       country: baseData.country,
       state_province: baseData.state_province,
@@ -492,8 +521,8 @@ function generateTrailsForSource(sourceType: string, count: number): any[] {
       elevation_gain: Math.floor(Math.random() * 1200) + 50,
       elevation: Math.floor(Math.random() * 3500) + 100,
       difficulty: baseData.difficulty,
-      latitude: baseData.latitude + (Math.random() - 0.5) * 2,
-      longitude: baseData.longitude + (Math.random() - 0.5) * 4,
+      latitude: baseData.latitude + (Math.random() - 0.5) * 0.5, // Smaller radius for more realistic clustering
+      longitude: baseData.longitude + (Math.random() - 0.5) * 0.5,
       surface: baseData.surfaces[Math.floor(Math.random() * baseData.surfaces.length)],
       trail_type: 'hiking',
       source: sourceType,
@@ -507,43 +536,122 @@ function generateTrailsForSource(sourceType: string, count: number): any[] {
   return trails;
 }
 
-function getBaseDataForSource(sourceType: string, index: number) {
-  const sources: Record<string, any> = {
+function getLocationAwareBaseData(sourceType: string, index: number, location?: { lat: number; lng: number; radius: number; city?: string; state?: string }) {
+  const isRochester = location && location.city?.toLowerCase().includes('rochester');
+  const isMinnesota = location && location.state?.toLowerCase().includes('minnesota');
+  
+  // Rochester, MN specific data
+  if (isRochester || isMinnesota) {
+    const rochesterSources: Record<string, any> = {
+      'rochester_osm': {
+        displayName: 'Rochester Parks',
+        locations: [
+          'Silver Lake Park, Rochester, MN',
+          'Quarry Hill Nature Center, Rochester, MN', 
+          'Chester\'s Kitchen Area, Rochester, MN',
+          'Zumbro River Trail, Rochester, MN',
+          'Mayowood Stone Barn, Rochester, MN'
+        ],
+        country: 'United States',
+        state_provinces: ['Minnesota'],
+        difficulties: ['easy', 'moderate'],
+        latitude: 44.0223,
+        longitude: -92.4695,
+        surfaces: ['paved', 'dirt', 'gravel'],
+        features: ['river views', 'prairie wildlife', 'urban trails', 'historic sites']
+      },
+      'minnesota_usgs': {
+        displayName: 'Minnesota State Parks',
+        locations: [
+          'Whitewater State Park, MN',
+          'Forestville/Mystery Cave State Park, MN',
+          'Carley State Park, MN',
+          'Richard J. Dorer Memorial Forest, MN',
+          'Root River State Trail, MN'
+        ],
+        country: 'United States', 
+        state_provinces: ['Minnesota'],
+        difficulties: ['moderate', 'hard'],
+        latitude: 44.1,
+        longitude: -92.3,
+        surfaces: ['dirt', 'rock', 'gravel'],
+        features: ['bluff country', 'trout streams', 'hardwood forests', 'limestone caves']
+      },
+      'local_trails': {
+        displayName: 'Local Rochester',
+        locations: [
+          'Mayo Clinic Campus Trails, Rochester, MN',
+          'Soldiers Field Veterans Memorial, Rochester, MN',
+          'Cascade Lake Park, Rochester, MN',
+          'Essex Park Trail, Rochester, MN',
+          'Bear Creek Trail, Rochester, MN'
+        ],
+        country: 'United States',
+        state_provinces: ['Minnesota'],
+        difficulties: ['easy', 'moderate'],
+        latitude: 44.05,
+        longitude: -92.5,
+        surfaces: ['paved', 'gravel'],
+        features: ['accessible trails', 'family-friendly', 'scenic lakes', 'community paths']
+      }
+    };
+    
+    const source = rochesterSources[sourceType] || rochesterSources['local_trails'];
+    
+    return {
+      displayName: source.displayName,
+      location: source.locations[index % source.locations.length],
+      country: source.country,
+      state_province: source.state_provinces[index % source.state_provinces.length],
+      difficulty: source.difficulties[index % source.difficulties.length],
+      latitude: source.latitude + (Math.random() - 0.5) * 0.3, // Constrain to Rochester area
+      longitude: source.longitude + (Math.random() - 0.5) * 0.3,
+      surfaces: source.surfaces,
+      features: source.features
+    };
+  }
+  
+  // Fallback to general sources if not Rochester-specific
+  const generalSources: Record<string, any> = {
     'hiking_project': {
+      displayName: 'Hiking Project',
       locations: ['Yosemite Valley, CA', 'Grand Canyon, AZ', 'Zion National Park, UT', 'Rocky Mountain NP, CO'],
       country: 'United States',
       state_provinces: ['California', 'Arizona', 'Utah', 'Colorado'],
       difficulties: ['easy', 'moderate', 'hard'],
-      latitude: 39.0,
-      longitude: -120.0,
+      latitude: location?.lat || 39.0,
+      longitude: location?.lng || -120.0,
       surfaces: ['dirt', 'rock', 'gravel'],
       features: ['scenic views', 'wildlife viewing', 'photography opportunities']
     },
     'openstreetmap': {
+      displayName: 'OpenStreetMap',
       locations: ['Pacific Northwest Trail', 'Appalachian Trail Section', 'Continental Divide', 'Great Lakes Trail'],
       country: 'United States',
-      state_provinces: ['Washington', 'Virginia', 'Montana', 'Michigan'],
+      state_provinces: [location?.state || 'Washington', 'Virginia', 'Montana', 'Michigan'],
       difficulties: ['easy', 'moderate', 'hard'],
-      latitude: 45.0,
-      longitude: -110.0,
+      latitude: location?.lat || 45.0,
+      longitude: location?.lng || -110.0,
       surfaces: ['dirt', 'gravel', 'paved'],
       features: ['well-marked trails', 'historic sites', 'diverse ecosystems']
     },
     'usgs': {
+      displayName: 'USGS',
       locations: ['Yellowstone Backcountry', 'Grand Teton NP', 'Glacier National Park', 'Olympic Peninsula'],
       country: 'United States',
-      state_provinces: ['Wyoming', 'Wyoming', 'Montana', 'Washington'],
+      state_provinces: [location?.state || 'Wyoming', 'Wyoming', 'Montana', 'Washington'],
       difficulties: ['moderate', 'hard'],
-      latitude: 44.5,
-      longitude: -110.5,
+      latitude: location?.lat || 44.5,
+      longitude: location?.lng || -110.5,
       surfaces: ['dirt', 'rock'],
       features: ['wilderness experience', 'geological features', 'pristine nature']
     }
   };
   
-  const source = sources[sourceType] || sources['openstreetmap'];
+  const source = generalSources[sourceType] || generalSources['openstreetmap'];
   
   return {
+    displayName: source.displayName,
     location: source.locations[index % source.locations.length],
     country: source.country,
     state_province: source.state_provinces[index % source.state_provinces.length],
@@ -557,6 +665,9 @@ function getBaseDataForSource(sourceType: string, index: number) {
 
 function getSourceDisplayName(sourceType: string): string {
   const names: Record<string, string> = {
+    'rochester_osm': 'Rochester Parks',
+    'minnesota_usgs': 'Minnesota State Parks',
+    'local_trails': 'Local Rochester',
     'hiking_project': 'Hiking Project',
     'openstreetmap': 'OpenStreetMap', 
     'usgs': 'USGS'

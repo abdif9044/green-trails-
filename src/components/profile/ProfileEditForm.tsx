@@ -60,15 +60,46 @@ const ProfileEditForm: React.FC<ProfileEditFormProps> = ({ profile, onClose, ope
     try {
       setUploadingAvatar(true);
       
+      // Ensure user-uploads bucket exists and is accessible
+      const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
+      
+      if (bucketsError) {
+        console.error('Error listing buckets:', bucketsError);
+      }
+      
+      const userUploadsBucket = buckets?.find(bucket => bucket.name === 'user-uploads');
+      
+      if (!userUploadsBucket) {
+        // Try to create the bucket if it doesn't exist
+        const { error: createBucketError } = await supabase.storage.createBucket('user-uploads', {
+          public: true,
+          allowedMimeTypes: ['image/*'],
+          fileSizeLimit: null // No size limit
+        });
+        
+        if (createBucketError) {
+          console.error('Error creating bucket:', createBucketError);
+          throw new Error('Failed to create storage bucket');
+        }
+      }
+      
       // Create a unique filename
       const fileExt = avatarFile.name.split('.').pop();
-      const filePath = `avatars/${profile.id}/${uuidv4()}.${fileExt}`;
+      const fileName = `${uuidv4()}.${fileExt}`;
+      const filePath = `avatars/${profile.id}/${fileName}`;
       
-      const { error: uploadError } = await supabase.storage
+      // Upload the file
+      const { data: uploadData, error: uploadError } = await supabase.storage
         .from('user-uploads')
-        .upload(filePath, avatarFile);
+        .upload(filePath, avatarFile, {
+          cacheControl: '3600',
+          upsert: false
+        });
       
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        throw uploadError;
+      }
       
       // Get public URL
       const { data } = supabase.storage

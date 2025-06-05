@@ -1,20 +1,17 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
-import { 
-  Database, 
-  CheckCircle, 
-  PlayCircle, 
-  AlertCircle,
-  RefreshCw,
-  Zap,
-  Settings,
-  MapPin
-} from 'lucide-react';
+import { Database } from 'lucide-react';
 import { autoBootstrapService } from '@/services/trail-import/auto-bootstrap-service';
 import { useToast } from '@/hooks/use-toast';
+
+// Import the smaller components
+import { StatusBadge } from './bootstrap/StatusBadge';
+import { RochesterImportCard } from './bootstrap/RochesterImportCard';
+import { DiagnosticsCard } from './bootstrap/DiagnosticsCard';
+import { ProgressSection } from './bootstrap/ProgressSection';
+import { StatusMessages } from './bootstrap/StatusMessages';
+import { ActionButtons } from './bootstrap/ActionButtons';
 
 export default function AutoBootstrapStatus() {
   const [progress, setProgress] = useState({
@@ -235,41 +232,6 @@ export default function AutoBootstrapStatus() {
     }
   };
 
-  const getStatusInfo = () => {
-    switch (bootstrapStatus) {
-      case 'checking':
-        return {
-          title: 'Checking System',
-          description: 'Running diagnostics...',
-          variant: 'secondary' as const,
-          icon: <RefreshCw className="h-4 w-4 animate-spin" />
-        };
-      case 'needed':
-        return {
-          title: autoTriggered ? 'Auto-Starting Import' : 'Import Required',
-          description: autoTriggered ? 'Import will begin shortly...' : 'Need 30K trails with fixed schema',
-          variant: 'destructive' as const,
-          icon: autoTriggered ? <Zap className="h-4 w-4 animate-pulse" /> : <AlertCircle className="h-4 w-4" />
-        };
-      case 'active':
-        return {
-          title: 'Downloading Trails',
-          description: 'Fixed schema import in progress...',
-          variant: 'default' as const,
-          icon: <Zap className="h-4 w-4 animate-pulse" />
-        };
-      case 'complete':
-        return {
-          title: 'Import Complete',
-          description: '30K+ trails loaded',
-          variant: 'default' as const,
-          icon: <CheckCircle className="h-4 w-4" />
-        };
-    }
-  };
-
-  const statusInfo = getStatusInfo();
-
   return (
     <Card className="mb-6">
       <CardHeader>
@@ -282,181 +244,32 @@ export default function AutoBootstrapStatus() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Status Badge */}
-        <div className="flex items-center justify-between">
-          <Badge variant={statusInfo.variant} className="flex items-center gap-2">
-            {statusInfo.icon}
-            {statusInfo.title}
-          </Badge>
-          <span className="text-sm text-gray-600">{statusInfo.description}</span>
-        </div>
+        <StatusBadge bootstrapStatus={bootstrapStatus} autoTriggered={autoTriggered} />
+        
+        <RochesterImportCard 
+          onImport={handleRochesterImport}
+          isImporting={rochesterImporting}
+          isLoading={isLoading}
+          autoTriggered={rochesterAutoTriggered}
+        />
 
-        {/* Auto Rochester Import Status */}
-        {rochesterAutoTriggered && (
-          <Card className="bg-blue-50 border border-blue-200">
-            <CardContent className="pt-4">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <Zap className="h-5 w-5 text-blue-600 animate-pulse" />
-                  <span className="font-medium text-blue-800">🎯 Auto-Importing Rochester Trails</span>
-                </div>
-                <Badge variant="outline" className="text-blue-600 border-blue-300">
-                  5,555 Trails
-                </Badge>
-              </div>
-              <p className="text-sm text-blue-600 mb-3">
-                Automatically importing location-specific trails for Rochester, Minnesota area within 100-mile radius
-              </p>
-              <div className="text-xs text-blue-500">
-                ✅ Import started automatically • No user action required • Progress will update in real-time
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        <DiagnosticsCard diagnostics={diagnostics} />
 
-        {/* Rochester Import Section */}
-        <Card className="bg-blue-50 border border-blue-200">
-          <CardContent className="pt-4">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <MapPin className="h-5 w-5 text-blue-600" />
-                <span className="font-medium text-blue-800">Rochester, MN Import</span>
-              </div>
-              <Badge variant="outline" className="text-blue-600 border-blue-300">
-                5,555 Trails
-              </Badge>
-            </div>
-            <p className="text-sm text-blue-600 mb-3">
-              Import location-specific trails for Rochester, Minnesota area within 100-mile radius
-            </p>
-            <Button 
-              onClick={handleRochesterImport}
-              disabled={rochesterImporting || isLoading}
-              className="w-full bg-blue-600 hover:bg-blue-700"
-            >
-              <MapPin className="h-4 w-4 mr-2" />
-              {rochesterImporting ? 'Importing Rochester Trails...' : 'Import 5,555 Rochester Trails'}
-            </Button>
-          </CardContent>
-        </Card>
+        <ProgressSection progress={progress} bootstrapStatus={bootstrapStatus} />
 
-        {/* Auto-trigger notice */}
-        {autoTriggered && bootstrapStatus !== 'active' && (
-          <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg text-sm">
-            <div className="flex items-center gap-2 mb-1">
-              <Zap className="h-4 w-4 text-blue-600 animate-pulse" />
-              <span className="font-medium text-blue-800">🚀 Auto-Import Initiated</span>
-            </div>
-            <div className="text-blue-600 text-xs">
-              Import process will begin automatically in a few seconds...
-            </div>
-          </div>
-        )}
+        <ActionButtons 
+          onFixedBootstrap={handleFixedBootstrap}
+          onRefresh={updateProgress}
+          isLoading={isLoading}
+          autoTriggered={autoTriggered}
+          bootstrapStatus={bootstrapStatus}
+        />
 
-        {/* Schema Fix Notice */}
-        <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg text-sm">
-          <div className="flex items-center gap-2 mb-1">
-            <Settings className="h-4 w-4 text-blue-600" />
-            <span className="font-medium text-blue-800">✅ Schema Fixes Applied</span>
-          </div>
-          <div className="text-blue-600 text-xs">
-            • Fixed trail_length → length mapping<br/>
-            • Fixed terrain_type → surface mapping<br/>
-            • Added required field validation<br/>
-            • Improved error handling & logging
-          </div>
-        </div>
-
-        {/* Diagnostics Status */}
-        {diagnostics && (
-          <div className={`p-3 rounded-lg text-sm ${
-            diagnostics.hasPermissions 
-              ? 'bg-green-50 border border-green-200' 
-              : 'bg-red-50 border border-red-200'
-          }`}>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="font-medium">
-                {diagnostics.hasPermissions ? '✅ System Diagnostics: PASSED' : '❌ System Issues Detected'}
-              </span>
-            </div>
-            {!diagnostics.hasPermissions && diagnostics.errors.length > 0 && (
-              <div className="text-xs text-red-600 ml-6">
-                {diagnostics.errors.slice(0, 2).map((error, i) => (
-                  <div key={i}>• {error}</div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Progress Section */}
-        {bootstrapStatus !== 'checking' && (
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <span>Current Trails: {progress.currentCount.toLocaleString()}</span>
-              <span>Target: {progress.targetCount.toLocaleString()}</span>
-            </div>
-            <Progress 
-              value={progress.progressPercent} 
-              className="w-full"
-            />
-            <div className="text-xs text-gray-500 text-right">
-              {progress.progressPercent}% complete
-            </div>
-          </div>
-        )}
-
-        {/* Action Buttons */}
-        <div className="flex gap-3">
-          <Button 
-            onClick={handleFixedBootstrap}
-            disabled={isLoading || autoTriggered}
-            className="flex items-center gap-2"
-            variant={bootstrapStatus === 'needed' ? 'default' : 'outline'}
-          >
-            <Zap className="h-4 w-4" />
-            {autoTriggered ? 'Auto-Starting...' : isLoading ? 'Starting...' : 'Force Fixed Schema Import'}
-          </Button>
-
-          <Button 
-            variant="outline" 
-            onClick={updateProgress}
-            disabled={isLoading}
-            size="sm"
-          >
-            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
-        </div>
-
-        {/* Status Details */}
-        {bootstrapStatus === 'active' && (
-          <div className="bg-blue-50 p-3 rounded-lg text-sm">
-            <p className="font-medium text-blue-800">🔧 Fixed Schema Import Active</p>
-            <p className="text-blue-600">
-              Downloading trails with corrected database schema. All field mappings fixed.
-              Process may take 5-15 minutes for full dataset.
-            </p>
-          </div>
-        )}
-
-        {bootstrapStatus === 'complete' && (
-          <div className="bg-green-50 p-3 rounded-lg text-sm">
-            <p className="font-medium text-green-800">✅ Import Complete</p>
-            <p className="text-green-600">
-              GreenTrails now has {progress.currentCount.toLocaleString()}+ trails loaded and ready!
-            </p>
-          </div>
-        )}
-
-        {bootstrapStatus === 'needed' && !autoTriggered && (
-          <div className="bg-yellow-50 p-3 rounded-lg text-sm">
-            <p className="font-medium text-yellow-800">⚠️ Trails Needed</p>
-            <p className="text-yellow-600">
-              Only {progress.currentCount} trails found. Click "Force Fixed Schema Import" to get 30,000+ trails.
-            </p>
-          </div>
-        )}
+        <StatusMessages 
+          bootstrapStatus={bootstrapStatus}
+          autoTriggered={autoTriggered}
+          progress={progress}
+        />
       </CardContent>
     </Card>
   );

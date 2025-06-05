@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 interface BootstrapProgress {
@@ -33,6 +32,15 @@ export class AutoBootstrapService {
       const needed = currentCount < 25000;
       
       if (needed) {
+        // Auto-trigger Rochester import if count is very low
+        if (currentCount < 1000) {
+          console.log('🎯 Auto-triggering Rochester import for 5,555 trails...');
+          const rochesterTriggered = await this.forceRochesterImport();
+          if (rochesterTriggered) {
+            return { needed, triggered: true, currentCount };
+          }
+        }
+        
         const triggered = await this.forceBootstrap();
         return { needed, triggered, currentCount };
       }
@@ -41,6 +49,28 @@ export class AutoBootstrapService {
     } catch (error) {
       console.error('Error in checkAndBootstrap:', error);
       return { needed: true, triggered: false, currentCount: 0 };
+    }
+  }
+
+  static async autoTriggerRochesterImport(): Promise<boolean> {
+    try {
+      console.log('🚀 Automatically starting Rochester, MN import of 5,555 trails...');
+      
+      const currentCount = await this.getCurrentTrailCount();
+      console.log(`📊 Current trail count: ${currentCount}`);
+      
+      const success = await this.forceRochesterImport();
+      
+      if (success) {
+        console.log('✅ Rochester import successfully auto-triggered');
+        return true;
+      } else {
+        console.error('❌ Failed to auto-trigger Rochester import');
+        return false;
+      }
+    } catch (error) {
+      console.error('💥 Error in auto-trigger Rochester import:', error);
+      return false;
     }
   }
 
@@ -201,5 +231,22 @@ export class AutoBootstrapService {
     }
   }
 }
+
+// Auto-execute Rochester import immediately
+(async () => {
+  try {
+    console.log('🎯 GreenTrails: Auto-executing Rochester trail import...');
+    const service = new AutoBootstrapService();
+    const success = await service.autoTriggerRochesterImport();
+    
+    if (success) {
+      console.log('🚀 Rochester import started successfully! 5,555 trails incoming...');
+    } else {
+      console.log('⚠️ Rochester import could not be started automatically');
+    }
+  } catch (error) {
+    console.error('❌ Auto-execution error:', error);
+  }
+})();
 
 export const autoBootstrapService = AutoBootstrapService;

@@ -28,6 +28,7 @@ export default function AutoBootstrapStatus() {
   const [diagnostics, setDiagnostics] = useState<{ hasPermissions: boolean; errors: string[] } | null>(null);
   const [autoTriggered, setAutoTriggered] = useState(false);
   const [rochesterImporting, setRochesterImporting] = useState(false);
+  const [rochesterAutoTriggered, setRochesterAutoTriggered] = useState(false);
   const { toast } = useToast();
 
   // Check bootstrap status on mount
@@ -39,21 +40,58 @@ export default function AutoBootstrapStatus() {
     return () => clearInterval(interval);
   }, []);
 
-  // Auto-trigger import if needed
+  // Auto-trigger Rochester import immediately if needed
   useEffect(() => {
-    if (bootstrapStatus === 'needed' && !autoTriggered && !isLoading) {
-      setAutoTriggered(true);
+    if (progress.currentCount < 1000 && !rochesterAutoTriggered && !isLoading) {
+      setRochesterAutoTriggered(true);
+      
       toast({
-        title: "🚀 Auto-starting Import",
-        description: "Beginning 30K trail import automatically as requested...",
+        title: "🎯 Auto-Starting Rochester Import",
+        description: "Automatically importing 5,555 trails near Rochester, MN...",
       });
       
-      // Start the import after a brief delay
+      // Start Rochester import immediately
       setTimeout(() => {
-        handleFixedBootstrap();
-      }, 1000);
+        handleAutoRochesterImport();
+      }, 500);
     }
-  }, [bootstrapStatus, autoTriggered, isLoading]);
+  }, [progress.currentCount, rochesterAutoTriggered, isLoading]);
+
+  const handleAutoRochesterImport = async () => {
+    try {
+      setRochesterImporting(true);
+      
+      console.log('🎯 Auto-starting Rochester import of 5,555 trails...');
+      
+      const success = await autoBootstrapService.forceRochesterImport();
+      
+      if (success) {
+        toast({
+          title: "🚀 Rochester Import Started",
+          description: "Auto-importing 5,555 trails near Rochester, MN with location targeting",
+        });
+        
+        // Start aggressive polling for updates
+        const interval = setInterval(updateProgress, 2000);
+        setTimeout(() => clearInterval(interval), 600000); // Stop after 10 minutes
+      } else {
+        toast({
+          title: "❌ Auto-Import Failed",
+          description: "Check console for detailed error report",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Auto Rochester import error:', error);
+      toast({
+        title: "💥 Auto-Import Error",
+        description: "An error occurred during automatic Rochester import",
+        variant: "destructive",
+      });
+    } finally {
+      setRochesterImporting(false);
+    }
+  };
 
   const checkBootstrapStatus = async () => {
     try {
@@ -237,10 +275,10 @@ export default function AutoBootstrapStatus() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Database className="h-5 w-5" />
-          Fixed Schema Trail Import System
+          Auto Trail Import System
         </CardTitle>
         <CardDescription>
-          Automated trail download with corrected database schema
+          Automatically importing 5,555 trails near Rochester, MN
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -252,6 +290,29 @@ export default function AutoBootstrapStatus() {
           </Badge>
           <span className="text-sm text-gray-600">{statusInfo.description}</span>
         </div>
+
+        {/* Auto Rochester Import Status */}
+        {rochesterAutoTriggered && (
+          <Card className="bg-blue-50 border border-blue-200">
+            <CardContent className="pt-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Zap className="h-5 w-5 text-blue-600 animate-pulse" />
+                  <span className="font-medium text-blue-800">🎯 Auto-Importing Rochester Trails</span>
+                </div>
+                <Badge variant="outline" className="text-blue-600 border-blue-300">
+                  5,555 Trails
+                </Badge>
+              </div>
+              <p className="text-sm text-blue-600 mb-3">
+                Automatically importing location-specific trails for Rochester, Minnesota area within 100-mile radius
+              </p>
+              <div className="text-xs text-blue-500">
+                ✅ Import started automatically • No user action required • Progress will update in real-time
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Rochester Import Section */}
         <Card className="bg-blue-50 border border-blue-200">

@@ -26,6 +26,7 @@ export default function AutoBootstrapStatus() {
   const [bootstrapStatus, setBootstrapStatus] = useState<'checking' | 'needed' | 'complete' | 'active'>('checking');
   const [isLoading, setIsLoading] = useState(true);
   const [diagnostics, setDiagnostics] = useState<{ hasPermissions: boolean; errors: string[] } | null>(null);
+  const [autoTriggered, setAutoTriggered] = useState(false);
   const { toast } = useToast();
 
   // Check bootstrap status on mount
@@ -36,6 +37,22 @@ export default function AutoBootstrapStatus() {
     const interval = setInterval(updateProgress, 3000);
     return () => clearInterval(interval);
   }, []);
+
+  // Auto-trigger import if needed
+  useEffect(() => {
+    if (bootstrapStatus === 'needed' && !autoTriggered && !isLoading) {
+      setAutoTriggered(true);
+      toast({
+        title: "🚀 Auto-starting Import",
+        description: "Beginning 30K trail import automatically as requested...",
+      });
+      
+      // Start the import after a brief delay
+      setTimeout(() => {
+        handleFixedBootstrap();
+      }, 1000);
+    }
+  }, [bootstrapStatus, autoTriggered, isLoading]);
 
   const checkBootstrapStatus = async () => {
     try {
@@ -151,10 +168,10 @@ export default function AutoBootstrapStatus() {
         };
       case 'needed':
         return {
-          title: 'Import Required',
-          description: 'Need 30K trails with fixed schema',
+          title: autoTriggered ? 'Auto-Starting Import' : 'Import Required',
+          description: autoTriggered ? 'Import will begin shortly...' : 'Need 30K trails with fixed schema',
           variant: 'destructive' as const,
-          icon: <AlertCircle className="h-4 w-4" />
+          icon: autoTriggered ? <Zap className="h-4 w-4 animate-pulse" /> : <AlertCircle className="h-4 w-4" />
         };
       case 'active':
         return {
@@ -195,6 +212,19 @@ export default function AutoBootstrapStatus() {
           </Badge>
           <span className="text-sm text-gray-600">{statusInfo.description}</span>
         </div>
+
+        {/* Auto-trigger notice */}
+        {autoTriggered && bootstrapStatus !== 'active' && (
+          <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg text-sm">
+            <div className="flex items-center gap-2 mb-1">
+              <Zap className="h-4 w-4 text-blue-600 animate-pulse" />
+              <span className="font-medium text-blue-800">🚀 Auto-Import Initiated</span>
+            </div>
+            <div className="text-blue-600 text-xs">
+              Import process will begin automatically in a few seconds...
+            </div>
+          </div>
+        )}
 
         {/* Schema Fix Notice */}
         <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg text-sm">
@@ -253,12 +283,12 @@ export default function AutoBootstrapStatus() {
         <div className="flex gap-3">
           <Button 
             onClick={handleFixedBootstrap}
-            disabled={isLoading}
+            disabled={isLoading || autoTriggered}
             className="flex items-center gap-2"
             variant={bootstrapStatus === 'needed' ? 'default' : 'outline'}
           >
             <Zap className="h-4 w-4" />
-            {isLoading ? 'Starting...' : 'Force Fixed Schema Import'}
+            {autoTriggered ? 'Auto-Starting...' : isLoading ? 'Starting...' : 'Force Fixed Schema Import'}
           </Button>
 
           <Button 
@@ -292,7 +322,7 @@ export default function AutoBootstrapStatus() {
           </div>
         )}
 
-        {bootstrapStatus === 'needed' && (
+        {bootstrapStatus === 'needed' && !autoTriggered && (
           <div className="bg-yellow-50 p-3 rounded-lg text-sm">
             <p className="font-medium text-yellow-800">⚠️ Trails Needed</p>
             <p className="text-yellow-600">

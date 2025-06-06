@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/providers/auth-provider";
 import { UserProvider } from "@/contexts/user-context";
 import { ThemeProvider } from "@/providers/theme-provider";
@@ -35,55 +35,53 @@ function App() {
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          <BrowserRouter>
-            <AuthProvider>
-              <UserProvider>
-                <Layout>
-                  <Routes>
-                    <Route path="/" element={<Index />} />
-                    <Route path="/auth" element={<Auth />} />
-                    <Route path="/trail/:id" element={<Trail />} />
-                    <Route path="/discover" element={<Discover />} />
-                    <Route path="/social" element={
-                      <AuthGuard>
-                        <Social />
-                      </AuthGuard>
-                    } />
-                    <Route path="/create-album" element={
-                      <AuthGuard>
-                        <CreateAlbum />
-                      </AuthGuard>
-                    } />
-                    <Route path="/album/:id" element={<AlbumDetail />} />
-                    <Route path="/profile/:username?" element={<Profile />} />
-                    <Route path="/legal/:type" element={<Legal />} />
-                    <Route path="/settings" element={
-                      <AuthGuard>
-                        <Settings />
-                      </AuthGuard>
-                    } />
-                    <Route path="/badges" element={
-                      <AuthGuard>
-                        <Badges />
-                      </AuthGuard>
-                    } />
-                    <Route path="/admin/import" element={
-                      <AuthGuard>
-                        <AdminTrailImport />
-                      </AuthGuard>
-                    } />
-                    <Route path="/admin/auto-import" element={
-                      <AuthGuard>
-                        <AutoImport />
-                      </AuthGuard>
-                    } />
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                  <AssistantBubble />
-                </Layout>
-              </UserProvider>
-            </AuthProvider>
-          </BrowserRouter>
+          <AuthProvider>
+            <UserProvider>
+              <Layout>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/auth" element={<Auth />} />
+                  <Route path="/trail/:id" element={<Trail />} />
+                  <Route path="/discover" element={<Discover />} />
+                  <Route path="/social" element={
+                    <AuthGuard>
+                      <Social />
+                    </AuthGuard>
+                  } />
+                  <Route path="/create-album" element={
+                    <AuthGuard>
+                      <CreateAlbum />
+                    </AuthGuard>
+                  } />
+                  <Route path="/album/:id" element={<AlbumDetail />} />
+                  <Route path="/profile/:username?" element={<Profile />} />
+                  <Route path="/legal/:type" element={<Legal />} />
+                  <Route path="/settings" element={
+                    <AuthGuard>
+                      <Settings />
+                    </AuthGuard>
+                  } />
+                  <Route path="/badges" element={
+                    <AuthGuard>
+                      <Badges />
+                    </AuthGuard>
+                  } />
+                  <Route path="/admin/import" element={
+                    <AuthGuard>
+                      <AdminTrailImport />
+                    </AuthGuard>
+                  } />
+                  <Route path="/admin/auto-import" element={
+                    <AuthGuard>
+                      <AutoImport />
+                    </AuthGuard>
+                  } />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+                <AssistantBubble />
+              </Layout>
+            </UserProvider>
+          </AuthProvider>
         </TooltipProvider>
       </ThemeProvider>
     </QueryClientProvider>

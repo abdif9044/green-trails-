@@ -1,7 +1,6 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { MessageCircle } from 'lucide-react';
 import AssistantChat from './AssistantChat';
 import { cn } from '@/lib/utils';
 
@@ -21,14 +20,17 @@ const AssistantBubble: React.FC = () => {
         <AssistantChat onClose={() => setIsOpen(false)} />
       )}
       
-      <Button
+      <button
         onClick={toggleChat}
-        variant="default"
-        className="rounded-full shadow-lg bg-greentrail-600 hover:bg-greentrail-700 h-14 w-14 p-0"
-        aria-label="Toggle assistant chat"
+        className="rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 h-16 w-16 p-0 border-0 bg-transparent"
+        aria-label="Toggle Roamie assistant chat"
       >
-        <MessageCircle className="h-6 w-6 text-white" />
-      </Button>
+        <img 
+          src="/lovable-uploads/f1f69aac-d6e2-4389-8835-f83b42f87d98.png" 
+          alt="Roamie Assistant" 
+          className="w-16 h-16 rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
+        />
+      </button>
     </div>
   );
 };

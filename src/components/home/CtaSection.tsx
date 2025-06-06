@@ -1,8 +1,16 @@
 
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/hooks/use-auth";
 
 const CtaSection = () => {
+  const { user } = useAuth();
+  
+  // Don't render if user is logged in
+  if (user) {
+    return null;
+  }
+  
   return (
     <section className="py-16 bg-greentrail-600 text-white">
       <div className="container mx-auto px-4 text-center">

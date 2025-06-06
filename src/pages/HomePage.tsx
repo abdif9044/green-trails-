@@ -18,26 +18,29 @@ const HomePage = () => {
       <Hero />
       <FeatureSection />
       
-      <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div>
-            <h2 className="text-2xl font-bold mb-8 text-greentrail-800 dark:text-greentrail-200">
-              Try GreenTrails Instantly
-            </h2>
-            <DemoAccountCreator />
-          </div>
-          
-          <div>
-            <h2 className="text-2xl font-bold mb-8 text-greentrail-800 dark:text-greentrail-200">
-              Earn Achievements
-            </h2>
-            <AchievementTeaser badges={badges} loading={loading} />
+      {!user && (
+        <div className="container mx-auto px-4 py-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div>
+              <h2 className="text-2xl font-bold mb-8 text-greentrail-800 dark:text-greentrail-200">
+                Try GreenTrails Instantly
+              </h2>
+              <DemoAccountCreator />
+            </div>
+            
+            <div>
+              <h2 className="text-2xl font-bold mb-8 text-greentrail-800 dark:text-greentrail-200">
+                Earn Achievements
+              </h2>
+              <AchievementTeaser badges={badges} loading={loading} />
+            </div>
           </div>
         </div>
-      </div>
+      )}
       
       <FeaturedTrails />
-      <CtaSection />
+      
+      {!user && <CtaSection />}
     </div>
   );
 };

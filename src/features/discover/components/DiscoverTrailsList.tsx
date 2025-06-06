@@ -12,7 +12,6 @@ interface DiscoverTrailsListProps {
 }
 
 const DiscoverTrailsList: React.FC<DiscoverTrailsListProps> = ({ trails, onResetFilters }) => {
-  // No longer need to get trail image URL since we're using a default now
   if (trails.length === 0) {
     return (
       <div className="col-span-full py-12 text-center">
@@ -30,24 +29,30 @@ const DiscoverTrailsList: React.FC<DiscoverTrailsListProps> = ({ trails, onReset
     );
   }
 
+  const handleTrailClick = (trailId: string, trailName: string) => {
+    console.log(`DiscoverTrailsList: Navigating to trail ${trailId} (${trailName})`);
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
       {trails.map((trail) => (
-        <Link to={`/trail/${trail.id}`} key={trail.id}>
-          <TrailCard 
-            id={trail.id}
-            name={trail.name}
-            location={trail.location}
-            imageUrl={trail.imageUrl}
-            difficulty={trail.difficulty}
-            length={trail.length}
-            elevation={trail.elevation}
-            tags={trail.tags}
-            likes={trail.likes}
-            strainTags={trail.strainTags}
-            isAgeRestricted={trail.isAgeRestricted}
-          />
-        </Link>
+        <div key={trail.id} onClick={() => handleTrailClick(trail.id, trail.name)}>
+          <Link to={`/trail/${trail.id}`}>
+            <TrailCard 
+              id={trail.id}
+              name={trail.name}
+              location={trail.location}
+              imageUrl={trail.imageUrl}
+              difficulty={trail.difficulty}
+              length={trail.length}
+              elevation={trail.elevation}
+              tags={trail.tags}
+              likes={trail.likes}
+              strainTags={trail.strainTags}
+              isAgeRestricted={trail.isAgeRestricted}
+            />
+          </Link>
+        </div>
       ))}
     </div>
   );

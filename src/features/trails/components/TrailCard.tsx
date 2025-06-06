@@ -66,10 +66,15 @@ const TrailCard = ({
     // If no matching tag is found, return default
     return TRAIL_FALLBACK_IMAGES.default;
   };
+
+  // Add debug logging for trail routing
+  const handleTrailClick = () => {
+    console.log(`Navigating to trail: ${id}, name: ${name}`);
+  };
   
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-all duration-200 trail-card-shadow border-greentrail-200 dark:border-greentrail-800">
-      <Link to={`/trail/${id}`}>
+      <Link to={`/trail/${id}`} onClick={handleTrailClick}>
         <div className="relative h-48 overflow-hidden">
           <LazyImage 
             src={imageUrl} 
@@ -90,7 +95,11 @@ const TrailCard = ({
       <CardContent className="pt-4">
         <div className="flex items-start justify-between">
           <div>
-            <h3 className="font-bold text-greentrail-800 dark:text-greentrail-200 text-lg">{name}</h3>
+            <Link to={`/trail/${id}`} onClick={handleTrailClick}>
+              <h3 className="font-bold text-greentrail-800 dark:text-greentrail-200 text-lg hover:text-greentrail-600 transition-colors">
+                {name}
+              </h3>
+            </Link>
             <div className="flex items-center mt-1 text-sm text-greentrail-600 dark:text-greentrail-400">
               <MapPin size={14} className="mr-1" />
               <span>{location}</span>

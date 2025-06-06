@@ -1,30 +1,96 @@
 
 import React from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useTrailInteractions } from '@/hooks/use-trail-interactions';
 import { useTrailQueryBase } from '@/features/trails/hooks/use-trail-query-base';
 import TrailSidebar from '@/components/trails/TrailSidebar';
 import SimilarTrails from '@/components/trails/SimilarTrails';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft, AlertTriangle } from 'lucide-react';
 
 const Trail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const trailId = id || '';
   
-  const { data: trail, isLoading: trailLoading } = useTrailQueryBase(trailId);
+  // Add debug logging
+  console.log('Trail page: trailId =', trailId, 'type:', typeof trailId);
+  
+  const { data: trail, isLoading: trailLoading, error } = useTrailQueryBase(trailId);
   const { isLiked, likeCount, toggleLike, isLoading } = useTrailInteractions(trailId);
 
+  // Handle loading state
   if (trailLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">Loading trail...</div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-greentrail-600 mx-auto mb-4"></div>
+          <div className="text-lg">Loading trail...</div>
+        </div>
       </div>
     );
   }
 
-  if (!trail) {
+  // Handle error state
+  if (error) {
+    console.error('Error loading trail:', error);
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">Trail not found</div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <div className="text-center max-w-md mx-auto p-6">
+          <AlertTriangle className="h-16 w-16 text-red-500 mx-auto mb-4" />
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            Error Loading Trail
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
+            We encountered an error while loading this trail. The trail ID might be invalid or the trail may no longer exist.
+          </p>
+          <div className="space-y-3">
+            <Button onClick={() => navigate('/discover')} className="w-full">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Browse All Trails
+            </Button>
+            <Button onClick={() => window.location.reload()} variant="outline" className="w-full">
+              Try Again
+            </Button>
+          </div>
+          {process.env.NODE_ENV === 'development' && (
+            <div className="mt-4 text-xs text-gray-500">
+              Trail ID: {trailId} | Error: {error.message}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Handle trail not found
+  if (!trail) {
+    console.warn('Trail not found for ID:', trailId);
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <div className="text-center max-w-md mx-auto p-6">
+          <div className="text-6xl mb-4">🥾</div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            Trail Not Found
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
+            The trail you're looking for doesn't exist or may have been removed. Let's help you find other amazing trails!
+          </p>
+          <div className="space-y-3">
+            <Button onClick={() => navigate('/discover')} className="w-full">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Discover Trails
+            </Button>
+            <Button onClick={() => navigate('/')} variant="outline" className="w-full">
+              Go Home
+            </Button>
+          </div>
+          {process.env.NODE_ENV === 'development' && (
+            <div className="mt-4 text-xs text-gray-500">
+              Attempted Trail ID: {trailId}
+            </div>
+          )}
+        </div>
       </div>
     );
   }

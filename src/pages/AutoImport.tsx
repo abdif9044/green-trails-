@@ -1,225 +1,203 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
+import { useAutoTrailImport } from '@/hooks/useAutoTrailImport';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { supabase } from '@/integrations/supabase/client';
-import { Database, CheckCircle, Settings, Bug } from 'lucide-react';
-import AutoBootstrapStatus from '@/components/trails/AutoBootstrapStatus';
-import DebugImportMonitor from '@/components/trails/DebugImportMonitor';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/use-auth';
+import { 
+  Database, 
+  Zap, 
+  CheckCircle, 
+  Loader2, 
+  AlertTriangle,
+  TreePine
+} from 'lucide-react';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
+import SEOProvider from '@/components/SEOProvider';
+import MinnesotaImport from '@/components/trails/MinnesotaImport';
 
 const AutoImport: React.FC = () => {
-  const [trailCount, setTrailCount] = useState<number>(0);
-  const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  
+  const {
+    loading,
+    error,
+    isSettingUpDb,
+    isImportTriggered,
+    isImportComplete,
+    bulkProgress,
+    activeBulkJobId,
+    initializeAutoImport,
+  } = useAutoTrailImport();
 
   useEffect(() => {
-    const fetchTrailCount = async () => {
-      try {
-        const { count, error } = await supabase
-          .from('trails')
-          .select('*', { count: 'exact', head: true });
-        
-        if (!error && count !== null) {
-          setTrailCount(count);
-        }
-      } catch (error) {
-        console.error('Error fetching trail count:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchTrailCount();
-    
-    // Refresh count every 30 seconds
-    const interval = setInterval(fetchTrailCount, 30000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const getSystemStatus = () => {
-    if (trailCount >= 25000) return { status: 'Fully Operational', variant: 'default' as const };
-    if (trailCount >= 15000) return { status: 'Scaling to 30K', variant: 'secondary' as const };
-    if (trailCount >= 5000) return { status: 'Building Database', variant: 'secondary' as const };
-    return { status: 'Initializing', variant: 'secondary' as const };
-  };
-
-  const systemStatus = getSystemStatus();
+    // Auto-start the import process when component mounts
+    if (!loading && !isImportTriggered && !error) {
+      initializeAutoImport();
+    }
+  }, [loading, isImportTriggered, error, initializeAutoImport]);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
-      <div className="container mx-auto px-4 max-w-4xl">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-            30K Trail Database System
-          </h1>
-          <p className="text-lg text-gray-600 dark:text-gray-300">
-            Comprehensive trail coverage across North America - fully automated
-          </p>
-        </div>
+    <div className="min-h-screen flex flex-col">
+      <SEOProvider 
+        title="Minnesota Trail Import - GreenTrails"
+        description="Import 10,000 trails from Minnesota and surrounding areas"
+      />
+      
+      <Navbar />
+      
+      <div className="flex-grow bg-slate-50 dark:bg-greentrail-950 py-8">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-bold text-greentrail-800 dark:text-greentrail-200 mb-4">
+              Minnesota Trail Import
+            </h1>
+            <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+              Import 10,000 trails from Minnesota state parks, national forests, and local trail systems
+            </p>
+          </div>
 
-        <Tabs defaultValue="status" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="status">System Status</TabsTrigger>
-            <TabsTrigger value="debug">Debug Monitor</TabsTrigger>
-            <TabsTrigger value="architecture">Architecture</TabsTrigger>
-          </TabsList>
+          {/* Minnesota Import Component */}
+          <div className="mb-8">
+            <MinnesotaImport />
+          </div>
 
-          <TabsContent value="status" className="space-y-6">
-            {/* Auto Bootstrap Status */}
-            <AutoBootstrapStatus />
-
-            {/* Current Database Status */}
-            <Card className="mb-8">
+          {/* Auto Import Status */}
+          {(loading || isSettingUpDb || isImportTriggered || activeBulkJobId) && (
+            <Card className="mb-6">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Database className="h-5 w-5" />
-                  Current Database Status
+                  {isImportComplete ? (
+                    <CheckCircle className="h-5 w-5 text-green-500" />
+                  ) : (
+                    <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
+                  )}
+                  Auto Import Status
                 </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="text-3xl font-bold text-greentrail-600">
-                      {isLoading ? 'Loading...' : trailCount.toLocaleString()}
-                    </div>
-                    <div className="text-sm text-gray-600">Trails in database</div>
-                    <div className="text-xs text-gray-500 mt-1">
-                      Target: 30,000 trails
-                    </div>
-                  </div>
-                  <Badge variant={systemStatus.variant}>
-                    {systemStatus.status}
-                  </Badge>
-                </div>
-                
-                {/* Progress Bar */}
-                <div className="mt-4">
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
-                      className="bg-greentrail-600 h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${Math.min((trailCount / 30000) * 100, 100)}%` }}
-                    ></div>
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1 text-right">
-                    {Math.round((trailCount / 30000) * 100)}% complete
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Enhanced Geographic Coverage */}
-            <Card>
-              <CardHeader>
-                <CardTitle>30K Geographic Distribution</CardTitle>
-                <CardDescription>
-                  Comprehensive trail coverage across North America
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid md:grid-cols-4 gap-4">
-                  <div className="text-center p-4 bg-gray-50 rounded-lg">
-                    <div className="text-2xl font-bold text-blue-600">15,000</div>
-                    <div className="text-sm text-gray-600">🇺🇸 United States</div>
-                    <div className="text-xs text-gray-500">Premium hiking trails</div>
-                  </div>
-                  
-                  <div className="text-center p-4 bg-gray-50 rounded-lg">
-                    <div className="text-2xl font-bold text-red-600">8,000</div>
-                    <div className="text-sm text-gray-600">🇨🇦 Canada</div>
-                    <div className="text-xs text-gray-500">Parks & wilderness</div>
-                  </div>
-                  
-                  <div className="text-center p-4 bg-gray-50 rounded-lg">
-                    <div className="text-2xl font-bold text-green-600">4,000</div>
-                    <div className="text-sm text-gray-600">🇲🇽 Mexico</div>
-                    <div className="text-xs text-gray-500">Natural areas & trails</div>
-                  </div>
-
-                  <div className="text-center p-4 bg-gray-50 rounded-lg">
-                    <div className="text-2xl font-bold text-purple-600">3,000</div>
-                    <div className="text-sm text-gray-600">🌍 Global</div>
-                    <div className="text-xs text-gray-500">International trails</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="debug">
-            <DebugImportMonitor />
-          </TabsContent>
-
-          <TabsContent value="architecture" className="space-y-6">
-            {/* System Information */}
-            <Card className="mb-8">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Settings className="h-5 w-5" />
-                  30K System Architecture
-                </CardTitle>
-                <CardDescription>
-                  Fully automated trail database with comprehensive North American coverage
-                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="flex items-start gap-3">
-                    <CheckCircle className="h-5 w-5 mt-0.5 text-greentrail-600" />
-                    <div>
-                      <div className="font-medium">Automatic 30K Population</div>
-                      <div className="text-sm text-gray-600">
-                        System automatically imports 30,000 real trails when database has fewer than 5,000 trails
-                      </div>
+                  {isSettingUpDb && (
+                    <div className="flex items-center gap-2 text-blue-600">
+                      <Database className="h-4 w-4" />
+                      <span>Setting up database tables...</span>
                     </div>
-                  </div>
+                  )}
                   
-                  <div className="flex items-start gap-3">
-                    <CheckCircle className="h-5 w-5 mt-0.5 text-greentrail-600" />
-                    <div>
-                      <div className="font-medium">Enhanced Debug System</div>
-                      <div className="text-sm text-gray-600">
-                        Real-time monitoring with detailed error tracking and batch processing diagnostics
+                  {isImportTriggered && (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span>Import Progress</span>
+                        <Badge variant="secondary">{bulkProgress}%</Badge>
                       </div>
+                      <Progress value={bulkProgress} className="w-full" />
                     </div>
-                  </div>
+                  )}
                   
-                  <div className="flex items-start gap-3">
-                    <CheckCircle className="h-5 w-5 mt-0.5 text-greentrail-600" />
-                    <div>
-                      <div className="font-medium">High-Performance Import</div>
-                      <div className="text-sm text-gray-600">
-                        Enhanced import system with 500-trail batches and controlled concurrency for stability
-                      </div>
+                  {isImportComplete && (
+                    <div className="flex items-center gap-2 text-green-600">
+                      <CheckCircle className="h-4 w-4" />
+                      <span>Import completed successfully!</span>
                     </div>
-                  </div>
-                  
-                  <div className="flex items-start gap-3">
-                    <CheckCircle className="h-5 w-5 mt-0.5 text-greentrail-600" />
-                    <div>
-                      <div className="font-medium">Three Primary Data Sources</div>
-                      <div className="text-sm text-gray-600">
-                        Hiking Project API, OpenStreetMap, and USGS with 10,000 trails each for 30K total
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3">
-                    <CheckCircle className="h-5 w-5 mt-0.5 text-greentrail-600" />
-                    <div>
-                      <div className="font-medium">Comprehensive Error Handling</div>
-                      <div className="text-sm text-gray-600">
-                        Individual trail validation, batch retry mechanisms, and detailed error logging
-                      </div>
-                    </div>
-                  </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
-        </Tabs>
+          )}
+
+          {/* Error Display */}
+          {error && (
+            <Card className="mb-6 border-red-200">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-2 text-red-600">
+                  <AlertTriangle className="h-5 w-5" />
+                  <span className="font-medium">Import Error</span>
+                </div>
+                <p className="text-red-600 mt-2">{error}</p>
+                <Button 
+                  onClick={initializeAutoImport}
+                  variant="outline"
+                  className="mt-3"
+                >
+                  Retry Import
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Navigation Options */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TreePine className="h-5 w-5 text-green-600" />
+                  Discover Trails
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <CardDescription className="mb-4">
+                  Explore the imported Minnesota trails
+                </CardDescription>
+                <Button 
+                  onClick={() => navigate('/discover')}
+                  className="w-full"
+                >
+                  Browse Trails
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Zap className="h-5 w-5 text-blue-600" />
+                  Admin Import
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <CardDescription className="mb-4">
+                  Advanced import tools and monitoring
+                </CardDescription>
+                <Button 
+                  onClick={() => navigate('/admin/import')}
+                  variant="outline"
+                  className="w-full"
+                >
+                  Admin Panel
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Database className="h-5 w-5 text-purple-600" />
+                  Auto Setup
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <CardDescription className="mb-4">
+                  Automated production setup
+                </CardDescription>
+                <Button 
+                  onClick={() => navigate('/admin/auto-import')}
+                  variant="outline"
+                  className="w-full"
+                >
+                  Production Setup
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
+      
+      <Footer />
     </div>
   );
 };

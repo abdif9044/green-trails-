@@ -203,7 +203,7 @@ const RoamieChat: React.FC<RoamieChatProps> = ({ trailContext, onClose }) => {
           <div className="flex items-center gap-2">
             <h3 className="text-lg font-medium text-greentrail-800 dark:text-greentrail-100">Roamie Assistant</h3>
             {isReady && (
-              <Brain className="h-4 w-4 text-greentrail-600" title="Memory enabled" />
+              <Brain className="h-4 w-4 text-greentrail-600" />
             )}
           </div>
           {onClose && (

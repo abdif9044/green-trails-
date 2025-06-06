@@ -22,7 +22,7 @@ import AdminTrailImport from "./pages/AdminTrailImport";
 import AutoImport from "./pages/AutoImport";
 import NotFound from "./pages/NotFound";
 import { AuthGuard } from "./components/auth/AuthGuard";
-import Layout from "./components/layout/layout";
+import { Layout } from "./components/layout/layout";
 import AssistantBubble from "./components/assistant/AssistantBubble";
 import "./App.css";
 

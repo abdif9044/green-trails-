@@ -1,73 +1,204 @@
-# Welcome to your Lovable project
 
-## Project info
+# GreenTrails
 
-**URL**: https://lovable.dev/projects/3c2f4537-b8cf-4934-ac7c-1e914a5026f5
+GreenTrails is an AllTrails-inspired outdoor adventure app with social networking features, built for modern hikers and cannabis-friendly explorers. The app is 100% free to use and runs on a Supabase backend for all data, media, and real-time features.
 
-## How can I edit this code?
+## Features
 
-There are several ways of editing your application.
+- **Trail Discovery**: Comprehensive trail database with filtering and search
+- **Social Networking**: User profiles, follows, likes, and comments
+- **Photo Albums**: Create and share photo albums from your adventures
+- **Weather Integration**: Real-time weather data for trails
+- **Roamie AI Assistant**: Intelligent assistant with memory capabilities
+- **Age Verification**: 21+ verification for age-restricted content
 
-**Use Lovable**
+## Technology Stack
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/3c2f4537-b8cf-4934-ac7c-1e914a5026f5) and start prompting.
+- **Frontend**: React with TypeScript, Tailwind CSS, shadcn/ui
+- **Backend**: Supabase (PostgreSQL, Auth, Storage, Edge Functions)
+- **Maps**: Mapbox GL JS
+- **Real-time**: Supabase Realtime
+- **State Management**: TanStack Query
+- **Testing**: Vitest
 
-Changes made via Lovable will be committed automatically to this repo.
+## Getting Started
 
-**Use your preferred IDE**
+### Prerequisites
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+- Node.js 18+
+- npm or yarn
+- Supabase account
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### Installation
 
-Follow these steps:
+1. Clone the repository:
+```bash
+git clone <repository-url>
+cd greentrails
+```
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+2. Install dependencies:
+```bash
+npm install
+```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+3. Set up environment variables:
+```bash
+cp .env.example .env.local
+```
 
-# Step 3: Install the necessary dependencies.
-npm i
+4. Update `.env.local` with your Supabase credentials.
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+5. Run the development server:
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+## Roamie Memory Integration
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Overview
 
-**Use GitHub Codespaces**
+Roamie is GreenTrails' AI assistant with memory capabilities. It can remember user preferences, past conversations, and trail history across sessions to provide personalized recommendations and assistance.
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### Database Schema
 
-## What technologies are used for this project?
+The memory system uses a `user_memory` table with the following structure:
 
-This project is built with:
+```sql
+CREATE TABLE public.user_memory (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) NOT NULL,
+  memory_key TEXT NOT NULL,
+  memory_value JSONB NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### Running the SQL Migration
 
-## How can I deploy this project?
+To set up the memory system, run the following SQL commands in your Supabase SQL editor:
 
-Simply open [Lovable](https://lovable.dev/projects/3c2f4537-b8cf-4934-ac7c-1e914a5026f5) and click on Share -> Publish.
+```sql
+-- Create user_memory table
+CREATE TABLE public.user_memory (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) NOT NULL,
+  memory_key TEXT NOT NULL,
+  memory_value JSONB NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
 
-## Can I connect a custom domain to my Lovable project?
+-- Create index for faster lookups
+CREATE UNIQUE INDEX user_memory_user_id_memory_key_idx ON public.user_memory (user_id, memory_key);
 
-Yes, you can!
+-- Enable RLS
+ALTER TABLE public.user_memory ENABLE ROW LEVEL SECURITY;
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+-- Create policies
+CREATE POLICY "Service role can modify memory" ON public.user_memory
+  FOR ALL USING (auth.role() = 'service_role');
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+CREATE POLICY "Users can read their own memory" ON public.user_memory
+  FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert their own memory" ON public.user_memory
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their own memory" ON public.user_memory
+  FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete their own memory" ON public.user_memory
+  FOR DELETE USING (auth.uid() = user_id);
+```
+
+### Deploying the Edge Function
+
+The memory API is implemented as a Supabase Edge Function. To deploy:
+
+1. Install Supabase CLI
+2. Login to your project: `supabase login`
+3. Deploy the function: `supabase functions deploy memory-api`
+
+The function provides three endpoints:
+- `GET /memory?user_id={id}&key={key}` - Retrieve memory
+- `POST /memory` - Set/update memory
+- `DELETE /memory?user_id={id}&key={key}` - Delete memory
+
+### How useRoamieMemory Works
+
+The `useRoamieMemory` hook provides a React interface for the memory system:
+
+```typescript
+const { roamieContext, loadMemory, saveMemory, clearMemory, updateContext, isReady } = useRoamieMemory();
+```
+
+- `roamieContext`: Current user context data
+- `loadMemory()`: Loads memory from backend
+- `saveMemory(context)`: Saves context to backend
+- `clearMemory()`: Clears all user memory
+- `updateContext(updates)`: Updates specific fields
+- `isReady`: Boolean indicating if system is ready
+
+### Integration Example
+
+The memory system automatically loads when a user is authenticated and saves context updates:
+
+```typescript
+// Update user's preferred difficulty
+await updateContext({ 
+  preferredTrailDifficulty: 'hard',
+  lastVisitedTrails: [...lastVisitedTrails, trailId]
+});
+```
+
+### Sample Conversation Flow
+
+1. **First interaction**: "Hi Roamie, I'm looking for easy trails near Denver"
+   - Roamie saves: `preferredTrailDifficulty: "easy"`, `favoriteLocations: [Denver]`
+
+2. **Later session**: "Show me some trails"
+   - Roamie remembers: "Based on your preference for easy trails and your interest in the Denver area, here are some recommendations..."
+
+3. **After visiting trails**: Roamie can reference past visits and suggest similar trails
+
+### Memory Data Structure
+
+```typescript
+interface RoamieContext {
+  lastVisitedTrails: string[];
+  preferredTrailDifficulty: "easy" | "moderate" | "hard" | null;
+  lastSearchTimestamp: string | null;
+  favoriteLocations: { id: string; name: string }[];
+  recentSearchTerms: string[];
+  preferredWeatherConditions: string[];
+  lastChatTimestamp: string | null;
+  conversationCount: number;
+}
+```
+
+## Testing
+
+Run the test suite:
+
+```bash
+npm run test
+```
+
+Tests include:
+- Memory API endpoint validation
+- Hook state management
+- Error handling scenarios
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests for new functionality
+5. Submit a pull request
+
+## License
+
+This project is licensed under the MIT License.

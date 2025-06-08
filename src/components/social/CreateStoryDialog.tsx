@@ -50,10 +50,12 @@ const CreateStoryDialog: React.FC<CreateStoryDialogProps> = ({ open, onOpenChang
 
   const handleLocationCapture = async () => {
     try {
-      await getCurrentLocation();
-      if (location) {
-        // In a real app, you'd reverse geocode the coordinates to get a place name
-        setLocationName(`${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}`);
+      const position = await getCurrentLocation();
+      if (position) {
+        // Access coordinates correctly through coords property
+        const lat = position.coords.latitude.toFixed(4);
+        const lng = position.coords.longitude.toFixed(4);
+        setLocationName(`${lat}, ${lng}`);
       }
     } catch (error) {
       toast({

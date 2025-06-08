@@ -40,12 +40,10 @@ if (!container) {
 const root = createRoot(container);
 
 // Auto-bootstrap runs when app starts - no user action needed
-// Import the hook at module level to trigger on app startup
 import('./hooks/use-auto-trail-bootstrap').then(({ useAutoTrailBootstrap }) => {
   console.log('🚀 Auto trail bootstrap system loaded');
 });
 
-// Single BrowserRouter at the top level - this is the ONLY Router in the app
 root.render(
   <React.StrictMode>
     <BrowserRouter>

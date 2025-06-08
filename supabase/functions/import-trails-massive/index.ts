@@ -4,24 +4,10 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "./cors.ts";
 import { createTestTrail, generateTrailsForSource } from "./trail-generator.ts";
 import { processBatch, type BatchResult } from "./batch-processor.ts";
-
-interface ImportRequest {
-  sources: string[];
-  maxTrailsPerSource: number;
-  batchSize?: number;
-  concurrency?: number;
-  priority?: string;
-  target?: string;
-  debug?: boolean;
-  validation?: boolean;
-  location?: {
-    lat: number;
-    lng: number;
-    radius: number;
-    city?: string;
-    state?: string;
-  };
-}
+import { parseAndValidateRequest, validateImportRequest, getLocationInfo } from "./request-handler.ts";
+import { createBulkImportJob, updateBulkImportJob } from "./job-manager.ts";
+import { buildSuccessResponse, buildErrorResponse } from "./response-builder.ts";
+import type { ImportRequest, SourceResult } from "./types.ts";
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -46,6 +32,17 @@ serve(async (req) => {
     
     console.log('🔑 Using service role for trail imports to bypass RLS');
     
+    // Parse and validate request
+    const request = await parseAndValidateRequest(req);
+    const validation = validateImportRequest(request);
+    
+    if (!validation.isValid) {
+      return new Response(
+        JSON.stringify({ error: validation.error }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+    
     const { 
       sources, 
       maxTrailsPerSource, 
@@ -54,25 +51,17 @@ serve(async (req) => {
       priority = 'normal',
       target = '30K',
       debug = false,
-      validation = false,
+      validation: validationMode = false,
       location
-    } = await req.json() as ImportRequest;
+    } = request;
     
-    const isLocationSpecific = !!location;
-    const locationName = location ? `${location.city || 'Location'}, ${location.state || 'Area'}` : 'General';
+    const { isLocationSpecific, locationName } = getLocationInfo(location);
     
     console.log(`🎯 Starting ${target} trail import${isLocationSpecific ? ` for ${locationName}` : ''} with validated schema`);
     console.log(`📊 Configuration: ${sources.length} sources, ${maxTrailsPerSource} trails per source, batch size: ${batchSize}`);
     
     if (location) {
       console.log(`📍 Location targeting: ${location.lat}, ${location.lng} within ${location.radius} miles`);
-    }
-    
-    if (!sources || sources.length === 0) {
-      return new Response(
-        JSON.stringify({ error: 'No sources specified for import' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-      );
     }
     
     // Test single insert with proper schema validation
@@ -110,27 +99,7 @@ serve(async (req) => {
     }
     
     // Create bulk import job
-    const { data: bulkJob, error: bulkJobError } = await supabase
-      .from('bulk_import_jobs')
-      .insert([{
-        status: 'processing',
-        started_at: new Date().toISOString(),
-        total_trails_requested: sources.length * maxTrailsPerSource,
-        total_sources: sources.length,
-        trails_processed: 0,
-        trails_added: 0,
-        trails_updated: 0,
-        trails_failed: 0
-      }])
-      .select('*')
-      .single();
-      
-    if (bulkJobError) {
-      console.error('Failed to create bulk import job:', bulkJobError);
-      throw new Error(`Failed to create bulk import job: ${bulkJobError.message}`);
-    }
-    
-    console.log(`✅ Created bulk job ${bulkJob.id} for ${locationName} with FIXED SCHEMA`);
+    const bulkJob = await createBulkImportJob(supabase, sources, maxTrailsPerSource, locationName);
     
     // Process all sources
     let totalAdded = 0;
@@ -138,7 +107,7 @@ serve(async (req) => {
     let totalProcessed = 0;
     let allInsertErrors: string[] = [];
     
-    const sourceResults = [];
+    const sourceResults: SourceResult[] = [];
     
     for (const sourceType of sources) {
       try {
@@ -212,24 +181,8 @@ serve(async (req) => {
     }
     
     // Update bulk job with final results
-    const finalStatus = totalAdded > 0 ? 'completed' : 'error';
+    const finalStatus = await updateBulkImportJob(supabase, bulkJob.id, totalProcessed, totalAdded, totalFailed);
     const successRate = totalProcessed > 0 ? Math.round((totalAdded / totalProcessed) * 100) : 0;
-    
-    const { error: updateError } = await supabase
-      .from('bulk_import_jobs')
-      .update({
-        status: finalStatus,
-        completed_at: new Date().toISOString(),
-        trails_processed: totalProcessed,
-        trails_added: totalAdded,
-        trails_updated: 0,
-        trails_failed: totalFailed
-      })
-      .eq('id', bulkJob.id);
-      
-    if (updateError) {
-      console.error('Error updating bulk job:', updateError);
-    }
     
     // Verify the final count in the database
     const { count: finalCount } = await supabase
@@ -245,39 +198,32 @@ serve(async (req) => {
       console.error(`💥 Insert errors encountered:`, allInsertErrors.slice(-5));
     }
     
+    const responseData = buildSuccessResponse(
+      bulkJob,
+      target,
+      locationName,
+      totalProcessed,
+      totalAdded,
+      totalFailed,
+      sourceResults,
+      allInsertErrors,
+      finalCount,
+      isLocationSpecific,
+      finalStatus
+    );
+    
     return new Response(
-      JSON.stringify({
-        job_id: bulkJob.id,
-        status: finalStatus,
-        target: target,
-        location: locationName,
-        total_processed: totalProcessed,
-        total_added: totalAdded,
-        total_updated: 0,
-        total_failed: totalFailed,
-        success_rate: successRate,
-        source_results: sourceResults,
-        service_role_used: true,
-        insert_errors: allInsertErrors.slice(-5),
-        final_database_count: finalCount,
-        schema_fixes_applied: true,
-        location_targeting: isLocationSpecific,
-        message: `${target} import completed for ${locationName}: ${totalAdded} trails added with ${successRate}% success rate using LOCATION-AWARE SCHEMA`
-      }),
+      JSON.stringify(responseData),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
     
   } catch (error) {
     console.error('💥 Massive import error:', error);
     
+    const errorResponse = buildErrorResponse(error);
+    
     return new Response(
-      JSON.stringify({ 
-        error: 'Massive import failed', 
-        details: error instanceof Error ? error.message : 'Unknown error',
-        target: '30K',
-        service_role_configured: !!Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'),
-        schema_fixes_applied: true
-      }),
+      JSON.stringify(errorResponse),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
   }

@@ -1,14 +1,13 @@
 
 import React, { useState, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { Upload, MapPin, Camera, Image as ImageIcon, X } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
-import { useGeolocation } from '@/hooks/use-geolocation';
+import FileUploadArea from './create-story/FileUploadArea';
+import StoryPreview from './create-story/StoryPreview';
+import CaptionInput from './create-story/CaptionInput';
+import LocationInput from './create-story/LocationInput';
+import StoryActions from './create-story/StoryActions';
 
 interface CreateStoryDialogProps {
   open: boolean;
@@ -18,7 +17,6 @@ interface CreateStoryDialogProps {
 const CreateStoryDialog: React.FC<CreateStoryDialogProps> = ({ open, onOpenChange }) => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { location, error: locationError, getCurrentLocation } = useGeolocation();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -45,24 +43,6 @@ const CreateStoryDialog: React.FC<CreateStoryDialogProps> = ({ open, onOpenChang
         setPreview(e.target?.result as string);
       };
       reader.readAsDataURL(file);
-    }
-  };
-
-  const handleLocationCapture = async () => {
-    try {
-      const position = await getCurrentLocation();
-      if (position) {
-        // Access coordinates correctly through coords property
-        const lat = position.coords.latitude.toFixed(4);
-        const lng = position.coords.longitude.toFixed(4);
-        setLocationName(`${lat}, ${lng}`);
-      }
-    } catch (error) {
-      toast({
-        title: "Location access denied",
-        description: "Please enable location services to add your location",
-        variant: "destructive"
-      });
     }
   };
 
@@ -124,118 +104,36 @@ const CreateStoryDialog: React.FC<CreateStoryDialogProps> = ({ open, onOpenChang
         <div className="space-y-4">
           {/* File Upload Area */}
           {!preview ? (
-            <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center">
-              <div className="space-y-3">
-                <div className="flex justify-center gap-2">
-                  <Camera className="h-8 w-8 text-gray-400" />
-                  <ImageIcon className="h-8 w-8 text-gray-400" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium">Add photo or video</p>
-                  <p className="text-xs text-gray-500">Share your trail experience</p>
-                </div>
-                <Button 
-                  variant="outline" 
-                  onClick={() => fileInputRef.current?.click()}
-                  className="mt-2"
-                >
-                  <Upload className="h-4 w-4 mr-2" />
-                  Choose File
-                </Button>
-              </div>
-            </div>
+            <FileUploadArea 
+              onFileSelect={handleFileSelect}
+              fileInputRef={fileInputRef}
+            />
           ) : (
-            <div className="relative">
-              <img 
-                src={preview} 
-                alt="Preview" 
-                className="w-full h-64 object-cover rounded-lg"
-              />
-              <Button
-                variant="destructive"
-                size="icon"
-                className="absolute top-2 right-2"
-                onClick={clearFile}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
+            <StoryPreview 
+              preview={preview}
+              onClear={clearFile}
+            />
           )}
 
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*,video/*"
-            onChange={handleFileSelect}
-            className="hidden"
-          />
-
           {/* Caption */}
-          <Textarea
-            placeholder="What's happening on the trail?"
-            value={caption}
-            onChange={(e) => setCaption(e.target.value)}
-            maxLength={200}
-            className="resize-none"
+          <CaptionInput 
+            caption={caption}
+            setCaption={setCaption}
           />
-          <div className="text-xs text-gray-500 text-right">
-            {caption.length}/200
-          </div>
 
           {/* Location */}
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleLocationCapture}
-                disabled={!!locationError}
-              >
-                <MapPin className="h-4 w-4 mr-2" />
-                Add Location
-              </Button>
-              {locationName && (
-                <Badge variant="secondary" className="flex items-center gap-1">
-                  <MapPin className="h-3 w-3" />
-                  {locationName}
-                  <button 
-                    onClick={() => setLocationName('')}
-                    className="ml-1 text-gray-500 hover:text-gray-700"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </Badge>
-              )}
-            </div>
-            
-            {!locationName && (
-              <Input
-                placeholder="Enter location manually"
-                value={locationName}
-                onChange={(e) => setLocationName(e.target.value)}
-                className="text-sm"
-              />
-            )}
-          </div>
+          <LocationInput 
+            locationName={locationName}
+            setLocationName={setLocationName}
+          />
 
           {/* Share Button */}
-          <div className="flex gap-2 pt-4">
-            <Button 
-              variant="outline" 
-              onClick={() => onOpenChange(false)}
-              className="flex-1"
-              disabled={isUploading}
-            >
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleShare}
-              className="flex-1 bg-greentrail-600 hover:bg-greentrail-700"
-              disabled={!selectedFile || isUploading}
-            >
-              {isUploading ? 'Sharing...' : 'Share Story'}
-            </Button>
-          </div>
+          <StoryActions 
+            onCancel={() => onOpenChange(false)}
+            onShare={handleShare}
+            isUploading={isUploading}
+            hasSelectedFile={!!selectedFile}
+          />
         </div>
       </DialogContent>
     </Dialog>

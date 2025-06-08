@@ -32,7 +32,7 @@ const EnhancedAlbumCard: React.FC<EnhancedAlbumCardProps> = ({ album }) => {
           <div className="flex items-center space-x-3">
             <div className="relative">
               <Avatar className="h-12 w-12 ring-2 ring-gold-500/20">
-                <AvatarImage src={album.user?.avatar_url || ''} />
+                <AvatarImage src="" />
                 <AvatarFallback className="bg-gold-gradient text-luxury-900 font-luxury font-semibold">
                   {album.user?.email?.charAt(0).toUpperCase() || 'A'}
                 </AvatarFallback>
@@ -58,7 +58,7 @@ const EnhancedAlbumCard: React.FC<EnhancedAlbumCardProps> = ({ album }) => {
         <Link to={`/albums/${album.id}`}>
           <div className="aspect-video relative overflow-hidden">
             <img
-              src="/placeholder.svg"
+              src={album.coverImage || "/placeholder.svg"}
               alt={album.title}
               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
             />

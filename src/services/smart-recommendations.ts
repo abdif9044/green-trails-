@@ -1,5 +1,4 @@
 
-
 import { supabase } from '@/integrations/supabase/client';
 import { Trail } from '@/types/trails';
 
@@ -86,7 +85,7 @@ class SmartRecommendationEngine {
       .from('trail_likes')
       .select(`
         trail_id,
-        trails!trail_likes_trail_id_fkey(*)
+        trails(*)
       `)
       .eq('user_id', userId);
 
@@ -186,4 +185,3 @@ class SmartRecommendationEngine {
 
 export const smartRecommendations = new SmartRecommendationEngine();
 export default smartRecommendations;
-

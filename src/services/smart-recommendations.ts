@@ -1,4 +1,5 @@
 
+
 import { supabase } from '@/integrations/supabase/client';
 import { Trail } from '@/types/trails';
 
@@ -185,3 +186,4 @@ class SmartRecommendationEngine {
 
 export const smartRecommendations = new SmartRecommendationEngine();
 export default smartRecommendations;
+

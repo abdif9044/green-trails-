@@ -1,24 +1,19 @@
 
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
-import { Heart, MessageCircle, Share2, MapPin, ArrowLeft } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { formatDistanceToNow } from 'date-fns';
-import { useAlbumLikeCount, useHasLikedAlbum, useToggleAlbumLike } from '@/hooks/use-album-likes';
-import { useAuth } from '@/hooks/use-auth';
+import { ArrowLeft } from 'lucide-react';
 import { Album } from '@/hooks/use-albums';
-import { useToast } from '@/hooks/use-toast';
+import AlbumDetailHeader from '@/components/albums/AlbumDetailHeader';
+import AlbumDetailActions from '@/components/albums/AlbumDetailActions';
+import AlbumMediaGrid from '@/components/albums/AlbumMediaGrid';
 
 const AlbumDetail = () => {
   const { albumId } = useParams<{ albumId: string }>();
-  const { user } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   // Fetch album details
   const { data: album, isLoading, error } = useQuery({
@@ -70,34 +65,6 @@ const AlbumDetail = () => {
     enabled: !!albumId,
   });
   
-  // Use album likes hooks
-  const { data: likesCount = 0 } = useAlbumLikeCount(albumId || '');
-  const { data: hasLiked = false } = useHasLikedAlbum(albumId || '');
-  const toggleLike = useToggleAlbumLike();
-  
-  const handleLike = async () => {
-    if (!albumId) return;
-    
-    if (!user) {
-      toast({
-        title: "Sign in required",
-        description: "You need to sign in to like albums",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    await toggleLike.mutateAsync(albumId);
-  };
-  
-  const handleShare = () => {
-    navigator.clipboard.writeText(window.location.href);
-    toast({
-      title: "Link copied",
-      description: "Album link copied to clipboard",
-    });
-  };
-  
   if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -130,11 +97,6 @@ const AlbumDetail = () => {
     );
   }
   
-  // Default values for display
-  const authorName = album.user?.email?.split('@')[0] || 'User';
-  const authorAvatar = null; // Could be fetched from profiles in the future
-  const commentsCount = 0; // Placeholder until comments are implemented
-  
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -149,98 +111,11 @@ const AlbumDetail = () => {
         </Button>
         
         <div className="bg-white rounded-lg shadow-md overflow-hidden dark:bg-greentrail-800">
-          <div className="p-6">
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
-              <div className="flex items-center space-x-4">
-                <Avatar className="h-12 w-12">
-                  <AvatarImage src={authorAvatar || undefined} />
-                  <AvatarFallback className="text-lg">{authorName[0].toUpperCase()}</AvatarFallback>
-                </Avatar>
-                <div>
-                  <h2 className="text-2xl font-bold">{album.title}</h2>
-                  <div className="flex items-center mt-1">
-                    <Link to={`/profile/${album.user_id}`} className="text-sm text-greentrail-600 dark:text-greentrail-400 hover:underline">
-                      {authorName}
-                    </Link>
-                    <span className="text-xs text-muted-foreground mx-2">•</span>
-                    <span className="text-xs text-muted-foreground">
-                      {formatDistanceToNow(new Date(album.created_at), { addSuffix: true })}
-                    </span>
-                  </div>
-                </div>
-              </div>
-              
-              {album.is_private && (
-                <Badge variant="secondary">Private</Badge>
-              )}
-            </div>
-            
-            {album.location && (
-              <p className="text-sm text-muted-foreground flex items-center mb-4">
-                <MapPin className="h-4 w-4 mr-1" /> {album.location}
-              </p>
-            )}
-            
-            {album.description && (
-              <p className="text-gray-700 dark:text-gray-300 mb-6">{album.description}</p>
-            )}
-            
-            <div className="flex space-x-4">
-              <Button 
-                variant="ghost" 
-                className={`space-x-2 ${hasLiked ? 'text-red-500' : ''}`} 
-                onClick={handleLike}
-                disabled={toggleLike.isPending}
-              >
-                <Heart className={`h-5 w-5 ${hasLiked ? 'fill-current' : ''}`} />
-                <span>{likesCount}</span>
-              </Button>
-              <Button variant="ghost" className="space-x-2">
-                <MessageCircle className="h-5 w-5" />
-                <span>{commentsCount}</span>
-              </Button>
-              <Button variant="ghost" onClick={handleShare}>
-                <Share2 className="h-5 w-5 mr-2" />
-                <span>Share</span>
-              </Button>
-            </div>
-          </div>
+          <AlbumDetailHeader album={album} />
+          <AlbumDetailActions albumId={albumId!} />
           
           <div className="border-t dark:border-greentrail-700">
-            <div className="p-6">
-              {media.length === 0 ? (
-                <div className="text-center py-12">
-                  <p className="text-muted-foreground">No photos or videos in this album yet.</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                  {media.map((item) => (
-                    <div 
-                      key={item.id} 
-                      className="aspect-square bg-muted rounded-md overflow-hidden"
-                    >
-                      {item.file_type.startsWith('image/') ? (
-                        <img 
-                          src={item.url} 
-                          alt={item.caption || 'Album photo'} 
-                          className="w-full h-full object-cover"
-                        />
-                      ) : item.file_type.startsWith('video/') ? (
-                        <video 
-                          src={item.url} 
-                          controls 
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <p className="text-muted-foreground">Unsupported media type</p>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+            <AlbumMediaGrid media={media} />
           </div>
         </div>
       </main>

@@ -4,10 +4,13 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import SocialHeader from "@/components/social/SocialHeader";
 import SocialFeed from "@/components/social/SocialFeed";
+import StoryCreator from "@/components/social/StoryCreator";
 import SEOProvider from "@/components/SEOProvider";
+import { useAuth } from '@/hooks/use-auth';
 
 const Social = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const { user } = useAuth();
   
   return (
     <div className="min-h-screen flex flex-col">
@@ -25,6 +28,12 @@ const Social = () => {
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
           />
+          
+          {user && (
+            <div className="mb-6">
+              <StoryCreator onStoryCreated={() => window.location.reload()} />
+            </div>
+          )}
           
           <SocialFeed searchQuery={searchQuery} onClearSearch={() => setSearchQuery('')} />
         </div>

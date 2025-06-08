@@ -1,32 +1,48 @@
 
 import React from 'react';
 import { Trail } from '@/types/trails';
+import WeatherInfo from './WeatherInfo';
+import TrailConditionReporter from '@/components/map/TrailConditionReporter';
+import OfflineMapCache from '@/components/map/OfflineMapCache';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-export interface TrailSidebarProps {
-  trailId: string;
-  trail?: Trail;
+interface TrailSidebarProps {
+  trail: Trail;
 }
 
-const TrailSidebar: React.FC<TrailSidebarProps> = ({ trailId, trail }) => {
+const TrailSidebar: React.FC<TrailSidebarProps> = ({ trail }) => {
+  const bounds = trail.coordinates ? {
+    north: trail.coordinates[0] + 0.01,
+    south: trail.coordinates[0] - 0.01,
+    east: trail.coordinates[1] + 0.01,
+    west: trail.coordinates[1] - 0.01
+  } : undefined;
+
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm">
-      <h3 className="text-lg font-semibold mb-4">Trail Information</h3>
-      {trail && (
-        <div className="space-y-3">
-          <div>
-            <span className="text-sm text-gray-600 dark:text-gray-400">Length:</span>
-            <span className="ml-2 font-medium">{trail.length} miles</span>
-          </div>
-          <div>
-            <span className="text-sm text-gray-600 dark:text-gray-400">Difficulty:</span>
-            <span className="ml-2 font-medium capitalize">{trail.difficulty}</span>
-          </div>
-          <div>
-            <span className="text-sm text-gray-600 dark:text-gray-400">Elevation:</span>
-            <span className="ml-2 font-medium">{trail.elevation} ft</span>
-          </div>
-        </div>
-      )}
+    <div className="space-y-6">
+      <WeatherInfo coordinates={trail.coordinates} />
+      
+      <TrailConditionReporter 
+        trailId={trail.id}
+        conditions={[
+          {
+            id: '1',
+            type: 'good',
+            description: 'Trail is in excellent condition, well maintained',
+            reportedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+            reportedBy: 'TrailRunner42'
+          },
+          {
+            id: '2',
+            type: 'caution',
+            description: 'Some muddy sections after recent rain',
+            reportedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+            reportedBy: 'HikingExplorer'
+          }
+        ]}
+      />
+      
+      <OfflineMapCache bounds={bounds} />
     </div>
   );
 };

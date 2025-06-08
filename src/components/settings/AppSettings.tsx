@@ -4,12 +4,12 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { useTheme } from '@/providers/theme-provider';
+import { useThemeToggle } from '@/hooks/use-theme-toggle';
 import { useToast } from '@/hooks/use-toast';
 import { Globe, Bell, Shield, MapPin } from 'lucide-react';
 
 const AppSettings = () => {
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme } = useThemeToggle();
   const { toast } = useToast();
   const [notifications, setNotifications] = useState(true);
   const [locationSharing, setLocationSharing] = useState(false);

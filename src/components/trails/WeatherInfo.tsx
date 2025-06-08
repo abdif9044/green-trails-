@@ -14,6 +14,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface WeatherInfoProps {
+  coordinates?: [number, number];
   temperature?: number;
   condition?: string;
   high?: number;
@@ -27,6 +28,7 @@ interface WeatherInfoProps {
 }
 
 const WeatherInfo: React.FC<WeatherInfoProps> = ({
+  coordinates,
   temperature,
   condition,
   high,

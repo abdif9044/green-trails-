@@ -174,7 +174,7 @@ const Trail: React.FC = () => {
           </div>
 
           <div className="space-y-6">
-            <TrailSidebar trailId={trailId} trail={trail} />
+            <TrailSidebar trail={trail} />
             <SimilarTrails currentTrailId={trailId} />
           </div>
         </div>

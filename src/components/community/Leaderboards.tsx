@@ -97,7 +97,7 @@ const Leaderboards: React.FC = () => {
         total_distance,
         total_elevation,
         current_streak,
-        profiles!user_stats_user_id_fkey(email, full_name, avatar_url)
+        profiles(email, full_name, avatar_url)
       `)
       .order(orderBy, { ascending: false })
       .limit(50);

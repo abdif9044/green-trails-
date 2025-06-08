@@ -84,14 +84,13 @@ class SmartRecommendationEngine {
     const { data } = await supabase
       .from('trail_likes')
       .select(`
-        trail_id,
-        trails!trail_likes_trail_id_fkey(*)
+        trails(*)
       `)
       .eq('user_id', userId);
 
     if (!data) return [];
 
-    // Extract trail data from the response
+    // Extract trail data from the response and filter out null values
     return data
       .map(item => item.trails)
       .filter((trail): trail is Trail => {

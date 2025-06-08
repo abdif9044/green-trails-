@@ -3,9 +3,8 @@ import { useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useAlbums } from '@/hooks/use-albums';
 import { toast } from '@/hooks/use-toast';
-import AlbumsList from './AlbumsList';
+import EnhancedAlbumsList from './EnhancedAlbumsList';
 import SocialTabs from './SocialTabs';
-import StoriesSection from './StoriesSection';
 import { TabsContent } from "@/components/ui/tabs";
 import SignInRequired from './SignInRequired';
 
@@ -46,13 +45,10 @@ const SocialFeed = ({ searchQuery, onClearSearch }: SocialFeedProps) => {
   });
   
   return (
-    <div className="space-y-6">
-      {/* Stories Section - Always visible at top */}
-      <StoriesSection />
-      
+    <div className="space-y-8">
       <SocialTabs currentTab={currentTab} onTabChange={handleTabChange}>
-        <TabsContent value="feed" className="space-y-6">
-          <AlbumsList
+        <TabsContent value="feed" className="space-y-8">
+          <EnhancedAlbumsList
             albums={filteredAlbums}
             isLoading={isLoading}
             searchQuery={searchQuery}
@@ -61,11 +57,11 @@ const SocialFeed = ({ searchQuery, onClearSearch }: SocialFeedProps) => {
           />
         </TabsContent>
         
-        <TabsContent value="following" className="space-y-6">
+        <TabsContent value="following" className="space-y-8">
           {!session ? (
             <SignInRequired />
           ) : (
-            <AlbumsList
+            <EnhancedAlbumsList
               albums={filteredAlbums}
               isLoading={isLoading}
               searchQuery={searchQuery}

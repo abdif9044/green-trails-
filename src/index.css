@@ -156,10 +156,48 @@
   }
 
   .luxury-card {
-    @apply bg-white/5 backdrop-blur-luxury border border-white/10 rounded-xl p-8 shadow-luxury hover:shadow-luxury-lg transition-all duration-500;
+    @apply bg-white/5 backdrop-blur-luxury border border-white/10 rounded-xl shadow-luxury hover:shadow-luxury-lg transition-all duration-500;
   }
 
   .hero-overlay {
     background: linear-gradient(135deg, rgba(12,10,9,0.9) 0%, rgba(28,25,23,0.7) 50%, rgba(47,65,47,0.8) 100%);
+  }
+
+  /* Enhanced Social Components */
+  .story-ring {
+    background: conic-gradient(from 0deg, #ffb700, #4a9c4a, #ffb700);
+  }
+
+  .story-ring-viewed {
+    background: linear-gradient(135deg, #78716c, #57534e);
+  }
+
+  .social-card-hover {
+    @apply transform transition-all duration-500 hover:scale-[1.02] hover:shadow-luxury-lg;
+  }
+
+  .reaction-picker {
+    @apply bg-white/10 backdrop-blur-luxury border border-white/20 rounded-xl shadow-luxury;
+  }
+
+  .challenge-progress {
+    background: linear-gradient(90deg, #ffb700 0%, #4a9c4a 100%);
+  }
+
+  .premium-tab {
+    @apply relative overflow-hidden;
+  }
+
+  .premium-tab::before {
+    content: '';
+    @apply absolute inset-0 bg-gold-gradient opacity-0 transition-opacity duration-300;
+  }
+
+  .premium-tab[data-state="active"]::before {
+    @apply opacity-100;
+  }
+
+  .premium-tab > * {
+    @apply relative z-10;
   }
 }

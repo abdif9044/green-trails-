@@ -83,13 +83,23 @@ class SmartRecommendationEngine {
   private async getLikedTrails(userId: string): Promise<Trail[]> {
     const { data } = await supabase
       .from('trail_likes')
-      .select('trail_id, trails(*)')
+      .select(`
+        trail_id,
+        trails!trail_likes_trail_id_fkey(*)
+      `)
       .eq('user_id', userId);
 
-    // Fix the type issue by properly extracting trail data
-    return (data || [])
+    if (!data) return [];
+
+    // Extract trail data from the response
+    return data
       .map(item => item.trails)
-      .filter((trail): trail is Trail => trail !== null && typeof trail === 'object');
+      .filter((trail): trail is Trail => {
+        return trail !== null && 
+               typeof trail === 'object' && 
+               'id' in trail && 
+               'name' in trail;
+      });
   }
 
   private scoreTrail(

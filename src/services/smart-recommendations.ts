@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Trail } from '@/types/trails';
 
@@ -94,7 +93,7 @@ class SmartRecommendationEngine {
       return [];
     }
 
-    // Extract trail data from the response and filter out null values
+    // Extract trail data from the nested structure and filter out null values
     return data
       .map(item => item.trails)
       .filter((trail): trail is Trail => {

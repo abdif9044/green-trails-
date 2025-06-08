@@ -1,39 +1,69 @@
 
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Compass } from 'lucide-react';
+import { Compass, ChevronDown } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 
 const Hero = () => {
   const { user } = useAuth();
   
   return (
-    <div className="relative overflow-hidden bg-gradient-to-br from-greentrail-50 to-greentrail-100 dark:from-greentrail-900 dark:to-greentrail-950">
-      <div className="container mx-auto px-4 py-16 md:py-28 relative z-10">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="mb-8 inline-block">
+    <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
+      {/* Luxury Background */}
+      <div className="absolute inset-0">
+        <div className="absolute inset-0 bg-luxury-gradient"></div>
+        <div className="absolute inset-0 luxury-pattern opacity-30"></div>
+        <div className="absolute inset-0 hero-overlay"></div>
+        
+        {/* Animated Background Elements */}
+        <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-gold-500/10 rounded-full blur-3xl animate-luxury-pulse"></div>
+        <div className="absolute bottom-1/3 right-1/4 w-48 h-48 bg-greentrail-500/10 rounded-full blur-3xl animate-luxury-pulse delay-1000"></div>
+      </div>
+
+      {/* Hero Content */}
+      <div className="relative z-10 container mx-auto px-4 text-center">
+        <div className="max-w-5xl mx-auto">
+          {/* Logo */}
+          <div className="mb-12 animate-fade-in-scale">
             <img 
               src="/lovable-uploads/0c2a9cc4-4fdb-4d4a-965c-47b406e4ec4e.png" 
               alt="GreenTrails Logo" 
-              className="h-16 w-auto mx-auto"
+              className="h-20 w-auto mx-auto drop-shadow-2xl"
             />
           </div>
           
-          <h1 className="text-5xl md:text-7xl font-heading font-bold text-greentrail-900 dark:text-greentrail-100 mb-6">
-            Blaze Your Path
-          </h1>
+          {/* Main Heading */}
+          <div className="mb-8 animate-fade-in-up">
+            <h1 className="text-6xl md:text-8xl lg:text-9xl luxury-heading text-white mb-6 leading-none">
+              Blaze
+            </h1>
+            <h1 className="text-6xl md:text-8xl lg:text-9xl luxury-heading bg-gold-gradient bg-clip-text text-transparent mb-8 leading-none">
+              Your Path
+            </h1>
+          </div>
           
-          <p className="text-xl md:text-2xl text-greentrail-700 dark:text-greentrail-300 mb-12 max-w-3xl mx-auto leading-relaxed">
-            Connect with fellow nature lovers, discover amazing trails, and share your outdoor experiences through photos and stories.
-          </p>
+          {/* Subtitle */}
+          <div className="mb-16 animate-fade-in-up delay-300">
+            <p className="text-xl md:text-2xl lg:text-3xl luxury-text text-luxury-100 max-w-4xl mx-auto leading-relaxed font-light">
+              Where nature meets community. Discover extraordinary trails, connect with fellow adventurers, and elevate your outdoor experience.
+            </p>
+          </div>
           
-          <Button asChild className="bg-greentrail-600 hover:bg-greentrail-700 text-white px-8 py-6 text-lg rounded-full shadow-lg hover:shadow-xl transition-all duration-300 group">
-            <Link to={user ? "/discover" : "/auth"}>
-              <Compass className="mr-2 group-hover:rotate-90 transition-transform duration-300" size={20} />
-              Start Your Journey
-            </Link>
-          </Button>
+          {/* CTA Button */}
+          <div className="mb-16 animate-fade-in-up delay-500">
+            <Button asChild className="gold-button text-lg md:text-xl px-12 py-6 rounded-full shadow-gold hover:shadow-gold-lg group">
+              <Link to={user ? "/discover" : "/auth"}>
+                <Compass className="mr-3 group-hover:rotate-90 transition-transform duration-500" size={24} />
+                Begin Your Journey
+              </Link>
+            </Button>
+          </div>
         </div>
+      </div>
+
+      {/* Scroll Indicator */}
+      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
+        <ChevronDown className="w-8 h-8 text-white/60" />
       </div>
     </div>
   );

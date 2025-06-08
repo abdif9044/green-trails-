@@ -1,4 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap');
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700;800&family=Montserrat:wght@300;400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -99,6 +100,14 @@
   h1, h2, h3, h4, h5, h6 {
     @apply font-heading font-medium tracking-tight;
   }
+
+  .luxury-text {
+    @apply font-luxury tracking-wide;
+  }
+
+  .luxury-heading {
+    @apply font-heading font-bold tracking-tight;
+  }
 }
 
 @layer components {
@@ -111,15 +120,31 @@
   }
   
   .glass-effect {
-    @apply backdrop-blur-md bg-white/70 dark:bg-black/40;
+    @apply backdrop-blur-luxury bg-white/10 dark:bg-black/20 border border-white/20;
+  }
+
+  .luxury-glass {
+    @apply backdrop-blur-luxury bg-white/5 dark:bg-black/10 border border-white/10;
   }
   
   .eco-button {
     @apply px-4 py-2 rounded-lg bg-greentrail-600 hover:bg-greentrail-700 text-white transition-colors duration-200;
   }
 
+  .luxury-button {
+    @apply px-8 py-4 rounded-lg bg-luxury-gradient hover:shadow-luxury text-white font-luxury font-medium tracking-wide transition-all duration-300 transform hover:scale-105;
+  }
+
+  .gold-button {
+    @apply px-8 py-4 rounded-lg bg-gold-gradient hover:shadow-gold text-luxury-950 font-luxury font-semibold tracking-wide transition-all duration-300 transform hover:scale-105;
+  }
+
   .geometric-pattern {
     background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23015c3d' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  }
+
+  .luxury-pattern {
+    background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffb700' fill-opacity='0.02' fill-rule='evenodd'%3E%3Cpath d='m0 40 40-40H20L0 20M40 40V20L20 40'/%3E%3C/g%3E%3C/svg%3E");
   }
 
   .freemason-border {
@@ -128,5 +153,13 @@
       content: '';
       @apply absolute inset-0 border-2 border-greentrail-600/10 rounded-lg transform rotate-45;
     }
+  }
+
+  .luxury-card {
+    @apply bg-white/5 backdrop-blur-luxury border border-white/10 rounded-xl p-8 shadow-luxury hover:shadow-luxury-lg transition-all duration-500;
+  }
+
+  .hero-overlay {
+    background: linear-gradient(135deg, rgba(12,10,9,0.9) 0%, rgba(28,25,23,0.7) 50%, rgba(47,65,47,0.8) 100%);
   }
 }

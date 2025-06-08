@@ -8,7 +8,6 @@ export * from './age-verification-service';
 // Re-export without name collision
 import { AgeVerificationService as AuthVerificationService } from './auth-verification-service';
 export { AuthVerificationService };
-export * from './demo-account-service';
 export * from './types';
 
 // Main consolidated AuthService object for convenience
@@ -18,7 +17,6 @@ import { SignUpService } from './sign-up-service';
 import { PasswordService } from './password-service';
 import { AgeVerificationService } from './age-verification-service';
 import { AgeVerificationService as AVerificationService } from './auth-verification-service';
-import { DemoAccountService } from './demo-account-service';
 
 export const AuthService = {
   signIn: SignInService.signIn,
@@ -29,7 +27,6 @@ export const AuthService = {
   verifyAge: AgeVerificationService.verifyAge,
   verifyUserAge: AgeVerificationService.verifyUserAge,
   verifyAuthToken: AVerificationService.verifyAge, // Using the age verification function from auth-verification-service
-  createDemoAccount: DemoAccountService.createDemoAccount
 };
 
 // Convenience method for age verification

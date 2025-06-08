@@ -1,15 +1,13 @@
 
 import { Link } from 'react-router-dom';
-import { Image, Heart, MessageCircle, Share2, MapPin } from 'lucide-react';
+import { Image, MapPin } from 'lucide-react';
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Album } from '@/hooks/use-albums';
 import { formatDistanceToNow } from 'date-fns';
-import { useAlbumLikeCount, useHasLikedAlbum, useToggleAlbumLike } from '@/hooks/use-album-likes';
-import { useAuth } from '@/hooks/use-auth';
-import { useToast } from '@/hooks/use-toast';
+import { useAlbumLikeCount, useHasLikedAlbum } from '@/hooks/use-album-likes';
+import EnhancedReactions from './EnhancedReactions';
 
 // Props interface now accepts the album object directly
 export interface AlbumCardProps {
@@ -27,42 +25,30 @@ const AlbumCard = ({ album }: AlbumCardProps) => {
     user_id
   } = album;
   
-  const { user } = useAuth();
-  const { toast } = useToast();
-  
   // Use the album likes hooks
-  const { data: likesCount = 0, isLoading: isLoadingLikes } = useAlbumLikeCount(id);
-  const { data: hasLiked = false, isLoading: isLoadingHasLiked } = useHasLikedAlbum(id);
-  const toggleLike = useToggleAlbumLike();
+  const { data: likesCount = 0 } = useAlbumLikeCount(id);
+  const { data: hasLiked = false } = useHasLikedAlbum(id);
   
   // Default values for display
   const authorName = album.user?.email?.split('@')[0] || 'User';
   const authorAvatar = null; // Could be fetched from profiles in the future
   const commentsCount = 0; // Placeholder until comments are implemented
   
-  const handleLike = async () => {
-    if (!user) {
-      toast({
-        title: "Sign in required",
-        description: "You need to sign in to like albums",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    try {
-      await toggleLike.mutateAsync(id);
-    } catch (error) {
-      // Error is handled by useMutation
-    }
+  // Create reactions data for EnhancedReactions
+  const initialReactions = {
+    heart: hasLiked ? 1 : 0, // Map like to heart reaction
+    // Add other reactions from database when available
+  };
+  
+  const handleCommentClick = () => {
+    // Navigate to album detail with focus on comments
+    // This would be implemented when comment system is added
+    console.log('Navigate to comments for album:', id);
   };
   
   const handleShare = () => {
-    navigator.clipboard.writeText(window.location.origin + `/albums/${id}`);
-    toast({
-      title: "Link copied",
-      description: "Album link copied to clipboard",
-    });
+    const url = `${window.location.origin}/albums/${id}`;
+    navigator.clipboard.writeText(url);
   };
   
   return (
@@ -110,26 +96,16 @@ const AlbumCard = ({ album }: AlbumCardProps) => {
         )}
       </CardContent>
       
-      <CardFooter className="p-4 pt-0 flex justify-between">
-        <div className="flex space-x-4">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className={`space-x-1 ${hasLiked ? 'text-red-500' : ''}`} 
-            onClick={handleLike}
-            disabled={toggleLike.isPending}
-          >
-            <Heart className={`h-4 w-4 ${hasLiked ? 'fill-current' : ''}`} />
-            <span>{isLoadingLikes ? '...' : likesCount}</span>
-          </Button>
-          <Button variant="ghost" size="sm" className="space-x-1">
-            <MessageCircle className="h-4 w-4" />
-            <span>{commentsCount}</span>
-          </Button>
-        </div>
-        <Button variant="ghost" size="sm" onClick={handleShare}>
-          <Share2 className="h-4 w-4" />
-        </Button>
+      <CardFooter className="p-4 pt-0">
+        <EnhancedReactions
+          itemId={id}
+          itemType="album"
+          initialReactions={initialReactions}
+          initialUserReaction={hasLiked ? 'heart' : null}
+          commentCount={commentsCount}
+          onCommentClick={handleCommentClick}
+          onShare={handleShare}
+        />
       </CardFooter>
     </Card>
   );

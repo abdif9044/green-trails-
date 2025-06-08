@@ -5,6 +5,7 @@ import { useAlbums } from '@/hooks/use-albums';
 import { toast } from '@/hooks/use-toast';
 import AlbumsList from './AlbumsList';
 import SocialTabs from './SocialTabs';
+import StoriesSection from './StoriesSection';
 import { TabsContent } from "@/components/ui/tabs";
 import SignInRequired from './SignInRequired';
 
@@ -45,21 +46,12 @@ const SocialFeed = ({ searchQuery, onClearSearch }: SocialFeedProps) => {
   });
   
   return (
-    <SocialTabs currentTab={currentTab} onTabChange={handleTabChange}>
-      <TabsContent value="feed" className="space-y-6">
-        <AlbumsList
-          albums={filteredAlbums}
-          isLoading={isLoading}
-          searchQuery={searchQuery}
-          currentTab={currentTab}
-          onClearSearch={onClearSearch}
-        />
-      </TabsContent>
+    <div className="space-y-6">
+      {/* Stories Section - Always visible at top */}
+      <StoriesSection />
       
-      <TabsContent value="following" className="space-y-6">
-        {!session ? (
-          <SignInRequired />
-        ) : (
+      <SocialTabs currentTab={currentTab} onTabChange={handleTabChange}>
+        <TabsContent value="feed" className="space-y-6">
           <AlbumsList
             albums={filteredAlbums}
             isLoading={isLoading}
@@ -67,9 +59,23 @@ const SocialFeed = ({ searchQuery, onClearSearch }: SocialFeedProps) => {
             currentTab={currentTab}
             onClearSearch={onClearSearch}
           />
-        )}
-      </TabsContent>
-    </SocialTabs>
+        </TabsContent>
+        
+        <TabsContent value="following" className="space-y-6">
+          {!session ? (
+            <SignInRequired />
+          ) : (
+            <AlbumsList
+              albums={filteredAlbums}
+              isLoading={isLoading}
+              searchQuery={searchQuery}
+              currentTab={currentTab}
+              onClearSearch={onClearSearch}
+            />
+          )}
+        </TabsContent>
+      </SocialTabs>
+    </div>
   );
 };
 

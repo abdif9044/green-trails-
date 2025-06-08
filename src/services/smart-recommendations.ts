@@ -81,14 +81,18 @@ class SmartRecommendationEngine {
   }
 
   private async getLikedTrails(userId: string): Promise<Trail[]> {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('trail_likes')
       .select(`
-        trails(*)
+        trail_id,
+        trails!trail_likes_trail_id_fkey(*)
       `)
       .eq('user_id', userId);
 
-    if (!data) return [];
+    if (error || !data) {
+      console.error('Error fetching liked trails:', error);
+      return [];
+    }
 
     // Extract trail data from the response and filter out null values
     return data

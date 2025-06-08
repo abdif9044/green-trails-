@@ -4,7 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Routes, Route, Navigate } from "react-router-dom";
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useEffect } from "react";
 import { AuthProvider } from "@/providers/auth-provider";
 import { UserProvider } from "@/contexts/user-context";
 import { ThemeProvider } from "@/providers/theme-provider";
@@ -12,6 +12,10 @@ import { AuthGuard } from "./components/auth/AuthGuard";
 import { Layout } from "./components/layout/layout";
 import AssistantBubble from "./components/assistant/AssistantBubble";
 import LoadingFallback from "./components/LoadingFallback";
+import { performanceMonitor } from "./services/performance-monitor";
+import { notificationService } from "./services/notification-service";
+import { useAuth } from "./hooks/use-auth";
+import { useToast } from "./hooks/use-toast";
 import "./App.css";
 
 // Lazy load all pages for better performance
@@ -41,6 +45,52 @@ const queryClient = new QueryClient({
   },
 });
 
+// Performance and notifications setup component
+const AppServices = () => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    // Initialize notification service with toast function
+    notificationService.setToastFunction(toast);
+    
+    // Subscribe to notifications if user is logged in
+    if (user?.id) {
+      notificationService.subscribeToNotifications(user.id);
+    }
+
+    // Track app initialization
+    performanceMonitor.trackUserEngagement('app_start');
+
+    return () => {
+      // Cleanup notifications subscription
+      notificationService.unsubscribe();
+    };
+  }, [user?.id, toast]);
+
+  // Track route changes for analytics
+  useEffect(() => {
+    const handleRouteChange = () => {
+      performanceMonitor.trackUserEngagement('page_view', {
+        path: window.location.pathname,
+        timestamp: new Date().toISOString()
+      });
+    };
+
+    // Track initial page load
+    handleRouteChange();
+
+    // Listen for route changes (simplified for this example)
+    window.addEventListener('popstate', handleRouteChange);
+    
+    return () => {
+      window.removeEventListener('popstate', handleRouteChange);
+    };
+  }, []);
+
+  return null;
+};
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -50,6 +100,7 @@ function App() {
           <Sonner />
           <AuthProvider>
             <UserProvider>
+              <AppServices />
               <Layout>
                 <Suspense fallback={<LoadingFallback />}>
                   <Routes>

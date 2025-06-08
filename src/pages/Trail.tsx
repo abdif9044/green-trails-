@@ -5,12 +5,15 @@ import { useTrailInteractions } from '@/hooks/use-trail-interactions';
 import { useTrailQueryBase } from '@/features/trails/hooks/use-trail-query-base';
 import TrailSidebar from '@/components/trails/TrailSidebar';
 import SimilarTrails from '@/components/trails/SimilarTrails';
+import HikeTracker from '@/components/mobile/HikeTracker';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, AlertTriangle } from 'lucide-react';
+import { useAuth } from '@/hooks/use-auth';
 
 const Trail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const trailId = id || '';
   
   // Add debug logging
@@ -167,6 +170,14 @@ const Trail: React.FC = () => {
                         </span>
                       ))}
                     </div>
+                  </div>
+                )}
+
+                {/* Hike Tracker Section for logged-in users */}
+                {user && (
+                  <div className="mt-8">
+                    <h2 className="text-xl font-semibold mb-4">Track Your Hike</h2>
+                    <HikeTracker trailId={trailId} trailName={trail.name} />
                   </div>
                 )}
               </div>

@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Trail } from '@/types/trails';
 
@@ -95,12 +96,19 @@ class SmartRecommendationEngine {
 
     // Extract trail data from the nested structure and filter out null values
     return data
-      .map(item => item.trails)
+      .map(item => {
+        // Handle both array and single object cases from Supabase
+        const trail = Array.isArray(item.trails) ? item.trails[0] : item.trails;
+        return trail;
+      })
       .filter((trail): trail is Trail => {
         return trail !== null && 
+               trail !== undefined &&
                typeof trail === 'object' && 
                'id' in trail && 
-               'name' in trail;
+               'name' in trail &&
+               typeof trail.id === 'string' &&
+               typeof trail.name === 'string';
       });
   }
 

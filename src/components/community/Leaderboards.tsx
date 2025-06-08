@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -98,7 +97,7 @@ const Leaderboards: React.FC = () => {
         total_distance,
         total_elevation,
         current_streak,
-        user:profiles(email, full_name, avatar_url)
+        profiles!inner(email, full_name, avatar_url)
       `)
       .order(orderBy, { ascending: false })
       .limit(50);
@@ -106,7 +105,16 @@ const Leaderboards: React.FC = () => {
     if (error) throw error;
 
     return (data || []).map((entry, index) => ({
-      ...entry,
+      user_id: entry.user_id,
+      total_trails: entry.total_trails,
+      total_distance: entry.total_distance,
+      total_elevation: entry.total_elevation,
+      current_streak: entry.current_streak,
+      user: {
+        email: entry.profiles.email,
+        full_name: entry.profiles.full_name,
+        avatar_url: entry.profiles.avatar_url
+      },
       rank: index + 1
     }));
   };

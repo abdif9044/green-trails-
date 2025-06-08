@@ -1,7 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { Trail } from '@/types/trails';
-import { useAuth } from '@/hooks/use-auth';
 
 interface UserPreferences {
   preferred_difficulty: string[];
@@ -84,10 +83,13 @@ class SmartRecommendationEngine {
   private async getLikedTrails(userId: string): Promise<Trail[]> {
     const { data } = await supabase
       .from('trail_likes')
-      .select('trails(*)')
+      .select('trail_id, trails(*)')
       .eq('user_id', userId);
 
-    return data?.map(item => item.trails).filter(Boolean) || [];
+    // Fix the type issue by properly extracting trail data
+    return (data || [])
+      .map(item => item.trails)
+      .filter((trail): trail is Trail => trail !== null && typeof trail === 'object');
   }
 
   private scoreTrail(

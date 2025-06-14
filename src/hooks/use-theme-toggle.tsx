@@ -7,16 +7,36 @@ export function useThemeToggle() {
 
   useEffect(() => {
     setMounted(true)
+    // Initialize theme from localStorage or system preference
+    const savedTheme = localStorage.getItem('theme')
+    if (savedTheme && ['light', 'dark', 'system'].includes(savedTheme)) {
+      applyTheme(savedTheme)
+    } else {
+      // Default to system preference
+      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+      applyTheme(systemTheme)
+    }
   }, [])
 
-  // Temporary fallback implementation without next-themes
-  const handleSetTheme = (newTheme: string) => {
+  const applyTheme = (newTheme: string) => {
     setTheme(newTheme)
-    if (newTheme === 'dark') {
+    localStorage.setItem('theme', newTheme)
+    
+    // Apply the actual theme to the document
+    let effectiveTheme = newTheme
+    if (newTheme === 'system') {
+      effectiveTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+    }
+    
+    if (effectiveTheme === 'dark') {
       document.documentElement.classList.add('dark')
     } else {
       document.documentElement.classList.remove('dark')
     }
+  }
+
+  const handleSetTheme = (newTheme: string) => {
+    applyTheme(newTheme)
   }
 
   if (!mounted) {
@@ -27,9 +47,15 @@ export function useThemeToggle() {
     }
   }
 
+  // Calculate resolved theme for display purposes
+  let resolvedTheme = theme
+  if (theme === 'system') {
+    resolvedTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+  }
+
   return {
     theme,
     setTheme: handleSetTheme,
-    resolvedTheme: theme,
+    resolvedTheme,
   }
 }

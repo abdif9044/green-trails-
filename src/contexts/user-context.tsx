@@ -11,7 +11,7 @@ interface UserContextType {
   setRoamieContext: (ctx: RoamieContext) => void;
 }
 
-const UserContext = createContext<UserContextType | undefined>(undefined);
+const UserContext = React.createContext<UserContextType | undefined>(undefined);
 
 interface UserProviderProps {
   children: React.ReactNode;
@@ -19,10 +19,10 @@ interface UserProviderProps {
 
 export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const { user, loading } = useAuth();
-  const [roamieContext, setRoamieContext] = useState<RoamieContext | null>(null);
+  const [roamieContext, setRoamieContext] = React.useState<RoamieContext | null>(null);
 
   // Initialize roamie context when user changes
-  useEffect(() => {
+  React.useEffect(() => {
     if (user && !roamieContext) {
       setRoamieContext(defaultRoamieContext);
     } else if (!user) {
@@ -45,7 +45,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
 };
 
 export const useUserContext = () => {
-  const context = useContext(UserContext);
+  const context = React.useContext(UserContext);
   if (context === undefined) {
     throw new Error('useUserContext must be used within a UserProvider');
   }

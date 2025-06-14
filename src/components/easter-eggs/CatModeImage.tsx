@@ -1,5 +1,5 @@
 
-import React from 'react';
+import * as React from 'react';
 import { useEasterEggs } from '@/contexts/easter-eggs-context';
 
 interface CatModeImageProps {

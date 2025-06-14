@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import * as React from 'react';
 import { User } from '@supabase/supabase-js';
 import { useAuth } from '@/hooks/use-auth';
 import { RoamieContext, defaultRoamieContext } from '@/types/roamie-memory';

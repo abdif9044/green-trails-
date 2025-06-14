@@ -1,3 +1,4 @@
+
 import React, { Suspense } from 'react';
 import {
   BrowserRouter,
@@ -5,20 +6,42 @@ import {
   Route,
 } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster"
-import { ThemeProvider } from '@/components/theme-provider'
-import { AuthProvider } from './contexts/AuthContext';
-import { QueryProvider } from './contexts/QueryContext';
+import { ThemeProvider } from '@/providers/theme-provider'
+import { AuthProvider } from '@/providers/auth-provider';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ErrorBoundary } from 'react-error-boundary'
-import ErrorDisplay from '@/components/ErrorDisplay';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
 import { Layout } from '@/components/layout/layout';
 import MapContainer from '@/components/map/MapContainer';
-import MapLoadingState from '@/components/map/MapLoadingState';
 import { LazyAdminTrailImport, LazyAlbumDetail, LazyAutoImportPage, LazyBadges, LazyCreateAlbum, LazyDiscover, LazyProfile, LazySocial, LazyTrail } from '@/components/lazy/LazyComponents';
 import { EasterEggsProvider } from '@/contexts/easter-eggs-context';
 import { useKonamiCode } from '@/hooks/use-konami-code';
 import { useEasterEggs } from '@/contexts/easter-eggs-context';
+
+// Create a query client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      retry: 1,
+    },
+  },
+});
+
+// Simple error fallback component
+const ErrorFallback = ({ error, resetErrorBoundary }: { error: Error; resetErrorBoundary: () => void }) => (
+  <div className="min-h-screen flex items-center justify-center bg-red-50">
+    <div className="text-center p-8">
+      <h2 className="text-2xl font-bold text-red-600 mb-4">Something went wrong</h2>
+      <p className="text-gray-600 mb-4">{error.message}</p>
+      <button 
+        onClick={resetErrorBoundary}
+        className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+      >
+        Try again
+      </button>
+    </div>
+  </div>
+);
 
 function AppContent() {
   const { triggerKonamiEasterEgg } = useEasterEggs();
@@ -51,17 +74,17 @@ function AppContent() {
 
 function App() {
   return (
-    <ErrorBoundary FallbackComponent={ErrorDisplay}>
-      <ThemeProvider defaultTheme="light" storageKey="greentrails-ui-theme">
-        <EasterEggsProvider>
-          <AuthProvider>
-            <QueryProvider>
+    <ErrorBoundary FallbackComponent={ErrorFallback}>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider defaultTheme="light" storageKey="greentrails-ui-theme">
+          <EasterEggsProvider>
+            <AuthProvider>
               <AppContent />
               <Toaster />
-            </QueryProvider>
-          </AuthProvider>
-        </EasterEggsProvider>
-      </ThemeProvider>
+            </AuthProvider>
+          </EasterEggsProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
     </ErrorBoundary>
   );
 }

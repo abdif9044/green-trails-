@@ -1,8 +1,6 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import confetti from 'canvas-confetti';
-// We are removing useToast to prevent the app from crashing.
-// import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/components/ui/sonner';
 
 interface EasterEggsContextType {
   isDevMode: boolean;
@@ -20,7 +18,6 @@ export const EasterEggsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [isDevMode, setIsDevMode] = useState(false);
   const [isCatMode, setIsCatMode] = useState(false);
   const [secretTrailsUnlocked, setSecretTrailsUnlocked] = useState(false);
-  // const { toast } = useToast(); // This was causing the crash.
 
   // Load easter egg states from localStorage
   useEffect(() => {
@@ -38,10 +35,9 @@ export const EasterEggsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     setIsDevMode(newState);
     localStorage.setItem('greentrails-dev-mode', newState.toString());
     console.log(newState ? "🔧 Developer Mode Activated" : "Developer Mode Deactivated");
-    // toast({
-    //   title: newState ? "🔧 Developer Mode Activated" : "Developer Mode Deactivated",
-    //   description: newState ? "Secret features unlocked!" : "Back to normal mode",
-    // });
+    toast(newState ? "🔧 Developer Mode Activated" : "Developer Mode Deactivated", {
+      description: newState ? "Secret features unlocked!" : "Back to normal mode",
+    });
   };
 
   const toggleCatMode = () => {
@@ -49,20 +45,18 @@ export const EasterEggsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     setIsCatMode(newState);
     localStorage.setItem('greentrails-cat-mode', newState.toString());
     console.log(newState ? "🐱 Cat Mode Activated!" : "Cat Mode Deactivated");
-    // toast({
-    //   title: newState ? "🐱 Cat Mode Activated!" : "Cat Mode Deactivated",
-    //   description: newState ? "Meow! Trail images replaced with cats!" : "Back to regular trails",
-    // });
+    toast(newState ? "🐱 Cat Mode Activated!" : "Cat Mode Deactivated", {
+      description: newState ? "Meow! Trail images replaced with cats!" : "Back to regular trails",
+    });
   };
 
   const unlockSecretTrails = () => {
     setSecretTrailsUnlocked(true);
     localStorage.setItem('greentrails-secret-trails', 'true');
     console.log("🗝️ Secret Trails Unlocked!");
-    // toast({
-    //   title: "🗝️ Secret Trails Unlocked!",
-    //   description: "You've discovered hidden trails only known to the most dedicated explorers!",
-    // });
+    toast("🗝️ Secret Trails Unlocked!", {
+      description: "You've discovered hidden trails only known to the most dedicated explorers!",
+    });
   };
 
   const triggerKonamiEasterEgg = () => {
@@ -94,11 +88,10 @@ export const EasterEggsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }());
 
     console.log("🎮 KONAMI CODE ACTIVATED!");
-    // toast({
-    //   title: "🎮 KONAMI CODE ACTIVATED!",
-    //   description: "You are a true gamer! All easter eggs have been unlocked!",
-    //   duration: 5000,
-    // });
+    toast("🎮 KONAMI CODE ACTIVATED!", {
+      description: "You are a true gamer! All easter eggs have been unlocked!",
+      duration: 5000,
+    });
 
     // Unlock everything
     toggleDevMode();

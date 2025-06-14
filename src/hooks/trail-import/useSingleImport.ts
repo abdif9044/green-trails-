@@ -1,11 +1,10 @@
 
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/components/ui/sonner';
 
 export function useSingleImport(reloadData: () => void) {
   const [importLoading, setImportLoading] = useState<Record<string, boolean>>({});
-  const { toast } = useToast();
 
   // Function to start a single source import
   const handleImport = async (sourceId: string) => {
@@ -20,8 +19,7 @@ export function useSingleImport(reloadData: () => void) {
       
       if (response.error) throw new Error(response.error.message);
       
-      toast({
-        title: "Import started",
+      toast("Import started", {
         description: "The trail import process has been started successfully.",
       });
       
@@ -29,10 +27,8 @@ export function useSingleImport(reloadData: () => void) {
       reloadData();
     } catch (error) {
       console.error('Import error:', error);
-      toast({
-        title: "Import error",
+      toast.error("Import error", {
         description: "Failed to start the trail import process.",
-        variant: "destructive",
       });
     } finally {
       setImportLoading(prev => ({ ...prev, [sourceId]: false }));

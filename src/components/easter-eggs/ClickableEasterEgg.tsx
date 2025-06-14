@@ -1,7 +1,5 @@
-
 import React, { useState } from 'react';
-import { useEasterEggs } from '@/contexts/easter-eggs-context';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/components/ui/sonner';
 import confetti from 'canvas-confetti';
 
 interface ClickableEasterEggProps {
@@ -19,7 +17,6 @@ const ClickableEasterEgg: React.FC<ClickableEasterEggProps> = ({
 }) => {
   const [clickCount, setClickCount] = useState(0);
   const [hasTriggered, setHasTriggered] = useState(false);
-  const { toast } = useToast();
 
   const handleClick = () => {
     if (hasTriggered) return;
@@ -38,8 +35,7 @@ const ClickableEasterEgg: React.FC<ClickableEasterEggProps> = ({
         colors: ['#22c55e', '#16a34a', '#15803d']
       });
 
-      toast({
-        title: message,
+      toast(message, {
         description: `You clicked ${requiredClicks} times! Here's your reward!`,
       });
 

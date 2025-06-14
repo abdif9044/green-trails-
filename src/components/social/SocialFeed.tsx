@@ -1,8 +1,7 @@
-
 import { useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useAlbums } from '@/hooks/use-albums';
-import { toast } from '@/hooks/use-toast';
+import { toast } from '@/components/ui/sonner';
 import EnhancedAlbumsList from './EnhancedAlbumsList';
 import SocialTabs from './SocialTabs';
 import { TabsContent } from "@/components/ui/tabs";
@@ -20,10 +19,8 @@ const SocialFeed = ({ searchQuery, onClearSearch }: SocialFeedProps) => {
 
   const handleTabChange = (tab: 'feed' | 'following') => {
     if (tab === 'following' && !session) {
-      toast({
-        title: "Sign in required",
+      toast.error("Sign in required", {
         description: "You need to sign in to see albums from people you follow.",
-        variant: "destructive",
       });
       return;
     }

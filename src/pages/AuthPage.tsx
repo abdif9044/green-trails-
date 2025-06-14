@@ -5,7 +5,7 @@ import { SignUpForm } from '@/components/auth/SignUpForm';
 import { Button } from '@/components/ui/button';
 import { AuthGuard } from '@/components/auth/AuthGuard';
 
-export const AuthPage = () => {
+const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
 
   return (
@@ -44,3 +44,5 @@ export const AuthPage = () => {
     </AuthGuard>
   );
 };
+
+export default AuthPage;

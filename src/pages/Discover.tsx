@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -5,10 +6,10 @@ import DiscoverHeader from "@/components/discover/DiscoverHeader";
 import DiscoverFilters from "@/components/discover/DiscoverFilters";
 import DiscoverTrailsList from "@/features/discover/components/DiscoverTrailsList";
 import DiscoverViewControls from "@/features/discover/components/DiscoverViewControls";
-import TrailStatsOverview from "@/components/discover/TrailStatsOverview";
+import { TrailStatsOverview } from "@/components/discover/TrailStatsOverview";
 import TrailMap from "@/features/map/components/TrailMap";
 import SEOProvider from "@/components/SEOProvider";
-import { useTrails } from "@/hooks/use-trails";
+import { useTrailsQuery } from "@/features/trails/hooks/use-trails-query";
 import { useSearchParams } from 'react-router-dom';
 import { Badge } from "@/components/ui/badge";
 import { useEasterEggs } from '@/contexts/easter-eggs-context';
@@ -28,14 +29,16 @@ const Discover = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { secretTrailsUnlocked } = useEasterEggs();
 
-  const { data, isLoading, isError, error } = useTrails({
-    search: searchQuery,
-    location: locationFilter,
-    difficulty: filters.difficulty,
-    length: filters.length,
-    rating: filters.rating,
-    sort: sortBy,
-  });
+  const trailFilters = {
+    searchQuery,
+    country: undefined,
+    stateProvince: undefined,
+    difficulty: filters.difficulty || undefined,
+  };
+
+  const { data, isLoading, isError, error } = useTrailsQuery(trailFilters);
+  const trails = data?.data || [];
+  const totalCount = data?.count || 0;
 
   useEffect(() => {
     // Read initial values from URL params
@@ -92,6 +95,10 @@ const Discover = () => {
     setShowTrailPaths(false);
   };
 
+  const handleFiltersChange = (newFilters: any) => {
+    setFilters(prev => ({ ...prev, ...newFilters }));
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-greentrail-50 dark:bg-greentrail-950">
       <SEOProvider
@@ -103,18 +110,15 @@ const Discover = () => {
       <Navbar />
       
       <DiscoverHeader 
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        onLocationFilter={setLocationFilter}
+        trailCount={totalCount}
+        totalTrails={totalCount}
       />
 
       <main className="flex-grow container mx-auto px-4 py-6">
         <div className="space-y-6">
           <DiscoverFilters
-            filters={filters}
-            onFiltersChange={setFilters}
-            onResetFilters={handleResetFilters}
-            trailCount={data?.trails?.length || 0}
+            onFiltersChange={handleFiltersChange}
+            currentFilters={filters}
           />
 
           {/* Secret Trails Section */}
@@ -139,8 +143,7 @@ const Discover = () => {
           <div className="flex flex-col lg:flex-row gap-6">
             <div className="lg:w-1/4">
               <TrailStatsOverview
-                totalTrails={data?.trails?.length || 0}
-                loading={isLoading}
+                count={totalCount}
               />
             </div>
 
@@ -162,12 +165,14 @@ const Discover = () => {
 
               {viewMode === 'list' ? (
                 <DiscoverTrailsList
-                  trails={data?.trails || []}
-                  onResetFilters={handleResetFilters}
+                  currentFilters={trailFilters}
+                  viewMode={viewMode}
+                  showTrailPaths={showTrailPaths}
+                  onTrailCountChange={() => {}}
                 />
               ) : (
                 <TrailMap
-                  trails={data?.trails || []}
+                  trails={trails}
                   showTrailPaths={showTrailPaths}
                 />
               )}

@@ -1,105 +1,182 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import DiscoverHeader from "@/components/discover/DiscoverHeader";
+import DiscoverFilters from "@/components/discover/DiscoverFilters";
+import DiscoverTrailsList from "@/features/discover/components/DiscoverTrailsList";
+import DiscoverViewControls from "@/features/discover/components/DiscoverViewControls";
+import TrailStatsOverview from "@/components/discover/TrailStatsOverview";
+import TrailMap from "@/features/map/components/TrailMap";
+import SEOProvider from "@/components/SEOProvider";
+import { useTrails } from "@/hooks/use-trails";
+import { useSearchParams } from 'react-router-dom';
+import { Badge } from "@/components/ui/badge";
+import { useEasterEggs } from '@/contexts/easter-eggs-context';
+import { SecretTrailsList } from '@/components/easter-eggs/SecretTrailCard';
 
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { TrailFilters } from '@/types/trails';
-import { supabase } from '@/integrations/supabase/client';
-import DiscoverHeader from '@/components/discover/DiscoverHeader';
-import DiscoverFilters from '@/components/discover/DiscoverFilters';
-import DiscoverTrailsList from '@/components/discover/DiscoverTrailsList';
-import DiscoverViewControls from '@/components/discover/DiscoverViewControls';
-import { TrailStatsOverview } from '@/components/discover/TrailStatsOverview';
-import { Separator } from '@/components/ui/separator';
-import DiscoverRedirect from './DiscoverRedirect';
-
-const Discover: React.FC = () => {
-  const navigate = useNavigate();
-  const [currentFilters, setCurrentFilters] = useState<TrailFilters>({});
+const Discover = () => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [locationFilter, setLocationFilter] = useState('');
+  const [filters, setFilters] = useState({
+    difficulty: '',
+    length: '',
+    rating: '',
+  });
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
   const [showTrailPaths, setShowTrailPaths] = useState(false);
-  const [trailCount, setTrailCount] = useState(0);
-  const [totalTrails, setTotalTrails] = useState(0);
-  const [isCheckingTrails, setIsCheckingTrails] = useState(true);
+  const [sortBy, setSortBy] = useState('popular');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { secretTrailsUnlocked } = useEasterEggs();
 
-  // Check total trail count on mount
+  const { data, isLoading, isError, error } = useTrails({
+    search: searchQuery,
+    location: locationFilter,
+    difficulty: filters.difficulty,
+    length: filters.length,
+    rating: filters.rating,
+    sort: sortBy,
+  });
+
   useEffect(() => {
-    const checkTrailCount = async () => {
-      try {
-        const { count, error } = await supabase
-          .from('trails')
-          .select('*', { count: 'exact', head: true });
-        
-        if (!error && count !== null) {
-          setTotalTrails(count);
-        }
-      } catch (error) {
-        console.error('Error checking trail count:', error);
-      } finally {
-        setIsCheckingTrails(false);
-      }
-    };
+    // Read initial values from URL params
+    const initialSearch = searchParams.get('search') || '';
+    const initialLocation = searchParams.get('location') || '';
+    const initialDifficulty = searchParams.get('difficulty') || '';
+    const initialLength = searchParams.get('length') || '';
+    const initialRating = searchParams.get('rating') || '';
+    const initialSort = searchParams.get('sort') || 'popular';
+    const initialViewMode = (searchParams.get('view') === 'map' ? 'map' : 'list') as 'list' | 'map';
+    const initialShowPaths = searchParams.get('paths') === 'true';
 
-    checkTrailCount();
-  }, []);
+    setSearchQuery(initialSearch);
+    setLocationFilter(initialLocation);
+    setFilters({
+      difficulty: initialDifficulty,
+      length: initialLength,
+      rating: initialRating,
+    });
+    setSortBy(initialSort);
+    setViewMode(initialViewMode);
+    setShowTrailPaths(initialShowPaths);
+  }, [searchParams]);
 
-  // Redirect to auto-import if we have very few trails
-  if (isCheckingTrails) {
-    return <DiscoverRedirect />;
-  }
+  const updateURLParams = useCallback(() => {
+    // Update URL params based on current state
+    const params = new URLSearchParams();
+    if (searchQuery) params.set('search', searchQuery);
+    if (locationFilter) params.set('location', locationFilter);
+    if (filters.difficulty) params.set('difficulty', filters.difficulty);
+    if (filters.length) params.set('length', filters.length);
+    if (filters.rating) params.set('rating', filters.rating);
+    if (sortBy) params.set('sort', sortBy);
+    if (viewMode === 'map') params.set('view', 'map');
+    if (showTrailPaths) params.set('paths', 'true');
 
-  if (totalTrails < 1000) {
-    return <DiscoverRedirect />;
-  }
+    setSearchParams(params);
+  }, [searchQuery, locationFilter, filters, sortBy, viewMode, showTrailPaths, setSearchParams]);
 
-  const handleFiltersChange = (newFilters: TrailFilters) => {
-    setCurrentFilters(newFilters);
-  };
+  useEffect(() => {
+    updateURLParams();
+  }, [updateURLParams]);
 
   const handleResetFilters = () => {
-    setCurrentFilters({});
-  };
-
-  const handleTrailCountChange = (count: number) => {
-    setTrailCount(count);
+    setFilters({
+      difficulty: '',
+      length: '',
+      rating: '',
+    });
+    setSearchQuery('');
+    setLocationFilter('');
+    setSortBy('popular');
+    setViewMode('list');
+    setShowTrailPaths(false);
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="container mx-auto px-4 py-8">
-        <DiscoverHeader trailCount={trailCount} />
-        
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mt-8">
-          <div className="lg:col-span-1">
-            <div className="space-y-6">
-              <DiscoverFilters 
-                onFiltersChange={handleFiltersChange}
-                currentFilters={currentFilters}
-              />
-              
-              <Separator />
-              
-              <TrailStatsOverview count={trailCount} />
+    <div className="min-h-screen flex flex-col bg-greentrail-50 dark:bg-greentrail-950">
+      <SEOProvider
+        title="Discover Trails - GreenTrails"
+        description="Discover amazing hiking trails, from easy walks to challenging mountain climbs. Filter by difficulty, location, and more to find your perfect outdoor adventure."
+        type="website"
+      />
+      
+      <Navbar />
+      
+      <DiscoverHeader 
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        onLocationFilter={setLocationFilter}
+      />
+
+      <main className="flex-grow container mx-auto px-4 py-6">
+        <div className="space-y-6">
+          <DiscoverFilters
+            filters={filters}
+            onFiltersChange={setFilters}
+            onResetFilters={handleResetFilters}
+            trailCount={data?.trails?.length || 0}
+          />
+
+          {/* Secret Trails Section */}
+          {secretTrailsUnlocked && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <h2 className="text-2xl font-bold text-greentrail-800 dark:text-greentrail-200">
+                  🔮 Secret Trails
+                </h2>
+                <Badge className="bg-purple-500 text-white">
+                  Unlocked!
+                </Badge>
+              </div>
+              <p className="text-muted-foreground">
+                These mysterious trails are only visible to true explorers who've discovered the hidden secrets of GreenTrails...
+              </p>
+              <SecretTrailsList />
+              <hr className="border-greentrail-200 dark:border-greentrail-800" />
             </div>
-          </div>
-          
-          <div className="lg:col-span-3">
-            <div className="space-y-6">
-              <DiscoverViewControls
-                viewMode={viewMode}
-                onViewModeChange={setViewMode}
-                showTrailPaths={showTrailPaths}
-                resultsCount={trailCount}
+          )}
+
+          <div className="flex flex-col lg:flex-row gap-6">
+            <div className="lg:w-1/4">
+              <TrailStatsOverview
+                totalTrails={data?.trails?.length || 0}
+                loading={isLoading}
               />
-              
-              <DiscoverTrailsList
-                currentFilters={currentFilters}
-                viewMode={viewMode}
-                showTrailPaths={showTrailPaths}
-                onTrailCountChange={handleTrailCountChange}
-              />
+            </div>
+
+            <div className="lg:w-3/4">
+              <div className="flex justify-between items-center mb-6">
+                <h1 className="text-2xl font-bold text-greentrail-800 dark:text-greentrail-200">
+                  {searchQuery ? `Search Results for "${searchQuery}"` : 'Discover Trails'}
+                </h1>
+                
+                <DiscoverViewControls
+                  viewMode={viewMode}
+                  onViewModeChange={setViewMode}
+                  showTrailPaths={showTrailPaths}
+                  onToggleTrailPaths={() => setShowTrailPaths(!showTrailPaths)}
+                  sortBy={sortBy}
+                  onSortChange={setSortBy}
+                />
+              </div>
+
+              {viewMode === 'list' ? (
+                <DiscoverTrailsList
+                  trails={data?.trails || []}
+                  onResetFilters={handleResetFilters}
+                />
+              ) : (
+                <TrailMap
+                  trails={data?.trails || []}
+                  showTrailPaths={showTrailPaths}
+                />
+              )}
             </div>
           </div>
         </div>
-      </div>
+      </main>
+
+      <Footer />
     </div>
   );
 };

@@ -12,16 +12,20 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = React.useState('light');
 
   React.useEffect(() => {
+    console.log('ThemeProvider: Initializing theme provider');
     setMounted(true);
     // Initialize theme from localStorage or system preference
     const savedTheme = localStorage.getItem('theme') || 'light';
+    console.log('ThemeProvider: Saved theme:', savedTheme);
     if (savedTheme === 'dark') {
       document.documentElement.classList.add('dark');
     }
     setTheme(savedTheme);
+    console.log('ThemeProvider: Theme provider initialized');
   }, []);
 
   const handleSetTheme = (newTheme: string) => {
+    console.log('ThemeProvider: Setting theme to:', newTheme);
     setTheme(newTheme);
     localStorage.setItem('theme', newTheme);
     
@@ -30,6 +34,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     } else {
       document.documentElement.classList.remove('dark');
     }
+    console.log('ThemeProvider: Theme set successfully');
   };
 
   const value = {
@@ -39,9 +44,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   };
 
   if (!mounted) {
+    console.log('ThemeProvider: Not mounted yet');
     return <>{children}</>;
   }
 
+  console.log('ThemeProvider: Rendering with theme:', theme);
   return (
     <ThemeContext.Provider value={value}>
       {children}

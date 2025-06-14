@@ -1,13 +1,11 @@
 
-import { useThemeToggle } from "@/hooks/use-theme-toggle"
+import { useTheme } from "@/providers/theme-provider"
 import { Toaster as Sonner, toast } from "sonner"
 
 type ToasterProps = React.ComponentProps<typeof Sonner>
 
 const Toaster = ({ ...props }: ToasterProps) => {
-  console.log('Sonner: Initializing Sonner component');
-  const { resolvedTheme = "light" } = useThemeToggle()
-  console.log('Sonner: Using resolved theme:', resolvedTheme);
+  const { resolvedTheme = "light" } = useTheme()
 
   return (
     <Sonner

@@ -1,65 +1,80 @@
 
-import * as React from "react"
+import React, { createContext, useContext, useState, useEffect } from "react"
 
-const ThemeContext = React.createContext<{
-  theme: string;
-  setTheme: (theme: string) => void;
-  resolvedTheme: string;
-} | undefined>(undefined);
+type Theme = "dark" | "light" | "system"
 
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [mounted, setMounted] = React.useState(false);
-  const [theme, setTheme] = React.useState('light');
+interface ThemeProviderState {
+  theme: Theme
+  setTheme: (theme: Theme) => void
+  resolvedTheme: "dark" | "light"
+}
 
-  React.useEffect(() => {
-    console.log('ThemeProvider: Initializing theme provider');
-    setMounted(true);
-    // Initialize theme from localStorage or system preference
-    const savedTheme = localStorage.getItem('theme') || 'light';
-    console.log('ThemeProvider: Saved theme:', savedTheme);
-    if (savedTheme === 'dark') {
-      document.documentElement.classList.add('dark');
+const ThemeProviderContext = createContext<ThemeProviderState | undefined>(
+  undefined
+)
+
+export function ThemeProvider({
+  children,
+  defaultTheme = "system",
+  storageKey = "vite-ui-theme",
+}: {
+  children: React.ReactNode
+  defaultTheme?: Theme
+  storageKey?: string
+}) {
+  const [theme, setTheme] = useState<Theme>(
+    () => (localStorage.getItem(storageKey) as Theme) || defaultTheme
+  )
+
+  const [resolvedTheme, setResolvedTheme] = useState<"dark" | "light">(() => {
+    const storedTheme = localStorage.getItem(storageKey) as Theme | null
+    if (storedTheme && storedTheme !== "system") {
+      return storedTheme
     }
-    setTheme(savedTheme);
-    console.log('ThemeProvider: Theme provider initialized');
-  }, []);
+    return window.matchMedia("(prefers-color-scheme: dark)").matches
+      ? "dark"
+      : "light"
+  })
 
-  const handleSetTheme = (newTheme: string) => {
-    console.log('ThemeProvider: Setting theme to:', newTheme);
-    setTheme(newTheme);
-    localStorage.setItem('theme', newTheme);
-    
-    if (newTheme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
+  useEffect(() => {
+    const root = window.document.documentElement
+    root.classList.remove("light", "dark")
+
+    let effectiveTheme = theme
+    if (theme === "system") {
+      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
+        .matches
+        ? "dark"
+        : "light"
+      effectiveTheme = systemTheme
     }
-    console.log('ThemeProvider: Theme set successfully');
-  };
+
+    setResolvedTheme(effectiveTheme as "dark" | "light")
+    root.classList.add(effectiveTheme)
+  }, [theme])
+
+  const handleSetTheme = (newTheme: Theme) => {
+    localStorage.setItem(storageKey, newTheme)
+    setTheme(newTheme)
+  }
 
   const value = {
     theme,
     setTheme: handleSetTheme,
-    resolvedTheme: theme,
-  };
-
-  if (!mounted) {
-    console.log('ThemeProvider: Not mounted yet');
-    return <>{children}</>;
+    resolvedTheme,
   }
 
-  console.log('ThemeProvider: Rendering with theme:', theme);
   return (
-    <ThemeContext.Provider value={value}>
+    <ThemeProviderContext.Provider value={value}>
       {children}
-    </ThemeContext.Provider>
-  );
+    </ThemeProviderContext.Provider>
+  )
 }
 
 export const useTheme = () => {
-  const context = React.useContext(ThemeContext);
-  if (!context) {
-    throw new Error('useTheme must be used within a ThemeProvider');
+  const context = useContext(ThemeProviderContext)
+  if (context === undefined) {
+    throw new Error("useTheme must be used within a ThemeProvider")
   }
-  return context;
-};
+  return context
+}

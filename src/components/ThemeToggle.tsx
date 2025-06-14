@@ -8,7 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useThemeToggle } from '@/hooks/use-theme-toggle';
+import { useTheme } from '@/providers/theme-provider';
 
 interface ThemeToggleProps {
   showLabel?: boolean;
@@ -19,7 +19,7 @@ const ThemeToggle: React.FC<ThemeToggleProps> = ({
   showLabel = false,
   size = 'default'
 }) => {
-  const { resolvedTheme, setTheme } = useThemeToggle();
+  const { resolvedTheme, setTheme } = useTheme();
 
   return (
     <DropdownMenu>

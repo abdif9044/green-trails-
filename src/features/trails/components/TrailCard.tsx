@@ -1,4 +1,3 @@
-
 import { Heart, MapPin } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
@@ -115,7 +114,7 @@ const TrailCard = ({
       </CardContent>
       
       <CardFooter className="pt-0 pb-4">
-        <TrailTagsList tags={tags} strainTags={strainTags} />
+        <TrailTagsList tags={tags} />
       </CardFooter>
     </Card>
   );

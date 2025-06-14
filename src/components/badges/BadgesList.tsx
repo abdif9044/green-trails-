@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Badge, BadgeCategory } from '@/types/badges';
 import { BadgeCard } from './BadgeCard';
@@ -18,7 +17,6 @@ export const BadgesList: React.FC<BadgesListProps> = ({ badges, className }) => 
     { value: 'trails', label: 'Trails' },
     { value: 'elevation', label: 'Elevation' },
     { value: 'social', label: 'Social' },
-    { value: 'cannabis', label: 'Cannabis' },
     { value: 'streak', label: 'Streaks' },
   ];
 

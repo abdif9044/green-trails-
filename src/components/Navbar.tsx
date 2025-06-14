@@ -1,7 +1,9 @@
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { NavbarAuth } from './NavbarAuth';
+import { useAuth } from '@/hooks/use-auth';
 import { 
   MapPin, 
   User, 
@@ -16,6 +18,7 @@ import NotificationCenter from '@/components/social/NotificationCenter';
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   return (
     <header className="bg-white dark:bg-gray-950 border-b border-gray-200 dark:border-gray-800">

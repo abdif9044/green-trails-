@@ -1,10 +1,10 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Send, Loader2, Trash2, Settings, Save } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAssistantChat } from '@/hooks/use-assistant-chat';
+import { useTextToSpeech } from '@/hooks/use-text-to-speech';
 import { TrailContext, ChatMessage, saveChatHistory, loadChatHistory } from '@/services/assistant-service';
 import ChatMessageItem from './ChatMessageItem';
 import ApiKeySetupModal from './ApiKeySetupModal';
@@ -39,6 +39,7 @@ const AssistantChat: React.FC<AssistantChatProps> = ({ trailContext, onClose }) 
     clearChat,
     updateTrailContext
   } = useAssistantChat(trailContext);
+  const { speak } = useTextToSpeech();
   
   // Load chat history from local storage on component mount
   useEffect(() => {
@@ -68,10 +69,16 @@ const AssistantChat: React.FC<AssistantChatProps> = ({ trailContext, onClose }) 
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
   
-  // Focus input on mount
+  // Focus input on mount and speak welcome
   useEffect(() => {
     inputRef.current?.focus();
-  }, []);
+    if (isApiKeyConfigured && messages.length === 0) {
+      const savedHistory = loadChatHistory();
+      if (savedHistory.length === 0) {
+        speak(WELCOME_MESSAGE.content);
+      }
+    }
+  }, [isApiKeyConfigured]);
   
   // Handle sending a message
   const handleSendMessage = (e: React.FormEvent) => {

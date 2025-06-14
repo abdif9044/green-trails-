@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
+import { useTextToSpeech } from '@/hooks/use-text-to-speech';
 
 export interface Notification {
   id: string;
@@ -21,6 +22,7 @@ export function useNotificationPopover() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { speak } = useTextToSpeech();
 
   // Real-time subscription (for popover, but can be reused)
   useEffect(() => {
@@ -44,6 +46,7 @@ export function useNotificationPopover() {
             description: notification.message,
             duration: 5000,
           });
+          speak(`${notification.title}. ${notification.message}`);
         }
       )
       .subscribe();
@@ -51,7 +54,7 @@ export function useNotificationPopover() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, queryClient, toast]);
+  }, [user, queryClient, toast, speak]);
 
   // Also allow external setter for open
   const handleOpenChange = useCallback((next: boolean) => setOpen(next), []);

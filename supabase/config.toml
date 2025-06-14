@@ -98,3 +98,7 @@ no_hooks = false
 [functions.set-openai-key]
 verify_jwt = true
 no_hooks = false
+
+[functions.text-to-speech]
+verify_jwt = true
+no_hooks = false

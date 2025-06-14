@@ -156,7 +156,7 @@ const DeveloperConsole: React.FC<{ onClose: () => void }> = ({ onClose }) => {
           </ScrollArea>
           <form onSubmit={handleSubmit}>
             <div className="flex gap-2">
-              <span className="text-green-400 font-mono">></span>
+              <span className="text-green-400 font-mono">&gt;</span>
               <Input
                 ref={inputRef}
                 value={input}

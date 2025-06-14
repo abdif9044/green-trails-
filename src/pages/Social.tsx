@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -16,6 +17,7 @@ import SEOProvider from "@/components/SEOProvider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from '@/hooks/use-auth';
 import { Trophy, Activity, Users, Image, Target, Star, Calendar, UserCheck } from 'lucide-react';
+import AssistantBubble from '@/components/assistant/AssistantBubble';
 
 const Social = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -173,6 +175,7 @@ const Social = () => {
       </main>
       
       <Footer />
+      <AssistantBubble />
     </div>
   );
 };

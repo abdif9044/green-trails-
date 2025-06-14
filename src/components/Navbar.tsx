@@ -11,6 +11,7 @@ import {
   X 
 } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
+import NotificationCenter from '@/components/social/NotificationCenter';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -55,6 +56,7 @@ const Navbar = () => {
             <User size={18} />
             <span>Profile</span>
           </div>
+          {user && <NotificationCenter />}
           <NavbarAuth />
         </div>
 

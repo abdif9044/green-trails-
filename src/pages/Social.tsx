@@ -7,12 +7,16 @@ import SocialFeed from "@/components/social/SocialFeed";
 import ActivityFeed from "@/components/social/ActivityFeed";
 import LiveStoriesSection from "@/components/social/LiveStoriesSection";
 import SocialChallenges from "@/components/social/SocialChallenges";
+import SocialGroups from "@/components/social/SocialGroups";
+import EventSystem from "@/components/social/EventSystem";
+import EnhancedUserProfile from "@/components/social/EnhancedUserProfile";
+import NotificationCenter from "@/components/social/NotificationCenter";
 import Leaderboards from "@/components/community/Leaderboards";
 import StoryCreator from "@/components/social/StoryCreator";
 import SEOProvider from "@/components/SEOProvider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from '@/hooks/use-auth';
-import { Trophy, Activity, Users, Image, Target, Star } from 'lucide-react';
+import { Trophy, Activity, Users, Image, Target, Star, Calendar, UserCheck } from 'lucide-react';
 
 const Social = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -26,7 +30,10 @@ const Social = () => {
         type="website"
       />
       
-      <Navbar />
+      <div className="flex items-center justify-between px-4">
+        <Navbar />
+        {user && <NotificationCenter />}
+      </div>
       
       {/* Premium Header */}
       <PremiumSocialHeader 
@@ -50,13 +57,27 @@ const Social = () => {
 
           {/* Main Content Tabs */}
           <Tabs defaultValue="feed" className="w-full">
-            <TabsList className="grid w-full grid-cols-6 bg-white/5 backdrop-blur-luxury border-white/10 p-1 rounded-xl">
+            <TabsList className="grid w-full grid-cols-8 bg-white/5 backdrop-blur-luxury border-white/10 p-1 rounded-xl">
               <TabsTrigger 
                 value="feed" 
                 className="flex items-center gap-2 data-[state=active]:bg-gold-gradient data-[state=active]:text-luxury-900 text-luxury-300 rounded-lg luxury-text"
               >
                 <Image className="h-4 w-4" />
-                <span className="hidden sm:inline">Albums</span>
+                <span className="hidden sm:inline">Feed</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="groups" 
+                className="flex items-center gap-2 data-[state=active]:bg-gold-gradient data-[state=active]:text-luxury-900 text-luxury-300 rounded-lg luxury-text"
+              >
+                <Users className="h-4 w-4" />
+                <span className="hidden sm:inline">Groups</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="events" 
+                className="flex items-center gap-2 data-[state=active]:bg-gold-gradient data-[state=active]:text-luxury-900 text-luxury-300 rounded-lg luxury-text"
+              >
+                <Calendar className="h-4 w-4" />
+                <span className="hidden sm:inline">Events</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="challenges" 
@@ -80,11 +101,11 @@ const Social = () => {
                 <span className="hidden sm:inline">Leaders</span>
               </TabsTrigger>
               <TabsTrigger 
-                value="community" 
+                value="profile" 
                 className="flex items-center gap-2 data-[state=active]:bg-gold-gradient data-[state=active]:text-luxury-900 text-luxury-300 rounded-lg luxury-text"
               >
-                <Users className="h-4 w-4" />
-                <span className="hidden sm:inline">Groups</span>
+                <UserCheck className="h-4 w-4" />
+                <span className="hidden sm:inline">Profile</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="featured" 
@@ -102,6 +123,14 @@ const Social = () => {
               />
             </TabsContent>
 
+            <TabsContent value="groups" className="mt-8">
+              <SocialGroups />
+            </TabsContent>
+
+            <TabsContent value="events" className="mt-8">
+              <EventSystem />
+            </TabsContent>
+
             <TabsContent value="challenges" className="mt-8">
               <SocialChallenges />
             </TabsContent>
@@ -114,17 +143,18 @@ const Social = () => {
               <Leaderboards />
             </TabsContent>
 
-            <TabsContent value="community" className="mt-8">
-              <div className="luxury-card bg-white/5 backdrop-blur-luxury border-white/10 p-12 rounded-xl text-center">
-                <Users className="h-16 w-16 text-gold-400 mx-auto mb-6" />
-                <h3 className="text-2xl luxury-heading text-white mb-4">Hiking Groups</h3>
-                <p className="text-luxury-400 luxury-text max-w-md mx-auto mb-8 leading-relaxed">
-                  Discover hiking groups in your area, join challenges, and connect with fellow outdoor enthusiasts who share your passion for adventure.
-                </p>
-                <button className="gold-button">
-                  Explore Groups
-                </button>
-              </div>
+            <TabsContent value="profile" className="mt-8">
+              {user ? (
+                <EnhancedUserProfile />
+              ) : (
+                <div className="luxury-card bg-white/5 backdrop-blur-luxury border-white/10 p-12 rounded-xl text-center">
+                  <UserCheck className="h-16 w-16 text-luxury-400 mx-auto mb-6" />
+                  <h3 className="text-2xl luxury-heading text-white mb-4">Sign In Required</h3>
+                  <p className="text-luxury-400 luxury-text max-w-md mx-auto mb-8 leading-relaxed">
+                    Please sign in to view and manage your enhanced hiking profile with stats, achievements, and social features.
+                  </p>
+                </div>
+              )}
             </TabsContent>
 
             <TabsContent value="featured" className="mt-8">
@@ -135,7 +165,7 @@ const Social = () => {
                   Handpicked extraordinary trail experiences and adventures from our most accomplished community members.
                 </p>
                 <button className="gold-button">
-                  View Featured
+                  View Featured Content
                 </button>
               </div>
             </TabsContent>

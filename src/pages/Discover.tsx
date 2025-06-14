@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -166,7 +165,6 @@ const Discover = () => {
 
               {viewMode === 'list' ? (
                 <DiscoverTrailsList
-                  viewMode={viewMode}
                   showTrailPaths={showTrailPaths}
                   onTrailCountChange={() => {}}
                 />

@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+
+import * as React from 'react';
 import confetti from 'canvas-confetti';
 import { toast } from '@/components/ui/sonner';
 
@@ -12,15 +13,15 @@ interface EasterEggsContextType {
   triggerKonamiEasterEgg: () => void;
 }
 
-const EasterEggsContext = createContext<EasterEggsContextType | undefined>(undefined);
+const EasterEggsContext = React.createContext<EasterEggsContextType | undefined>(undefined);
 
 export const EasterEggsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [isDevMode, setIsDevMode] = useState(false);
-  const [isCatMode, setIsCatMode] = useState(false);
-  const [secretTrailsUnlocked, setSecretTrailsUnlocked] = useState(false);
+  const [isDevMode, setIsDevMode] = React.useState(false);
+  const [isCatMode, setIsCatMode] = React.useState(false);
+  const [secretTrailsUnlocked, setSecretTrailsUnlocked] = React.useState(false);
 
   // Load easter egg states from localStorage
-  useEffect(() => {
+  React.useEffect(() => {
     const savedDevMode = localStorage.getItem('greentrails-dev-mode') === 'true';
     const savedCatMode = localStorage.getItem('greentrails-cat-mode') === 'true';
     const savedSecretTrails = localStorage.getItem('greentrails-secret-trails') === 'true';
@@ -51,6 +52,7 @@ export const EasterEggsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   };
 
   const unlockSecretTrails = () => {
+    if (secretTrailsUnlocked) return;
     setSecretTrailsUnlocked(true);
     localStorage.setItem('greentrails-secret-trails', 'true');
     console.log("🗝️ Secret Trails Unlocked!");
@@ -93,8 +95,10 @@ export const EasterEggsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       duration: 5000,
     });
 
-    // Unlock everything
-    toggleDevMode();
+    // Unlock everything idempotently
+    if (!isDevMode) {
+      toggleDevMode();
+    }
     unlockSecretTrails();
   };
 
@@ -114,7 +118,7 @@ export const EasterEggsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 };
 
 export const useEasterEggs = () => {
-  const context = useContext(EasterEggsContext);
+  const context = React.useContext(EasterEggsContext);
   if (context === undefined) {
     throw new Error('useEasterEggs must be used within an EasterEggsProvider');
   }

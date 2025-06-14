@@ -5,10 +5,8 @@ import { useEffect, useState } from "react"
 export function useThemeToggle() {
   const [mounted, setMounted] = useState(false)
   
-  // Only access useTheme after component is mounted to avoid SSR issues
-  const themeContext = mounted ? useNextTheme() : { theme: 'light', setTheme: () => {}, resolvedTheme: 'light' }
-  
-  const { theme, setTheme, resolvedTheme } = themeContext
+  // Always call the hook to follow Rules of Hooks
+  const { theme, setTheme, resolvedTheme } = useNextTheme()
 
   useEffect(() => {
     setMounted(true)

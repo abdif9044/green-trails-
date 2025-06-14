@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from "react"
@@ -23,5 +22,6 @@ export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
   React.useEffect(() => {
     console.log("[DEBUG] ThemeProvider rendered, React version:", React.version);
   }, []);
-  return <NextThemesProvider {...props}>{children}</NextThemesProvider>
+  // Explicitly setting attribute="class" (required by next-themes)
+  return <NextThemesProvider attribute="class" {...props}>{children}</NextThemesProvider>
 }

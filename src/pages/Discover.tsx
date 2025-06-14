@@ -146,7 +146,6 @@ const Discover = () => {
                 count={totalCount}
               />
             </div>
-
             <div className="lg:w-3/4">
               <div className="flex justify-between items-center mb-6">
                 <h1 className="text-2xl font-bold text-greentrail-800 dark:text-greentrail-200">
@@ -162,11 +161,11 @@ const Discover = () => {
                   onSortChange={setSortBy}
                 />
               </div>
-
+              
               {viewMode === 'list' ? (
                 <DiscoverTrailsList
-                  showTrailPaths={showTrailPaths}
-                  onTrailCountChange={() => {}}
+                  trails={trails}
+                  onResetFilters={handleResetFilters}
                 />
               ) : (
                 <TrailMap

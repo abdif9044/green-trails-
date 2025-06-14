@@ -1,18 +1,15 @@
 
-"use client"
-
 import * as React from "react"
-import { ThemeProvider as NextThemesProvider } from "next-themes"
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  return (
-    <NextThemesProvider 
-      attribute="class" 
-      defaultTheme="light" 
-      enableSystem={false}
-      disableTransitionOnChange
-    >
-      {children}
-    </NextThemesProvider>
-  )
+  // Temporary simple implementation without next-themes
+  React.useEffect(() => {
+    // Initialize theme
+    const savedTheme = localStorage.getItem('theme') || 'light'
+    if (savedTheme === 'dark') {
+      document.documentElement.classList.add('dark')
+    }
+  }, [])
+
+  return <>{children}</>
 }

@@ -4,20 +4,10 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useNotificationPopover } from "@/hooks/social/use-notification-popover";
-import NotificationPopover from "./NotificationPopover";
+import { NotificationPopover } from "./NotificationPopover";
 import NotificationList from "./NotificationList";
 
-// Interface reused from use-notification-popover
-interface Notification {
-  id: string;
-  user_id: string;
-  type: string;
-  title: string;
-  message: string;
-  data: Record<string, any>;
-  read: boolean;
-  created_at: string;
-}
+import type { Notification } from "@/hooks/social/use-notification-popover";
 
 const NotificationCenter: React.FC = () => {
   const { user } = useAuth();

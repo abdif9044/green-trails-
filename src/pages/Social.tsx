@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -8,7 +7,7 @@ import ActivityFeed from "@/components/social/ActivityFeed";
 import LiveStoriesSection from "@/components/social/LiveStoriesSection";
 import SocialChallenges from "@/components/social/SocialChallenges";
 import SocialGroups from "@/components/social/SocialGroups";
-import EventSystem from "@/components/social/EventSystem";
+import EventList from "@/components/social/EventList";
 import EnhancedUserProfile from "@/components/social/EnhancedUserProfile";
 import NotificationCenter from "@/components/social/NotificationCenter";
 import Leaderboards from "@/components/community/Leaderboards";
@@ -128,7 +127,7 @@ const Social = () => {
             </TabsContent>
 
             <TabsContent value="events" className="mt-8">
-              <EventSystem />
+              <EventList />
             </TabsContent>
 
             <TabsContent value="challenges" className="mt-8">

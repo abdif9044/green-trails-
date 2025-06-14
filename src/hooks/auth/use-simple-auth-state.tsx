@@ -24,15 +24,11 @@ export const useSimpleAuthState = () => {
 
     const initializeAuth = async () => {
       try {
-        // Get initial session
         const { data: { session: initialSession }, error } = await supabase.auth.getSession();
-        
         if (!mounted) return;
-        
         if (error) {
           console.error('Error getting initial session:', error);
         }
-
         setState(prevState => ({
           ...prevState,
           session: initialSession,
@@ -41,12 +37,9 @@ export const useSimpleAuthState = () => {
           initialized: true
         }));
 
-        // Set up auth state listener
         subscription = supabase.auth.onAuthStateChange((event, currentSession) => {
           if (!mounted) return;
-          
           console.log(`Auth state change: ${event}`, currentSession?.user?.email || 'No user');
-          
           setState(prevState => ({
             ...prevState,
             session: currentSession,
@@ -54,7 +47,6 @@ export const useSimpleAuthState = () => {
             loading: false
           }));
         }).data.subscription;
-
       } catch (error) {
         console.error('Auth initialization error:', error);
         if (mounted) {

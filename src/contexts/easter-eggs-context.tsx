@@ -15,14 +15,12 @@ interface EasterEggsContextType {
 
 const EasterEggsContext = React.createContext<EasterEggsContextType | undefined>(undefined);
 
-// Added: Loading state to provider – only render children when initial read from localStorage is completed
 export const EasterEggsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isDevMode, setIsDevMode] = React.useState(false);
   const [isCatMode, setIsCatMode] = React.useState(false);
   const [secretTrailsUnlocked, setSecretTrailsUnlocked] = React.useState(false);
-  const [loaded, setLoaded] = React.useState(false); // track if localStorage has been read
+  const [loaded, setLoaded] = React.useState(false);
 
-  // Load easter egg states from localStorage, then render children
   React.useEffect(() => {
     const savedDevMode = localStorage.getItem('greentrails-dev-mode') === 'true';
     const savedCatMode = localStorage.getItem('greentrails-cat-mode') === 'true';
@@ -64,7 +62,6 @@ export const EasterEggsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   }, [secretTrailsUnlocked]);
 
   const triggerKonamiEasterEgg = React.useCallback(() => {
-    // Epic confetti explosion
     const duration = 3000;
     const end = Date.now() + duration;
 
@@ -103,7 +100,6 @@ export const EasterEggsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     unlockSecretTrails();
   }, [isDevMode, toggleDevMode, unlockSecretTrails]);
 
-  // Defensive: don't render children/forms until loaded is true
   if (!loaded) return null;
 
   return (
@@ -121,7 +117,6 @@ export const EasterEggsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   );
 };
 
-// Defensive: throw descriptive error if context is not ready  
 export const useEasterEggs = () => {
   const context = React.useContext(EasterEggsContext);
   if (context === undefined) {
@@ -129,4 +124,3 @@ export const useEasterEggs = () => {
   }
   return context;
 };
-

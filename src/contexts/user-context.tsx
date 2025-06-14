@@ -21,7 +21,6 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const { user, loading } = useAuth();
   const [roamieContext, setRoamieContext] = React.useState<RoamieContext | null>(null);
 
-  // Initialize roamie context when user changes
   React.useEffect(() => {
     if (user && !roamieContext) {
       setRoamieContext(defaultRoamieContext);

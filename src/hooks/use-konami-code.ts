@@ -1,3 +1,4 @@
+
 import * as React from 'react';
 
 const KONAMI_CODE = [
@@ -13,21 +14,16 @@ export const useKonamiCode = (callback: () => void) => {
     const handleKeyDown = (event: KeyboardEvent) => {
       setSequence(prev => {
         const newSequence = [...prev, event.code];
-        
-        // Keep only the last 10 keys
         if (newSequence.length > KONAMI_CODE.length) {
           newSequence.shift();
         }
-        
-        // Check if sequence matches Konami code
         if (newSequence.length === KONAMI_CODE.length) {
           const matches = newSequence.every((key, index) => key === KONAMI_CODE[index]);
           if (matches) {
             callback();
-            return []; // Reset sequence
+            return [];
           }
         }
-        
         return newSequence;
       });
     };

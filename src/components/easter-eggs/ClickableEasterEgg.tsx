@@ -27,8 +27,7 @@ const ClickableEasterEgg: React.FC<ClickableEasterEggProps> = ({
 
     if (newCount === requiredClicks) {
       setHasTriggered(true);
-      
-      // Small confetti burst
+
       confetti({
         particleCount: 50,
         spread: 70,
@@ -44,7 +43,6 @@ const ClickableEasterEgg: React.FC<ClickableEasterEggProps> = ({
         action();
       }
 
-      // Reset after 5 seconds
       setTimeout(() => {
         setClickCount(0);
         setHasTriggered(false);
@@ -53,7 +51,7 @@ const ClickableEasterEgg: React.FC<ClickableEasterEggProps> = ({
   };
 
   return (
-    <div 
+    <div
       onClick={handleClick}
       className={`cursor-pointer select-none ${hasTriggered ? 'animate-pulse' : ''}`}
       title={hasTriggered ? "Easter egg activated!" : `${clickCount}/${requiredClicks} clicks`}

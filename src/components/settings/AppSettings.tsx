@@ -1,16 +1,14 @@
-
 import { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { useThemeToggle } from '@/hooks/use-theme-toggle';
-import { useToast } from '@/hooks/use-toast';
+import { useTheme } from '@/providers/theme-provider';
+import { toast } from "@/components/ui/sonner"
 import { Globe, Bell, Shield, MapPin } from 'lucide-react';
 
 const AppSettings = () => {
-  const { theme, setTheme } = useThemeToggle();
-  const { toast } = useToast();
+  const { theme, setTheme } = useTheme();
   const [notifications, setNotifications] = useState(true);
   const [locationSharing, setLocationSharing] = useState(false);
   const [dataUsage, setDataUsage] = useState('wifi');
@@ -18,9 +16,8 @@ const AppSettings = () => {
   const [units, setUnits] = useState('metric');
 
   const handleSettingChange = (setting: string, value: any) => {
-    toast({
-      title: "Settings updated",
-      description: `${setting} has been updated`
+    toast("Settings updated", {
+      description: `${setting} has been updated to ${value}.`
     });
   };
 
@@ -37,7 +34,7 @@ const AppSettings = () => {
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <Label htmlFor="theme">Theme</Label>
-            <Select value={theme} onValueChange={setTheme}>
+            <Select value={theme} onValueChange={(value: "light" | "dark" | "system") => setTheme(value)}>
               <SelectTrigger className="w-32">
                 <SelectValue />
               </SelectTrigger>

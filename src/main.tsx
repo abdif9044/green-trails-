@@ -43,6 +43,8 @@ import('./hooks/use-auto-trail-bootstrap').then(({ useAutoTrailBootstrap }) => {
   console.log('🚀 Auto trail bootstrap system loaded');
 });
 
+// NOTE: Do NOT wrap <App /> with <BrowserRouter> here.
+// Only <App />; BrowserRouter is handled INSIDE App.tsx
 root.render(
   <React.StrictMode>
     <HelmetProvider>

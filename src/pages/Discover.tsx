@@ -36,7 +36,8 @@ const Discover = () => {
     difficulty: filters.difficulty || undefined,
   };
 
-  const { data, isLoading, isError, error } = useTrailsQuery(trailFilters);
+  const { data, isLoading, error, refetch } = useTrailsQuery(trailFilters);
+  const isError = !!error;
   const trails = data?.data || [];
   const totalCount = data?.count || 0;
 
@@ -165,7 +166,6 @@ const Discover = () => {
 
               {viewMode === 'list' ? (
                 <DiscoverTrailsList
-                  currentFilters={trailFilters}
                   viewMode={viewMode}
                   showTrailPaths={showTrailPaths}
                   onTrailCountChange={() => {}}

@@ -1,4 +1,3 @@
-
 // External trail data interfaces for different APIs
 export interface HikingProjectTrail {
   id: number;
@@ -73,7 +72,6 @@ export interface NormalizedTrail {
   source: string;
   source_id: string;
   geojson: any | null;
-  is_age_restricted: boolean;
 }
 
 // Standardize difficulty ratings across different sources
@@ -154,7 +152,6 @@ function normalizeHikingProjectTrail(trail: HikingProjectTrail): NormalizedTrail
     source: 'hiking_project',
     source_id: trail.id.toString(),
     geojson: null,
-    is_age_restricted: false
   };
 }
 
@@ -180,7 +177,6 @@ function normalizeOSMTrail(trail: OSMTrail): NormalizedTrail {
     source: 'openstreetmap',
     source_id: trail.id.toString(),
     geojson: trail.geometry || null,
-    is_age_restricted: false
   };
 }
 
@@ -204,7 +200,6 @@ function normalizeUSGSTrail(trail: USGSTrail): NormalizedTrail {
     source: 'usgs',
     source_id: trail.id,
     geojson: null,
-    is_age_restricted: false
   };
 }
 

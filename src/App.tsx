@@ -58,7 +58,7 @@ function AppContent() {
     <BrowserRouter>
       <Helmet>
         <title>GreenTrails - Discover Nature's Path</title>
-        <meta name="description" content="Discover and share cannabis-friendly hiking trails and outdoor adventures with the GreenTrails community." />
+        <meta name="description" content="Discover and share hiking trails and outdoor adventures with the GreenTrails community. Find your path, connect with nature." />
       </Helmet>
       <div className="App">
         <ErrorBoundary FallbackComponent={ErrorFallback}>

@@ -1,4 +1,3 @@
-
 import { Badge } from "@/types/badges";
 
 export const availableBadges: Badge[] = [
@@ -140,31 +139,5 @@ export const availableBadges: Badge[] = [
     unlocked: false,
     progress: 0,
     maxProgress: 30
-  },
-  
-  // Cannabis-friendly badges
-  {
-    id: "cannabis-explorer",
-    name: "420 Explorer",
-    description: "Visited your first cannabis-friendly trail",
-    category: "cannabis",
-    icon: "leaf",
-    level: 1,
-    requirement: "Visit 1 cannabis-friendly trail",
-    unlocked: false,
-    progress: 0,
-    maxProgress: 1
-  },
-  {
-    id: "cannabis-enthusiast",
-    name: "Green Enthusiast",
-    description: "Visited 5 cannabis-friendly trails",
-    category: "cannabis",
-    icon: "star",
-    level: 2,
-    requirement: "Visit 5 cannabis-friendly trails",
-    unlocked: false,
-    progress: 0,
-    maxProgress: 5
   },
 ];

@@ -1,10 +1,8 @@
-
 export type BadgeCategory = 
   | 'distance' 
   | 'trails' 
   | 'elevation' 
   | 'social' 
-  | 'cannabis' 
   | 'streak';
 
 export interface Badge {

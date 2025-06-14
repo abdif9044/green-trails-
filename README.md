@@ -1,7 +1,6 @@
-
 # GreenTrails
 
-GreenTrails is an AllTrails-inspired outdoor adventure app with social networking features, built for modern hikers and cannabis-friendly explorers. The app is 100% free to use and runs on a Supabase backend for all data, media, and real-time features.
+GreenTrails is an AllTrails-inspired outdoor adventure app with social networking features, built for modern hikers and explorers. The app is 100% free to use and runs on a Supabase backend for all data, media, and real-time features.
 
 ## Features
 
@@ -10,7 +9,6 @@ GreenTrails is an AllTrails-inspired outdoor adventure app with social networkin
 - **Photo Albums**: Create and share photo albums from your adventures
 - **Weather Integration**: Real-time weather data for trails
 - **Roamie AI Assistant**: Intelligent assistant with memory capabilities
-- **Age Verification**: 21+ verification for age-restricted content
 
 ## Technology Stack
 

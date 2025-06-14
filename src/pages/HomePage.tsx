@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import * as React from 'react';
 import Hero from '@/components/Hero';
 import FeatureSection from '@/components/home/FeatureSection';
 import CtaSection from '@/components/home/CtaSection';
@@ -14,7 +14,7 @@ import { useEasterEggs } from '@/contexts/easter-eggs-context';
 const HomePage = () => {
   const { user } = useAuth();
   const { badges, loading } = useBadges();
-  const [showDevConsole, setShowDevConsole] = useState(false);
+  const [showDevConsole, setShowDevConsole] = React.useState(false);
   const { isDevMode, toggleDevMode } = useEasterEggs();
   
   return (

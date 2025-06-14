@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import * as React from 'react';
 
 const KONAMI_CODE = [
   'ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown',
@@ -7,9 +7,9 @@ const KONAMI_CODE = [
 ];
 
 export const useKonamiCode = (callback: () => void) => {
-  const [sequence, setSequence] = useState<string[]>([]);
+  const [sequence, setSequence] = React.useState<string[]>([]);
 
-  useEffect(() => {
+  React.useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       setSequence(prev => {
         const newSequence = [...prev, event.code];

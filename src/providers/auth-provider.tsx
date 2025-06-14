@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext } from 'react';
+import * as React from 'react';
 import { AuthContext, AuthContextType } from '@/contexts/auth-context';
 import { useSimpleAuthState } from '@/hooks/auth/use-simple-auth-state';
 import { useAuthMethods } from '@/hooks/auth/use-auth-methods';
@@ -31,12 +31,4 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-};
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
 };

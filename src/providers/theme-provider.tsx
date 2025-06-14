@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState, useEffect } from "react"
+import * as React from "react"
 
 type Theme = "dark" | "light" | "system"
 
@@ -9,7 +9,7 @@ interface ThemeProviderState {
   resolvedTheme: "dark" | "light"
 }
 
-const ThemeProviderContext = createContext<ThemeProviderState | undefined>(
+const ThemeProviderContext = React.createContext<ThemeProviderState | undefined>(
   undefined
 )
 
@@ -22,11 +22,11 @@ export function ThemeProvider({
   defaultTheme?: Theme
   storageKey?: string
 }) {
-  const [theme, setTheme] = useState<Theme>(
+  const [theme, setTheme] = React.useState<Theme>(
     () => (localStorage.getItem(storageKey) as Theme) || defaultTheme
   )
 
-  const [resolvedTheme, setResolvedTheme] = useState<"dark" | "light">(() => {
+  const [resolvedTheme, setResolvedTheme] = React.useState<"dark" | "light">(() => {
     const storedTheme = localStorage.getItem(storageKey) as Theme | null
     if (storedTheme && storedTheme !== "system") {
       return storedTheme
@@ -36,11 +36,11 @@ export function ThemeProvider({
       : "light"
   })
 
-  useEffect(() => {
+  React.useEffect(() => {
     const root = window.document.documentElement
     root.classList.remove("light", "dark")
 
-    let effectiveTheme = theme
+    let effectiveTheme: Theme | "dark" | "light" = theme
     if (theme === "system") {
       const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
         .matches
@@ -72,7 +72,7 @@ export function ThemeProvider({
 }
 
 export const useTheme = () => {
-  const context = useContext(ThemeProviderContext)
+  const context = React.useContext(ThemeProviderContext)
   if (context === undefined) {
     throw new Error("useTheme must be used within a ThemeProvider")
   }

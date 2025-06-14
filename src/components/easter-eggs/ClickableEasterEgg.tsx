@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import * as React from 'react';
 import { toast } from '@/components/ui/sonner';
 import confetti from 'canvas-confetti';
 
@@ -15,8 +16,8 @@ const ClickableEasterEgg: React.FC<ClickableEasterEggProps> = ({
   message = "You found a secret! 🎉",
   action
 }) => {
-  const [clickCount, setClickCount] = useState(0);
-  const [hasTriggered, setHasTriggered] = useState(false);
+  const [clickCount, setClickCount] = React.useState(0);
+  const [hasTriggered, setHasTriggered] = React.useState(false);
 
   const handleClick = () => {
     if (hasTriggered) return;

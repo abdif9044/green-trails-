@@ -1,5 +1,5 @@
 
-import React, { Suspense } from 'react';
+import * as React from 'react';
 import {
   BrowserRouter,
   Routes,
@@ -46,19 +46,19 @@ function AppContent() {
     <BrowserRouter>
       <div className="App">
         <Routes>
-          <Route path="/" element={<Layout><Suspense fallback={<>Loading...</>}><HomePage /></Suspense></Layout>} />
-          <Route path="/discover" element={<Layout><Suspense fallback={<>Loading...</>}><LazyDiscover /></Suspense></Layout>} />
-          <Route path="/social" element={<Layout><Suspense fallback={<>Loading...</>}><LazySocial /></Suspense></Layout>} />
-          <Route path="/profile" element={<Layout><Suspense fallback={<>Loading...</>}><LazyProfile /></Suspense></Layout>} />
-          <Route path="/badges" element={<Layout><Suspense fallback={<>Loading...</>}><LazyBadges /></Suspense></Layout>} />
-          <Route path="/trail/:trailId" element={<Layout><Suspense fallback={<>Loading...</>}><LazyTrail /></Suspense></Layout>} />
-          <Route path="/album/:albumId" element={<Layout><Suspense fallback={<>Loading...</>}><LazyAlbumDetail /></Suspense></Layout>} />
-          <Route path="/create-album" element={<Layout><Suspense fallback={<>Loading...</>}><LazyCreateAlbum /></Suspense></Layout>} />
+          <Route path="/" element={<Layout><React.Suspense fallback={<>Loading...</>}><HomePage /></React.Suspense></Layout>} />
+          <Route path="/discover" element={<Layout><React.Suspense fallback={<>Loading...</>}><LazyDiscover /></React.Suspense></Layout>} />
+          <Route path="/social" element={<Layout><React.Suspense fallback={<>Loading...</>}><LazySocial /></React.Suspense></Layout>} />
+          <Route path="/profile" element={<Layout><React.Suspense fallback={<>Loading...</>}><LazyProfile /></React.Suspense></Layout>} />
+          <Route path="/badges" element={<Layout><React.Suspense fallback={<>Loading...</>}><LazyBadges /></React.Suspense></Layout>} />
+          <Route path="/trail/:trailId" element={<Layout><React.Suspense fallback={<>Loading...</>}><LazyTrail /></React.Suspense></Layout>} />
+          <Route path="/album/:albumId" element={<Layout><React.Suspense fallback={<>Loading...</>}><LazyAlbumDetail /></React.Suspense></Layout>} />
+          <Route path="/create-album" element={<Layout><React.Suspense fallback={<>Loading...</>}><LazyCreateAlbum /></React.Suspense></Layout>} />
           <Route path="/map-test" element={<Layout><MapContainer /></Layout>} />
-          <Route path="/admin/trail-import" element={<Layout><Suspense fallback={<>Loading...</>}><LazyAdminTrailImport /></Suspense></Layout>} />
-          <Route path="/auto-import" element={<Layout><Suspense fallback={<>Loading...</>}><LazyAutoImportPage /></Suspense></Layout>} />
-          <Route path="/auth" element={<Layout><Suspense fallback={<>Loading...</>}><AuthPage /></Suspense></Layout>} />
-          <Route path="*" element={<Layout><Suspense fallback={<>Loading...</>}><NotFoundPage /></Suspense></Layout>} />
+          <Route path="/admin/trail-import" element={<Layout><React.Suspense fallback={<>Loading...</>}><LazyAdminTrailImport /></React.Suspense></Layout>} />
+          <Route path="/auto-import" element={<Layout><React.Suspense fallback={<>Loading...</>}><LazyAutoImportPage /></React.Suspense></Layout>} />
+          <Route path="/auth" element={<Layout><React.Suspense fallback={<>Loading...</>}><AuthPage /></React.Suspense></Layout>} />
+          <Route path="*" element={<Layout><React.Suspense fallback={<>Loading...</>}><NotFoundPage /></React.Suspense></Layout>} />
         </Routes>
       </div>
     </BrowserRouter>

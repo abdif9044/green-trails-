@@ -1,4 +1,3 @@
-
 import * as React from 'react';
 import {
   BrowserRouter,
@@ -38,9 +37,32 @@ const ErrorFallback = ({ error, resetErrorBoundary }: { error: Error; resetError
 );
 
 function AppContent() {
-  const { triggerKonamiEasterEgg } = useEasterEggs();
+  // Defensive: Use React.useRef to avoid running code before context is ready
+  const [konamiReady, setKonamiReady] = React.useState(false);
+  let triggerKonamiEasterEgg: undefined | (() => void);
 
-  useKonamiCode(triggerKonamiEasterEgg);
+  // Try/catch so code still works if context isn't ready due to loading in provider
+  try {
+    // Will throw error only if not rendered in correct hierarchy
+    // Don't destructure in outer scope, so context can be missing during hydration
+    triggerKonamiEasterEgg = require('@/contexts/easter-eggs-context').useEasterEggs().triggerKonamiEasterEgg;
+  } catch (e) {
+    triggerKonamiEasterEgg = undefined;
+  }
+
+  // Run effect only if available
+  React.useEffect(() => {
+    if (triggerKonamiEasterEgg) {
+      setKonamiReady(true);
+    }
+  }, [triggerKonamiEasterEgg]);
+
+  React.useEffect(() => {
+    if (!konamiReady) return;
+    // Dynamically import/useKonamiCode to avoid SSR/hydration mismatch
+    const { useKonamiCode } = require('@/hooks/use-konami-code');
+    useKonamiCode(triggerKonamiEasterEgg!);
+  }, [konamiReady, triggerKonamiEasterEgg]);
 
   return (
     <BrowserRouter>

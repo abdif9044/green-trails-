@@ -15,23 +15,25 @@ interface EasterEggsContextType {
 
 const EasterEggsContext = React.createContext<EasterEggsContextType | undefined>(undefined);
 
+// Added: Loading state to provider – only render children when initial read from localStorage is completed
 export const EasterEggsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isDevMode, setIsDevMode] = React.useState(false);
   const [isCatMode, setIsCatMode] = React.useState(false);
   const [secretTrailsUnlocked, setSecretTrailsUnlocked] = React.useState(false);
+  const [loaded, setLoaded] = React.useState(false); // track if localStorage has been read
 
-  // Load easter egg states from localStorage
+  // Load easter egg states from localStorage, then render children
   React.useEffect(() => {
     const savedDevMode = localStorage.getItem('greentrails-dev-mode') === 'true';
     const savedCatMode = localStorage.getItem('greentrails-cat-mode') === 'true';
     const savedSecretTrails = localStorage.getItem('greentrails-secret-trails') === 'true';
-    
     setIsDevMode(savedDevMode);
     setIsCatMode(savedCatMode);
     setSecretTrailsUnlocked(savedSecretTrails);
+    setLoaded(true);
   }, []);
 
-  const toggleDevMode = () => {
+  const toggleDevMode = React.useCallback(() => {
     const newState = !isDevMode;
     setIsDevMode(newState);
     localStorage.setItem('greentrails-dev-mode', newState.toString());
@@ -39,9 +41,9 @@ export const EasterEggsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     toast(newState ? "🔧 Developer Mode Activated" : "Developer Mode Deactivated", {
       description: newState ? "Secret features unlocked!" : "Back to normal mode",
     });
-  };
+  }, [isDevMode]);
 
-  const toggleCatMode = () => {
+  const toggleCatMode = React.useCallback(() => {
     const newState = !isCatMode;
     setIsCatMode(newState);
     localStorage.setItem('greentrails-cat-mode', newState.toString());
@@ -49,9 +51,9 @@ export const EasterEggsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     toast(newState ? "🐱 Cat Mode Activated!" : "Cat Mode Deactivated", {
       description: newState ? "Meow! Trail images replaced with cats!" : "Back to regular trails",
     });
-  };
+  }, [isCatMode]);
 
-  const unlockSecretTrails = () => {
+  const unlockSecretTrails = React.useCallback(() => {
     if (secretTrailsUnlocked) return;
     setSecretTrailsUnlocked(true);
     localStorage.setItem('greentrails-secret-trails', 'true');
@@ -59,9 +61,9 @@ export const EasterEggsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     toast("🗝️ Secret Trails Unlocked!", {
       description: "You've discovered hidden trails only known to the most dedicated explorers!",
     });
-  };
+  }, [secretTrailsUnlocked]);
 
-  const triggerKonamiEasterEgg = () => {
+  const triggerKonamiEasterEgg = React.useCallback(() => {
     // Epic confetti explosion
     const duration = 3000;
     const end = Date.now() + duration;
@@ -95,12 +97,14 @@ export const EasterEggsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       duration: 5000,
     });
 
-    // Unlock everything idempotently
     if (!isDevMode) {
       toggleDevMode();
     }
     unlockSecretTrails();
-  };
+  }, [isDevMode, toggleDevMode, unlockSecretTrails]);
+
+  // Defensive: don't render children/forms until loaded is true
+  if (!loaded) return null;
 
   return (
     <EasterEggsContext.Provider value={{
@@ -117,6 +121,7 @@ export const EasterEggsProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   );
 };
 
+// Defensive: throw descriptive error if context is not ready  
 export const useEasterEggs = () => {
   const context = React.useContext(EasterEggsContext);
   if (context === undefined) {
@@ -124,3 +129,4 @@ export const useEasterEggs = () => {
   }
   return context;
 };
+

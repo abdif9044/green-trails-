@@ -1,4 +1,3 @@
-
 import React, { Suspense } from 'react';
 import {
   BrowserRouter,
@@ -67,6 +66,8 @@ function AppContent() {
 
 // Providers (QueryClientProvider, HelmetProvider, etc.) remain in main.tsx!
 function App() {
+  console.log("[DEBUG] App root running, React version:", React.version);
+
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback}>
       <ThemeProvider defaultTheme="light" storageKey="greentrails-ui-theme">

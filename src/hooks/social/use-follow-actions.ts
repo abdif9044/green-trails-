@@ -4,6 +4,7 @@ import { useToast } from '../use-toast';
 import { useAuth } from '../use-auth';
 import { useQuery } from '@tanstack/react-query';
 import { logSocialAction } from './use-follow-audit';
+import { useCreateNotification } from './use-notifications';
 
 // Hook to check if a user is following another user
 export const useIsFollowing = (targetUserId: string) => {
@@ -32,6 +33,7 @@ export const useIsFollowing = (targetUserId: string) => {
 export const useToggleFollow = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const createNotification = useCreateNotification();
   const [isPending, setIsPending] = useState(false);
   
   const mutate = async (targetUserId: string) => {
@@ -43,18 +45,14 @@ export const useToggleFollow = () => {
       });
       return;
     }
-    
     setIsPending(true);
-    
     try {
-      // Check if already following
       const { data: existingFollow } = await supabase
         .from('follows')
         .select('id')
         .eq('follower_id', user.id)
         .eq('following_id', targetUserId)
         .single();
-      
       if (existingFollow) {
         // Unfollow
         await supabase
@@ -78,12 +76,19 @@ export const useToggleFollow = () => {
             following_id: targetUserId,
             created_at: new Date().toISOString()
           });
-        
         logSocialAction('follow', user.id, targetUserId);
         toast({
           title: "Now following!",
           description: "You are following this user.",
           variant: "default"
+        });
+        // Notify the followed user
+        createNotification.mutate({
+          userId: targetUserId,
+          type: "social",
+          title: "You have a new follower!",
+          message: `${user.email || 'Someone'} started following you`,
+          data: { followerId: user.id }
         });
       }
     } catch (error: any) {
@@ -96,6 +101,5 @@ export const useToggleFollow = () => {
       setIsPending(false);
     }
   };
-  
   return { mutate, isPending };
 };

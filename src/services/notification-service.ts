@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -37,7 +36,6 @@ class NotificationService {
     if (this.subscription) {
       this.subscription.unsubscribe();
     }
-
     this.subscription = supabase
       .channel(`notifications:${userId}`)
       .on(

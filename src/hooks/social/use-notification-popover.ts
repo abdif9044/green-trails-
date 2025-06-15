@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
@@ -61,3 +60,7 @@ export function useNotificationPopover() {
 
   return { open, setOpen: handleOpenChange };
 }
+
+// Storage bucket reminder (manual step): 
+// Make sure to create buckets "avatars", "stories-media", "album-media" in Supabase Storage UI. 
+// Set read permissions per app needs.

@@ -83,7 +83,7 @@ export const useToggleFollow = () => {
         toast({
           title: "Now following!",
           description: "You are following this user.",
-          variant: "success"
+          variant: "default"
         });
       }
     } catch (error: any) {

@@ -1,9 +1,9 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '../use-toast';
 import { useAuth } from '../use-auth';
 import { useQuery } from '@tanstack/react-query';
+import { logSocialAction } from './use-follow-audit';
 
 // Hook to check if a user is following another user
 export const useIsFollowing = (targetUserId: string) => {
@@ -37,8 +37,8 @@ export const useToggleFollow = () => {
   const mutate = async (targetUserId: string) => {
     if (!user?.id || !targetUserId || user.id === targetUserId) {
       toast({
-        title: "Error",
-        description: "Cannot follow/unfollow this user",
+        title: "Oops",
+        description: "Cannot follow/unfollow yourself.",
         variant: "destructive"
       });
       return;
@@ -62,10 +62,12 @@ export const useToggleFollow = () => {
           .delete()
           .eq('follower_id', user.id)
           .eq('following_id', targetUserId);
-          
+        
+        logSocialAction('unfollow', user.id, targetUserId);
         toast({
-          title: "Unfollowed",
-          description: "You have unfollowed this user"
+          title: "Unfollowed!",
+          description: "You have unfollowed this user.",
+          variant: "default"
         });
       } else {
         // Follow
@@ -76,16 +78,18 @@ export const useToggleFollow = () => {
             following_id: targetUserId,
             created_at: new Date().toISOString()
           });
-          
+        
+        logSocialAction('follow', user.id, targetUserId);
         toast({
-          title: "Following",
-          description: "You are now following this user"
+          title: "Now following!",
+          description: "You are following this user.",
+          variant: "success"
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       toast({
-        title: "Error",
-        description: "Failed to update follow status",
+        title: "Action failed",
+        description: error.message || "Could not update follow.",
         variant: "destructive"
       });
     } finally {

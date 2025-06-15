@@ -1,11 +1,12 @@
 
 import React from 'react';
-import { Card, CardProps } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
-interface GlassCardProps extends CardProps {
+interface GlassCardProps extends React.HTMLAttributes<HTMLDivElement> {
   glassIntensity?: 'subtle' | 'medium' | 'strong';
   hoverable?: boolean;
+  children: React.ReactNode;
 }
 
 export const GlassCard: React.FC<GlassCardProps> = ({

@@ -1,5 +1,5 @@
 
-import * as React from 'react';
+import React from 'react';
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from '@/providers/theme-provider'
@@ -32,7 +32,6 @@ const ErrorFallback = ({ error, resetErrorBoundary }: { error: Error; resetError
 );
 
 function AppContent() {
-  // Defensive: Use React.useRef to avoid running code before context is ready
   const [konamiReady, setKonamiReady] = React.useState(false);
   let triggerKonamiEasterEgg: undefined | (() => void);
 

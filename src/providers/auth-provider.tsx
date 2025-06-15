@@ -1,5 +1,5 @@
 
-import * as React from 'react';
+import React from 'react';
 import { AuthContext, AuthContextType } from '@/contexts/auth-context';
 import { useSimpleAuthState } from '@/hooks/auth/use-simple-auth-state';
 import { useAuthMethods } from '@/hooks/auth/use-auth-methods';

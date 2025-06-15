@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from '@/providers/theme-provider'
@@ -32,7 +32,7 @@ const ErrorFallback = ({ error, resetErrorBoundary }: { error: Error; resetError
 );
 
 function AppContent() {
-  const [konamiReady, setKonamiReady] = React.useState(false);
+  const [konamiReady, setKonamiReady] = useState(false);
   let triggerKonamiEasterEgg: undefined | (() => void);
 
   try {
@@ -41,13 +41,13 @@ function AppContent() {
     triggerKonamiEasterEgg = undefined;
   }
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (triggerKonamiEasterEgg) {
       setKonamiReady(true);
     }
   }, [triggerKonamiEasterEgg]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!konamiReady) return;
     const { useKonamiCode } = require('@/hooks/use-konami-code');
     useKonamiCode(triggerKonamiEasterEgg!);

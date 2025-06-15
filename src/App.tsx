@@ -85,7 +85,6 @@ function AppContent() {
   );
 }
 
-// Only use App.tsx for routing and main providers, NOT src/routes.tsx
 function App() {
   return (
     <ThemeProvider>

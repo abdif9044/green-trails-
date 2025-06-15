@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, AlertCircle, User } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { useAvatarUpload } from '@/hooks/use-avatar-upload';
 
 interface Profile {
   id: string;
@@ -28,6 +28,7 @@ export const UserProfile = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const { uploading, uploadAvatar, validateFile } = useAvatarUpload();
 
   useEffect(() => {
     if (user) {
@@ -102,6 +103,24 @@ export const UserProfile = () => {
     handleUpdate(updates);
   };
 
+  const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !user) return;
+    const { valid, message } = await validateFile(file);
+    if (!valid) {
+      setError(message || 'Invalid avatar.');
+      return;
+    }
+    await uploadAvatar({
+      file,
+      userId: user.id,
+      onSuccess: async (url) => {
+        await handleUpdate({ avatar_url: url });
+      },
+      onError: (e) => setError(e.message),
+    });
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -128,6 +147,34 @@ export const UserProfile = () => {
         <CardDescription>Manage your GreenTrails profile information</CardDescription>
       </CardHeader>
       <CardContent>
+        {/* Avatar upload UI */}
+        <div className="flex flex-col items-center mb-4">
+          <label htmlFor="avatar-upload" className="cursor-pointer group relative">
+            {profile?.avatar_url ? (
+              <img
+                src={profile.avatar_url}
+                alt="Profile avatar"
+                className="w-20 h-20 rounded-full border-2 border-greentrail-300 object-cover group-hover:opacity-80"
+              />
+            ) : (
+              <User className="h-20 w-20 text-greentrail-400 border-2 border-greentrail-200 rounded-full p-3" />
+            )}
+            <input
+              id="avatar-upload"
+              type="file"
+              accept="image/*"
+              className="hidden"
+              disabled={uploading}
+              onChange={handleAvatarChange}
+            />
+            <span className="absolute bottom-2 right-2 bg-white rounded-full shadow p-1 text-xs hidden group-hover:inline">Change</span>
+          </label>
+          {uploading && (
+            <div className="text-xs mt-2 text-greentrail-500 flex items-center gap-1">
+              <Loader2 className="h-4 w-4 animate-spin" /> Uploading...
+            </div>
+          )}
+        </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
             <Alert variant="destructive">

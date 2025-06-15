@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
@@ -8,7 +9,7 @@ import { useTextToSpeech } from '@/hooks/use-text-to-speech';
 export interface Notification {
   id: string;
   user_id: string;
-  type: string;
+  type: 'social' | 'weather' | 'trail' | 'system' | 'achievement';
   title: string;
   message: string;
   data: Record<string, any>;

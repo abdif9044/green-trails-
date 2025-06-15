@@ -1,9 +1,8 @@
-
 -- 1. Notifications table for all social notifications (follow, like, comment, system, weather, trail, etc.)
 CREATE TABLE IF NOT EXISTS public.notifications (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL, -- references profiles.id, NOT auth.users (by project best practice)
-  type TEXT NOT NULL CHECK (type IN ('social', 'weather', 'trail', 'system')),
+  type TEXT NOT NULL CHECK (type IN ('social', 'weather', 'trail', 'system', 'achievement')),
   title TEXT NOT NULL,
   message TEXT NOT NULL,
   data JSONB,
@@ -112,4 +111,3 @@ CREATE INDEX IF NOT EXISTS idx_group_members_user_id ON public.group_members(use
 --   - stories-media (for stories uploads)
 --   - album-media (for album photos)
 -- Set each bucket to "private" by default and apply policies if needed.
-

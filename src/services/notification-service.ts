@@ -1,10 +1,11 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 export interface Notification {
   id: string;
   user_id: string;
-  type: 'social' | 'weather' | 'trail' | 'system';
+  type: 'social' | 'weather' | 'trail' | 'system' | 'achievement';
   title: string;
   message: string;
   data?: Record<string, any>;
@@ -106,6 +107,9 @@ class NotificationService {
         break;
       case 'weather':
         window.location.href = '/discover';
+        break;
+      case 'achievement':
+        window.location.href = '/profile';
         break;
       default:
         window.location.href = '/';

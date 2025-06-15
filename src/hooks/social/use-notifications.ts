@@ -38,7 +38,7 @@ export const useCreateNotification = () => {
       data 
     }: {
       userId: string;
-      type: "social" | "weather" | "trail" | "system";
+      type: "social" | "weather" | "trail" | "system" | "achievement";
       title: string;
       message: string;
       data?: Record<string, any>;

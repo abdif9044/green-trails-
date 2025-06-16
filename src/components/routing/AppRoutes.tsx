@@ -7,6 +7,7 @@ import MapContainer from '@/components/map/MapContainer';
 const AuthPage = React.lazy(() => import('@/pages/AuthPage'));
 const HomePage = React.lazy(() => import('@/pages/HomePage'));
 const NotFoundPage = React.lazy(() => import('@/pages/NotFoundPage'));
+const SecurityAuditPage = React.lazy(() => import('@/pages/SecurityAuditPage'));
 
 const AppRoutes = () => {
   return (
@@ -22,6 +23,7 @@ const AppRoutes = () => {
       <Route path="/map-test" element={<MapContainer />} />
       <Route path="/admin/trail-import" element={<LazyAdminTrailImport />} />
       <Route path="/auto-import" element={<LazyAutoImportPage />} />
+      <Route path="/security-audit" element={<SecurityAuditPage />} />
       <Route path="/auth" element={<AuthPage />} />
       <Route path="*" element={<NotFoundPage />} />
     </Routes>

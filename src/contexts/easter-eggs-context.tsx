@@ -2,6 +2,7 @@
 import * as React from 'react';
 import confetti from 'canvas-confetti';
 import { toast } from '@/components/ui/sonner';
+import { useEasterEggStorage } from '@/hooks/use-easter-egg-storage';
 
 interface EasterEggsContextType {
   isDevMode: boolean;
@@ -16,55 +17,46 @@ interface EasterEggsContextType {
 const EasterEggsContext = React.createContext<EasterEggsContextType | undefined>(undefined);
 
 export const EasterEggsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [isDevMode, setIsDevMode] = React.useState(false);
-  const [isCatMode, setIsCatMode] = React.useState(false);
-  const [secretTrailsUnlocked, setSecretTrailsUnlocked] = React.useState(false);
-  const [loaded, setLoaded] = React.useState(false);
-
-  React.useEffect(() => {
-    const savedDevMode = localStorage.getItem('greentrails-dev-mode') === 'true';
-    const savedCatMode = localStorage.getItem('greentrails-cat-mode') === 'true';
-    const savedSecretTrails = localStorage.getItem('greentrails-secret-trails') === 'true';
-    setIsDevMode(savedDevMode);
-    setIsCatMode(savedCatMode);
-    setSecretTrailsUnlocked(savedSecretTrails);
-    setLoaded(true);
-  }, []);
+  const {
+    isDevMode,
+    isCatMode,
+    secretTrailsUnlocked,
+    loaded,
+    updateDevMode,
+    updateCatMode,
+    updateSecretTrails,
+  } = useEasterEggStorage();
 
   const toggleDevMode = React.useCallback(() => {
     const newState = !isDevMode;
-    setIsDevMode(newState);
-    localStorage.setItem('greentrails-dev-mode', newState.toString());
+    updateDevMode(newState);
     console.log(newState ? "🔧 Developer Mode Activated" : "Developer Mode Deactivated");
     toast(newState ? "🔧 Developer Mode Activated" : "Developer Mode Deactivated", {
       description: newState ? "Secret features unlocked!" : "Back to normal mode",
     });
-  }, [isDevMode]);
+  }, [isDevMode, updateDevMode]);
 
   const toggleCatMode = React.useCallback(() => {
     const newState = !isCatMode;
-    setIsCatMode(newState);
-    localStorage.setItem('greentrails-cat-mode', newState.toString());
+    updateCatMode(newState);
     console.log(newState ? "🐱 Cat Mode Activated!" : "Cat Mode Deactivated");
     toast(newState ? "🐱 Cat Mode Activated!" : "Cat Mode Deactivated", {
       description: newState ? "Meow! Trail images replaced with cats!" : "Back to regular trails",
     });
-  }, [isCatMode]);
+  }, [isCatMode, updateCatMode]);
 
   const unlockSecretTrails = React.useCallback(() => {
     if (secretTrailsUnlocked) return;
-    setSecretTrailsUnlocked(true);
-    localStorage.setItem('greentrails-secret-trails', 'true');
+    updateSecretTrails(true);
     console.log("🗝️ Secret Trails Unlocked!");
     toast("🗝️ Secret Trails Unlocked!", {
       description: "You've discovered hidden trails only known to the most dedicated explorers!",
     });
-  }, [secretTrailsUnlocked]);
+  }, [secretTrailsUnlocked, updateSecretTrails]);
 
   const triggerKonamiEasterEgg = React.useCallback(() => {
     const duration = 3000;
     const end = Date.now() + duration;
-
     const colors = ['#22c55e', '#16a34a', '#15803d'];
 
     (function frame() {

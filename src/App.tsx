@@ -27,36 +27,30 @@ const ErrorFallback = ({ error, resetErrorBoundary }: { error: Error; resetError
   </div>
 );
 
-const AppContent = () => {
-  return (
-    <BrowserRouter>
-      <Helmet>
-        <title>GreenTrails - Discover Nature's Path</title>
-        <meta name="description" content="Discover and share hiking trails and outdoor adventures with the GreenTrails community. Find your path, connect with nature." />
-      </Helmet>
-      <div className="App">
-        <ErrorBoundary FallbackComponent={ErrorFallback}>
-          <React.Suspense fallback={<LoadingFallback />}>
-            <Layout>
-              <AppRoutes />
-            </Layout>
-            <KonamiCodeHandler />
-          </React.Suspense>
-        </ErrorBoundary>
-      </div>
-      <Toaster />
-    </BrowserRouter>
-  );
-};
-
 function App() {
   return (
     <ThemeProvider>
-      <EasterEggsProvider>
-        <AuthProvider>
-          <AppContent />
-        </AuthProvider>
-      </EasterEggsProvider>
+      <BrowserRouter>
+        <Helmet>
+          <title>GreenTrails - Discover Nature's Path</title>
+          <meta name="description" content="Discover and share hiking trails and outdoor adventures with the GreenTrails community. Find your path, connect with nature." />
+        </Helmet>
+        <div className="App">
+          <ErrorBoundary FallbackComponent={ErrorFallback}>
+            <React.Suspense fallback={<LoadingFallback />}>
+              <EasterEggsProvider>
+                <AuthProvider>
+                  <Layout>
+                    <AppRoutes />
+                  </Layout>
+                  <KonamiCodeHandler />
+                </AuthProvider>
+              </EasterEggsProvider>
+            </React.Suspense>
+          </ErrorBoundary>
+        </div>
+        <Toaster />
+      </BrowserRouter>
     </ThemeProvider>
   );
 }

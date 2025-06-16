@@ -1,9 +1,10 @@
 
-import { Profile as BaseProfile } from '@/hooks/use-profile';
+import { Database } from '@/integrations/supabase/types';
 
-// Extend the base profile with additional social properties
-export interface ProfileWithSocial extends BaseProfile {
-  website_url?: string | null;
-  twitter_url?: string | null;
-  instagram_url?: string | null;
+export type Profile = Database['public']['Tables']['profiles']['Row'];
+
+export interface ProfileWithSocial extends Profile {
+  follower_count?: number;
+  following_count?: number;
+  trail_count?: number;
 }

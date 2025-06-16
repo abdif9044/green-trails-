@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -6,31 +7,14 @@ import { Badge } from '@/components/ui/badge';
 import { Trophy, Mountain, MapPin, Calendar, TrendingUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
+import { Database } from '@/integrations/supabase/types';
 
-interface LeaderboardEntry {
-  user_id: string;
-  user: {
-    email: string;
-    full_name?: string;
-    avatar_url?: string;
-  };
-  total_trails: number;
-  total_distance: number;
-  total_elevation: number;
-  current_streak: number;
+type UserStats = Database['public']['Tables']['user_stats']['Row'];
+type Profile = Database['public']['Tables']['profiles']['Row'];
+
+interface LeaderboardEntry extends UserStats {
+  profiles: Profile | null;
   rank: number;
-}
-
-interface CommunityChallenge {
-  id: string;
-  title: string;
-  description: string;
-  type: 'distance' | 'trails' | 'elevation' | 'streak';
-  target: number;
-  start_date: string;
-  end_date: string;
-  participants: number;
-  reward_badge: string;
 }
 
 const Leaderboards: React.FC = () => {
@@ -45,16 +29,12 @@ const Leaderboards: React.FC = () => {
     elevation: [],
     streak: []
   });
-  const [challenges, setChallenges] = useState<CommunityChallenge[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [userRanks, setUserRanks] = useState<Record<string, number>>({});
   const { user } = useAuth();
 
   useEffect(() => {
-    Promise.all([
-      fetchLeaderboards(),
-      fetchChallenges()
-    ]).finally(() => setIsLoading(false));
+    fetchLeaderboards().finally(() => setIsLoading(false));
   }, []);
 
   const fetchLeaderboards = async () => {
@@ -92,51 +72,18 @@ const Leaderboards: React.FC = () => {
     const { data, error } = await supabase
       .from('user_stats')
       .select(`
-        user_id,
-        total_trails,
-        total_distance,
-        total_elevation,
-        current_streak,
-        profiles!user_stats_user_id_fkey(email, full_name, avatar_url)
+        *,
+        profiles(*)
       `)
       .order(orderBy, { ascending: false })
       .limit(50);
 
     if (error) throw error;
 
-    return (data || []).map((entry, index) => {
-      // Handle the case where profiles might be null or an array
-      const profile = Array.isArray(entry.profiles) ? entry.profiles[0] : entry.profiles;
-      
-      return {
-        user_id: entry.user_id,
-        total_trails: entry.total_trails,
-        total_distance: entry.total_distance,
-        total_elevation: entry.total_elevation,
-        current_streak: entry.current_streak,
-        user: {
-          email: profile?.email || '',
-          full_name: profile?.full_name,
-          avatar_url: profile?.avatar_url
-        },
-        rank: index + 1
-      };
-    });
-  };
-
-  const fetchChallenges = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('community_challenges')
-        .select('*')
-        .gte('end_date', new Date().toISOString())
-        .order('start_date', { ascending: true });
-
-      if (error) throw error;
-      setChallenges(data || []);
-    } catch (error) {
-      console.error('Error fetching challenges:', error);
-    }
+    return (data || []).map((entry, index) => ({
+      ...entry,
+      rank: index + 1
+    }));
   };
 
   const getRankBadgeColor = (rank: number) => {
@@ -163,12 +110,12 @@ const Leaderboards: React.FC = () => {
   const LeaderboardTable = ({ entries, type }: { entries: LeaderboardEntry[], type: string }) => (
     <div className="space-y-2">
       {entries.map((entry) => {
-        const userName = entry.user.full_name || entry.user.email.split('@')[0];
+        const userName = entry.profiles?.full_name || entry.profiles?.username || 'Anonymous User';
         const isCurrentUser = user?.id === entry.user_id;
         
         return (
           <div 
-            key={entry.user_id}
+            key={entry.id}
             className={`flex items-center space-x-3 p-3 rounded-lg transition-colors ${
               isCurrentUser ? 'bg-green-50 border border-green-200' : 'hover:bg-gray-50'
             }`}
@@ -180,7 +127,7 @@ const Leaderboards: React.FC = () => {
             </div>
             
             <Avatar className="h-8 w-8">
-              <AvatarImage src={entry.user.avatar_url || undefined} />
+              <AvatarImage src={entry.profiles?.avatar_url || undefined} />
               <AvatarFallback className="text-xs">
                 {userName[0].toUpperCase()}
               </AvatarFallback>
@@ -196,8 +143,8 @@ const Leaderboards: React.FC = () => {
             <div className="text-right">
               <p className="font-bold text-sm">
                 {type === 'trails' && entry.total_trails}
-                {type === 'distance' && formatDistance(entry.total_distance)}
-                {type === 'elevation' && formatElevation(entry.total_elevation)}
+                {type === 'distance' && formatDistance(entry.total_distance || 0)}
+                {type === 'elevation' && formatElevation(entry.total_elevation || 0)}
                 {type === 'streak' && `${entry.current_streak} days`}
               </p>
             </div>
@@ -335,32 +282,6 @@ const Leaderboards: React.FC = () => {
           </Card>
         </TabsContent>
       </Tabs>
-
-      {/* Community Challenges */}
-      {challenges.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Trophy className="h-5 w-5" />
-              Active Community Challenges
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {challenges.map((challenge) => (
-                <div key={challenge.id} className="border rounded-lg p-4">
-                  <h3 className="font-semibold mb-2">{challenge.title}</h3>
-                  <p className="text-sm text-gray-600 mb-3">{challenge.description}</p>
-                  <div className="flex justify-between items-center text-xs">
-                    <span>{challenge.participants} participants</span>
-                    <Badge variant="outline">{challenge.reward_badge}</Badge>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 };

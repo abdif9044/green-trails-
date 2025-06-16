@@ -9,18 +9,9 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, AlertCircle, User } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useAvatarUpload } from '@/hooks/use-avatar-upload';
+import { Database } from '@/integrations/supabase/types';
 
-interface Profile {
-  id: string;
-  username: string | null;
-  full_name: string | null;
-  bio: string | null;
-  avatar_url: string | null;
-  website_url: string | null;
-  is_age_verified: boolean;
-  created_at: string;
-  updated_at: string;
-}
+type Profile = Database['public']['Tables']['profiles']['Row'];
 
 export const UserProfile = () => {
   const { user } = useAuth();

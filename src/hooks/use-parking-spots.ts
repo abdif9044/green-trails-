@@ -1,45 +1,20 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { Database } from '@/integrations/supabase/types';
 
-export interface ParkingSpot {
-  id: string;
-  trail_id: string;
-  name: string;
-  description: string | null;
-  latitude: number;
-  longitude: number;
-  is_free: boolean | null;
-  capacity: number | null;
-  notes: string | null;
-  created_at?: string;
-  updated_at?: string;
-}
+type ParkingSpot = Database['public']['Tables']['parking_spots']['Row'];
 
-export const useParkingSpots = (trailId?: string) => {
+export const useParkingSpots = () => {
   return useQuery({
-    queryKey: ['parking-spots', trailId],
+    queryKey: ['parking-spots'],
     queryFn: async () => {
-      try {
-        let query = supabase.from('parking_spots').select('*');
-        
-        if (trailId) {
-          query = query.eq('trail_id', trailId);
-        }
-        
-        const { data, error } = await query;
-        
-        if (error) {
-          console.error('Error fetching parking spots:', error);
-          return [];
-        }
-        
-        return data as ParkingSpot[];
-      } catch (error) {
-        console.error('Error in useParkingSpots:', error);
-        return [];
-      }
+      const { data, error } = await supabase
+        .from('parking_spots')
+        .select('*');
+      
+      if (error) throw error;
+      return data as ParkingSpot[];
     },
-    enabled: true,
   });
 };

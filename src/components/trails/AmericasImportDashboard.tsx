@@ -41,12 +41,13 @@ const AmericasImportDashboard: React.FC = () => {
     try {
       // Get current progress from function
       const { data: progressData, error: progressError } = await supabase
-        .rpc('get_americas_import_progress');
+        .rpc('get_americas_import_progress')
+        .maybeSingle();
 
       if (progressError) {
         console.error('Error fetching progress:', progressError);
-      } else if (progressData && Array.isArray(progressData) && progressData.length > 0) {
-        setProgress(progressData[0]);
+      } else if (progressData) {
+        setProgress(progressData);
       }
 
       // Get active jobs
@@ -54,12 +55,13 @@ const AmericasImportDashboard: React.FC = () => {
         .from('bulk_import_jobs')
         .select('*')
         .order('started_at', { ascending: false })
-        .limit(1);
+        .limit(1)
+        .maybeSingle();
 
       if (jobError) {
         console.error('Error fetching jobs:', jobError);
-      } else if (jobData && jobData.length > 0) {
-        setActiveJob(jobData[0]);
+      } else if (jobData) {
+        setActiveJob(jobData);
       }
     } catch (error) {
       console.error('Error in fetchProgress:', error);

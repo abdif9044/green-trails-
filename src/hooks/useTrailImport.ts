@@ -7,7 +7,7 @@ import { useSingleImport } from './trail-import/useSingleImport';
 import { useBulkImportStatus } from './trail-import/useBulkImportStatus';
 import { useBulkImportHandler } from './trail-import/useBulkImportHandler';
 
-// Types for data sources and import jobs
+// Types for data sources and import jobs - ensure compatibility
 export type TrailDataSource = {
   id: string;
   name: string;
@@ -31,7 +31,7 @@ export type ImportJob = {
   trails_processed: number;
   trails_added: number;
   trails_updated: number;
-  trails_failed: number;
+  trails_failed: number; // Ensure this property exists
   error_message: string | null;
   bulk_job_id?: string | null;
 };
@@ -101,7 +101,10 @@ export function useTrailImport() {
 
   return {
     dataSources,
-    importJobs,
+    importJobs: importJobs.map(job => ({
+      ...job,
+      trails_failed: job.trails_failed || 0 // Ensure trails_failed is always present
+    })),
     bulkImportJobs,
     loading,
     importLoading,

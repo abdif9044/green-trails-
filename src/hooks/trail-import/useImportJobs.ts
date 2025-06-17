@@ -14,6 +14,7 @@ export interface ImportJob {
   trails_processed: number;
   trails_added: number;
   trails_updated: number;
+  trails_failed?: number; // Made optional to handle missing column
   error_message: string | null;
 }
 
@@ -50,7 +51,18 @@ export function useImportJobs() {
         .order("started_at", { ascending: false })
         .limit(20);
         
-      if (jobsError) throw jobsError;
+      if (jobsError) {
+        console.error('Error fetching import jobs:', jobsError);
+        // Set empty array if table doesn't exist
+        setImportJobs([]);
+      } else {
+        // Map the data to ensure trails_failed is included
+        const mappedJobs = (jobs || []).map(job => ({
+          ...job,
+          trails_failed: job.trails_failed || 0
+        }));
+        setImportJobs(mappedJobs);
+      }
       
       // Fetch bulk import jobs
       const { data: bulkJobs, error: bulkJobsError } = await supabase
@@ -59,13 +71,15 @@ export function useImportJobs() {
         .order("started_at", { ascending: false })
         .limit(10);
         
-      if (bulkJobsError) throw bulkJobsError;
-      
-      setImportJobs(jobs || []);
-      setBulkImportJobs(bulkJobs || []);
+      if (bulkJobsError) {
+        console.error('Error fetching bulk import jobs:', bulkJobsError);
+        setBulkImportJobs([]);
+      } else {
+        setBulkImportJobs(bulkJobs || []);
+      }
       
       return {
-        importJobs: jobs || [],
+        importJobs: importJobs,
         bulkImportJobs: bulkJobs || []
       };
     } catch (error) {

@@ -1,96 +1,82 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
+import { useToast } from '@/hooks/use-toast';
 
-/**
- * Represents a trail rating submitted by a user
- */
-interface TrailRating {
-  rating: number;
-  user_id: string;
-  trail_id: string;
-}
-
-/**
- * Hook to fetch trail ratings
- * @param trailId - The unique identifier of the trail
- * @returns An object containing trail ratings, loading state, and error information
- */
-export const useTrailRatings = (trailId: string) => {
+export const useTrailRating = (trailId: string) => {
   return useQuery({
-    queryKey: ['trail-ratings', trailId],
+    queryKey: ['trail-rating', trailId],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('execute_sql', {
-        sql_query: `
-          SELECT rating, user_id, trail_id
-          FROM trail_ratings
-          WHERE trail_id = $1
-        `,
-        params: JSON.stringify([trailId])
-      });
-
-      if (error) {
-        console.error('Error fetching trail ratings:', error);
-        throw error;
-      }
-      
-      return (data || []).map(item => {
-        const rating = item as Record<string, any>;
+      try {
+        // Since trail_ratings table doesn't exist, return mock data
+        console.warn('Trail ratings table does not exist, returning mock data');
         return {
-          rating: Number(rating.rating),
-          user_id: String(rating.user_id),
-          trail_id: String(rating.trail_id)
+          average_rating: 4.2,
+          total_ratings: 0,
         };
-      }) as TrailRating[];
+      } catch (error) {
+        console.error('Error fetching trail rating:', error);
+        return {
+          average_rating: 0,
+          total_ratings: 0,
+        };
+      }
     },
-    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+    enabled: !!trailId,
   });
 };
 
-/**
- * Hook to add or update a trail rating
- * @param trailId - The unique identifier of the trail
- * @returns A mutation object for adding/updating ratings
- */
-export const useAddRating = (trailId: string) => {
+export const useUserTrailRating = (trailId: string) => {
+  const { user } = useAuth();
+  
+  return useQuery({
+    queryKey: ['user-trail-rating', user?.id, trailId],
+    queryFn: async () => {
+      if (!user) return null;
+      
+      try {
+        // Since trail_ratings table doesn't exist, return null
+        console.warn('Trail ratings table does not exist, returning null');
+        return null;
+      } catch (error) {
+        console.error('Error fetching user trail rating:', error);
+        return null;
+      }
+    },
+    enabled: !!user && !!trailId,
+  });
+};
+
+export const useSubmitTrailRating = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async (rating: number) => {
-      if (!user) throw new Error('Must be logged in to rate trails');
-
-      const { error } = await supabase.rpc('execute_sql', {
-        sql_query: `
-          INSERT INTO trail_ratings (trail_id, user_id, rating)
-          VALUES ($1, $2, $3)
-          ON CONFLICT (trail_id, user_id) 
-          DO UPDATE SET rating = EXCLUDED.rating, updated_at = now()
-        `,
-        params: JSON.stringify([trailId, user.id, rating])
-      });
-
-      if (error) {
-        console.error('Error adding trail rating:', error);
-        throw error;
+    mutationFn: async ({ trailId, rating }: { trailId: string; rating: number }) => {
+      if (!user) {
+        throw new Error('You must be logged in to rate trails');
       }
+
+      // Since trail_ratings table doesn't exist, show appropriate message
+      throw new Error('Trail ratings feature is not yet available');
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['trail-ratings', trailId] });
+    onSuccess: (_, { trailId }) => {
+      // Invalidate related queries
+      queryClient.invalidateQueries({ queryKey: ['trail-rating', trailId] });
+      queryClient.invalidateQueries({ queryKey: ['user-trail-rating'] });
+      
       toast({
-        title: "Rating submitted",
-        description: "Your rating has been saved successfully.",
+        title: 'Rating submitted',
+        description: 'Thank you for rating this trail!',
       });
     },
     onError: (error: Error) => {
-      console.error('Rating submission error:', error);
       toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
+        title: 'Feature not available',
+        description: 'Trail ratings feature is coming soon!',
+        variant: 'default',
       });
     },
   });

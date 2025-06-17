@@ -1,71 +1,56 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Trail } from '@/types/trails';
 
-export const useSimilarTrails = (trailId: string, currentTrail?: Trail) => {
+export interface Trail {
+  id: string;
+  name: string;
+  location: string;
+  difficulty: string;
+  distance: number;
+  elevation_gain: number;
+  description?: string;
+  country?: string;
+  imageUrl?: string;
+  tags?: string[];
+  likes?: number;
+}
+
+export const useSimilarTrails = (trailId: string, limit = 6) => {
   return useQuery({
     queryKey: ['similar-trails', trailId],
     queryFn: async (): Promise<Trail[]> => {
-      if (!currentTrail) return [];
+      try {
+        const { data, error } = await supabase
+          .from('trails')
+          .select('*')
+          .neq('id', trailId)
+          .limit(limit);
 
-      // First try to get similar trails from the database
-      const { data: dbTrails, error } = await supabase
-        .from('trails')
-        .select('*')
-        .neq('id', trailId)
-        .eq('difficulty', currentTrail.difficulty)
-        .limit(6);
-
-      if (error) {
-        console.error('Error fetching similar trails:', error);
-      }
-
-      if (dbTrails && dbTrails.length > 0) {
-        return dbTrails as Trail[];
-      }
-
-      // Fallback to mock similar trails if no database trails found
-      const mockSimilarTrails: Trail[] = [
-        {
-          id: 'similar-1',
-          name: 'Pine Ridge Trail',
-          location: 'Similar National Park',
-          imageUrl: '/placeholder.svg',
-          difficulty: currentTrail.difficulty,
-          length: currentTrail.length * 0.8,
-          elevation: currentTrail.elevation,
-          elevation_gain: currentTrail.elevation_gain * 0.9,
-          tags: [],
-          likes: Math.floor(Math.random() * 200) + 50,
-          coordinates: [
-            (currentTrail.coordinates?.[0] || 0) + 0.1,
-            (currentTrail.coordinates?.[1] || 0) + 0.1
-          ] as [number, number],
-          description: 'A beautiful trail similar to your current selection.'
-        },
-        {
-          id: 'similar-2',
-          name: 'Valley View Path',
-          location: 'Nearby State Park',
-          imageUrl: '/placeholder.svg',
-          difficulty: currentTrail.difficulty,
-          length: currentTrail.length * 1.2,
-          elevation: currentTrail.elevation,
-          elevation_gain: currentTrail.elevation_gain * 1.1,
-          tags: [],
-          likes: Math.floor(Math.random() * 200) + 50,
-          coordinates: [
-            (currentTrail.coordinates?.[0] || 0) - 0.1,
-            (currentTrail.coordinates?.[1] || 0) - 0.1
-          ] as [number, number],
-          description: 'Another great option with similar characteristics.'
+        if (error) {
+          console.error('Error fetching similar trails:', error);
+          return [];
         }
-      ];
 
-      return mockSimilarTrails;
+        // Transform database records to Trail interface
+        return (data || []).map(trail => ({
+          id: trail.id,
+          name: trail.name,
+          location: trail.location,
+          difficulty: trail.difficulty,
+          distance: trail.distance,
+          elevation_gain: trail.elevation_gain,
+          description: trail.description,
+          country: trail.country,
+          imageUrl: trail.image_url || undefined,
+          tags: [], // Default empty array since tags might not be in database
+          likes: 0, // Default to 0 since likes might not be in database
+        }));
+      } catch (error) {
+        console.error('Error fetching similar trails:', error);
+        return [];
+      }
     },
-    enabled: !!currentTrail,
-    staleTime: 10 * 60 * 1000, // 10 minutes
+    enabled: !!trailId,
   });
 };

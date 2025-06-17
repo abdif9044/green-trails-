@@ -22,47 +22,60 @@ export function ThemeProvider({
   defaultTheme?: Theme
   storageKey?: string
 }) {
-  const [theme, setTheme] = React.useState<Theme>(
-    () => (localStorage.getItem(storageKey) as Theme) || defaultTheme
-  )
-
-  const [resolvedTheme, setResolvedTheme] = React.useState<"dark" | "light">(() => {
-    const storedTheme = localStorage.getItem(storageKey) as Theme | null
-    if (storedTheme && storedTheme !== "system") {
-      return storedTheme
+  // Initialize theme from localStorage with fallback
+  const getInitialTheme = (): Theme => {
+    try {
+      const stored = localStorage.getItem(storageKey) as Theme | null
+      return stored || defaultTheme
+    } catch {
+      return defaultTheme
     }
-    return window.matchMedia("(prefers-color-scheme: dark)").matches
-      ? "dark"
-      : "light"
-  })
+  }
+
+  // Initialize resolved theme
+  const getInitialResolvedTheme = (): "dark" | "light" => {
+    try {
+      const stored = localStorage.getItem(storageKey) as Theme | null
+      if (stored && stored !== "system") {
+        return stored
+      }
+      return window.matchMedia("(prefers-color-scheme: dark)").matches
+        ? "dark"
+        : "light"
+    } catch {
+      return "light"
+    }
+  }
+
+  const [theme, setThemeState] = React.useState<Theme>(getInitialTheme)
+  const [resolvedTheme, setResolvedTheme] = React.useState<"dark" | "light">(getInitialResolvedTheme)
 
   React.useEffect(() => {
     const root = window.document.documentElement
     root.classList.remove("light", "dark")
 
-    let effectiveTheme: Theme | "dark" | "light" = theme
-    if (theme === "system") {
-      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
-        .matches
-        ? "dark"
-        : "light"
-      effectiveTheme = systemTheme
-    }
+    let effectiveTheme: "dark" | "light" = theme === "system" 
+      ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
+      : theme
 
-    setResolvedTheme(effectiveTheme as "dark" | "light")
+    setResolvedTheme(effectiveTheme)
     root.classList.add(effectiveTheme)
   }, [theme])
 
-  const handleSetTheme = (newTheme: Theme) => {
-    localStorage.setItem(storageKey, newTheme)
-    setTheme(newTheme)
-  }
+  const setTheme = React.useCallback((newTheme: Theme) => {
+    try {
+      localStorage.setItem(storageKey, newTheme)
+    } catch {
+      // Ignore localStorage errors
+    }
+    setThemeState(newTheme)
+  }, [storageKey])
 
-  const value = {
+  const value = React.useMemo(() => ({
     theme,
-    setTheme: handleSetTheme,
+    setTheme,
     resolvedTheme,
-  }
+  }), [theme, setTheme, resolvedTheme])
 
   return (
     <ThemeProviderContext.Provider value={value}>

@@ -14,7 +14,7 @@ export interface ImportJob {
   trails_processed: number;
   trails_added: number;
   trails_updated: number;
-  trails_failed: number; // We'll ensure this is always present
+  trails_failed: number;
   error_message: string | null;
 }
 
@@ -56,10 +56,10 @@ export function useImportJobs() {
           console.error('Error fetching import jobs:', jobsError);
           setImportJobs([]);
         } else {
-          // Map the data and ensure trails_failed is included (fallback to 0 if missing)
+          // Map the data and ensure trails_failed is included
           const mappedJobs = (jobs || []).map(job => ({
             ...job,
-            trails_failed: job.trails_failed || 0 // Fallback for missing column
+            trails_failed: job.trails_failed ?? 0 // Use nullish coalescing
           })) as ImportJob[];
           setImportJobs(mappedJobs);
         }

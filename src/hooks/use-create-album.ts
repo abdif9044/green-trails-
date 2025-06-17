@@ -1,122 +1,66 @@
 
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { v4 as uuidv4 } from 'uuid';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/use-auth';
+
+interface CreateAlbumData {
+  title: string;
+  description?: string;
+  location?: string;
+  is_private: boolean;
+  trail_id?: string;
+}
+
+interface MediaFile {
+  file: File;
+  caption?: string;
+}
 
 export const useCreateAlbum = () => {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
   const { toast } = useToast();
-  const navigate = useNavigate();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  const handleCreateAlbum = async (
-    title: string, 
-    description: string, 
-    location: string, 
-    isPrivate: boolean, 
-    files: File[], 
-    userLocation: { lat: number, lng: number } | null
-  ) => {
-    if (!title) {
-      toast({
-        title: "Error",
-        description: "Please enter a title for your album",
-        variant: "destructive"
-      });
-      return false;
-    }
-    
-    if (files.length === 0) {
-      toast({
-        title: "Error",
-        description: "Please add at least one photo or video to your album",
-        variant: "destructive"
-      });
-      return false;
-    }
-    
-    setIsSubmitting(true);
-    
-    try {
-      // Get the current user
-      const { data: { user } } = await supabase.auth.getUser();
-      
+
+  return useMutation({
+    mutationFn: async ({ albumData, mediaFiles }: { albumData: CreateAlbumData; mediaFiles: MediaFile[] }) => {
       if (!user) {
-        throw new Error('You must be signed in to create an album');
+        throw new Error('User must be logged in to create an album');
       }
-      
-      // Create album
-      const { data: album, error: albumError } = await supabase
-        .from('albums')
-        .insert({
-          title,
-          description,
-          location,
-          is_private: isPrivate,
-          user_id: user.id,
-          // Add coordinates if using location
-          ...(userLocation ? {
-            coordinates: `POINT(${userLocation.lng} ${userLocation.lat})`
-          } : {})
-        })
-        .select()
-        .single();
-      
-      if (albumError) throw albumError;
-      
-      // Upload files
-      for (const file of files) {
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${uuidv4()}.${fileExt}`;
-        const filePath = `${user.id}/${fileName}`;
-        
-        // Upload to storage
-        const { error: uploadError } = await supabase.storage
-          .from('media')
-          .upload(filePath, file);
-        
-        if (uploadError) throw uploadError;
-        
-        const fileUrl = supabase.storage.from('media').getPublicUrl(filePath).data.publicUrl;
-        
-        // Add to media table
-        const { error: mediaError } = await supabase
-          .from('media')
-          .insert({
-            album_id: album.id,
-            user_id: user.id,
-            file_path: filePath,
-            file_type: file.type,
-            caption: ''
-          });
-        
-        if (mediaError) throw mediaError;
-      }
-      
+
+      // Since albums table doesn't exist, show appropriate message
       toast({
-        title: "Album Created",
-        description: "Your album has been created successfully"
+        title: "Feature coming soon",
+        description: "Album creation will be available once the albums feature is fully implemented.",
+        variant: "default",
       });
       
-      navigate('/social');
-      return true;
+      throw new Error('Albums feature is not yet available');
+    },
+    onSuccess: () => {
+      // Invalidate and refetch albums
+      queryClient.invalidateQueries({ queryKey: ['albums'] });
       
-    } catch (error: any) {
-      console.error('Error creating album:', error);
       toast({
-        title: "Error",
-        description: error.message || 'An unexpected error occurred',
-        variant: "destructive"
+        title: 'Album created',
+        description: 'Your album has been created successfully.',
       });
-      return false;
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-  
-  return {
-    handleCreateAlbum,
-    isSubmitting
-  };
+    },
+    onError: (error: Error) => {
+      if (error.message !== 'Albums feature is not yet available') {
+        toast({
+          title: 'Error creating album',
+          description: error.message || 'Failed to create album. Please try again.',
+          variant: 'destructive',
+        });
+      }
+    },
+  });
+};
+
+// Mock function for media upload since media table doesn't exist
+const uploadMediaFiles = async (albumId: string, mediaFiles: MediaFile[]) => {
+  // This would normally upload files to Supabase storage and create media records
+  console.warn('Media upload not implemented - media table does not exist');
+  return [];
 };

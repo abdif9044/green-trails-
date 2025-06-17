@@ -11,7 +11,6 @@ export interface ImportJob {
   trails_processed: number;
   trails_added: number;
   trails_updated: number;
-  trails_failed: number;
   error_message?: string;
   bulk_job_id?: string;
 }
@@ -42,7 +41,6 @@ export function useImportJobs() {
           trails_processed: job.trails_processed || 0,
           trails_added: job.trails_added || 0,
           trails_updated: job.trails_updated || 0,
-          trails_failed: job.trails_failed || 0,
           error_message: job.error_message,
           bulk_job_id: job.bulk_job_id
         }));

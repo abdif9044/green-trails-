@@ -5,13 +5,17 @@ import { Database } from '@/integrations/supabase/types';
 
 type ParkingSpot = Database['public']['Tables']['parking_spots']['Row'];
 
-export const useParkingSpots = () => {
+export const useParkingSpots = (trailId?: string) => {
   return useQuery({
-    queryKey: ['parking-spots'],
+    queryKey: trailId ? ['parking-spots', trailId] : ['parking-spots'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('parking_spots')
-        .select('*');
+      let query = supabase.from('parking_spots').select('*');
+      
+      if (trailId) {
+        query = query.eq('trail_id', trailId);
+      }
+      
+      const { data, error } = await query;
       
       if (error) throw error;
       return data as ParkingSpot[];

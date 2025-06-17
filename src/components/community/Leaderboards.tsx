@@ -1,288 +1,135 @@
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { Trophy, Mountain, MapPin, Calendar, TrendingUp } from 'lucide-react';
+import React from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/use-auth';
-import { Database } from '@/integrations/supabase/types';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Trophy, Medal, Award } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
-type UserStats = Database['public']['Tables']['user_stats']['Row'];
-type Profile = Database['public']['Tables']['profiles']['Row'];
-
-interface LeaderboardEntry extends UserStats {
-  profiles: Profile | null;
+interface LeaderboardEntry {
   rank: number;
+  user_id: string;
+  total_distance: number;
+  total_elevation: number;
+  total_trails: number;
+  current_streak: number;
+  profiles: {
+    full_name: string;
+    avatar_url: string;
+    username: string;
+  } | null;
 }
 
 const Leaderboards: React.FC = () => {
-  const [leaderboards, setLeaderboards] = useState<{
-    trails: LeaderboardEntry[];
-    distance: LeaderboardEntry[];
-    elevation: LeaderboardEntry[];
-    streak: LeaderboardEntry[];
-  }>({
-    trails: [],
-    distance: [],
-    elevation: [],
-    streak: []
-  });
-  const [isLoading, setIsLoading] = useState(true);
-  const [userRanks, setUserRanks] = useState<Record<string, number>>({});
-  const { user } = useAuth();
+  const { data: leaderboard = [], isLoading } = useQuery({
+    queryKey: ['leaderboard'],
+    queryFn: async (): Promise<LeaderboardEntry[]> => {
+      const { data, error } = await supabase
+        .from('user_stats')
+        .select(`
+          *,
+          profiles (
+            full_name,
+            avatar_url,
+            username
+          )
+        `)
+        .order('total_distance', { ascending: false })
+        .limit(10);
 
-  useEffect(() => {
-    fetchLeaderboards().finally(() => setIsLoading(false));
-  }, []);
-
-  const fetchLeaderboards = async () => {
-    try {
-      // Fetch different leaderboard types
-      const [trailsData, distanceData, elevationData, streakData] = await Promise.all([
-        fetchLeaderboard('total_trails'),
-        fetchLeaderboard('total_distance'),
-        fetchLeaderboard('total_elevation'),
-        fetchLeaderboard('current_streak')
-      ]);
-
-      setLeaderboards({
-        trails: trailsData,
-        distance: distanceData,
-        elevation: elevationData,
-        streak: streakData
-      });
-
-      // Set user ranks
-      if (user) {
-        setUserRanks({
-          trails: trailsData.find(entry => entry.user_id === user.id)?.rank || 0,
-          distance: distanceData.find(entry => entry.user_id === user.id)?.rank || 0,
-          elevation: elevationData.find(entry => entry.user_id === user.id)?.rank || 0,
-          streak: streakData.find(entry => entry.user_id === user.id)?.rank || 0
-        });
+      if (error) {
+        console.error('Error fetching leaderboard:', error);
+        throw error;
       }
-    } catch (error) {
-      console.error('Error fetching leaderboards:', error);
+
+      return (data || []).map((entry, index) => ({
+        rank: index + 1,
+        user_id: entry.user_id || '',
+        total_distance: entry.total_distance || 0,
+        total_elevation: entry.total_elevation || 0,
+        total_trails: entry.total_trails || 0,
+        current_streak: entry.current_streak || 0,
+        profiles: Array.isArray(entry.profiles) ? entry.profiles[0] : entry.profiles
+      }));
+    },
+  });
+
+  const getRankIcon = (rank: number) => {
+    switch (rank) {
+      case 1:
+        return <Trophy className="h-6 w-6 text-yellow-500" />;
+      case 2:
+        return <Medal className="h-6 w-6 text-gray-400" />;
+      case 3:
+        return <Award className="h-6 w-6 text-amber-600" />;
+      default:
+        return <span className="text-lg font-bold text-gray-500">#{rank}</span>;
     }
   };
 
-  const fetchLeaderboard = async (orderBy: string): Promise<LeaderboardEntry[]> => {
-    const { data, error } = await supabase
-      .from('user_stats')
-      .select(`
-        *,
-        profiles(*)
-      `)
-      .order(orderBy, { ascending: false })
-      .limit(50);
-
-    if (error) throw error;
-
-    return (data || []).map((entry, index) => ({
-      ...entry,
-      rank: index + 1
-    }));
-  };
-
-  const getRankBadgeColor = (rank: number) => {
-    if (rank === 1) return 'bg-yellow-500 text-white';
-    if (rank === 2) return 'bg-gray-400 text-white';
-    if (rank === 3) return 'bg-amber-600 text-white';
-    if (rank <= 10) return 'bg-blue-500 text-white';
-    return 'bg-gray-200 text-gray-700';
-  };
-
-  const getRankIcon = (rank: number) => {
-    if (rank <= 3) return <Trophy className="h-4 w-4" />;
-    return <TrendingUp className="h-4 w-4" />;
-  };
-
-  const formatDistance = (distance: number) => {
-    return `${distance.toFixed(1)} mi`;
-  };
-
-  const formatElevation = (elevation: number) => {
-    return `${elevation.toLocaleString()} ft`;
-  };
-
-  const LeaderboardTable = ({ entries, type }: { entries: LeaderboardEntry[], type: string }) => (
-    <div className="space-y-2">
-      {entries.map((entry) => {
-        const userName = entry.profiles?.full_name || entry.profiles?.username || 'Anonymous User';
-        const isCurrentUser = user?.id === entry.user_id;
-        
-        return (
-          <div 
-            key={entry.id}
-            className={`flex items-center space-x-3 p-3 rounded-lg transition-colors ${
-              isCurrentUser ? 'bg-green-50 border border-green-200' : 'hover:bg-gray-50'
-            }`}
-          >
-            <div className="flex items-center space-x-2">
-              <Badge className={`${getRankBadgeColor(entry.rank)} min-w-[2rem] justify-center`}>
-                {entry.rank <= 3 ? getRankIcon(entry.rank) : entry.rank}
-              </Badge>
-            </div>
-            
-            <Avatar className="h-8 w-8">
-              <AvatarImage src={entry.profiles?.avatar_url || undefined} />
-              <AvatarFallback className="text-xs">
-                {userName[0].toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            
-            <div className="flex-1">
-              <p className="font-medium text-sm">{userName}</p>
-              {isCurrentUser && (
-                <p className="text-xs text-green-600">You</p>
-              )}
-            </div>
-            
-            <div className="text-right">
-              <p className="font-bold text-sm">
-                {type === 'trails' && entry.total_trails}
-                {type === 'distance' && formatDistance(entry.total_distance || 0)}
-                {type === 'elevation' && formatElevation(entry.total_elevation || 0)}
-                {type === 'streak' && `${entry.current_streak} days`}
-              </p>
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Card key={i} className="animate-pulse">
-            <CardHeader>
-              <div className="h-6 bg-gray-300 rounded w-1/2"></div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {Array.from({ length: 5 }).map((_, j) => (
-                  <div key={j} className="flex items-center space-x-3">
-                    <div className="h-8 w-8 bg-gray-300 rounded-full"></div>
-                    <div className="flex-1 h-4 bg-gray-300 rounded"></div>
-                    <div className="h-4 w-16 bg-gray-300 rounded"></div>
-                  </div>
-                ))}
+      <Card>
+        <CardHeader>
+          <CardTitle>Leaderboard</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex items-center space-x-4">
+                <Skeleton className="h-10 w-10 rounded-full" />
+                <div className="space-y-2 flex-1">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-3 w-24" />
+                </div>
+                <Skeleton className="h-6 w-16" />
               </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="text-center">
-        <h1 className="text-3xl font-bold mb-2">Community Leaderboards</h1>
-        <p className="text-gray-600">See how you stack up against other adventurers</p>
-      </div>
-
-      {/* User's Ranks Summary */}
-      {user && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Trophy className="h-5 w-5" />
-              Your Rankings
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center">
-                <p className="text-2xl font-bold text-green-600">#{userRanks.trails || '--'}</p>
-                <p className="text-sm text-gray-600">Trails Completed</p>
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Trophy className="h-5 w-5" />
+          Leaderboard
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          {leaderboard.map((entry) => (
+            <div key={entry.user_id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+              <div className="flex items-center space-x-3">
+                <div className="flex items-center justify-center w-8">
+                  {getRankIcon(entry.rank)}
+                </div>
+                <Avatar className="h-10 w-10">
+                  <AvatarImage src={entry.profiles?.avatar_url || ''} />
+                  <AvatarFallback>
+                    {entry.profiles?.full_name?.charAt(0) || 'U'}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="font-medium">{entry.profiles?.full_name || 'Unknown User'}</p>
+                  <p className="text-sm text-muted-foreground">
+                    @{entry.profiles?.username || 'unknown'}
+                  </p>
+                </div>
               </div>
-              <div className="text-center">
-                <p className="text-2xl font-bold text-blue-600">#{userRanks.distance || '--'}</p>
-                <p className="text-sm text-gray-600">Total Distance</p>
-              </div>
-              <div className="text-center">
-                <p className="text-2xl font-bold text-purple-600">#{userRanks.elevation || '--'}</p>
-                <p className="text-sm text-gray-600">Elevation Gained</p>
-              </div>
-              <div className="text-center">
-                <p className="text-2xl font-bold text-orange-600">#{userRanks.streak || '--'}</p>
-                <p className="text-sm text-gray-600">Current Streak</p>
+              <div className="text-right">
+                <p className="font-semibold">{entry.total_distance.toFixed(1)} mi</p>
+                <p className="text-sm text-muted-foreground">{entry.total_trails} trails</p>
               </div>
             </div>
-          </CardContent>
-        </Card>
-      )}
-
-      <Tabs defaultValue="trails" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="trails" className="flex items-center gap-1">
-            <Mountain className="h-4 w-4" />
-            Trails
-          </TabsTrigger>
-          <TabsTrigger value="distance" className="flex items-center gap-1">
-            <MapPin className="h-4 w-4" />
-            Distance
-          </TabsTrigger>
-          <TabsTrigger value="elevation" className="flex items-center gap-1">
-            <TrendingUp className="h-4 w-4" />
-            Elevation
-          </TabsTrigger>
-          <TabsTrigger value="streak" className="flex items-center gap-1">
-            <Calendar className="h-4 w-4" />
-            Streak
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="trails">
-          <Card>
-            <CardHeader>
-              <CardTitle>Most Trails Completed</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <LeaderboardTable entries={leaderboards.trails} type="trails" />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="distance">
-          <Card>
-            <CardHeader>
-              <CardTitle>Longest Total Distance</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <LeaderboardTable entries={leaderboards.distance} type="distance" />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="elevation">
-          <Card>
-            <CardHeader>
-              <CardTitle>Highest Total Elevation</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <LeaderboardTable entries={leaderboards.elevation} type="elevation" />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="streak">
-          <Card>
-            <CardHeader>
-              <CardTitle>Longest Current Streak</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <LeaderboardTable entries={leaderboards.streak} type="streak" />
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-    </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

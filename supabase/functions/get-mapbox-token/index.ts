@@ -14,7 +14,7 @@ serve(async (req) => {
 
   try {
     // Get the Mapbox token from environment variables
-    const token = Deno.env.get('MAPBOX_ACCESS_TOKEN') || 'pk.eyJ1IjoiZGVtby1ncmVlbnRyYWlscyIsImEiOiJjbHdnYW9sdTAwbmpvMmp0ZWJvNnQ2cXdxIn0.F7uYVxm9vBqBRdlSIkd4Kg';
+    const token = Deno.env.get('MAPBOX_ACCESS_TOKEN') || 'pk.eyJ1IjoiZ3Ryb2FtaWUiLCJhIjoiY21iNzF1YjltMDY4MjJubjVsMm4wbml6eiJ9.HTW9ugjeNZTbK9mafphIQQ';
     
     // Return the token
     return new Response(

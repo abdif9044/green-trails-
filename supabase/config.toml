@@ -1,1 +1,52 @@
+
 project_id = "egmshbdgldabocvalrxo"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[auth]
+enabled = true
+port = 54324
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["https://localhost:3000"]
+jwt_expiry = 3600
+enable_signup = true
+
+[edge_runtime]
+enabled = true
+port = 54323
+
+[[edge_runtime.policies]]
+path = "/functions/create-missing-tables"
+allowed_origins = ["*"]
+
+[[edge_runtime.policies]]
+path = "/functions/get-mapbox-token"
+allowed_origins = ["*"]
+
+[[edge_runtime.policies]]
+path = "/functions/get-weather-key"
+allowed_origins = ["*"]
+
+[[edge_runtime.policies]]
+path = "/functions/get-weather"
+allowed_origins = ["*"]
+
+[[edge_runtime.policies]]
+path = "/functions/get-weather-forecast"
+allowed_origins = ["*"]
+
+[[edge_runtime.policies]]
+path = "/functions/setup-weather-tables"
+allowed_origins = ["*"]
+
+[db]
+port = 54322
+
+[studio]
+enabled = true
+port = 54323

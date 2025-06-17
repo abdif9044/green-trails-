@@ -10,17 +10,9 @@ export const useAlbumLikeCount = (albumId: string) => {
     queryKey: ['albumLikes', albumId],
     queryFn: async () => {
       try {
-        // Try to query likes table with a function call since the table may not exist
-        const { data, error } = await supabase
-          .rpc('get_album_like_count', { album_id: albumId })
-          .maybeSingle();
-          
-        if (error) {
-          console.warn('Likes table may not exist:', error);
-          return 0;
-        }
-        
-        return data?.count || 0;
+        // Since likes table doesn't exist, return 0 as fallback
+        console.warn('Likes table does not exist, returning 0');
+        return 0;
       } catch (error) {
         console.warn('Error fetching like count, table may not exist:', error);
         return 0;
@@ -40,20 +32,9 @@ export const useHasLikedAlbum = (albumId: string) => {
       if (!user) return false;
       
       try {
-        // Try to query likes table with a function call since the table may not exist
-        const { data, error } = await supabase
-          .rpc('check_user_liked_album', { 
-            album_id: albumId, 
-            user_id: user.id 
-          })
-          .maybeSingle();
-          
-        if (error) {
-          console.warn('Likes table may not exist:', error);
-          return false;
-        }
-        
-        return data?.liked || false;
+        // Since likes table doesn't exist, return false as fallback
+        console.warn('Likes table does not exist, returning false');
+        return false;
       } catch (error) {
         console.warn('Error checking if user liked album, table may not exist:', error);
         return false;
@@ -75,24 +56,8 @@ export const useToggleAlbumLike = () => {
         throw new Error('You must be logged in to like albums');
       }
       
-      try {
-        // Try to use a function call to handle likes since the table may not exist
-        const { data, error } = await supabase
-          .rpc('toggle_album_like', {
-            album_id: albumId,
-            user_id: user.id
-          });
-          
-        if (error) {
-          console.warn('Likes functionality not available:', error);
-          throw new Error('Likes functionality is not yet available');
-        }
-        
-        return data;
-      } catch (error) {
-        console.warn('Error toggling like, table may not exist:', error);
-        throw new Error('Likes functionality is not yet available');
-      }
+      // Since likes table doesn't exist, throw appropriate error
+      throw new Error('Likes functionality is not yet available');
     },
     onSuccess: (result) => {
       // Invalidate and refetch related queries

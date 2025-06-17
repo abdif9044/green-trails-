@@ -24,28 +24,18 @@ export function useTrailDataSources() {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  // Function to load data sources with fallback
+  // Function to load data sources with fallback when table doesn't exist
   const loadDataSources = async () => {
     setLoading(true);
     try {
-      // Try to query trail_data_sources table
-      const { data: sources, error: sourcesError } = await supabase
-        .rpc('get_trail_data_sources')
-        .maybeSingle();
-        
-      if (sourcesError || !sources) {
-        console.log('Trail data sources table does not exist yet, using fallbacks');
-        // Create fallback data sources
-        const fallbackSources = createFallbackDataSources();
-        setDataSources(fallbackSources);
-        return fallbackSources;
-      }
-      
-      setDataSources(sources || []);
-      return sources || [];
+      // Since trail_data_sources table doesn't exist, use fallback data
+      console.log('Trail data sources table does not exist, using fallback data');
+      const fallbackSources = createFallbackDataSources();
+      setDataSources(fallbackSources);
+      return fallbackSources;
     } catch (error) {
       console.error('Error loading data sources:', error);
-      // Use fallback data sources if the table doesn't exist
+      // Use fallback data sources if any error occurs
       const fallbackSources = createFallbackDataSources();
       setDataSources(fallbackSources);
       return fallbackSources;
@@ -105,11 +95,9 @@ export function useTrailDataSources() {
     ];
   };
 
-  // Function to create default data sources (placeholder - actual implementation would need the table to exist)
+  // Function to create default data sources (placeholder implementation)
   const createDefaultDataSources = async () => {
     try {
-      // This would normally insert into the database, but since the table may not exist,
-      // we'll just show a success message and use the fallback sources
       toast({
         title: "Using fallback data sources",
         description: "Trail data sources are ready for import operations."

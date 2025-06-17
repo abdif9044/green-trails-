@@ -1,5 +1,5 @@
 
-import React from "react"
+import * as React from "react"
 
 type Theme = "dark" | "light" | "system"
 
@@ -23,17 +23,17 @@ export function ThemeProvider({
   storageKey?: string
 }) {
   // Initialize theme from localStorage with fallback
-  const getInitialTheme = (): Theme => {
+  const getInitialTheme = React.useCallback((): Theme => {
     try {
       const stored = localStorage.getItem(storageKey) as Theme | null
       return stored || defaultTheme
     } catch {
       return defaultTheme
     }
-  }
+  }, [storageKey, defaultTheme]);
 
   // Initialize resolved theme
-  const getInitialResolvedTheme = (): "dark" | "light" => {
+  const getInitialResolvedTheme = React.useCallback((): "dark" | "light" => {
     try {
       const stored = localStorage.getItem(storageKey) as Theme | null
       if (stored && stored !== "system") {
@@ -45,7 +45,7 @@ export function ThemeProvider({
     } catch {
       return "light"
     }
-  }
+  }, [storageKey]);
 
   const [theme, setThemeState] = React.useState<Theme>(getInitialTheme)
   const [resolvedTheme, setResolvedTheme] = React.useState<"dark" | "light">(getInitialResolvedTheme)

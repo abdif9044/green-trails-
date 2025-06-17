@@ -41,7 +41,14 @@ const root = createRoot(container);
 // Auto-bootstrap runs when app starts - no user action needed
 import('./hooks/use-auto-trail-bootstrap').then(({ useAutoTrailBootstrap }) => {
   console.log('🚀 Auto trail bootstrap system loaded');
+}).catch(error => {
+  console.warn('Auto trail bootstrap failed to load:', error);
 });
+
+// Ensure React is available globally before rendering
+if (typeof React === 'undefined') {
+  throw new Error('React is not available');
+}
 
 root.render(
   <React.StrictMode>

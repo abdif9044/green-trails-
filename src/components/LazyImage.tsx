@@ -1,11 +1,12 @@
 
-import React, { useState, useEffect } from "react";
-import { Skeleton } from "@/components/ui/skeleton";
-import { ImageIcon } from "lucide-react";
-import { isValidImageSource, getNatureFallbackImage } from "@/utils/image-validators";
+import React from "react";
 import { NATURE_IMAGES } from "@/utils/image-constants";
 import { useLazyLoad } from "@/hooks/use-lazy-load";
 import { useWebPSupport } from "@/hooks/use-webp-support";
+import { useImageLoading } from "@/hooks/use-image-loading";
+import { getImageSource, createContainerStyle } from "@/utils/image-source-utils";
+import { LazyImageStates } from "./LazyImageStates";
+import { LazyImagePicture } from "./LazyImagePicture";
 
 export interface LazyImageProps {
   src: string;
@@ -30,81 +31,44 @@ export const LazyImage: React.FC<LazyImageProps> = ({
   fallbackImage = NATURE_IMAGES.default,
   objectFit = "cover",
 }) => {
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [hasError, setHasError] = useState(false);
   const { isInView, elementRef } = useLazyLoad();
   const supportsWebP = useWebPSupport();
-  
-  // Reset states when src changes
-  useEffect(() => {
-    setIsLoaded(false);
-    setHasError(false);
-  }, [src]);
+  const { isLoaded, hasError, handleLoad, handleError } = useImageLoading({ src, onLoad });
 
-  // Handle image load
-  const handleLoad = () => {
-    setIsLoaded(true);
-    if (onLoad) onLoad();
-  };
-
-  // Handle image error
-  const handleError = () => {
-    console.warn(`Image failed to load: ${src}`);
-    setHasError(true);
-  };
+  // Get the actual image source to display
+  const imageSource = getImageSource({
+    src,
+    alt,
+    placeholderSrc,
+    fallbackImage,
+    isInView,
+    hasError
+  });
 
   // Style for the container to prevent layout shifts
-  const containerStyle: React.CSSProperties = {
-    position: "relative",
-    width: width ? (typeof width === 'number' ? `${width}px` : width) : "100%",
-    height: height ? (typeof height === 'number' ? `${height}px` : height) : "auto",
-    overflow: "hidden",
-  };
-
-  // Get actual image source to display
-  const getImageSource = () => {
-    // If not in view yet, use placeholder
-    if (!isInView) return placeholderSrc;
-    
-    // If we've already detected an error or the source is invalid, use fallback
-    if (hasError || !isValidImageSource(src)) {
-      return getNatureFallbackImage(alt, fallbackImage);
-    }
-    
-    // Source is valid and we're in view
-    return src;
-  };
+  const containerStyle = createContainerStyle(width, height);
 
   return (
     <div style={containerStyle} ref={elementRef}>
-      {!isLoaded && <Skeleton className="absolute inset-0" />}
-      
-      {(hasError || !isValidImageSource(src)) && !isLoaded && (
-        <div className="absolute inset-0 flex items-center justify-center bg-muted">
-          <ImageIcon className="h-8 w-8 text-muted-foreground" />
-        </div>
-      )}
+      <LazyImageStates 
+        isLoaded={isLoaded}
+        hasError={hasError}
+        src={src}
+      />
       
       {isInView && (
-        <picture>
-          {supportsWebP && isValidImageSource(src) && (
-            <source 
-              srcSet={src.replace(/\.(jpg|jpeg|png)$/, '.webp')} 
-              type="image/webp" 
-            />
-          )}
-          <img
-            src={getImageSource()}
-            alt={alt}
-            className={`${className} ${isLoaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300`}
-            style={{ objectFit }}
-            onLoad={handleLoad}
-            onError={handleError}
-            loading="lazy"
-            width={width}
-            height={height}
-          />
-        </picture>
+        <LazyImagePicture
+          src={imageSource}
+          alt={alt}
+          className={className}
+          isLoaded={isLoaded}
+          objectFit={objectFit}
+          width={width}
+          height={height}
+          supportsWebP={supportsWebP}
+          onLoad={handleLoad}
+          onError={handleError}
+        />
       )}
     </div>
   );

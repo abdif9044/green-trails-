@@ -18,7 +18,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Check, Clock, Loader2, X } from "lucide-react";
 import { formatDistanceToNow } from 'date-fns';
-import { ImportJob } from '@/hooks/useTrailImport';
+import { ImportJob } from '@/hooks/trail-import/useImportJobs';
 
 interface ImportJobsTabProps {
   importJobs: ImportJob[];
@@ -63,7 +63,7 @@ const ImportJobsTab: React.FC<ImportJobsTabProps> = ({
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Added</TableHead>
                   <TableHead className="text-right">Updated</TableHead>
-                  <TableHead className="text-right">Failed</TableHead>
+                  <TableHead className="text-right">Processed</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -105,7 +105,7 @@ const ImportJobsTab: React.FC<ImportJobsTabProps> = ({
                       </TableCell>
                       <TableCell className="text-right">{job.trails_added}</TableCell>
                       <TableCell className="text-right">{job.trails_updated}</TableCell>
-                      <TableCell className="text-right">{job.trails_failed}</TableCell>
+                      <TableCell className="text-right">{job.trails_processed}</TableCell>
                     </TableRow>
                   ))
                 )}

@@ -6,15 +6,15 @@ export interface TrailDataSource {
   endpoint: string;
   type: string;
   enabled: boolean;
-  config?: any;
   source_type: string;
-  url: string | null;
-  country: string | null;
+  url: string;
+  country: string;
   state_province: string | null;
-  region: string | null;
+  region: string;
   last_synced: string | null;
   next_sync: string | null;
   is_active: boolean;
+  config: any;
   created_at: string;
   updated_at: string;
 }
@@ -28,7 +28,6 @@ export interface ImportJob {
   trails_processed: number;
   trails_added: number;
   trails_updated: number;
-  trails_failed: number;
   error_message?: string;
   bulk_job_id?: string;
 }
@@ -37,31 +36,35 @@ export interface BulkImportJob {
   id: string;
   total_trails_requested: number;
   total_sources: number;
-  status: string;
-  started_at: string;
-  completed_at?: string;
   trails_processed: number;
   trails_added: number;
   trails_updated: number;
   trails_failed: number;
+  status: string;
+  started_at: string;
+  completed_at?: string;
+  last_updated: string;
   config?: any;
   results?: any;
 }
 
-export interface BatchResult {
-  addedCount: number;
-  failedCount: number;
-  insertErrors: string[];
+export interface ImportProgress {
+  currentSource?: string;
+  processedSources: number;
+  totalSources: number;
+  processedTrails: number;
+  totalTrails: number;
+  errors: string[];
+  status: 'idle' | 'processing' | 'completed' | 'error';
 }
 
-export interface SourceResult {
-  source: string;
+export interface TrailImportResult {
   success: boolean;
-  trails_added: number;
-  trails_failed: number;
-  trails_processed: number;
-  success_rate: number;
-  error_details?: string[];
-  location?: string;
-  error?: string;
+  message: string;
+  data?: {
+    processed: number;
+    added: number;
+    updated: number;
+    failed: number;
+  };
 }

@@ -11,4 +11,4 @@ export {
   type UserPreferences,
   type TrailInteraction,
   type TrailScore
-} from './smart-recommendations';
+} from './smart-recommendations/index';

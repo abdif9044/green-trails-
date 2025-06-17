@@ -7,7 +7,6 @@ export class DatabaseSetupService {
     try {
       console.log('Checking database table setup...');
       
-      // Test a few key tables to see if they exist
       const { data: trailsTest } = await supabase
         .from('trails')
         .select('id')
@@ -55,12 +54,10 @@ export class DatabaseSetupService {
   static async setupBulkImportTables() {
     try {
       console.log('Setting up bulk import tables...');
-      // Tables should already exist via migrations
-      // This is a placeholder for any additional setup
-      return true;
+      return { success: true };
     } catch (error) {
       console.error('Error setting up bulk import tables:', error);
-      return false;
+      return { success: false };
     }
   }
 

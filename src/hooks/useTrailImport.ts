@@ -1,44 +1,6 @@
 
 import { useImportJobs } from './trail-import/useImportJobs';
-
-// Re-export types for backward compatibility
-export interface TrailDataSource {
-  id: string;
-  name: string;
-  description: string;
-  endpoint: string;
-  type: string;
-  enabled: boolean;
-  config?: any;
-}
-
-export interface ImportJob {
-  id: string;
-  source_id: string;
-  status: string;
-  started_at: string;
-  completed_at?: string;
-  trails_processed: number;
-  trails_added: number;
-  trails_updated: number;
-  error_message?: string;
-  bulk_job_id?: string;
-}
-
-export interface BulkImportJob {
-  id: string;
-  total_trails_requested: number;
-  total_sources: number;
-  status: string;
-  started_at: string;
-  completed_at?: string;
-  trails_processed: number;
-  trails_added: number;
-  trails_updated: number;
-  trails_failed: number;
-  config?: any;
-  results?: any;
-}
+import type { TrailDataSource, ImportJob, BulkImportJob } from '../services/trail-import/types';
 
 export const useTrailImport = () => {
   const importJobsQuery = useImportJobs();
@@ -63,3 +25,6 @@ export const useTrailImport = () => {
     setActiveBulkJobId: () => {},
   };
 };
+
+// Re-export types for backward compatibility
+export type { TrailDataSource, ImportJob, BulkImportJob };

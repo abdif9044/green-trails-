@@ -1,23 +1,7 @@
 
 import { useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-
-export interface TrailDataSource {
-  id: string;
-  name: string;
-  source_type: string;
-  url: string | null;
-  country: string | null;
-  state_province: string | null;
-  region: string | null;
-  last_synced: string | null;
-  next_sync: string | null;
-  is_active: boolean;
-  config: any;
-  created_at: string;
-  updated_at: string;
-}
+import type { TrailDataSource } from '../../services/trail-import/types';
 
 export function useTrailDataSources() {
   const [dataSources, setDataSources] = useState<TrailDataSource[]>([]);
@@ -28,14 +12,12 @@ export function useTrailDataSources() {
   const loadDataSources = async () => {
     setLoading(true);
     try {
-      // Since trail_data_sources table doesn't exist, use fallback data
       console.log('Trail data sources table does not exist, using fallback data');
       const fallbackSources = createFallbackDataSources();
       setDataSources(fallbackSources);
       return fallbackSources;
     } catch (error) {
       console.error('Error loading data sources:', error);
-      // Use fallback data sources if any error occurs
       const fallbackSources = createFallbackDataSources();
       setDataSources(fallbackSources);
       return fallbackSources;
@@ -50,6 +32,10 @@ export function useTrailDataSources() {
       {
         id: '1',
         name: "US Hiking Project",
+        description: "Mountain Project trail data",
+        endpoint: "https://www.hikingproject.com/data",
+        type: "hiking_project",
+        enabled: true,
         source_type: "hiking_project",
         url: "https://www.hikingproject.com/data",
         country: "United States",
@@ -65,6 +51,10 @@ export function useTrailDataSources() {
       {
         id: '2',
         name: "Parks Canada Trails",
+        description: "Canadian national parks",
+        endpoint: "https://www.pc.gc.ca/apps/tctr/api",
+        type: "parks_canada",
+        enabled: true,
         source_type: "parks_canada",
         url: "https://www.pc.gc.ca/apps/tctr/api",
         country: "Canada",
@@ -80,6 +70,10 @@ export function useTrailDataSources() {
       {
         id: '3',
         name: "Americas OSM Network",
+        description: "OpenStreetMap trail data",
+        endpoint: "https://overpass-api.de/api",
+        type: "openstreetmap",
+        enabled: true,
         source_type: "openstreetmap",
         url: "https://overpass-api.de/api",
         country: "Various",
@@ -95,7 +89,6 @@ export function useTrailDataSources() {
     ];
   };
 
-  // Function to create default data sources (placeholder implementation)
   const createDefaultDataSources = async () => {
     try {
       toast({

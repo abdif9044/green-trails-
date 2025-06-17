@@ -3,11 +3,9 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { DatabaseSetupService } from '@/services/database/setup-service';
-import { useTrailImport } from './useTrailImport';
 import { useTrailDataSources } from './trail-import/useTrailDataSources';
 import { useBulkImportHandler } from './trail-import/useBulkImportHandler';
 import { useBulkImportStatus } from './trail-import/useBulkImportStatus';
-import { supabase } from '@/integrations/supabase/client';
 
 export function useAutoTrailImport() {
   const navigate = useNavigate();
@@ -34,26 +32,19 @@ export function useAutoTrailImport() {
         description: "Trail data has been imported successfully. Redirecting to discover page..."
       });
       
-      // Delay redirect for the toast to be visible
       setTimeout(() => {
         navigate('/discover');
       }, 3000);
     }
   }, [isImportTriggered, activeBulkJobId, isSettingUpDb, loading, navigate, toast, isImportComplete]);
   
-  // Initialize the auto-import process
   const initializeAutoImport = async () => {
     setLoading(true);
     setError(null);
     
     try {
-      // Step 1: Check and setup database tables if needed
       await setupDatabase();
-      
-      // Step 2: Load data sources
       await loadAllDataSources();
-      
-      // Step 3: Start auto import
       await startAutoImport();
     } catch (err) {
       console.error('Auto-import initialization error:', err);
@@ -68,7 +59,6 @@ export function useAutoTrailImport() {
     }
   };
   
-  // Database setup helper
   const setupDatabase = async () => {
     setIsSettingUpDb(true);
     try {
@@ -106,16 +96,14 @@ export function useAutoTrailImport() {
     }
   };
   
-  // Helper to load data sources
   const loadAllDataSources = async () => {
     try {
       const sources = await loadDataSources();
       
-      // If no data sources exist, create default ones
       if (!sources || sources.length === 0) {
         console.log('No data sources found, creating defaults');
         await createDefaultDataSources();
-        await loadDataSources(); // Reload after creating
+        await loadDataSources();
       }
     } catch (error) {
       console.error('Error loading data sources:', error);
@@ -129,12 +117,10 @@ export function useAutoTrailImport() {
     }
   };
   
-  // Function to refresh data
   function refreshData() {
     loadDataSources();
   }
   
-  // Start the auto import process
   const startAutoImport = async () => {
     if (dataSources.length === 0) {
       setError("No data sources available for import");
@@ -146,7 +132,6 @@ export function useAutoTrailImport() {
       return false;
     }
     
-    // Filter active sources
     const activeSources = dataSources.filter(source => source.is_active).map(source => source.id);
     
     if (activeSources.length === 0) {

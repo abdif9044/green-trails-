@@ -1,6 +1,11 @@
 
 import { supabase } from '@/integrations/supabase/client';
 
+interface JobResults {
+  errors?: string[];
+  [key: string]: any;
+}
+
 export class TrailImportRecoveryService {
   
   static async analyzeImportFailures() {
@@ -16,14 +21,17 @@ export class TrailImportRecoveryService {
 
       const analysis = {
         totalFailedJobs: jobs?.length || 0,
-        commonErrors: [],
-        suggestedFixes: []
+        commonErrors: [] as string[],
+        suggestedFixes: [] as string[]
       };
 
-      // Analyze common failure patterns
+      // Analyze common failure patterns with proper type checking
       jobs?.forEach(job => {
-        if (job.results?.errors) {
-          analysis.commonErrors.push(...job.results.errors);
+        if (job.results && typeof job.results === 'object') {
+          const results = job.results as JobResults;
+          if (results.errors && Array.isArray(results.errors)) {
+            analysis.commonErrors.push(...results.errors);
+          }
         }
       });
 

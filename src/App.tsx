@@ -11,7 +11,7 @@ import Discover from "./pages/Discover";
 import Social from "./pages/Social";
 import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
-import TrailDetail from "./pages/TrailDetail";
+import Trail from "./pages/Trail";
 import AdminTrailImport from "./pages/AdminTrailImport";
 import AutoImport from "./pages/AutoImport";
 import AutoImportPage from "./pages/AutoImportPage";
@@ -33,7 +33,7 @@ const App = () => (
               <Route path="/social" element={<Social />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/profile" element={<Profile />} />
-              <Route path="/trail/:id" element={<TrailDetail />} />
+              <Route path="/trail/:id" element={<Trail />} />
               <Route path="/admin/import" element={<AdminTrailImport />} />
               <Route path="/admin/auto-import" element={<AutoImportPage />} />
               <Route path="/auto-import" element={<AutoImport />} />

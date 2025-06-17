@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback, useMemo, useContext, createContext } from "react"
+import React from "react"
 
 type Theme = "dark" | "light" | "system"
 
@@ -9,7 +9,7 @@ interface ThemeProviderState {
   resolvedTheme: "dark" | "light"
 }
 
-const ThemeProviderContext = createContext<ThemeProviderState | undefined>(
+const ThemeProviderContext = React.createContext<ThemeProviderState | undefined>(
   undefined
 )
 
@@ -47,10 +47,10 @@ export function ThemeProvider({
     }
   }
 
-  const [theme, setThemeState] = useState<Theme>(getInitialTheme)
-  const [resolvedTheme, setResolvedTheme] = useState<"dark" | "light">(getInitialResolvedTheme)
+  const [theme, setThemeState] = React.useState<Theme>(getInitialTheme)
+  const [resolvedTheme, setResolvedTheme] = React.useState<"dark" | "light">(getInitialResolvedTheme)
 
-  useEffect(() => {
+  React.useEffect(() => {
     const root = window.document.documentElement
     root.classList.remove("light", "dark")
 
@@ -62,7 +62,7 @@ export function ThemeProvider({
     root.classList.add(effectiveTheme)
   }, [theme])
 
-  const setTheme = useCallback((newTheme: Theme) => {
+  const setTheme = React.useCallback((newTheme: Theme) => {
     try {
       localStorage.setItem(storageKey, newTheme)
     } catch {
@@ -71,7 +71,7 @@ export function ThemeProvider({
     setThemeState(newTheme)
   }, [storageKey])
 
-  const value = useMemo(() => ({
+  const value = React.useMemo(() => ({
     theme,
     setTheme,
     resolvedTheme,
@@ -85,7 +85,7 @@ export function ThemeProvider({
 }
 
 export function useTheme() {
-  const context = useContext(ThemeProviderContext)
+  const context = React.useContext(ThemeProviderContext)
   if (context === undefined) {
     throw new Error("useTheme must be used within a ThemeProvider")
   }

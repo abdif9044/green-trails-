@@ -2,9 +2,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '../use-auth';
-import { useToast } from '../use-toast';
 
-// Notification hooks
+// Basic notifications hook using existing notifications table
 export const useNotifications = () => {
   const { user } = useAuth();
   
@@ -12,14 +11,15 @@ export const useNotifications = () => {
     queryKey: ['notifications', user?.id],
     queryFn: async () => {
       if (!user) return [];
+      
       const { data, error } = await supabase
         .from('notifications')
         .select('*')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(50);
+        .order('created_at', { ascending: false });
+        
       if (error) throw error;
-      return data;
+      return data || [];
     },
     enabled: !!user,
   });
@@ -27,7 +27,6 @@ export const useNotifications = () => {
 
 export const useCreateNotification = () => {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
   
   return useMutation({
     mutationFn: async ({ 
@@ -36,12 +35,12 @@ export const useCreateNotification = () => {
       title, 
       message, 
       data 
-    }: {
-      userId: string;
-      type: "social" | "weather" | "trail" | "system" | "achievement";
-      title: string;
-      message: string;
-      data?: Record<string, any>;
+    }: { 
+      userId: string; 
+      type: string; 
+      title: string; 
+      message: string; 
+      data?: any 
     }) => {
       const { error } = await supabase
         .from('notifications')
@@ -49,21 +48,12 @@ export const useCreateNotification = () => {
           user_id: userId,
           type,
           title,
-          message,
-          data,
-          read: false
+          message
         });
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to send notification",
-        variant: "destructive",
-      });
     },
   });
 };

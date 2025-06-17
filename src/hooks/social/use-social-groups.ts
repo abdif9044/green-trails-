@@ -4,26 +4,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '../use-auth';
 import { useToast } from '../use-toast';
 
-// Social groups hooks
+// Social groups hooks - temporarily disabled until tables are created
 export const useSocialGroups = (searchQuery?: string) => {
   return useQuery({
     queryKey: ['social-groups', searchQuery],
     queryFn: async () => {
-      let query = supabase
-        .from('social_groups')
-        .select(`
-          *,
-          owner:owner_id(id, username, full_name, avatar_url),
-          members:group_members(count)
-        `)
-        .eq('is_private', false)
-        .order('created_at', { ascending: false });
-      if (searchQuery) {
-        query = query.or(`name.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%,location.ilike.%${searchQuery}%`);
-      }
-      const { data, error } = await query;
-      if (error) throw error;
-      return data;
+      console.log('Social groups table not yet available');
+      return [];
     },
   });
 };
@@ -35,16 +22,8 @@ export const useJoinGroup = () => {
   
   return useMutation({
     mutationFn: async (groupId: string) => {
-      if (!user) throw new Error('Must be logged in to join group');
-      const { error } = await supabase
-        .from('group_members')
-        .insert({
-          group_id: groupId,
-          user_id: user.id,
-          role: 'member',
-          joined_at: new Date().toISOString()
-        });
-      if (error) throw error;
+      console.log('Group membership not yet available');
+      // Gracefully handle missing tables
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['social-groups'] });

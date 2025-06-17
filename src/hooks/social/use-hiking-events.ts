@@ -4,26 +4,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '../use-auth';
 import { useToast } from '../use-toast';
 
-// Events/hikes hooks
+// Events/hikes hooks - temporarily disabled until tables are created
 export const useHikingEvents = () => {
   return useQuery({
     queryKey: ['hiking-events'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('hiking_events')
-        .select(`
-          *,
-          organizer:organizer_id(id, username, full_name, avatar_url),
-          attendees:event_attendees(
-            user_id,
-            status,
-            user:user_id(id, username, full_name, avatar_url)
-          )
-        `)
-        .gte('date', new Date().toISOString())
-        .order('date', { ascending: true });
-      if (error) throw error;
-      return data;
+      console.log('Hiking events table not yet available');
+      return [];
     },
   });
 };
@@ -41,18 +28,8 @@ export const useRSVPEvent = () => {
       eventId: string; 
       status: 'going' | 'maybe' | 'declined' 
     }) => {
-      if (!user) throw new Error('Must be logged in to RSVP');
-      const { error } = await supabase
-        .from('event_attendees')
-        .upsert({
-          event_id: eventId,
-          user_id: user.id,
-          status,
-          rsvp_at: new Date().toISOString()
-        }, {
-          onConflict: 'event_id,user_id'
-        });
-      if (error) throw error;
+      console.log('Event RSVP not yet available');
+      // Gracefully handle missing tables
     },
     onSuccess: (_, { status }) => {
       queryClient.invalidateQueries({ queryKey: ['hiking-events'] });

@@ -9,6 +9,39 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      achievements: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          criteria: Json | null
+          description: string
+          icon: string | null
+          id: string
+          name: string
+          points: number | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          criteria?: Json | null
+          description: string
+          icon?: string | null
+          id?: string
+          name: string
+          points?: number | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          criteria?: Json | null
+          description?: string
+          icon?: string | null
+          id?: string
+          name?: string
+          points?: number | null
+        }
+        Relationships: []
+      }
       bulk_import_jobs: {
         Row: {
           completed_at: string | null
@@ -96,6 +129,38 @@ export type Database = {
         }
         Relationships: []
       }
+      event_attendees: {
+        Row: {
+          event_id: string
+          id: string
+          rsvp_at: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          event_id: string
+          id?: string
+          rsvp_at?: string | null
+          status: string
+          user_id: string
+        }
+        Update: {
+          event_id?: string
+          id?: string
+          rsvp_at?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_attendees_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "hiking_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       follows: {
         Row: {
           created_at: string | null
@@ -114,6 +179,124 @@ export type Database = {
           follower_id?: string | null
           following_id?: string | null
           id?: string
+        }
+        Relationships: []
+      }
+      group_members: {
+        Row: {
+          group_id: string
+          id: string
+          joined_at: string | null
+          role: string | null
+          user_id: string
+        }
+        Insert: {
+          group_id: string
+          id?: string
+          joined_at?: string | null
+          role?: string | null
+          user_id: string
+        }
+        Update: {
+          group_id?: string
+          id?: string
+          joined_at?: string | null
+          role?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "social_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hiking_events: {
+        Row: {
+          created_at: string | null
+          date: string
+          description: string | null
+          difficulty_level: string | null
+          id: string
+          location: string
+          max_participants: number | null
+          organizer_id: string
+          title: string
+          trail_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          date: string
+          description?: string | null
+          difficulty_level?: string | null
+          id?: string
+          location: string
+          max_participants?: number | null
+          organizer_id: string
+          title: string
+          trail_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          date?: string
+          description?: string | null
+          difficulty_level?: string | null
+          id?: string
+          location?: string
+          max_participants?: number | null
+          organizer_id?: string
+          title?: string
+          trail_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hiking_events_trail_id_fkey"
+            columns: ["trail_id"]
+            isOneToOne: false
+            referencedRelation: "trails"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hiking_stats: {
+        Row: {
+          created_at: string | null
+          highest_elevation: number | null
+          id: string
+          longest_hike: number | null
+          total_distance: number | null
+          total_elevation_gain: number | null
+          total_hikes: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          highest_elevation?: number | null
+          id?: string
+          longest_hike?: number | null
+          total_distance?: number | null
+          total_elevation_gain?: number | null
+          total_hikes?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          highest_elevation?: number | null
+          id?: string
+          longest_hike?: number | null
+          total_distance?: number | null
+          total_elevation_gain?: number | null
+          total_hikes?: number | null
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -257,6 +440,193 @@ export type Database = {
         }
         Relationships: []
       }
+      social_groups: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          image_url: string | null
+          is_private: boolean | null
+          location: string | null
+          member_count: number | null
+          name: string
+          owner_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_private?: boolean | null
+          location?: string | null
+          member_count?: number | null
+          name: string
+          owner_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_private?: boolean | null
+          location?: string | null
+          member_count?: number | null
+          name?: string
+          owner_id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      social_stats: {
+        Row: {
+          comments_received: number | null
+          created_at: string | null
+          followers_count: number | null
+          following_count: number | null
+          id: string
+          likes_received: number | null
+          posts_count: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          comments_received?: number | null
+          created_at?: string | null
+          followers_count?: number | null
+          following_count?: number | null
+          id?: string
+          likes_received?: number | null
+          posts_count?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          comments_received?: number | null
+          created_at?: string | null
+          followers_count?: number | null
+          following_count?: number | null
+          id?: string
+          likes_received?: number | null
+          posts_count?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      stories: {
+        Row: {
+          caption: string | null
+          created_at: string | null
+          expires_at: string
+          id: string
+          latitude: number | null
+          location_name: string | null
+          longitude: number | null
+          media_url: string
+          user_id: string
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string | null
+          expires_at: string
+          id?: string
+          latitude?: number | null
+          location_name?: string | null
+          longitude?: number | null
+          media_url: string
+          user_id: string
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string | null
+          expires_at?: string
+          id?: string
+          latitude?: number | null
+          location_name?: string | null
+          longitude?: number | null
+          media_url?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      trail_comments: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          rating: number | null
+          trail_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          rating?: number | null
+          trail_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          rating?: number | null
+          trail_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trail_comments_trail_id_fkey"
+            columns: ["trail_id"]
+            isOneToOne: false
+            referencedRelation: "trails"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trail_images: {
+        Row: {
+          caption: string | null
+          created_at: string | null
+          id: string
+          is_primary: boolean | null
+          trail_id: string
+          url: string
+          user_id: string
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string | null
+          id?: string
+          is_primary?: boolean | null
+          trail_id: string
+          url: string
+          user_id: string
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string | null
+          id?: string
+          is_primary?: boolean | null
+          trail_id?: string
+          url?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trail_images_trail_id_fkey"
+            columns: ["trail_id"]
+            isOneToOne: false
+            referencedRelation: "trails"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trail_import_jobs: {
         Row: {
           bulk_job_id: string | null
@@ -295,6 +665,38 @@ export type Database = {
           trails_updated?: number | null
         }
         Relationships: []
+      }
+      trail_ratings: {
+        Row: {
+          created_at: string | null
+          id: string
+          rating: number
+          trail_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          rating: number
+          trail_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          rating?: number
+          trail_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trail_ratings_trail_id_fkey"
+            columns: ["trail_id"]
+            isOneToOne: false
+            referencedRelation: "trails"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       trails: {
         Row: {
@@ -367,6 +769,35 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      user_achievements: {
+        Row: {
+          achievement_id: string
+          id: string
+          unlocked_at: string | null
+          user_id: string
+        }
+        Insert: {
+          achievement_id: string
+          id?: string
+          unlocked_at?: string | null
+          user_id: string
+        }
+        Update: {
+          achievement_id?: string
+          id?: string
+          unlocked_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_achievements_achievement_id_fkey"
+            columns: ["achievement_id"]
+            isOneToOne: false
+            referencedRelation: "achievements"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_stats: {
         Row: {

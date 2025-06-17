@@ -104,7 +104,7 @@ const AutoImportTrigger: React.FC = () => {
             <Globe className={`h-5 w-5 ${needsImport ? 'text-orange-600' : 'text-green-600'}`} />
             Americas Trail Database Status
           </span>
-          <Badge variant={needsImport ? 'destructive' : 'success'}>
+          <Badge variant={needsImport ? 'destructive' : 'secondary'}>
             {needsImport ? 'Needs Import' : 'Active'}
           </Badge>
         </CardTitle>

@@ -39,13 +39,13 @@ const AmericasImportDashboard: React.FC = () => {
 
   const fetchProgress = async () => {
     try {
-      // Get current progress
+      // Get current progress from function
       const { data: progressData, error: progressError } = await supabase
         .rpc('get_americas_import_progress');
 
       if (progressError) {
         console.error('Error fetching progress:', progressError);
-      } else if (progressData && progressData.length > 0) {
+      } else if (progressData && Array.isArray(progressData) && progressData.length > 0) {
         setProgress(progressData[0]);
       }
 
@@ -118,13 +118,15 @@ const AmericasImportDashboard: React.FC = () => {
   const getStatusBadge = (status: string) => {
     const variants = {
       'processing': 'default',
-      'completed': 'success',
+      'completed': 'secondary',
       'error': 'destructive',
-      'queued': 'secondary'
+      'queued': 'outline'
     } as const;
     
+    const variant = variants[status as keyof typeof variants] || 'outline';
+    
     return (
-      <Badge variant={variants[status as keyof typeof variants] || 'outline'}>
+      <Badge variant={variant}>
         {status.toUpperCase()}
       </Badge>
     );

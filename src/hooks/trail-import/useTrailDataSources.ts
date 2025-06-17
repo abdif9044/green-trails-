@@ -2,7 +2,22 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { TrailDataSource } from '../useTrailImport';
+
+export interface TrailDataSource {
+  id: string;
+  name: string;
+  source_type: string;
+  url: string | null;
+  country: string | null;
+  state_province: string | null;
+  region: string | null;
+  last_synced: string | null;
+  next_sync: string | null;
+  is_active: boolean;
+  config: any;
+  created_at: string;
+  updated_at: string;
+}
 
 export function useTrailDataSources() {
   const [dataSources, setDataSources] = useState<TrailDataSource[]>([]);
@@ -13,13 +28,22 @@ export function useTrailDataSources() {
   const loadDataSources = async () => {
     setLoading(true);
     try {
-      // Fetch data sources
+      // Check if table exists and fetch data sources
       const { data: sources, error: sourcesError } = await supabase
         .from("trail_data_sources")
         .select("*")
         .order("last_synced", { ascending: false });
         
-      if (sourcesError) throw sourcesError;
+      if (sourcesError) {
+        console.error('Error loading data sources:', sourcesError);
+        // If table doesn't exist, return empty array gracefully
+        if (sourcesError.message?.includes('does not exist')) {
+          console.log('Trail data sources table does not exist yet');
+          setDataSources([]);
+          return [];
+        }
+        throw sourcesError;
+      }
       
       setDataSources(sources || []);
       return sources || [];

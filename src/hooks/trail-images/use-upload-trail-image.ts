@@ -56,12 +56,12 @@ export const useUploadTrailImage = (trailId: string) => {
         if (updateError) throw updateError;
       }
 
-      // Save image metadata to database
+      // Save image metadata to database using 'url' column
       const { error: dbError } = await supabase
         .from('trail_images')
         .insert({
           trail_id: trailId,
-          image_path: filePath,
+          url: publicUrl,
           is_primary: isPrimary,
           caption,
           user_id: user.id

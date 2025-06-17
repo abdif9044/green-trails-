@@ -2,8 +2,36 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { ImportJob, BulkImportJob } from '../useTrailImport';
-import { createExtendedSupabaseClient } from '@/types/supabase-extensions';
+
+// Define types that match actual database schema
+export interface ImportJob {
+  id: string;
+  source_id: string;
+  bulk_job_id: string | null;
+  status: string;
+  started_at: string;
+  completed_at: string | null;
+  trails_processed: number;
+  trails_added: number;
+  trails_updated: number;
+  error_message: string | null;
+}
+
+export interface BulkImportJob {
+  id: string;
+  status: string;
+  started_at: string;
+  completed_at: string | null;
+  total_trails_requested: number;
+  trails_processed: number | null;
+  trails_added: number | null;
+  trails_updated: number | null;
+  trails_failed: number | null;
+  total_sources: number;
+  config: any;
+  results: any;
+  last_updated: string | null;
+}
 
 export function useImportJobs() {
   const [importJobs, setImportJobs] = useState<ImportJob[]>([]);
@@ -15,9 +43,6 @@ export function useImportJobs() {
   const loadImportJobs = async () => {
     setLoading(true);
     try {
-      // Create an extended client with the additional types
-      const extendedSupabase = createExtendedSupabaseClient(supabase);
-      
       // Fetch recent import jobs
       const { data: jobs, error: jobsError } = await supabase
         .from("trail_import_jobs")

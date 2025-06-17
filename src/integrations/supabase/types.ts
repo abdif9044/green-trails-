@@ -589,6 +589,63 @@ export type Database = {
           },
         ]
       }
+      trail_data_sources: {
+        Row: {
+          config: Json | null
+          country: string | null
+          created_at: string | null
+          description: string | null
+          enabled: boolean | null
+          endpoint: string | null
+          id: string
+          is_active: boolean | null
+          last_synced: string | null
+          name: string
+          next_sync: string | null
+          region: string | null
+          source_type: string
+          state_province: string | null
+          updated_at: string | null
+          url: string | null
+        }
+        Insert: {
+          config?: Json | null
+          country?: string | null
+          created_at?: string | null
+          description?: string | null
+          enabled?: boolean | null
+          endpoint?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_synced?: string | null
+          name: string
+          next_sync?: string | null
+          region?: string | null
+          source_type: string
+          state_province?: string | null
+          updated_at?: string | null
+          url?: string | null
+        }
+        Update: {
+          config?: Json | null
+          country?: string | null
+          created_at?: string | null
+          description?: string | null
+          enabled?: boolean | null
+          endpoint?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_synced?: string | null
+          name?: string
+          next_sync?: string | null
+          region?: string | null
+          source_type?: string
+          state_province?: string | null
+          updated_at?: string | null
+          url?: string | null
+        }
+        Relationships: []
+      }
       trail_images: {
         Row: {
           caption: string | null

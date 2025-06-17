@@ -86,3 +86,13 @@ export class DatabaseSetupService {
     }
   }
 }
+
+// Hook for easy access to database setup functionality
+export const useDatabaseSetup = () => {
+  return {
+    checkBulkImportTablesExist: DatabaseSetupService.checkBulkImportTablesExist,
+    setupBulkImportTables: DatabaseSetupService.setupBulkImportTables,
+    getCurrentTrailCount: DatabaseSetupService.getCurrentTrailCount,
+    getImportStatus: DatabaseSetupService.getImportStatus
+  };
+};

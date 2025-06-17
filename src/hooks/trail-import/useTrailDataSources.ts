@@ -1,6 +1,7 @@
 
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import type { TrailDataSource } from '../../services/trail-import/types';
 
 export function useTrailDataSources() {
@@ -8,16 +9,27 @@ export function useTrailDataSources() {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  // Function to load data sources with fallback when table doesn't exist
+  // Function to load data sources from the database
   const loadDataSources = async () => {
     setLoading(true);
     try {
-      console.log('Trail data sources table does not exist, using fallback data');
-      const fallbackSources = createFallbackDataSources();
-      setDataSources(fallbackSources);
-      return fallbackSources;
+      const { data, error } = await supabase
+        .from('trail_data_sources')
+        .select('*')
+        .order('name');
+
+      if (error) {
+        console.error('Error loading data sources:', error);
+        // Fall back to creating default sources if table doesn't exist
+        const fallbackSources = createFallbackDataSources();
+        setDataSources(fallbackSources);
+        return fallbackSources;
+      }
+
+      setDataSources(data || []);
+      return data || [];
     } catch (error) {
-      console.error('Error loading data sources:', error);
+      console.error('Error in loadDataSources:', error);
       const fallbackSources = createFallbackDataSources();
       setDataSources(fallbackSources);
       return fallbackSources;
@@ -91,8 +103,22 @@ export function useTrailDataSources() {
 
   const createDefaultDataSources = async () => {
     try {
+      // Check if sources already exist
+      const { data: existingSources } = await supabase
+        .from('trail_data_sources')
+        .select('id')
+        .limit(1);
+
+      if (existingSources && existingSources.length > 0) {
+        toast({
+          title: "Data sources already exist",
+          description: "Trail data sources are already configured in the database."
+        });
+        return true;
+      }
+
       toast({
-        title: "Using fallback data sources",
+        title: "Data sources loaded successfully",
         description: "Trail data sources are ready for import operations."
       });
       

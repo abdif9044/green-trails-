@@ -1,49 +1,49 @@
 
-import React from 'react';
-import { BrowserRouter } from "react-router-dom";
-import { Toaster } from "@/components/ui/sonner";
-import { ThemeProvider } from '@/providers/theme-provider'
-import { AuthProvider } from '@/providers/auth-provider';
-import { Layout } from '@/components/layout/layout';
-import { EasterEggsProvider } from '@/contexts/easter-eggs-context';
-import LoadingFallback from '@/components/LoadingFallback';
-import { Helmet } from 'react-helmet-async';
-import AppRoutes from '@/components/routing/AppRoutes';
-import { KonamiCodeHandler } from '@/components/easter-eggs/KonamiCodeHandler';
-import { AppErrorBoundary } from '@/components/AppErrorBoundary';
-import { AuthErrorBoundary } from '@/components/auth/AuthErrorBoundary';
-import { SafeContextProvider } from '@/providers/SafeContextProvider';
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { HelmetProvider } from 'react-helmet-async';
+import { EnhancedAuthProvider } from "@/providers/enhanced-auth-provider";
+import Index from "./pages/Index";
+import Discover from "./pages/Discover";
+import Social from "./pages/Social";
+import Auth from "./pages/Auth";
+import Profile from "./pages/Profile";
+import TrailDetail from "./pages/TrailDetail";
+import AdminTrailImport from "./pages/AdminTrailImport";
+import AutoImport from "./pages/AutoImport";
+import AutoImportPage from "./pages/AutoImportPage";
+import TrailRecovery from "./pages/TrailRecovery";
 
-function App() {
-  return (
-    <AppErrorBoundary>
-      <SafeContextProvider>
-        <ThemeProvider>
+const queryClient = new QueryClient();
+
+const App = () => (
+  <HelmetProvider>
+    <QueryClientProvider client={queryClient}>
+      <EnhancedAuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
           <BrowserRouter>
-            <Helmet>
-              <title>GreenTrails - Discover Nature's Path</title>
-              <meta name="description" content="Discover and share hiking trails and outdoor adventures with the GreenTrails community. Find your path, connect with nature." />
-            </Helmet>
-            <div className="App">
-              <React.Suspense fallback={<LoadingFallback />}>
-                <EasterEggsProvider>
-                  <AuthErrorBoundary>
-                    <AuthProvider>
-                      <Layout>
-                        <AppRoutes />
-                      </Layout>
-                      <KonamiCodeHandler />
-                    </AuthProvider>
-                  </AuthErrorBoundary>
-                </EasterEggsProvider>
-              </React.Suspense>
-            </div>
-            <Toaster />
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/discover" element={<Discover />} />
+              <Route path="/social" element={<Social />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/trail/:id" element={<TrailDetail />} />
+              <Route path="/admin/import" element={<AdminTrailImport />} />
+              <Route path="/admin/auto-import" element={<AutoImportPage />} />
+              <Route path="/auto-import" element={<AutoImport />} />
+              <Route path="/recovery" element={<TrailRecovery />} />
+            </Routes>
           </BrowserRouter>
-        </ThemeProvider>
-      </SafeContextProvider>
-    </AppErrorBoundary>
-  );
-}
+        </TooltipProvider>
+      </EnhancedAuthProvider>
+    </QueryClientProvider>
+  </HelmetProvider>
+);
 
 export default App;

@@ -1,42 +1,31 @@
-
 // Trail generation utilities
 
 import { getLocationAwareBaseData, getSourceDisplayName } from "./location-utils.ts";
 
-export function createTestTrail(location?: { lat: number; lng: number; radius: number; city?: string; state?: string }): any {
-  const lat = location ? location.lat + (Math.random() - 0.5) * 0.1 : 44.0223;
-  const lng = location ? location.lng + (Math.random() - 0.5) * 0.1 : -92.4695;
-  const locationName = location ? `${location.city || 'Test Location'}, ${location.state || 'MN'}` : 'Test Location, CA';
-  
-  return {
+export const createTestTrail = (location?: any) => {
+  const testTrail = {
     id: crypto.randomUUID(),
-    name: 'Schema Test Trail',
-    location: locationName,
-    difficulty: 'moderate',
-    length: 5.5,
-    elevation: 150,
-    longitude: lng,
-    latitude: lat,
-    country: 'United States',
-    state_province: location?.state || 'Minnesota',
-    surface: 'dirt',
+    name: 'Recovery Test Trail',
+    location: location ? `${location.lat}, ${location.lng}` : 'Test Location, USA',
+    country: 'USA',
+    state_province: 'Test State',
+    difficulty: 'easy' as const,
+    length: 1.0,
+    elevation_gain: 50,
+    elevation: 1000,
+    latitude: location?.lat || 45.0,
+    longitude: location?.lng || -93.0,
     trail_type: 'hiking',
-    source: 'test',
-    source_id: `test-${Date.now()}`,
+    surface: 'dirt',
     is_age_restricted: false,
     is_verified: true,
-    description: `Test trail for schema validation near ${locationName}`,
-    length_km: 5.5,
-    elevation_gain: 150,
-    geojson: {
-      type: 'Point',
-      coordinates: [lng, lat]
-    },
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
+    description: 'Test trail for recovery validation',
     user_id: null
   };
-}
+
+  console.log('🧪 Created test trail for recovery:', testTrail.name);
+  return testTrail;
+};
 
 export function generateTrailsForSource(sourceType: string, count: number, location?: { lat: number; lng: number; radius: number; city?: string; state?: string }): any[] {
   const trails = [];

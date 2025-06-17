@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { BadgeAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/hooks/use-auth';
+import { useEnhancedAuth } from '@/providers/enhanced-auth-provider';
 import { verifyUserAge } from '@/services/auth/age-verification-service';
 import AgeVerification from '../auth/AgeVerification';
 
@@ -12,7 +12,7 @@ interface AgeRestrictionWarningProps {
 }
 
 const AgeRestrictionWarning: React.FC<AgeRestrictionWarningProps> = ({ onVerified }) => {
-  const { user } = useAuth();
+  const { user } = useEnhancedAuth();
   const [showVerification, setShowVerification] = useState(false);
   const [isCheckingStatus, setIsCheckingStatus] = useState(false);
   

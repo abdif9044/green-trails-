@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/hooks/use-auth';
+import { useEnhancedAuth } from '@/providers/enhanced-auth-provider';
 import { Compass, Users, User } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
 import NotificationCenter from '@/components/social/NotificationCenter';
@@ -9,7 +9,7 @@ import { NavbarAuth } from '@/components/NavbarAuth';
 
 export const DesktopNavigation: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user } = useEnhancedAuth();
 
   const navigationItems = [
     { icon: Compass, label: 'Discover', path: '/discover' },

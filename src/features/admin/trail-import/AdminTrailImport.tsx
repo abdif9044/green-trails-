@@ -289,11 +289,11 @@ const AdminTrailImport = () => {
                   importJobs={importJobs}
                   bulkImportJobs={bulkImportJobs || []} 
                   loading={loading || isSettingUpDb}
-                  importLoading={importLoading}
+                  importLoading={{}}
                   handleImport={handleImport}
                   getSourceNameById={getSourceNameById}
-                  selectAllSources={() => {}}
-                  deselectAllSources={() => {}}
+                  selectAllSources={selectAllSources}
+                  deselectAllSources={deselectAllSources}
                 />
               )}
               
@@ -305,11 +305,11 @@ const AdminTrailImport = () => {
                   importJobs={importJobs}
                   bulkImportJobs={bulkImportJobs || []} 
                   loading={loading || isSettingUpDb}
-                  importLoading={importLoading}
+                  importLoading={{}}
                   handleImport={handleImport}
                   getSourceNameById={getSourceNameById}
-                  selectAllSources={() => {}}
-                  deselectAllSources={() => {}}
+                  selectAllSources={selectAllSources}
+                  deselectAllSources={deselectAllSources}
                 />
               )}
             </div>

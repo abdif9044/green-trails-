@@ -3,6 +3,26 @@ import { supabase } from '@/integrations/supabase/client';
 import { DatabaseSetupService } from '../database/setup-service';
 
 export class PasswordService {
+  static async resetPassword(email: string): Promise<{ success: boolean; message?: string }> {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`
+      });
+
+      if (error) {
+        await this.logPasswordEvent('password_reset_failed', error.message);
+        return { success: false, message: error.message };
+      }
+
+      await this.logPasswordEvent('password_reset_requested');
+      return { success: true, message: 'Password reset email sent' };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      await this.logPasswordEvent('password_reset_error', errorMessage);
+      return { success: false, message: errorMessage };
+    }
+  }
+
   static async updatePassword(newPassword: string): Promise<{ success: boolean; error?: string }> {
     try {
       const { error } = await supabase.auth.updateUser({

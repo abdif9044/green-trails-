@@ -16,6 +16,31 @@ export interface TrailsResponse {
   totalPages: number;
 }
 
+// Define proper database trail type to match Supabase schema
+interface DatabaseTrail {
+  id: string;
+  name: string;
+  location: string;
+  description: string;
+  difficulty: string;
+  elevation: number;
+  elevation_gain: number;
+  geojson: any;
+  is_age_restricted: boolean;
+  is_verified: boolean;
+  latitude: number;
+  longitude: number;
+  country: string;
+  state_province: string;
+  region: string;
+  terrain_type: string;
+  trail_length: number;
+  created_at: string;
+  updated_at: string;
+  user_id: string;
+  trail_tags: Array<{ tag_name: string }> | null;
+}
+
 export const useTrails = () => {
   // Search trails with filters using Supabase - NO MOCK DATA
   const useTrailsSearch = (params: TrailSearchParams = {}) => {
@@ -50,7 +75,7 @@ export const useTrails = () => {
             throw error;
           }
 
-          const formattedTrails = (data || []).map(formatTrailFromDatabase);
+          const formattedTrails = (data || []).map((trail: any) => formatTrailFromDatabase(trail as DatabaseTrail));
           
           return {
             data: formattedTrails,
@@ -65,7 +90,7 @@ export const useTrails = () => {
           .from('trails')
           .select(`
             *,
-            trail_tags (
+            trail_tags!left (
               tag_name
             )
           `, { count: 'exact' });
@@ -80,7 +105,7 @@ export const useTrails = () => {
         }
 
         if (lengthRange && lengthRange.length === 2) {
-          query = query.gte('length_km', lengthRange[0]).lte('length_km', lengthRange[1]);
+          query = query.gte('trail_length', lengthRange[0]).lte('trail_length', lengthRange[1]);
         }
 
         if (country) {
@@ -106,7 +131,14 @@ export const useTrails = () => {
           throw error;
         }
 
-        const formattedTrails = (data || []).map(formatTrailFromDatabase);
+        const formattedTrails = (data || []).map((trail: any) => {
+          // Ensure trail_tags is properly formatted
+          const formattedTrail = {
+            ...trail,
+            trail_tags: trail.trail_tags || []
+          };
+          return formatTrailFromDatabase(formattedTrail as DatabaseTrail);
+        });
         
         return {
           data: formattedTrails,
@@ -127,7 +159,7 @@ export const useTrails = () => {
           .from('trails')
           .select(`
             *,
-            trail_tags (
+            trail_tags!left (
               tag_name
             )
           `)
@@ -139,7 +171,13 @@ export const useTrails = () => {
           throw error;
         }
 
-        return formatTrailFromDatabase(data);
+        // Ensure trail_tags is properly formatted
+        const formattedData = {
+          ...data,
+          trail_tags: data.trail_tags || []
+        };
+
+        return formatTrailFromDatabase(formattedData as DatabaseTrail);
       },
       enabled: !!trailId
     });
@@ -162,7 +200,7 @@ export const useTrails = () => {
           throw error;
         }
 
-        return (data || []).map(formatTrailFromDatabase);
+        return (data || []).map((trail: any) => formatTrailFromDatabase(trail as DatabaseTrail));
       },
       enabled: !!(lat && lng)
     });
@@ -177,7 +215,7 @@ export const useTrails = () => {
           .from('trails')
           .select(`
             *,
-            trail_tags (
+            trail_tags!left (
               tag_name
             )
           `)
@@ -189,7 +227,14 @@ export const useTrails = () => {
           throw error;
         }
 
-        return (data || []).map(formatTrailFromDatabase);
+        return (data || []).map((trail: any) => {
+          // Ensure trail_tags is properly formatted
+          const formattedTrail = {
+            ...trail,
+            trail_tags: trail.trail_tags || []
+          };
+          return formatTrailFromDatabase(formattedTrail as DatabaseTrail);
+        });
       }
     });
   };

@@ -1,4 +1,3 @@
-
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { DatabaseSetupService } from '@/services/database/setup-service';
@@ -75,8 +74,7 @@ export const initializeAuthState = async (
       
       // Log successful initialization
       try {
-        await DatabaseSetupService.logSecurityEvent('session_restored', { 
-          user_id: initialSession.user?.id,
+        await DatabaseSetupService.logSecurityEvent('session_restored', initialSession.user?.id, { 
           timestamp: new Date().toISOString() 
         });
       } catch (logError) {
@@ -144,9 +142,8 @@ export const setupAuthStateListener = (
       // Log auth state changes for security purposes
       if (event) {
         try {
-          DatabaseSetupService.logSecurityEvent('auth_state_change', {
+          DatabaseSetupService.logSecurityEvent('auth_state_change', currentSession?.user?.id, {
             event: event,
-            user_id: currentSession?.user?.id,
             timestamp: new Date().toISOString()
           }).catch(error => console.warn('Failed to log auth state change (non-critical):', error));
         } catch (error) {

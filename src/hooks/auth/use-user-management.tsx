@@ -39,10 +39,13 @@ export const useUserManagement = (currentUser: User | null) => {
       const result = await AuthService.updatePassword(password);
       
       if (!result.success) {
-        console.error('Password update error:', result.message);
+        console.error('Password update error:', result.error);
       }
       
-      return result;
+      return {
+        success: result.success,
+        message: result.error || 'Password updated successfully'
+      };
     } catch (error) {
       console.error('Exception during password update:', error);
       const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
@@ -56,7 +59,6 @@ export const useUserManagement = (currentUser: User | null) => {
     }
   };
 
-  // Updated to properly handle the birthdate
   const verifyAge = async (birthdate: Date) => {
     if (!currentUser) {
       console.error('Cannot verify age: No user is logged in');

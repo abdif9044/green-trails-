@@ -101,7 +101,7 @@ export class MassiveTrailImportOrchestrator {
       .select('id')
       .limit(1);
       
-    if (bulkTableError && bulkTableError.code === '42P01') {
+    if (bulkTableError && (bulkTableError as any).code === '42P01') {
       throw new Error('Bulk import tables not found. Run database setup first.');
     }
     

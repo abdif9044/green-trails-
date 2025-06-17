@@ -2,7 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 
 export class ValidationService {
-  static async validateEnvironment(): Promise<{ isValid: boolean; errors: string[] }> {
+  static async validateEnvironment(): Promise<{ hasPermissions: boolean; errors: string[] }> {
     const errors: string[] = [];
     
     try {
@@ -34,7 +34,7 @@ export class ValidationService {
     }
 
     return {
-      isValid: errors.length === 0,
+      hasPermissions: errors.length === 0,
       errors
     };
   }

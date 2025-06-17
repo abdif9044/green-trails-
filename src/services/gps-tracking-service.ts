@@ -1,14 +1,19 @@
+
 export interface HikeSession {
   id: string;
   userId: string;
   trailId?: string;
   startTime: Date;
   endTime?: Date;
-  duration: number; // Add missing duration property
+  duration: number;
   distance: number;
   elevationGain: number;
   coordinates: Array<{ lat: number; lng: number; timestamp: Date; elevation?: number }>;
   isActive: boolean;
+  // Add missing properties for backward compatibility
+  start_time: string;
+  status: 'active' | 'paused' | 'completed';
+  total_distance: number;
 }
 
 export class GPSTrackingService {
@@ -24,7 +29,6 @@ export class GPSTrackingService {
     return GPSTrackingService.instance;
   }
 
-  // Add missing properties
   get isCurrentlyTracking(): boolean {
     return this.isTracking;
   }
@@ -53,16 +57,20 @@ export class GPSTrackingService {
     try {
       console.log('Starting GPS tracking...');
       
+      const startTime = new Date();
       this.currentSession = {
         id: `session_${Date.now()}`,
         userId: 'current_user',
         trailId,
-        startTime: new Date(),
+        startTime,
         duration: 0,
         distance: 0,
         elevationGain: 0,
         coordinates: [],
-        isActive: true
+        isActive: true,
+        start_time: startTime.toISOString(),
+        status: 'active',
+        total_distance: 0
       };
       
       this.isTracking = true;
@@ -78,6 +86,7 @@ export class GPSTrackingService {
     this.isTracking = false;
     if (this.currentSession) {
       this.currentSession.isActive = false;
+      this.currentSession.status = 'paused';
     }
     return true;
   }
@@ -87,6 +96,7 @@ export class GPSTrackingService {
     this.isTracking = true;
     if (this.currentSession) {
       this.currentSession.isActive = true;
+      this.currentSession.status = 'active';
     }
     return true;
   }
@@ -97,7 +107,9 @@ export class GPSTrackingService {
     if (this.currentSession) {
       this.currentSession.endTime = new Date();
       this.currentSession.isActive = false;
+      this.currentSession.status = 'completed';
       this.currentSession.duration = this.currentSession.endTime.getTime() - this.currentSession.startTime.getTime();
+      this.currentSession.total_distance = this.currentSession.distance;
       
       const completedSession = { ...this.currentSession };
       this.currentSession = null;
@@ -115,6 +127,7 @@ export class GPSTrackingService {
       const timestamp = new Date();
       this.currentSession.coordinates.push({ lat, lng, timestamp, elevation });
       this.currentSession.distance += this.calculateDistance(lat, lng);
+      this.currentSession.total_distance = this.currentSession.distance;
       if (elevation) {
         this.currentSession.elevationGain += this.calculateElevationGain(elevation);
       }
@@ -130,7 +143,7 @@ export class GPSTrackingService {
 
     const prevCoord = this.currentSession.coordinates[this.currentSession.coordinates.length - 1];
     const R = 6371e3; // metres
-    const φ1 = prevCoord.lat * Math.PI / 180; // φ, λ in radians
+    const φ1 = prevCoord.lat * Math.PI / 180;
     const φ2 = lat * Math.PI / 180;
     const Δφ = (lat - prevCoord.lat) * Math.PI / 180;
     const Δλ = (lng - prevCoord.lng) * Math.PI / 180;

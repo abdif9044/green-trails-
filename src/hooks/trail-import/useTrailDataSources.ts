@@ -26,8 +26,29 @@ export function useTrailDataSources() {
         return fallbackSources;
       }
 
-      setDataSources(data || []);
-      return data || [];
+      // Map the database response to our TrailDataSource interface
+      const mappedSources: TrailDataSource[] = (data || []).map(source => ({
+        id: source.id,
+        name: source.name,
+        description: source.description,
+        endpoint: source.endpoint,
+        type: source.source_type, // Map source_type to type
+        enabled: source.enabled,
+        source_type: source.source_type,
+        url: source.url,
+        country: source.country,
+        state_province: source.state_province,
+        region: source.region,
+        last_synced: source.last_synced,
+        next_sync: source.next_sync,
+        is_active: source.is_active,
+        config: source.config,
+        created_at: source.created_at,
+        updated_at: source.updated_at
+      }));
+
+      setDataSources(mappedSources);
+      return mappedSources;
     } catch (error) {
       console.error('Error in loadDataSources:', error);
       const fallbackSources = createFallbackDataSources();

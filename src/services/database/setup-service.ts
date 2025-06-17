@@ -85,6 +85,20 @@ export class DatabaseSetupService {
       };
     }
   }
+
+  static async logSecurityEvent(eventType: string, userId?: string, metadata?: any): Promise<void> {
+    try {
+      await supabase
+        .from('security_audit_log')
+        .insert({
+          event_type: eventType,
+          user_id: userId,
+          metadata: metadata || {}
+        });
+    } catch (error) {
+      console.error('Error logging security event:', error);
+    }
+  }
 }
 
 // Hook for easy access to database setup functionality

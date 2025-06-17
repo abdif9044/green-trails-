@@ -32,7 +32,20 @@ export function useImportJobs() {
           return [];
         }
 
-        return data || [];
+        // Map the database response to our ImportJob interface
+        return (data || []).map(job => ({
+          id: job.id,
+          source_id: job.source_id,
+          status: job.status,
+          started_at: job.started_at,
+          completed_at: job.completed_at,
+          trails_processed: job.trails_processed || 0,
+          trails_added: job.trails_added || 0,
+          trails_updated: job.trails_updated || 0,
+          trails_failed: job.trails_failed || 0,
+          error_message: job.error_message,
+          bulk_job_id: job.bulk_job_id
+        }));
       } catch (error) {
         console.error('Error in useImportJobs:', error);
         return [];

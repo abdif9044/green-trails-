@@ -1,49 +1,42 @@
 
 import { supabase } from '@/integrations/supabase/client';
 
-/**
- * Service responsible for managing tag-related database operations
- */
-export class TagsService {
-  /**
-   * Sets up the tables required for trail tags
-   * @returns Promise resolving to success status and optional error
-   */
-  static async setupTagTables() {
-    try {
-      // Use the raw SQL script to create necessary tables
-      const { error } = await supabase.rpc('execute_sql', { 
-        sql_query: `
-          -- Add tags table if it doesn't exist
-          CREATE TABLE IF NOT EXISTS tags (
-            id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-            name TEXT NOT NULL UNIQUE,
-            details JSONB,
-            created_at TIMESTAMPTZ DEFAULT now()
-          );
-
-          -- Add trail_tags junction table if it doesn't exist
-          CREATE TABLE IF NOT EXISTS trail_tags (
-            trail_id UUID REFERENCES trails(id) ON DELETE CASCADE,
-            tag_id UUID REFERENCES tags(id) ON DELETE CASCADE,
-            PRIMARY KEY (trail_id, tag_id)
-          );
-
-          -- Add index for faster tag queries
-          CREATE INDEX IF NOT EXISTS idx_trail_tags_trail_id ON trail_tags(trail_id);
-          CREATE INDEX IF NOT EXISTS idx_trail_tags_tag_id ON trail_tags(tag_id);
-        `
-      });
-
-      if (error) {
-        console.error('Error setting up tag tables:', error);
-        return { success: false, error };
-      }
-
-      return { success: true };
-    } catch (error) {
-      console.error('Exception when setting up tag tables:', error);
-      return { success: false, error };
-    }
-  }
+export interface TrailTag {
+  id: string;
+  trail_id: string;
+  tag: string;
+  created_at: string;
 }
+
+export const addTrailTags = async (trailId: string, tags: string[]) => {
+  try {
+    // Since trail_tags table doesn't exist, log warning and return empty array
+    console.warn('Trail tags table does not exist, unable to add tags');
+    return [];
+  } catch (error) {
+    console.error('Error in addTrailTags:', error);
+    return [];
+  }
+};
+
+export const getTrailTags = async (trailId: string) => {
+  try {
+    // Since trail_tags table doesn't exist, return empty array
+    console.warn('Trail tags table does not exist, returning empty tags');
+    return [];
+  } catch (error) {
+    console.error('Error in getTrailTags:', error);
+    return [];
+  }
+};
+
+export const getAllTags = async () => {
+  try {
+    // Since trail_tags table doesn't exist, return empty array
+    console.warn('Trail tags table does not exist, returning empty tags');
+    return [];
+  } catch (error) {
+    console.error('Error in getAllTags:', error);
+    return [];
+  }
+};

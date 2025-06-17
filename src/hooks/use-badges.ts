@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from 'react';
+import { useSafeReact } from './use-safe-react';
 
 interface Badge {
   id: string;
@@ -16,10 +17,13 @@ interface Badge {
 }
 
 export const useBadges = () => {
+  const isReactReady = useSafeReact();
   const [badges, setBadges] = useState<Badge[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!isReactReady) return;
+
     // Mock badges data with all required properties
     const mockBadges: Badge[] = [
       {
@@ -56,11 +60,11 @@ export const useBadges = () => {
 
     setBadges(mockBadges);
     setLoading(false);
-  }, []);
+  }, [isReactReady]);
 
   return {
     badges,
-    loading,
+    loading: loading || !isReactReady,
     refreshBadges: () => {
       // Refresh logic would go here
     }

@@ -1,100 +1,82 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 interface PerformanceMetric {
-  metric_name: string;
-  value: number;
-  metadata?: Record<string, any>;
-  user_id?: string;
+  id: string;
+  component: string;
+  operation: string;
+  duration: number;
+  timestamp: string;
+  metadata?: any;
 }
 
-class PerformanceMonitor {
-  private metrics: PerformanceMetric[] = [];
-  private batchSize = 10;
-  private flushInterval = 30000; // 30 seconds
+export class PerformanceMonitor {
+  private static metrics: PerformanceMetric[] = [];
 
-  constructor() {
-    this.startPerformanceObserver();
-    this.startBatchFlush();
-  }
-
-  // Track core web vitals and app performance
-  private startPerformanceObserver() {
-    if (typeof window === 'undefined') return;
-
-    // Track page load times
-    window.addEventListener('load', () => {
-      const loadTime = performance.now();
-      this.trackMetric('page_load_time', loadTime);
-    });
-
-    // Track largest contentful paint
-    if ('PerformanceObserver' in window) {
-      const observer = new PerformanceObserver((list) => {
-        const entries = list.getEntries();
-        const lastEntry = entries[entries.length - 1];
-        this.trackMetric('largest_contentful_paint', lastEntry.startTime);
-      });
-      observer.observe({ entryTypes: ['largest-contentful-paint'] });
-    }
-  }
-
-  public trackMetric(name: string, value: number, metadata?: Record<string, any>, userId?: string) {
-    this.metrics.push({
-      metric_name: name,
-      value,
-      metadata,
-      user_id: userId
-    });
-
-    if (this.metrics.length >= this.batchSize) {
-      this.flushMetrics();
-    }
-  }
-
-  public trackUserEngagement(action: string, context?: Record<string, any>) {
-    this.trackMetric('user_engagement', 1, {
-      action,
-      timestamp: new Date().toISOString(),
-      ...context
-    });
-  }
-
-  public trackTrailInteraction(trailId: string, action: 'view' | 'like' | 'comment' | 'share') {
-    this.trackMetric('trail_interaction', 1, {
-      trail_id: trailId,
-      action,
-      timestamp: new Date().toISOString()
-    });
-  }
-
-  private async flushMetrics() {
-    if (this.metrics.length === 0) return;
-
-    const metricsToSend = [...this.metrics];
-    this.metrics = [];
-
-    try {
-      const { error } = await supabase
-        .from('performance_metrics')
-        .insert(metricsToSend);
-
-      if (error) {
-        console.error('Failed to send performance metrics:', error);
-        // Re-add metrics to queue for retry
-        this.metrics.unshift(...metricsToSend);
+  static startTimer(component: string, operation: string) {
+    const startTime = performance.now();
+    return {
+      end: () => {
+        const duration = performance.now() - startTime;
+        this.recordMetric(component, operation, duration);
+        return duration;
       }
+    };
+  }
+
+  static recordMetric(component: string, operation: string, duration: number, metadata?: any) {
+    const metric: PerformanceMetric = {
+      id: crypto.randomUUID(),
+      component,
+      operation,
+      duration,
+      timestamp: new Date().toISOString(),
+      metadata
+    };
+
+    this.metrics.push(metric);
+    
+    // Keep only last 100 metrics in memory
+    if (this.metrics.length > 100) {
+      this.metrics = this.metrics.slice(-100);
+    }
+
+    // Log performance issues
+    if (duration > 1000) {
+      console.warn(`Slow operation detected: ${component}.${operation} took ${duration}ms`);
+    }
+
+    // Try to save to database (gracefully handle if table doesn't exist)
+    this.saveMetricToDatabase(metric).catch(error => {
+      console.warn('Could not save performance metric to database:', error.message);
+    });
+  }
+
+  private static async saveMetricToDatabase(metric: PerformanceMetric) {
+    try {
+      // Since performance_metrics table doesn't exist, just log the metric
+      console.log('Performance metric (table not available):', metric);
+      return;
     } catch (error) {
-      console.error('Error sending performance metrics:', error);
+      console.warn('Performance metrics table not available:', error);
     }
   }
 
-  private startBatchFlush() {
-    setInterval(() => {
-      this.flushMetrics();
-    }, this.flushInterval);
+  static getMetrics() {
+    return this.metrics;
+  }
+
+  static getAverageByOperation(component: string, operation: string) {
+    const relevantMetrics = this.metrics.filter(
+      m => m.component === component && m.operation === operation
+    );
+    
+    if (relevantMetrics.length === 0) return 0;
+    
+    const sum = relevantMetrics.reduce((acc, m) => acc + m.duration, 0);
+    return sum / relevantMetrics.length;
+  }
+
+  static clearMetrics() {
+    this.metrics = [];
   }
 }
-
-export const performanceMonitor = new PerformanceMonitor();
-export default performanceMonitor;

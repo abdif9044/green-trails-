@@ -8,7 +8,7 @@ export function useBulkImport(handleBulkImport: (sourceIds: string[], trailCount
   const [trailCount, setTrailCount] = useState(5000);
   const { toast } = useToast();
 
-  const onBulkImport = async (selectedSources: string[], dataSources: TrailDataSource[]) => {
+  const onBulkImport = async (selectedSources: string[], dataSources: TrailDataSource[]): Promise<boolean> => {
     if (selectedSources.length === 0) {
       toast({
         title: "No sources selected",

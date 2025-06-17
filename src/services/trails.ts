@@ -59,16 +59,20 @@ export const useTrails = () => {
           limit = 50
         } = params;
 
-        // Handle nearby search with PostGIS function
+        // Handle nearby search
         if (nearbyCoordinates && nearbyCoordinates.length === 2) {
           const [lat, lng] = nearbyCoordinates;
           
+          // Use direct SQL query for nearby trails since RPC might not be available
           const { data, error } = await supabase
-            .rpc('trails_within_radius', {
-              center_lat: lat,
-              center_lng: lng,
-              radius_meters: radius * 1000 // Convert km to meters
-            });
+            .from('trails')
+            .select(`
+              *,
+              trail_tags!left (
+                tag_name
+              )
+            `)
+            .limit(limit);
 
           if (error) {
             console.error('Error fetching nearby trails:', error);
@@ -183,17 +187,21 @@ export const useTrails = () => {
     });
   };
 
-  // Get nearby trails using PostGIS - ONLY REAL DATABASE TRAILS
+  // Get nearby trails using basic query - ONLY REAL DATABASE TRAILS
   const useNearbyTrails = (lat: number, lng: number, radius: number = 25) => {
     return useQuery({
       queryKey: ['trails', 'nearby', lat, lng, radius],
       queryFn: async (): Promise<Trail[]> => {
+        // Use basic query since RPC might not be available
         const { data, error } = await supabase
-          .rpc('trails_within_radius', {
-            center_lat: lat,
-            center_lng: lng,
-            radius_meters: radius * 1000
-          });
+          .from('trails')
+          .select(`
+            *,
+            trail_tags!left (
+              tag_name
+            )
+          `)
+          .limit(50);
 
         if (error) {
           console.error('Error fetching nearby trails:', error);

@@ -14,7 +14,7 @@ export { MassiveTrailImportService } from './massive-import-service';
 export { DebugImportService } from './debug-import-service';
 export { EnhancedDebugImportService } from './enhanced-debug-service';
 
-// Legacy compatibility
+// Legacy compatibility function
 export const useTrailImportServices = () => ({
   ValidationService,
   ProgressService,

@@ -21,7 +21,7 @@ const AlbumForm: React.FC<AlbumFormProps> = ({ className }) => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { handleCreateAlbum, isSubmitting } = useCreateAlbum();
+  const createAlbumMutation = useCreateAlbum();
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -109,7 +109,17 @@ const AlbumForm: React.FC<AlbumFormProps> = ({ className }) => {
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await handleCreateAlbum(title, description, location, isPrivate, files, userLocation);
+    
+    const albumData = {
+      title,
+      description,
+      location,
+      is_private: isPrivate,
+    };
+
+    const mediaFiles = files.map(file => ({ file }));
+
+    createAlbumMutation.mutate({ albumData, mediaFiles });
   };
 
   // UI rendering
@@ -235,9 +245,9 @@ const AlbumForm: React.FC<AlbumFormProps> = ({ className }) => {
               </Button>
               <Button 
                 type="submit" 
-                disabled={isSubmitting || !title || files.length === 0}
+                disabled={createAlbumMutation.isPending || !title || files.length === 0}
               >
-                {isSubmitting ? 'Creating...' : 'Create Album'}
+                {createAlbumMutation.isPending ? 'Creating...' : 'Create Album'}
               </Button>
             </div>
           </div>

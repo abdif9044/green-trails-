@@ -53,10 +53,10 @@ export const usePaginatedTrails = (
         query = query.in('difficulty', filters.difficulty);
       }
       if (filters.minDistance) {
-        query = query.gte('distance', filters.minDistance);
+        query = query.gte('length', filters.minDistance);
       }
       if (filters.maxDistance) {
-        query = query.lte('distance', filters.maxDistance);
+        query = query.lte('length', filters.maxDistance);
       }
       if (filters.search) {
         query = query.ilike('name', `%${filters.search}%`);
@@ -77,11 +77,11 @@ export const usePaginatedTrails = (
         name: trail.name,
         location: trail.location,
         difficulty: trail.difficulty,
-        distance: trail.distance,
+        distance: trail.length || trail.trail_length || 0, // Use available distance field
         elevation_gain: trail.elevation_gain,
         description: trail.description,
         country: trail.country,
-        imageUrl: trail.image_url || undefined,
+        imageUrl: undefined, // No image_url field in current schema
         tags: [], // Default empty array
         likes: 0, // Default to 0
       }));

@@ -38,11 +38,11 @@ export const useSimilarTrails = (trailId: string, limit = 6) => {
           name: trail.name,
           location: trail.location,
           difficulty: trail.difficulty,
-          distance: trail.distance,
+          distance: trail.length || trail.trail_length || 0, // Use available distance field
           elevation_gain: trail.elevation_gain,
           description: trail.description,
           country: trail.country,
-          imageUrl: trail.image_url || undefined,
+          imageUrl: undefined, // No image_url field in current schema
           tags: [], // Default empty array since tags might not be in database
           likes: 0, // Default to 0 since likes might not be in database
         }));

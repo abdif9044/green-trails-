@@ -8,9 +8,10 @@ import { formatDistanceToNow } from 'date-fns';
 
 interface AlbumDetailHeaderProps {
   album: Album;
+  mediaCount?: number;
 }
 
-const AlbumDetailHeader = ({ album }: AlbumDetailHeaderProps) => {
+const AlbumDetailHeader = ({ album, mediaCount }: AlbumDetailHeaderProps) => {
   const authorName = album.user?.email?.split('@')[0] || 'User';
   const authorAvatar = null; // Could be fetched from profiles in the future
 
@@ -32,6 +33,14 @@ const AlbumDetailHeader = ({ album }: AlbumDetailHeaderProps) => {
               <span className="text-xs text-muted-foreground">
                 {formatDistanceToNow(new Date(album.created_at), { addSuffix: true })}
               </span>
+              {mediaCount !== undefined && (
+                <>
+                  <span className="text-xs text-muted-foreground mx-2">•</span>
+                  <span className="text-xs text-muted-foreground">
+                    {mediaCount} {mediaCount === 1 ? 'item' : 'items'}
+                  </span>
+                </>
+              )}
             </div>
           </div>
         </div>

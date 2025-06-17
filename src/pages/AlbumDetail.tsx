@@ -28,6 +28,7 @@ interface MediaItem {
   url: string;
   caption?: string;
   created_at: string;
+  file_type: string;
 }
 
 const AlbumDetail = () => {
@@ -120,7 +121,7 @@ const AlbumDetail = () => {
       />
       
       <AlbumDetailActions 
-        album={album}
+        albumId={album.id}
       />
       
       <AlbumMediaGrid 

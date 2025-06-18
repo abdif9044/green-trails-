@@ -17,7 +17,7 @@ export const useAssistantChat = (initialTrailContext?: TrailContext | null) => {
   const [isApiKeyConfigured, setIsApiKeyConfigured] = useState<boolean | null>(null);
   const [trailContext, setTrailContext] = useState<TrailContext | null>(initialTrailContext || null);
   const { user } = useAuth();
-  const { location } = useGeolocation();
+  const { coordinates } = useGeolocation();
   
   // Check if OpenAI API key is configured
   useEffect(() => {
@@ -50,13 +50,13 @@ export const useAssistantChat = (initialTrailContext?: TrailContext | null) => {
     setIsLoading(true);
     
     try {
-      // Get user location if available
+      // Get user location if available using new coordinates structure
       let userLocation: UserLocation | null = null;
-      if (location && location.coords) {
+      if (coordinates) {
         userLocation = {
-          latitude: location.coords.latitude,
-          longitude: location.coords.longitude,
-          accuracy: location.coords.accuracy
+          latitude: coordinates.latitude,
+          longitude: coordinates.longitude,
+          accuracy: 10 // Default accuracy since it's not provided in the new structure
         };
       }
       
@@ -81,7 +81,7 @@ export const useAssistantChat = (initialTrailContext?: TrailContext | null) => {
     } finally {
       setIsLoading(false);
     }
-  }, [messages, trailContext, location]);
+  }, [messages, trailContext, coordinates]);
   
   // Function to clear chat history
   const clearChat = useCallback(() => {

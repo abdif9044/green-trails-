@@ -19,32 +19,51 @@ export const useMapInitialization = ({
   style
 }: UseMapInitializationProps) => {
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { map, setMap } = useMap();
 
   useEffect(() => {
-    if (!mapContainer.current) return;
+    if (!mapContainer.current) {
+      console.log('🗺️ Map container not ready yet');
+      return;
+    }
+
+    if (map) {
+      console.log('🗺️ Map already initialized');
+      setIsLoading(false);
+      return;
+    }
 
     const initializeMap = async () => {
       try {
-        // Get Mapbox token using the utility function from mapUtils
+        console.log('🗺️ Starting map initialization...');
+        setIsLoading(true);
+        setError(null);
+        
+        // Get Mapbox token using the utility function
         const token = await getMapboxToken();
         
         if (!token) {
           throw new Error('Failed to retrieve Mapbox token');
         }
         
+        console.log('🗺️ Setting Mapbox access token');
         mapboxgl.accessToken = token;
 
+        console.log('🗺️ Creating new map instance with:', { center, zoom, style });
+        
         // Create a new map instance
         const newMap = new mapboxgl.Map({
-          container: mapContainer.current,
+          container: mapContainer.current!,
           style: style,
           center: center,
           zoom: zoom,
           pitch: 30,
-          attributionControl: true
+          attributionControl: true,
+          preserveDrawingBuffer: true // Helps with rendering issues
         });
 
+        // Add navigation controls
         newMap.addControl(
           new mapboxgl.NavigationControl({
             visualizePitch: true
@@ -54,9 +73,10 @@ export const useMapInitialization = ({
 
         // Handle map load event
         newMap.on('load', () => {
+          console.log('🗺️ Map loaded successfully');
           setIsLoading(false);
           
-          // Add terrain and atmosphere layers
+          // Add terrain and atmosphere layers with error handling
           try {
             newMap.addSource('terrain', {
               type: 'raster-dem',
@@ -78,15 +98,36 @@ export const useMapInitialization = ({
                 'sky-atmosphere-sun-intensity': 15
               }
             });
+            
+            console.log('🗺️ Added terrain and sky layers');
           } catch (terrainError) {
-            console.warn('Could not add terrain or sky:', terrainError);
+            console.warn('🗺️ Could not add terrain or sky (this is optional):', terrainError);
             // Continue without terrain if it fails
           }
         });
 
+        // Handle map errors
+        newMap.on('error', (e) => {
+          console.error('🗺️ Map error:', e);
+          setError('Map failed to load properly');
+        });
+
+        // Handle style load errors
+        newMap.on('style.load', () => {
+          console.log('🗺️ Map style loaded');
+        });
+
+        newMap.on('styledata', () => {
+          console.log('🗺️ Map style data loaded');
+        });
+
+        console.log('🗺️ Map instance created, setting in context');
         setMap(newMap);
+
       } catch (error) {
-        console.error('Error initializing map:', error);
+        console.error('🗺️ Error initializing map:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown map initialization error';
+        setError(errorMessage);
         toast({
           title: "Map Error",
           description: "Could not initialize map. Please try again later.",
@@ -102,11 +143,12 @@ export const useMapInitialization = ({
     // Cleanup function to remove map when component unmounts
     return () => {
       if (map) {
+        console.log('🗺️ Cleaning up map instance');
         map.remove();
         setMap(null);
       }
     };
   }, [style, mapContainer, center, zoom, setMap, map]);
 
-  return { isLoading };
+  return { isLoading, error };
 };

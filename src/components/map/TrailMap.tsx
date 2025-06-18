@@ -3,6 +3,7 @@ import MapContainer from './MapContainer';
 import { Trail } from '@/types/trails';
 import { Button } from '@/components/ui/button';
 import { Layers } from 'lucide-react';
+import { validateCoordinates } from '@/features/map/utils/mapUtils';
 
 interface TrailMapProps {
   trails: Trail[];
@@ -36,16 +37,32 @@ const TrailMap: React.FC<TrailMapProps> = ({
   // Determine the map center based on trails if not provided
   useEffect(() => {
     if (!center && trails.length > 0) {
-      // Try to find a trail with coordinates
-      const trailWithCoords = trails.find(t => t.coordinates);
-      if (trailWithCoords && trailWithCoords.coordinates) {
-        setUsableCenter(trailWithCoords.coordinates);
-      } else {
-        // Default to US center if no coordinates available
-        setUsableCenter([-98.5795, 39.8283]);
+      console.log('🗺️ No center provided, finding suitable center from trails');
+      
+      // Try to find a trail with valid coordinates
+      let foundValidCoords = false;
+      for (const trail of trails) {
+        const validCoords = validateCoordinates(trail.coordinates);
+        if (validCoords) {
+          console.log(`🗺️ Using coordinates from trail ${trail.name}: [${validCoords[0]}, ${validCoords[1]}]`);
+          setUsableCenter(validCoords);
+          foundValidCoords = true;
+          break;
+        }
+      }
+      
+      if (!foundValidCoords) {
+        console.log('🗺️ No valid coordinates found in trails, using default US center');
+        setUsableCenter([-98.5795, 39.8283]); // Default to US center
       }
     } else if (center) {
-      setUsableCenter(center);
+      const validCenter = validateCoordinates(center);
+      if (validCenter) {
+        setUsableCenter(validCenter);
+      } else {
+        console.warn('🗺️ Invalid center coordinates provided:', center);
+        setUsableCenter([-98.5795, 39.8283]);
+      }
     }
 
     // Set zoom level based on filter specificity
@@ -62,23 +79,36 @@ const TrailMap: React.FC<TrailMapProps> = ({
     }
   }, [trails, center, zoom, country, stateProvince]);
 
-  // Split trails into batches for better performance with large datasets
+  // Filter trails to only include those with valid coordinates
   const [visibleTrails, setVisibleTrails] = useState<Trail[]>([]);
   const batchSize = 200;
 
   useEffect(() => {
+    console.log(`🗺️ Processing ${trails.length} trails for map display`);
+    
+    // Filter trails with valid coordinates
+    const validTrails = trails.filter(trail => {
+      const isValid = validateCoordinates(trail.coordinates) !== null;
+      if (!isValid) {
+        console.warn(`🗺️ Skipping trail ${trail.name} - invalid coordinates:`, trail.coordinates);
+      }
+      return isValid;
+    });
+    
+    console.log(`🗺️ Found ${validTrails.length} trails with valid coordinates`);
+    
     // If we have a reasonable number of trails, show them all
-    if (trails.length <= batchSize) {
-      setVisibleTrails(trails);
+    if (validTrails.length <= batchSize) {
+      setVisibleTrails(validTrails);
       return;
     }
 
     // Otherwise, limit to the first batch for initial load
-    setVisibleTrails(trails.slice(0, batchSize));
+    setVisibleTrails(validTrails.slice(0, batchSize));
     
     // Then load the rest after a delay for better UI responsiveness
     const timer = setTimeout(() => {
-      setVisibleTrails(trails);
+      setVisibleTrails(validTrails);
     }, 1000);
     
     return () => clearTimeout(timer);
@@ -88,6 +118,19 @@ const TrailMap: React.FC<TrailMapProps> = ({
   const togglePaths = () => {
     setShowPaths(!showPaths);
   };
+
+  if (!usableCenter) {
+    return (
+      <div className="h-full w-full flex items-center justify-center bg-gray-100 dark:bg-gray-800 rounded-lg">
+        <div className="text-center p-6">
+          <div className="text-gray-400 mb-2">🗺️</div>
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            Unable to determine map center
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative h-full w-full">
@@ -120,6 +163,14 @@ const TrailMap: React.FC<TrailMapProps> = ({
       {trails.length > batchSize && visibleTrails.length < trails.length && (
         <div className="absolute bottom-4 left-4 z-10 bg-background/80 px-3 py-1 rounded text-sm">
           Loading {trails.length} trails...
+        </div>
+      )}
+      
+      {visibleTrails.length === 0 && trails.length > 0 && (
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10 bg-background/80 px-4 py-2 rounded text-sm text-center">
+          <p className="text-gray-600 dark:text-gray-400">
+            No trails with valid coordinates found
+          </p>
         </div>
       )}
     </div>

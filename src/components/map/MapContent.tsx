@@ -31,7 +31,7 @@ interface MapContentProps {
 const MapContent: React.FC<MapContentProps> = ({
   trails = [],
   onTrailSelect,
-  center = [-92.4631, 44.0553],
+  center = [-92.4631, 44.0553], // Default to Minnesota center
   zoom = 10,
   className = 'h-[500px] w-full',
   showParking = true,
@@ -40,7 +40,7 @@ const MapContent: React.FC<MapContentProps> = ({
   weatherLayerType = 'temperature'
 }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
-  const { map } = useMap();
+  const { map, isInitialized } = useMap();
   
   const {
     weatherLayer,
@@ -59,7 +59,7 @@ const MapContent: React.FC<MapContentProps> = ({
     setWeatherLayer(showWeatherLayer);
   }, [showWeatherLayer, setWeatherLayer]);
 
-  const { isLoading } = useMapInitialization({
+  const { isLoading, error } = useMapInitialization({
     mapContainer,
     center,
     zoom,
@@ -74,6 +74,28 @@ const MapContent: React.FC<MapContentProps> = ({
   const relevantParkingSpots = parkingSpots.filter(
     spot => trailIds.includes(spot.trail_id)
   );
+
+  // Show error state if there's an initialization error
+  if (error) {
+    return (
+      <div className={`relative rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 ${className}`}>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="text-center p-6">
+            <div className="text-red-500 mb-2">⚠️</div>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Map failed to load: {error}
+            </p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="mt-2 px-4 py-2 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`relative rounded-lg overflow-hidden ${className}`}>
@@ -92,7 +114,7 @@ const MapContent: React.FC<MapContentProps> = ({
         />
       </div>
       
-      {map && (
+      {map && isInitialized && (
         <>
           <MapTrailMarkers
             trails={trails}
@@ -122,7 +144,7 @@ const MapContent: React.FC<MapContentProps> = ({
         type={weatherLayerType} 
       />
       
-      {isLoading && <MapLoadingState />}
+      {isLoading && <MapLoadingState message="Loading map..." />}
     </div>
   );
 };

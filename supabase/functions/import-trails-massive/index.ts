@@ -4,10 +4,6 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "./cors.ts";
 import { createTestTrail, generateTrailsForSource } from "./trail-generator.ts";
 import { processBatch, type BatchResult } from "./batch-processor.ts";
-import { parseAndValidateRequest, validateImportRequest, getLocationInfo } from "./request-handler.ts";
-import { createBulkImportJob, updateBulkImportJob } from "./job-manager.ts";
-import { buildSuccessResponse, buildErrorResponse } from "./response-builder.ts";
-import type { ImportRequest, SourceResult } from "./types.ts";
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -32,41 +28,27 @@ serve(async (req) => {
     
     console.log('🔑 Using service role for trail imports to bypass RLS');
     
-    // Parse and validate request
-    const request = await parseAndValidateRequest(req);
-    const validation = validateImportRequest(request);
-    
-    if (!validation.isValid) {
-      return new Response(
-        JSON.stringify({ error: validation.error }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-      );
+    // Parse request with defaults for immediate execution
+    let requestBody;
+    try {
+      requestBody = await req.json();
+    } catch {
+      requestBody = {};
     }
     
     const { 
-      sources, 
-      maxTrailsPerSource, 
-      batchSize = 15,
-      concurrency = 1,
-      priority = 'normal',
-      target = '30K',
-      debug = false,
-      validation: validationMode = false,
-      location
-    } = request;
+      sources = ['hiking_project', 'openstreetmap'], 
+      maxTrailsPerSource = 2500,
+      batchSize = 25,
+      target = '5K Trails Quick Start'
+    } = requestBody;
     
-    const { isLocationSpecific, locationName } = getLocationInfo(location);
-    
-    console.log(`🎯 Starting ${target} trail import${isLocationSpecific ? ` for ${locationName}` : ''} with validated schema`);
+    console.log(`🎯 Starting ${target} import with FIXED SCHEMA`);
     console.log(`📊 Configuration: ${sources.length} sources, ${maxTrailsPerSource} trails per source, batch size: ${batchSize}`);
-    
-    if (location) {
-      console.log(`📍 Location targeting: ${location.lat}, ${location.lng} within ${location.radius} miles`);
-    }
     
     // Test single insert with proper schema validation
     console.log('🧪 Testing single trail insert with FIXED schema...');
-    const testTrail = createTestTrail(location);
+    const testTrail = createTestTrail();
     
     const { data: testData, error: testError } = await supabase
       .from('trails')
@@ -78,16 +60,14 @@ serve(async (req) => {
         code: testError.code,
         message: testError.message,
         details: testError.details,
-        hint: testError.hint,
-        testTrail: testTrail
+        hint: testError.hint
       });
       return new Response(
         JSON.stringify({ 
           error: 'Schema validation failed', 
           details: testError.message,
           code: testError.code,
-          hint: testError.hint,
-          schema_test: 'failed'
+          hint: testError.hint
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       );
@@ -99,7 +79,27 @@ serve(async (req) => {
     }
     
     // Create bulk import job
-    const bulkJob = await createBulkImportJob(supabase, sources, maxTrailsPerSource, locationName);
+    const { data: bulkJob, error: bulkJobError } = await supabase
+      .from('bulk_import_jobs')
+      .insert([{
+        status: 'processing',
+        started_at: new Date().toISOString(),
+        total_trails_requested: sources.length * maxTrailsPerSource,
+        total_sources: sources.length,
+        trails_processed: 0,
+        trails_added: 0,
+        trails_updated: 0,
+        trails_failed: 0
+      }])
+      .select('*')
+      .single();
+    
+    if (bulkJobError) {
+      console.error('Failed to create bulk import job:', bulkJobError);
+      throw new Error(`Failed to create bulk import job: ${bulkJobError.message}`);
+    }
+    
+    console.log(`✅ Created bulk job ${bulkJob.id} with FIXED SCHEMA`);
     
     // Process all sources
     let totalAdded = 0;
@@ -107,17 +107,15 @@ serve(async (req) => {
     let totalProcessed = 0;
     let allInsertErrors: string[] = [];
     
-    const sourceResults: SourceResult[] = [];
-    
     for (const sourceType of sources) {
       try {
-        console.log(`🚀 Processing source: ${sourceType} for ${locationName}`);
+        console.log(`🚀 Processing source: ${sourceType}`);
         
-        // Generate location-specific trails for this source
-        const trails = generateTrailsForSource(sourceType, maxTrailsPerSource, location);
+        // Generate trails for this source
+        const trails = generateTrailsForSource(sourceType, maxTrailsPerSource);
         totalProcessed += trails.length;
         
-        console.log(`📋 Generated ${trails.length} trails for ${sourceType} near ${locationName}`);
+        console.log(`📋 Generated ${trails.length} trails for ${sourceType}`);
         
         // Process trails in batches
         let sourceAddedCount = 0;
@@ -132,98 +130,84 @@ serve(async (req) => {
             supabase,
             batch,
             sourceType,
-            batchIndex,
-            location
+            batchIndex
           );
           
           sourceAddedCount += result.addedCount;
           sourceFailedCount += result.failedCount;
           sourceInsertErrors.push(...result.insertErrors);
           
-          // Small delay between batches
-          await new Promise(resolve => setTimeout(resolve, 200));
+          // Small delay between batches to prevent overwhelming DB
+          await new Promise(resolve => setTimeout(resolve, 100));
         }
         
         totalAdded += sourceAddedCount;
         totalFailed += sourceFailedCount;
         allInsertErrors.push(...sourceInsertErrors);
         
-        sourceResults.push({
-          source: sourceType,
-          success: sourceAddedCount > 0,
-          trails_added: sourceAddedCount,
-          trails_failed: sourceFailedCount,
-          trails_processed: trails.length,
-          success_rate: trails.length > 0 ? Math.round((sourceAddedCount / trails.length) * 100) : 0,
-          error_details: sourceFailedCount > 0 ? sourceInsertErrors.slice(-3) : [],
-          location: locationName
-        });
-        
-        console.log(`✅ ${sourceType} COMPLETE for ${locationName}: ${sourceAddedCount} added, ${sourceFailedCount} failed (${Math.round((sourceAddedCount/trails.length)*100)}% success)`);
+        console.log(`✅ ${sourceType} COMPLETE: ${sourceAddedCount} added, ${sourceFailedCount} failed (${Math.round((sourceAddedCount/trails.length)*100)}% success)`);
         
       } catch (sourceError) {
         console.error(`💥 Source processing failed for ${sourceType}:`, sourceError);
         const errorMsg = sourceError instanceof Error ? sourceError.message : 'Unknown error';
         allInsertErrors.push(`${sourceType}: ${errorMsg}`);
         totalFailed += maxTrailsPerSource;
-        
-        sourceResults.push({
-          source: sourceType,
-          success: false,
-          error: errorMsg,
-          trails_added: 0,
-          trails_failed: maxTrailsPerSource,
-          trails_processed: 0,
-          success_rate: 0,
-          location: locationName
-        });
       }
     }
     
     // Update bulk job with final results
-    const finalStatus = await updateBulkImportJob(supabase, bulkJob.id, totalProcessed, totalAdded, totalFailed);
-    const successRate = totalProcessed > 0 ? Math.round((totalAdded / totalProcessed) * 100) : 0;
+    const finalStatus = totalAdded > 0 ? 'completed' : 'error';
+    await supabase
+      .from('bulk_import_jobs')
+      .update({
+        status: finalStatus,
+        completed_at: new Date().toISOString(),
+        trails_processed: totalProcessed,
+        trails_added: totalAdded,
+        trails_updated: 0,
+        trails_failed: totalFailed
+      })
+      .eq('id', bulkJob.id);
     
     // Verify the final count in the database
     const { count: finalCount } = await supabase
       .from('trails')
       .select('*', { count: 'exact', head: true });
     
-    console.log(`🎉 ${target} Import COMPLETE for ${locationName}!`);
+    console.log(`🎉 ${target} Import COMPLETE!`);
     console.log(`📊 Final Results: ${totalAdded} added, ${totalFailed} failed, ${totalProcessed} processed`);
-    console.log(`📈 Success rate: ${successRate}%`);
+    console.log(`📈 Success rate: ${totalProcessed > 0 ? Math.round((totalAdded / totalProcessed) * 100) : 0}%`);
     console.log(`🗄️ Total trails now in database: ${finalCount}`);
     
     if (allInsertErrors.length > 0) {
-      console.error(`💥 Insert errors encountered:`, allInsertErrors.slice(-5));
+      console.error(`💥 Insert errors encountered:`, allInsertErrors.slice(-10));
     }
     
-    const responseData = buildSuccessResponse(
-      bulkJob,
-      target,
-      locationName,
-      totalProcessed,
-      totalAdded,
-      totalFailed,
-      sourceResults,
-      allInsertErrors,
-      finalCount,
-      isLocationSpecific,
-      finalStatus
-    );
-    
     return new Response(
-      JSON.stringify(responseData),
+      JSON.stringify({
+        success: true,
+        job_id: bulkJob.id,
+        trails_added: totalAdded,
+        trails_failed: totalFailed,
+        trails_processed: totalProcessed,
+        success_rate: totalProcessed > 0 ? Math.round((totalAdded / totalProcessed) * 100) : 0,
+        total_trails_in_db: finalCount,
+        target: target,
+        status: finalStatus,
+        errors: allInsertErrors.slice(-5) // Include last 5 errors for debugging
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
     
   } catch (error) {
     console.error('💥 Massive import error:', error);
     
-    const errorResponse = buildErrorResponse(error);
-    
     return new Response(
-      JSON.stringify(errorResponse),
+      JSON.stringify({ 
+        success: false,
+        error: 'Internal Server Error', 
+        details: error instanceof Error ? error.message : 'Unknown error'
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
   }

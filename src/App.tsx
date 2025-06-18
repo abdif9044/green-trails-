@@ -17,6 +17,7 @@ import AdminTrailImport from "./pages/AdminTrailImport";
 import AutoImport from "./pages/AutoImport";
 import AutoImportPage from "./pages/AutoImportPage";
 import TrailRecovery from "./pages/TrailRecovery";
+import WeatherProphet from "./pages/WeatherProphet";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +41,7 @@ const App = () => (
                 <Route path="/admin/auto-import" element={<AutoImportPage />} />
                 <Route path="/auto-import" element={<AutoImport />} />
                 <Route path="/recovery" element={<TrailRecovery />} />
+                <Route path="/weather-prophet" element={<WeatherProphet />} />
               </Routes>
             </BrowserRouter>
           </TooltipProvider>

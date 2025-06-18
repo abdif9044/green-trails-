@@ -7,7 +7,7 @@ import DatabaseEmergencyFix from '@/components/admin/DatabaseEmergencyFix';
 import FeaturedTrails from '@/components/home/FeaturedTrails';
 import CtaSection from '@/components/home/CtaSection';
 import FeatureSection from '@/components/home/FeatureSection';
-import AchievementTeaser from '@/components/home/AchievementTeaser';
+import { AchievementTeaser } from '@/components/home/AchievementTeaser';
 import { MapPin, Users, Star, Zap, Mountain, Camera, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
@@ -188,7 +188,7 @@ const Index: React.FC = () => {
         </section>
 
         {/* Achievement Teaser */}
-        <AchievementTeaser />
+        <AchievementTeaser badges={[]} loading={false} />
 
         {/* Feature Sections */}
         <FeatureSection />

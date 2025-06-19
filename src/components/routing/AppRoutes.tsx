@@ -1,8 +1,10 @@
+
 import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Loading from '@/components/Loading';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import LandingPage from '@/pages/LandingPage';
 import Index from '@/pages/Index';
 import Discover from '@/pages/Discover';
 import TrailDetail from '@/pages/TrailDetail';
@@ -20,10 +22,10 @@ import TermsOfServicePage from '@/pages/TermsOfServicePage';
 const AppRoutes: React.FC = () => {
   return (
     <Router>
-      <Navbar />
       <Suspense fallback={<Loading />}>
         <Routes>
-          <Route path="/" element={<Index />} />
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/home" element={<Index />} />
           <Route path="/discover" element={<Discover />} />
           <Route path="/trail/:id" element={<TrailDetail />} />
           <Route path="/weather-prophet" element={<WeatherProphet />} />
@@ -41,7 +43,6 @@ const AppRoutes: React.FC = () => {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
-      <Footer />
     </Router>
   );
 };

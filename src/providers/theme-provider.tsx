@@ -1,5 +1,6 @@
 
 import React from "react"
+import { ensureReactReady } from "@/utils/react-safety"
 
 type Theme = "dark" | "light" | "system"
 
@@ -22,6 +23,12 @@ export function ThemeProvider({
   defaultTheme?: Theme
   storageKey?: string
 }) {
+  // Safety check for React readiness
+  if (!ensureReactReady()) {
+    console.warn('ThemeProvider: React not ready, rendering children without theme context');
+    return <>{children}</>;
+  }
+
   // Initialize theme from localStorage with fallback
   const getInitialTheme = (): Theme => {
     if (typeof window === 'undefined') return defaultTheme;

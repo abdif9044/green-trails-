@@ -4,6 +4,7 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { EnhancedAuthService } from '@/services/auth/enhanced-auth-service';
 import { SecurityManager } from '@/services/security/security-manager';
+import { ensureReactReady } from '@/utils/react-safety';
 
 interface EnhancedAuthContextType {
   user: User | null;
@@ -29,6 +30,12 @@ export const useEnhancedAuth = () => {
 };
 
 export const EnhancedAuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // Safety check for React readiness
+  if (!ensureReactReady()) {
+    console.warn('EnhancedAuthProvider: React not ready, rendering children without auth context');
+    return <>{children}</>;
+  }
+
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
@@ -36,49 +43,55 @@ export const EnhancedAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   useEffect(() => {
     let mounted = true;
+    let subscription: { unsubscribe: () => void } | null = null;
 
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (!mounted) return;
-
-        setSession(session);
-        setUser(session?.user ?? null);
-
-        // Log auth state changes securely
-        if (event === 'SIGNED_IN' && session?.user) {
-          setTimeout(() => {
-            SecurityManager.logSecurityEvent({
-              event_type: 'auth_state_change',
-              user_id: session.user.id,
-              metadata: { event },
-              severity: 'low'
-            });
-          }, 0);
-        } else if (event === 'SIGNED_OUT') {
-          setTimeout(() => {
-            SecurityManager.logSecurityEvent({
-              event_type: 'auth_state_change',
-              metadata: { event },
-              severity: 'low'
-            });
-          }, 0);
-        }
-
-        if (!isInitialized) {
-          setIsInitialized(true);
-          setLoading(false);
-        }
-      }
-    );
-
-    // THEN check for existing session
     const initializeAuth = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        // Set up auth state listener FIRST
+        const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateChange(
+          async (event, session) => {
+            if (!mounted) return;
+
+            console.log('Auth state change:', event, session?.user?.id);
+
+            setSession(session);
+            setUser(session?.user ?? null);
+
+            // Log auth state changes securely
+            if (event === 'SIGNED_IN' && session?.user) {
+              setTimeout(() => {
+                SecurityManager.logSecurityEvent({
+                  event_type: 'auth_state_change',
+                  user_id: session.user.id,
+                  metadata: { event },
+                  severity: 'low'
+                }).catch(console.error);
+              }, 0);
+            } else if (event === 'SIGNED_OUT') {
+              setTimeout(() => {
+                SecurityManager.logSecurityEvent({
+                  event_type: 'auth_state_change',
+                  metadata: { event },
+                  severity: 'low'
+                }).catch(console.error);
+              }, 0);
+            }
+
+            if (!isInitialized) {
+              setIsInitialized(true);
+              setLoading(false);
+            }
+          }
+        );
+
+        subscription = authSubscription;
+
+        // THEN check for existing session
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
         if (mounted) {
-          setSession(session);
-          setUser(session?.user ?? null);
+          console.log('Initial session:', currentSession?.user?.id);
+          setSession(currentSession);
+          setUser(currentSession?.user ?? null);
           setIsInitialized(true);
           setLoading(false);
         }
@@ -95,9 +108,11 @@ export const EnhancedAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     return () => {
       mounted = false;
-      subscription.unsubscribe();
+      if (subscription) {
+        subscription.unsubscribe();
+      }
     };
-  }, [isInitialized]);
+  }, []); // Remove isInitialized dependency to prevent re-initialization
 
   const signIn = async (email: string, password: string) => {
     setLoading(true);
@@ -161,7 +176,7 @@ export const EnhancedAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     return await EnhancedAuthService.secureUpdatePassword(password);
   };
 
-  const value = {
+  const value = React.useMemo(() => ({
     user,
     session,
     loading,
@@ -172,7 +187,7 @@ export const EnhancedAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     verifyAge,
     resetPassword,
     updatePassword,
-  };
+  }), [user, session, loading, isInitialized]);
 
   return (
     <EnhancedAuthContext.Provider value={value}>

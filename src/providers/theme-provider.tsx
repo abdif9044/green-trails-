@@ -23,17 +23,19 @@ export function ThemeProvider({
   storageKey?: string
 }) {
   // Initialize theme from localStorage with fallback
-  const getInitialTheme = React.useCallback((): Theme => {
+  const getInitialTheme = (): Theme => {
+    if (typeof window === 'undefined') return defaultTheme;
     try {
       const stored = localStorage.getItem(storageKey) as Theme | null
       return stored || defaultTheme
     } catch {
       return defaultTheme
     }
-  }, [storageKey, defaultTheme]);
+  };
 
   // Initialize resolved theme
-  const getInitialResolvedTheme = React.useCallback((): "dark" | "light" => {
+  const getInitialResolvedTheme = (): "dark" | "light" => {
+    if (typeof window === 'undefined') return "light";
     try {
       const stored = localStorage.getItem(storageKey) as Theme | null
       if (stored && stored !== "system") {
@@ -45,12 +47,14 @@ export function ThemeProvider({
     } catch {
       return "light"
     }
-  }, [storageKey]);
+  };
 
   const [theme, setThemeState] = React.useState<Theme>(getInitialTheme)
   const [resolvedTheme, setResolvedTheme] = React.useState<"dark" | "light">(getInitialResolvedTheme)
 
   React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
     const root = window.document.documentElement
     root.classList.remove("light", "dark")
 
@@ -63,6 +67,7 @@ export function ThemeProvider({
   }, [theme])
 
   const setTheme = React.useCallback((newTheme: Theme) => {
+    if (typeof window === 'undefined') return;
     try {
       localStorage.setItem(storageKey, newTheme)
     } catch {

@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import App from './App.tsx'
 import './index.css'
+import AppErrorBoundary from './components/AppErrorBoundary.tsx'
 
 // Create a client for React Query with optimized settings
 const queryClient = new QueryClient({
@@ -51,8 +52,10 @@ if (typeof React === 'undefined') {
 
 root.render(
   <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <App />
-    </QueryClientProvider>
+    <AppErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <App />
+      </QueryClientProvider>
+    </AppErrorBoundary>
   </React.StrictMode>
 );

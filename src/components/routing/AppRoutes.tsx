@@ -18,6 +18,16 @@ import NotFound from '@/pages/NotFound';
 import AdminPanel from '@/pages/AdminPanel';
 import PrivacyPolicyPage from '@/pages/PrivacyPolicyPage';
 import TermsOfServicePage from '@/pages/TermsOfServicePage';
+import { AuthProvider } from '@/providers/auth-provider';
+
+// Wrapper component to provide auth context to routes that need it
+const AuthProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  return (
+    <AuthProvider>
+      {children}
+    </AuthProvider>
+  );
+};
 
 const AppRoutes: React.FC = () => {
   return (
@@ -27,12 +37,32 @@ const AppRoutes: React.FC = () => {
           <Route path="/" element={<LandingPage />} />
           <Route path="/home" element={<Index />} />
           <Route path="/discover" element={<Discover />} />
-          <Route path="/trail/:id" element={<TrailDetail />} />
+          <Route path="/trail/:id" element={
+            <AuthProtectedRoute>
+              <TrailDetail />
+            </AuthProtectedRoute>
+          } />
           <Route path="/weather-prophet" element={<WeatherProphet />} />
-          <Route path="/social" element={<Social />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/badges" element={<Badges />} />
-          <Route path="/settings" element={<Settings />} />
+          <Route path="/social" element={
+            <AuthProtectedRoute>
+              <Social />
+            </AuthProtectedRoute>
+          } />
+          <Route path="/profile" element={
+            <AuthProtectedRoute>
+              <Profile />
+            </AuthProtectedRoute>
+          } />
+          <Route path="/badges" element={
+            <AuthProtectedRoute>
+              <Badges />
+            </AuthProtectedRoute>
+          } />
+          <Route path="/settings" element={
+            <AuthProtectedRoute>
+              <Settings />
+            </AuthProtectedRoute>
+          } />
           <Route path="/auth" element={<Auth />} />
           <Route path="/admin" element={<AdminPanel />} />
 

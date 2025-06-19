@@ -1,5 +1,5 @@
 
-import * as React from "react"
+import React from "react"
 
 type Theme = "dark" | "light" | "system"
 
@@ -66,7 +66,7 @@ export function ThemeProvider({
     root.classList.add(effectiveTheme)
   }, [theme])
 
-  const setTheme = React.useCallback((newTheme: Theme) => {
+  const setTheme = (newTheme: Theme) => {
     if (typeof window === 'undefined') return;
     try {
       localStorage.setItem(storageKey, newTheme)
@@ -74,13 +74,13 @@ export function ThemeProvider({
       // Ignore localStorage errors
     }
     setThemeState(newTheme)
-  }, [storageKey])
+  }
 
   const value = React.useMemo(() => ({
     theme,
     setTheme,
     resolvedTheme,
-  }), [theme, setTheme, resolvedTheme])
+  }), [theme, resolvedTheme])
 
   return (
     <ThemeProviderContext.Provider value={value}>

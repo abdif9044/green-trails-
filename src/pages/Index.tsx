@@ -1,9 +1,8 @@
-
 import React from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import SEOProvider from '@/components/SEOProvider';
-import DatabaseEmergencyFix from '@/components/admin/DatabaseEmergencyFix';
+import EmergencyBootstrap from '@/components/bootstrap/EmergencyBootstrap';
 import FeaturedTrails from '@/components/home/FeaturedTrails';
 import CtaSection from '@/components/home/CtaSection';
 import FeatureSection from '@/components/home/FeatureSection';
@@ -23,10 +22,10 @@ const Index: React.FC = () => {
       <Navbar />
       
       <main className="flex-grow">
-        {/* Emergency Database Fix Section */}
-        <section className="py-8 bg-red-50 dark:bg-red-950 border-b border-red-200 dark:border-red-800">
+        {/* Emergency Bootstrap Section */}
+        <section className="py-8 bg-blue-50 dark:bg-blue-950 border-b border-blue-200 dark:border-blue-800">
           <div className="container mx-auto px-4">
-            <DatabaseEmergencyFix />
+            <EmergencyBootstrap />
           </div>
         </section>
 

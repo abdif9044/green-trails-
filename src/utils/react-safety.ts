@@ -1,4 +1,6 @@
 
+import React from 'react';
+
 // Utility to ensure React is properly initialized before using hooks
 export const ensureReactReady = (): boolean => {
   if (typeof window === 'undefined') return false;

@@ -2,7 +2,6 @@
 import React from 'react'
 import { createRoot } from 'react-dom/client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { HelmetProvider } from 'react-helmet-async'
 import App from './App.tsx'
 import './index.css'
 
@@ -52,10 +51,8 @@ if (typeof React === 'undefined') {
 
 root.render(
   <React.StrictMode>
-    <HelmetProvider>
-      <QueryClientProvider client={queryClient}>
-        <App />
-      </QueryClientProvider>
-    </HelmetProvider>
+    <QueryClientProvider client={queryClient}>
+      <App />
+    </QueryClientProvider>
   </React.StrictMode>
 );

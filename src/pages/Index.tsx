@@ -84,22 +84,6 @@ const Index: React.FC = () => {
                   </Link>
                 </Button>
               </div>
-
-              {/* Stats Bar */}
-              <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-3xl mx-auto animate-fade-in-up delay-600">
-                <div className="text-center">
-                  <div className="text-3xl md:text-4xl font-bold text-greentrail-600 mb-2">5,000+</div>
-                  <div className="text-gray-600 dark:text-gray-300">Verified Trails</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl md:text-4xl font-bold text-gold-600 mb-2">15k+</div>
-                  <div className="text-gray-600 dark:text-gray-300">Active Hikers</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl md:text-4xl font-bold text-greentrail-600 mb-2">50k+</div>
-                  <div className="text-gray-600 dark:text-gray-300">Trail Photos</div>
-                </div>
-              </div>
             </div>
           </div>
         </section>

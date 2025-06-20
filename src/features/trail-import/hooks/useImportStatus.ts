@@ -36,7 +36,25 @@ export function useImportStatus() {
         .limit(10);
 
       if (error) throw error;
-      setRecentJobs(data || []);
+      
+      // Transform database response to match our BulkImportJob interface
+      const transformedJobs: BulkImportJob[] = (data || []).map(job => ({
+        id: job.id,
+        status: job.status as BulkImportJob['status'], // Type assertion for status
+        trails_processed: job.trails_processed || 0,
+        trails_added: job.trails_added || 0,
+        trails_failed: job.trails_failed || 0,
+        started_at: job.started_at,
+        completed_at: job.completed_at || undefined,
+        error_message: undefined, // Database doesn't have this field
+        total_trails_requested: job.total_trails_requested || 0,
+        total_sources: job.total_sources || 0,
+        trails_updated: job.trails_updated || 0,
+        config: job.config,
+        results: job.results
+      }));
+      
+      setRecentJobs(transformedJobs);
     } catch (error) {
       console.error('Error fetching import jobs:', error);
     }

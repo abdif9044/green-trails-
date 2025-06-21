@@ -44,6 +44,3 @@ export const useTrailInteractions = (trailId: string) => {
     likes: likeCount
   };
 };
-
-// Export the trail comments hook
-export { useTrailComments } from './use-trail-comments';

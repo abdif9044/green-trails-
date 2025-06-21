@@ -4,6 +4,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import SEOProvider from '@/components/SEOProvider';
 import { ImportDashboard } from '@/features/trail-import/ImportDashboard';
+import { AutonomousImportTrigger } from '@/components/autonomous/AutonomousImportTrigger';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Database, Zap, Shield, TrendingUp } from 'lucide-react';
 
@@ -69,6 +70,11 @@ const AdminPanel: React.FC = () => {
                 </div>
               </CardContent>
             </Card>
+          </div>
+
+          {/* Autonomous Import Trigger */}
+          <div className="mb-8">
+            <AutonomousImportTrigger />
           </div>
 
           {/* Main Import Dashboard */}

@@ -5,6 +5,7 @@ import Footer from '@/components/Footer';
 import SEOProvider from '@/components/SEOProvider';
 import { ImportDashboard } from '@/features/trail-import/ImportDashboard';
 import { AutonomousImportTrigger } from '@/components/autonomous/AutonomousImportTrigger';
+import { DatabaseHealthCheck } from '@/components/database/DatabaseHealthCheck';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Database, Zap, Shield, TrendingUp } from 'lucide-react';
 
@@ -25,7 +26,7 @@ const AdminPanel: React.FC = () => {
               Trail Import Administration
             </h1>
             <p className="text-gray-600 dark:text-gray-400">
-              Bulletproof trail import system with real-time monitoring and emergency recovery
+              Phase 1 Complete: Database foundation fixed with RLS policies and performance indexes
             </p>
           </div>
 
@@ -35,8 +36,8 @@ const AdminPanel: React.FC = () => {
               <CardContent className="flex items-center gap-3 p-4">
                 <Database className="h-8 w-8 text-green-600" />
                 <div>
-                  <p className="text-sm text-muted-foreground">System Status</p>
-                  <p className="font-semibold">Operational</p>
+                  <p className="text-sm text-muted-foreground">Database</p>
+                  <p className="font-semibold">Phase 1 ✅</p>
                 </div>
               </CardContent>
             </Card>
@@ -45,8 +46,8 @@ const AdminPanel: React.FC = () => {
               <CardContent className="flex items-center gap-3 p-4">
                 <Shield className="h-8 w-8 text-blue-600" />
                 <div>
-                  <p className="text-sm text-muted-foreground">Data Validation</p>
-                  <p className="font-semibold">Bulletproof</p>
+                  <p className="text-sm text-muted-foreground">RLS Policies</p>
+                  <p className="font-semibold">Fixed</p>
                 </div>
               </CardContent>
             </Card>
@@ -55,8 +56,8 @@ const AdminPanel: React.FC = () => {
               <CardContent className="flex items-center gap-3 p-4">
                 <Zap className="h-8 w-8 text-yellow-600" />
                 <div>
-                  <p className="text-sm text-muted-foreground">Import Engine</p>
-                  <p className="font-semibold">V2.0</p>
+                  <p className="text-sm text-muted-foreground">Indexes</p>
+                  <p className="font-semibold">Optimized</p>
                 </div>
               </CardContent>
             </Card>
@@ -65,11 +66,16 @@ const AdminPanel: React.FC = () => {
               <CardContent className="flex items-center gap-3 p-4">
                 <TrendingUp className="h-8 w-8 text-purple-600" />
                 <div>
-                  <p className="text-sm text-muted-foreground">Success Rate</p>
-                  <p className="font-semibold">100%</p>
+                  <p className="text-sm text-muted-foreground">Edge Functions</p>
+                  <p className="font-semibold">Updated</p>
                 </div>
               </CardContent>
             </Card>
+          </div>
+
+          {/* Database Health Check */}
+          <div className="mb-8">
+            <DatabaseHealthCheck />
           </div>
 
           {/* Autonomous Import Trigger */}

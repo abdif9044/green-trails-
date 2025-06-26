@@ -1,126 +1,284 @@
 
-import { TrailTemplate } from './types.ts';
+import { TrailTemplate, GeographicDistribution } from './types.ts';
 
-export class TrailDataGenerator {
-  private difficulties: Array<'easy' | 'moderate' | 'hard' | 'expert'> = ['easy', 'moderate', 'hard', 'expert'];
-  private terrainTypes = ['forest', 'mountain', 'desert', 'coastal', 'prairie', 'canyon', 'alpine', 'woodland'];
-  private regions = [
-    { country: 'United States', states: ['California', 'Colorado', 'Washington', 'Utah', 'Arizona', 'Montana', 'Wyoming', 'Oregon', 'Nevada', 'New Mexico'], coords: { lat: 39.8283, lng: -98.5795 } },
-    { country: 'Canada', states: ['British Columbia', 'Alberta', 'Ontario', 'Quebec', 'Nova Scotia', 'Yukon'], coords: { lat: 56.1304, lng: -106.3468 } },
-    { country: 'Mexico', states: ['Baja California', 'Sonora', 'Chihuahua', 'Oaxaca', 'Veracruz'], coords: { lat: 23.6345, lng: -102.5528 } }
+export class TrailGenerator {
+  private usStatesList = [
+    'California', 'Colorado', 'Washington', 'Oregon', 'Utah', 'Montana', 
+    'Wyoming', 'Idaho', 'Arizona', 'Nevada', 'New Mexico', 'Texas',
+    'North Carolina', 'Tennessee', 'Virginia', 'West Virginia', 'Kentucky',
+    'Georgia', 'South Carolina', 'Alabama', 'Arkansas', 'Missouri',
+    'Illinois', 'Wisconsin', 'Minnesota', 'Michigan', 'Ohio', 'Pennsylvania',
+    'New York', 'Vermont', 'New Hampshire', 'Maine', 'Massachusetts',
+    'Connecticut', 'Rhode Island', 'New Jersey', 'Delaware', 'Maryland'
   ];
   
-  generateTrails(count: number): TrailTemplate[] {
-    const trails: TrailTemplate[] = [];
+  private canadianProvinces = [
+    'British Columbia', 'Alberta', 'Ontario', 'Quebec', 'Nova Scotia',
+    'New Brunswick', 'Manitoba', 'Saskatchewan', 'Newfoundland and Labrador'
+  ];
+  
+  private terrainTypes = [
+    'Mountain', 'Forest', 'Desert', 'Coastal', 'Prairie', 'Canyon',
+    'River Valley', 'Lake Shore', 'Alpine', 'Woodland', 'Grassland'
+  ];
+  
+  private trailPrefixes = [
+    'Pine', 'Oak', 'Cedar', 'Maple', 'Aspen', 'Birch', 'Willow',
+    'Eagle', 'Bear', 'Wolf', 'Deer', 'Fox', 'Hawk', 'Raven',
+    'Mountain', 'Valley', 'Ridge', 'Creek', 'River', 'Lake',
+    'Summit', 'Vista', 'Canyon', 'Mesa', 'Bluff', 'Falls'
+  ];
+  
+  private trailSuffixes = [
+    'Trail', 'Path', 'Loop', 'Route', 'Way', 'Walk', 'Track',
+    'Ridge Trail', 'Creek Trail', 'Mountain Trail', 'Valley Trail',
+    'Lookout Trail', 'Nature Trail', 'Wilderness Trail'
+  ];
+  
+  async generateTrails(count: number): Promise<TrailTemplate[]> {
+    console.log(`🎯 Generating ${count} diverse trail templates...`);
     
-    for (let i = 0; i < count; i++) {
-      const region = this.regions[i % this.regions.length];
-      const state = region.states[Math.floor(Math.random() * region.states.length)];
-      const difficulty = this.difficulties[i % this.difficulties.length];
-      const terrainType = this.terrainTypes[Math.floor(Math.random() * this.terrainTypes.length)];
-      
-      // Generate realistic coordinates within the region
-      const latVariation = (Math.random() - 0.5) * 10; // ±5 degrees
-      const lngVariation = (Math.random() - 0.5) * 20; // ±10 degrees
-      
-      const trail: TrailTemplate = {
-        id: crypto.randomUUID(),
-        name: this.generateTrailName(terrainType, i + 1),
-        location: `${state}, ${region.country}`,
-        description: this.generateDescription(difficulty, terrainType, state),
-        difficulty,
-        terrain_type: terrainType,
-        length: this.generateLength(difficulty),
-        elevation: this.generateElevation(region.country, terrainType),
-        elevation_gain: this.generateElevationGain(difficulty),
-        latitude: region.coords.lat + latVariation,
-        longitude: region.coords.lng + lngVariation,
-        country: region.country,
-        state_province: state,
-        region: this.getRegionName(region.country),
-        is_verified: Math.random() > 0.2, // 80% verified
-        is_age_restricted: false // Keep all trails age-unrestricted for simplicity
-      };
-      
-      trails.push(trail);
+    const trails: TrailTemplate[] = [];
+    const distribution = this.calculateDistribution(count);
+    
+    // Generate US trails
+    for (let i = 0; i < distribution.us; i++) {
+      trails.push(this.generateUSTrail());
     }
     
+    // Generate Canadian trails
+    for (let i = 0; i < distribution.canada; i++) {
+      trails.push(this.generateCanadianTrail());
+    }
+    
+    // Generate Mexican trails
+    for (let i = 0; i < distribution.mexico; i++) {
+      trails.push(this.generateMexicanTrail());
+    }
+    
+    // Generate global trails
+    for (let i = 0; i < distribution.global; i++) {
+      trails.push(this.generateGlobalTrail());
+    }
+    
+    console.log(`✅ Generated ${trails.length} trails across ${Object.keys(distribution).length} regions`);
     return trails;
   }
   
-  private generateTrailName(terrainType: string, index: number): string {
-    const prefixes = {
-      mountain: ['Summit', 'Peak', 'Ridge', 'Alpine', 'High'],
-      forest: ['Woodland', 'Cedar', 'Pine', 'Oak', 'Maple'],
-      desert: ['Canyon', 'Mesa', 'Arroyo', 'Dune', 'Oasis'],
-      coastal: ['Shoreline', 'Cliff', 'Bay', 'Lighthouse', 'Tide'],
-      prairie: ['Meadow', 'Valley', 'Rolling', 'Open', 'Grass'],
-      canyon: ['Red Rock', 'Stone', 'Echo', 'Deep', 'Narrow'],
-      alpine: ['Snow', 'Glacier', 'Crystal', 'Ice', 'High'],
-      woodland: ['Ancient', 'Whispering', 'Enchanted', 'Misty', 'Secret']
+  private calculateDistribution(total: number): GeographicDistribution {
+    return {
+      us: Math.floor(total * 0.6),        // 60% US trails
+      canada: Math.floor(total * 0.2),    // 20% Canadian trails
+      mexico: Math.floor(total * 0.1),    // 10% Mexican trails
+      global: Math.floor(total * 0.1)     // 10% Global trails
     };
-    
-    const suffixes = ['Trail', 'Path', 'Loop', 'Way', 'Route', 'Trek', 'Walk', 'Hike'];
-    
-    const prefix = prefixes[terrainType as keyof typeof prefixes]?.[Math.floor(Math.random() * 5)] || 'Scenic';
-    const suffix = suffixes[Math.floor(Math.random() * suffixes.length)];
-    
-    return `${prefix} ${suffix} #${index}`;
   }
   
-  private generateDescription(difficulty: string, terrainType: string, state: string): string {
-    const difficultyDescriptions = {
-      easy: 'Perfect for families and beginners',
-      moderate: 'Great for intermediate hikers',
-      hard: 'Challenging trail for experienced hikers',
-      expert: 'Demanding adventure for expert hikers only'
-    };
+  private generateUSTrail(): TrailTemplate {
+    const state = this.randomChoice(this.usStatesList);
+    const coords = this.generateUSCoordinates(state);
     
-    return `Beautiful ${difficulty} ${terrainType} trail in ${state}. ${difficultyDescriptions[difficulty as keyof typeof difficultyDescriptions]}. Features stunning views and well-maintained paths.`;
+    return {
+      id: crypto.randomUUID(),
+      name: this.generateTrailName(),
+      location: `${this.generateCityName()}, ${state}`,
+      difficulty: this.randomChoice(['easy', 'moderate', 'hard', 'expert'] as const),
+      length: this.randomFloat(0.5, 25.0),
+      elevation: this.randomInt(0, 14000),
+      elevation_gain: this.randomInt(0, 5000),
+      latitude: coords.lat,
+      longitude: coords.lng,
+      description: this.generateDescription(),
+      terrain_type: this.randomChoice(this.terrainTypes),
+      country: 'United States',
+      state_province: state,
+      region: this.getUSRegion(state),
+      is_verified: Math.random() > 0.3,
+      is_age_restricted: Math.random() > 0.9
+    };
   }
   
-  private generateLength(difficulty: string): number {
-    const ranges = {
-      easy: { min: 0.5, max: 3.0 },
-      moderate: { min: 2.0, max: 6.0 },
-      hard: { min: 4.0, max: 12.0 },
-      expert: { min: 8.0, max: 20.0 }
-    };
+  private generateCanadianTrail(): TrailTemplate {
+    const province = this.randomChoice(this.canadianProvinces);
+    const coords = this.generateCanadianCoordinates(province);
     
-    const range = ranges[difficulty as keyof typeof ranges];
-    return Math.round((range.min + Math.random() * (range.max - range.min)) * 100) / 100;
+    return {
+      id: crypto.randomUUID(),
+      name: this.generateTrailName(),
+      location: `${this.generateCityName()}, ${province}`,
+      difficulty: this.randomChoice(['easy', 'moderate', 'hard', 'expert'] as const),
+      length: this.randomFloat(0.5, 30.0),
+      elevation: this.randomInt(0, 12000),
+      elevation_gain: this.randomInt(0, 4000),
+      latitude: coords.lat,
+      longitude: coords.lng,
+      description: this.generateDescription(),
+      terrain_type: this.randomChoice(this.terrainTypes),
+      country: 'Canada',
+      state_province: province,
+      region: 'Canada',
+      is_verified: Math.random() > 0.4,
+      is_age_restricted: Math.random() > 0.95
+    };
   }
   
-  private generateElevation(country: string, terrainType: string): number {
-    const baseElevations = {
-      'United States': { mountain: 8000, forest: 2000, desert: 1500, coastal: 100, prairie: 800 },
-      'Canada': { mountain: 6000, forest: 1500, desert: 1000, coastal: 50, prairie: 600 },
-      'Mexico': { mountain: 7000, forest: 1800, desert: 2000, coastal: 80, prairie: 1200 }
-    };
+  private generateMexicanTrail(): TrailTemplate {
+    const coords = this.generateMexicanCoordinates();
     
-    const base = baseElevations[country as keyof typeof baseElevations]?.[terrainType as keyof typeof baseElevations['United States']] || 1000;
-    return Math.round(base + (Math.random() - 0.5) * base * 0.5);
+    return {
+      id: crypto.randomUUID(),
+      name: this.generateTrailName(),
+      location: `${this.generateMexicanCityName()}, Mexico`,
+      difficulty: this.randomChoice(['easy', 'moderate', 'hard', 'expert'] as const),
+      length: this.randomFloat(1.0, 20.0),
+      elevation: this.randomInt(0, 18000),
+      elevation_gain: this.randomInt(0, 3000),
+      latitude: coords.lat,
+      longitude: coords.lng,
+      description: this.generateDescription(),
+      terrain_type: this.randomChoice(this.terrainTypes),
+      country: 'Mexico',
+      state_province: 'Various',
+      region: 'Mexico',
+      is_verified: Math.random() > 0.5,
+      is_age_restricted: false
+    };
   }
   
-  private generateElevationGain(difficulty: string): number {
-    const ranges = {
-      easy: { min: 100, max: 500 },
-      moderate: { min: 400, max: 1200 },
-      hard: { min: 1000, max: 2500 },
-      expert: { min: 2000, max: 4000 }
-    };
+  private generateGlobalTrail(): TrailTemplate {
+    const countries = ['Germany', 'France', 'Italy', 'Spain', 'Norway', 'Sweden', 'Switzerland', 'Austria', 'New Zealand', 'Australia'];
+    const country = this.randomChoice(countries);
+    const coords = this.generateGlobalCoordinates(country);
     
-    const range = ranges[difficulty as keyof typeof ranges];
-    return Math.round(range.min + Math.random() * (range.max - range.min));
+    return {
+      id: crypto.randomUUID(),
+      name: this.generateTrailName(),
+      location: `${this.generateCityName()}, ${country}`,
+      difficulty: this.randomChoice(['easy', 'moderate', 'hard', 'expert'] as const),
+      length: this.randomFloat(1.0, 35.0),
+      elevation: this.randomInt(0, 15000),
+      elevation_gain: this.randomInt(0, 4500),
+      latitude: coords.lat,
+      longitude: coords.lng,
+      description: this.generateDescription(),
+      terrain_type: this.randomChoice(this.terrainTypes),
+      country: country,
+      state_province: 'Various',
+      region: 'International',
+      is_verified: Math.random() > 0.6,
+      is_age_restricted: false
+    };
   }
   
-  private getRegionName(country: string): string {
-    const regions = {
-      'United States': 'North America',
-      'Canada': 'North America', 
-      'Mexico': 'North America'
+  private generateTrailName(): string {
+    const prefix = this.randomChoice(this.trailPrefixes);
+    const suffix = this.randomChoice(this.trailSuffixes);
+    return `${prefix} ${suffix}`;
+  }
+  
+  private generateDescription(): string {
+    const descriptions = [
+      'A scenic trail offering beautiful views and moderate difficulty.',
+      'Perfect for hikers of all skill levels with well-maintained paths.',
+      'Challenging terrain with rewarding panoramic vistas at the summit.',
+      'Family-friendly trail through diverse ecosystems and wildlife.',
+      'Historic route with interpretive signs and cultural significance.',
+      'Wilderness experience with pristine natural beauty and solitude.',
+      'Popular trail featuring waterfalls and swimming opportunities.',
+      'Desert landscape with unique flora and geological formations.',
+      'Coastal trail with ocean views and beach access points.',
+      'Mountain adventure with alpine lakes and rocky terrain.'
+    ];
+    return this.randomChoice(descriptions);
+  }
+  
+  private generateCityName(): string {
+    const cities = [
+      'Pine Ridge', 'Cedar Falls', 'Mountain View', 'River Bend', 'Forest Glen',
+      'Eagle Point', 'Bear Creek', 'Sunset Valley', 'Crystal Lake', 'Stone Bridge'
+    ];
+    return this.randomChoice(cities);
+  }
+  
+  private generateMexicanCityName(): string {
+    const cities = [
+      'Puerto Vallarta', 'Guadalajara', 'Monterrey', 'Oaxaca', 'San Miguel de Allende',
+      'Playa del Carmen', 'Tulum', 'Merida', 'Guanajuato', 'Puebla'
+    ];
+    return this.randomChoice(cities);
+  }
+  
+  private generateUSCoordinates(state: string): { lat: number; lng: number } {
+    // Simplified coordinate generation based on state
+    const stateCoords: Record<string, { lat: [number, number]; lng: [number, number] }> = {
+      'California': { lat: [32.5, 42.0], lng: [-124.4, -114.1] },
+      'Colorado': { lat: [37.0, 41.0], lng: [-109.1, -102.0] },
+      'Washington': { lat: [45.5, 49.0], lng: [-124.8, -116.9] },
+      'Oregon': { lat: [42.0, 46.3], lng: [-124.6, -116.5] },
+      'Utah': { lat: [37.0, 42.0], lng: [-114.0, -109.0] },
+      'Montana': { lat: [44.4, 49.0], lng: [-116.1, -104.0] }
     };
     
-    return regions[country as keyof typeof regions] || 'Global';
+    const coords = stateCoords[state] || { lat: [39.0, 40.0], lng: [-105.0, -104.0] };
+    return {
+      lat: this.randomFloat(coords.lat[0], coords.lat[1]),
+      lng: this.randomFloat(coords.lng[0], coords.lng[1])
+    };
+  }
+  
+  private generateCanadianCoordinates(province: string): { lat: number; lng: number } {
+    // Simplified Canadian coordinates
+    return {
+      lat: this.randomFloat(49.0, 70.0),
+      lng: this.randomFloat(-141.0, -52.0)
+    };
+  }
+  
+  private generateMexicanCoordinates(): { lat: number; lng: number } {
+    return {
+      lat: this.randomFloat(14.5, 32.7),
+      lng: this.randomFloat(-118.4, -86.7)
+    };
+  }
+  
+  private generateGlobalCoordinates(country: string): { lat: number; lng: number } {
+    // Very simplified global coordinates
+    const coords: Record<string, { lat: [number, number]; lng: [number, number] }> = {
+      'Germany': { lat: [47.3, 55.1], lng: [5.9, 15.0] },
+      'France': { lat: [41.3, 51.1], lng: [-5.1, 9.6] },
+      'New Zealand': { lat: [-47.3, -34.4], lng: [166.4, 178.6] }
+    };
+    
+    const coord = coords[country] || { lat: [45.0, 50.0], lng: [0.0, 10.0] };
+    return {
+      lat: this.randomFloat(coord.lat[0], coord.lat[1]),
+      lng: this.randomFloat(coord.lng[0], coord.lng[1])
+    };
+  }
+  
+  private getUSRegion(state: string): string {
+    const regions: Record<string, string> = {
+      'California': 'West',
+      'Colorado': 'West',
+      'Washington': 'West',
+      'Oregon': 'West',
+      'Texas': 'South',
+      'Florida': 'South',
+      'New York': 'Northeast',
+      'Pennsylvania': 'Northeast'
+    };
+    return regions[state] || 'Unknown';
+  }
+  
+  private randomChoice<T>(array: T[]): T {
+    return array[Math.floor(Math.random() * array.length)];
+  }
+  
+  private randomInt(min: number, max: number): number {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+  
+  private randomFloat(min: number, max: number): number {
+    return Math.round((Math.random() * (max - min) + min) * 100) / 100;
   }
 }

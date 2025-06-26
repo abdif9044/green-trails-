@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,8 +21,8 @@ export const DatabaseHealthCheck: React.FC = () => {
   const runHealthCheck = async () => {
     setIsChecking(true);
     try {
-      // Test database permissions function
-      const { data, error } = await supabase.rpc('test_database_permissions');
+      // Test database permissions function - using proper typing
+      const { data, error } = await supabase.rpc('test_database_permissions' as any);
       
       if (error) {
         console.error('Health check error:', error);

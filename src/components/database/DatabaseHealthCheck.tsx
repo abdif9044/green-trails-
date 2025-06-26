@@ -35,10 +35,12 @@ export const DatabaseHealthCheck: React.FC = () => {
         return;
       }
 
-      setResults(data || []);
+      // Ensure data is an array
+      const healthResults = Array.isArray(data) ? data : [];
+      setResults(healthResults);
       setLastCheck(new Date());
       
-      const allPassed = data?.every(result => result.success) ?? false;
+      const allPassed = healthResults.length > 0 && healthResults.every(result => result.success);
       toast({
         title: allPassed ? "Health Check Passed" : "Health Check Issues Found",
         description: allPassed ? "All database tests passed" : "Some database tests failed",

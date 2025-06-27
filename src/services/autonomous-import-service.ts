@@ -7,6 +7,15 @@ export interface AutonomousImportResult {
   jobId?: string;
   trailsImported: number;
   timeElapsed: number;
+  phases?: Array<{
+    phase: string;
+    success: boolean;
+    trailsProcessed: number;
+    trailsAdded: number;
+    trailsFailed: number;
+    duration: number;
+    errors: string[];
+  }>;
 }
 
 export class AutonomousImportService {
@@ -16,7 +25,17 @@ export class AutonomousImportService {
       
       const { data, error } = await supabase.functions.invoke('autonomous-trail-import', {
         body: {
-          targetTrails: 55555
+          targetTrails: 55555,
+          maxRetries: 3,
+          batchSize: 100,
+          concurrency: 2,
+          autoHeal: true,
+          phases: [
+            { name: 'Database Health Check', trailCount: 0, batchSize: 1, concurrency: 1, successThreshold: 100, autoRetry: true },
+            { name: 'Trail Generation', trailCount: 55555, batchSize: 1000, concurrency: 1, successThreshold: 95, autoRetry: true },
+            { name: 'Batch Import', trailCount: 55555, batchSize: 100, concurrency: 2, successThreshold: 90, autoRetry: true },
+            { name: 'Validation', trailCount: 0, batchSize: 1, concurrency: 1, successThreshold: 100, autoRetry: false }
+          ]
         }
       });
 
@@ -30,14 +49,15 @@ export class AutonomousImportService {
         };
       }
 
-      console.log('Autonomous import response:', data);
+      console.log('✅ Autonomous import response:', data);
       
       return {
-        success: data.success,
-        message: data.message,
+        success: data.success || false,
+        message: data.message || 'Import completed',
         jobId: data.jobId,
-        trailsImported: data.trailsImported,
-        timeElapsed: data.timeElapsed
+        trailsImported: data.trailsImported || 0,
+        timeElapsed: data.timeElapsed || 0,
+        phases: data.phases || []
       };
       
     } catch (error) {
@@ -64,9 +84,18 @@ export class AutonomousImportService {
       const currentCount = count || 0;
       const progress = Math.min(100, (currentCount / 55555) * 100);
       
+      // Check for active jobs
+      const { data: activeJobs } = await supabase
+        .from('bulk_import_jobs')
+        .select('status')
+        .in('status', ['processing', 'queued'])
+        .limit(1);
+      
+      const isActive = (activeJobs && activeJobs.length > 0) || false;
+      
       return {
         currentCount,
-        isActive: false, // We'll implement active job tracking later
+        isActive,
         progress
       };
       
@@ -76,6 +105,63 @@ export class AutonomousImportService {
         currentCount: 0,
         isActive: false,
         progress: 0
+      };
+    }
+  }
+
+  static async validateImportQuality(): Promise<{
+    isValid: boolean;
+    totalTrails: number;
+    issues: string[];
+    recommendations: string[];
+  }> {
+    try {
+      const { count: totalTrails } = await supabase
+        .from('trails')
+        .select('*', { count: 'exact', head: true });
+
+      const issues: string[] = [];
+      const recommendations: string[] = [];
+
+      // Check for minimum trail count
+      if (!totalTrails || totalTrails < 50000) {
+        issues.push(`Trail count (${totalTrails?.toLocaleString()}) below production target of 50,000`);
+      }
+
+      // Check for geographic distribution
+      const { data: countryStats } = await supabase
+        .from('trails')
+        .select('country')
+        .not('country', 'is', null);
+
+      if (countryStats) {
+        const countries = [...new Set(countryStats.map(t => t.country))];
+        if (countries.length < 3) {
+          issues.push('Geographic diversity insufficient - need trails from at least 3 countries');
+        }
+      }
+
+      // Add recommendations
+      if (totalTrails && totalTrails >= 50000) {
+        recommendations.push('Trail database is production-ready');
+        recommendations.push('Consider adding trail images and user reviews');
+        recommendations.push('Enable real-time trail condition updates');
+      }
+
+      return {
+        isValid: issues.length === 0,
+        totalTrails: totalTrails || 0,
+        issues,
+        recommendations
+      };
+
+    } catch (error) {
+      console.error('Error validating import quality:', error);
+      return {
+        isValid: false,
+        totalTrails: 0,
+        issues: ['Unable to validate import quality'],
+        recommendations: []
       };
     }
   }

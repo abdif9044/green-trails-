@@ -26,7 +26,7 @@ serve(async (req) => {
       throw new Error('Weather API key not configured. Please add OPENWEATHER_API_KEY to Supabase secrets.');
     }
 
-    console.log('🌤️ Weather Prophet - API keys configured successfully');
+    console.log('🌤️ Weather Prophet - Starting analysis...');
 
     const { coordinates, trailData, analysisType = 'comprehensive' } = await req.json();
     
@@ -35,6 +35,24 @@ serve(async (req) => {
     }
 
     const [longitude, latitude] = coordinates;
+    console.log(`📍 Fetching weather for coordinates: ${latitude}, ${longitude}`);
+
+    // Test the weather API key first with a simple current weather call
+    const testResponse = await fetch(
+      `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${weatherApiKey}&units=imperial`
+    );
+    
+    if (!testResponse.ok) {
+      const errorText = await testResponse.text();
+      console.error('Weather API test failed:', errorText);
+      
+      if (testResponse.status === 401) {
+        throw new Error('Invalid OpenWeather API key. Please check your API key and ensure it is active.');
+      }
+      throw new Error(`Weather API error: ${testResponse.status} - ${errorText}`);
+    }
+
+    console.log('✅ Weather API key validated successfully');
 
     // Fetch extended weather forecast
     const forecastResponse = await fetch(
@@ -42,11 +60,17 @@ serve(async (req) => {
     );
     
     if (!forecastResponse.ok) {
-      console.error('Weather API error:', await forecastResponse.text());
-      throw new Error('Failed to fetch weather data');
+      const errorText = await forecastResponse.text();
+      console.error('Weather forecast API error:', errorText);
+      
+      if (forecastResponse.status === 401) {
+        throw new Error('Invalid OpenWeather API key for forecast data. Please check your API key subscription.');
+      }
+      throw new Error(`Weather forecast API error: ${forecastResponse.status}`);
     }
     
     const forecastData = await forecastResponse.json();
+    console.log('✅ Weather data fetched successfully');
 
     // Prepare weather context for AI analysis
     const weatherContext = {
@@ -104,6 +128,8 @@ serve(async (req) => {
 
     userPrompt += `\n\nProvide your analysis in a structured format with clear sections and actionable recommendations. Be specific about timing and conditions.`;
 
+    console.log('🤖 Calling OpenAI for weather analysis...');
+
     // Call OpenAI for analysis
     const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -125,6 +151,10 @@ serve(async (req) => {
     if (!aiResponse.ok) {
       const errorText = await aiResponse.text();
       console.error('OpenAI API error:', errorText);
+      
+      if (aiResponse.status === 401) {
+        throw new Error('Invalid OpenAI API key. Please check your API key.');
+      }
       throw new Error(`OpenAI API error: ${aiResponse.status}`);
     }
 

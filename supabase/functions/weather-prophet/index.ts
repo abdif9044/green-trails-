@@ -1,7 +1,6 @@
 
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -18,12 +17,16 @@ serve(async (req) => {
     const weatherApiKey = Deno.env.get('OPENWEATHER_API_KEY');
     
     if (!openAIApiKey) {
-      throw new Error('OpenAI API key not configured');
+      console.error('OpenAI API key not found in environment variables');
+      throw new Error('OpenAI API key not configured. Please add OPENAI_API_KEY to Supabase secrets.');
     }
     
     if (!weatherApiKey) {
-      throw new Error('Weather API key not configured');
+      console.error('Weather API key not found in environment variables');
+      throw new Error('Weather API key not configured. Please add OPENWEATHER_API_KEY to Supabase secrets.');
     }
+
+    console.log('🌤️ Weather Prophet - API keys configured successfully');
 
     const { coordinates, trailData, analysisType = 'comprehensive' } = await req.json();
     
@@ -37,6 +40,11 @@ serve(async (req) => {
     const forecastResponse = await fetch(
       `https://api.openweathermap.org/data/2.5/onecall?lat=${latitude}&lon=${longitude}&appid=${weatherApiKey}&units=imperial&exclude=minutely`
     );
+    
+    if (!forecastResponse.ok) {
+      console.error('Weather API error:', await forecastResponse.text());
+      throw new Error('Failed to fetch weather data');
+    }
     
     const forecastData = await forecastResponse.json();
 
@@ -104,7 +112,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
@@ -115,11 +123,15 @@ serve(async (req) => {
     });
 
     if (!aiResponse.ok) {
-      throw new Error(`OpenAI API error: ${aiResponse.statusText}`);
+      const errorText = await aiResponse.text();
+      console.error('OpenAI API error:', errorText);
+      throw new Error(`OpenAI API error: ${aiResponse.status}`);
     }
 
     const aiData = await aiResponse.json();
     const analysis = aiData.choices[0].message.content;
+
+    console.log('✅ Weather Prophet analysis completed successfully');
 
     // Return structured response
     return new Response(
@@ -127,7 +139,8 @@ serve(async (req) => {
         analysis,
         weatherData: weatherContext,
         timestamp: new Date().toISOString(),
-        coordinates: { latitude, longitude }
+        coordinates: { latitude, longitude },
+        success: true
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
@@ -138,7 +151,9 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         error: error.message,
-        details: 'Weather Prophet analysis failed'
+        details: 'Weather Prophet analysis failed',
+        success: false,
+        fallback_message: 'Weather analysis temporarily unavailable. Please check your API key configuration.'
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }, 

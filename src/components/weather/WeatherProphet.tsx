@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Brain, CloudSun, Shield, Clock, Shirt, Loader2 } from 'lucide-react';
+import { Brain, CloudSun, Shield, Clock, Shirt, Loader2, AlertCircle } from 'lucide-react';
 import { useWeatherProphet } from '@/hooks/use-weather-prophet';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -104,7 +104,14 @@ const WeatherProphet: React.FC<WeatherProphetProps> = ({
 
             {error && (
               <div className="text-center py-6">
-                <p className="text-red-600 mb-4">Failed to get weather analysis</p>
+                <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+                <h3 className="font-semibold text-red-600 mb-2">Weather Analysis Unavailable</h3>
+                <p className="text-red-600 mb-4 text-sm">
+                  {error.message?.includes('API key') 
+                    ? 'API configuration issue. Please check your settings.'
+                    : 'Failed to get weather analysis. Please try again.'
+                  }
+                </p>
                 <Button onClick={() => refetch()} variant="outline" size="sm">
                   Try Again
                 </Button>

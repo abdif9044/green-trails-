@@ -13,6 +13,9 @@ export type Profile = {
   avatar_url: string | null;
   is_age_verified: boolean;
   website_url?: string | null;
+  is_admin?: boolean;
+  created_at?: string;
+  updated_at?: string;
 };
 
 export const useProfile = (userId?: string) => {

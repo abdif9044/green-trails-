@@ -9,6 +9,39 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      albums: {
+        Row: {
+          cover_image_url: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          is_public: boolean | null
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          cover_image_url?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          title: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          cover_image_url?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       chat_history: {
         Row: {
           conversation_id: string | null
@@ -44,6 +77,45 @@ export type Database = {
           },
         ]
       }
+      community_challenges: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          end_date: string
+          id: string
+          participants: number | null
+          reward_badge: string | null
+          start_date: string
+          target: number
+          title: string
+          type: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          end_date: string
+          id?: string
+          participants?: number | null
+          reward_badge?: string | null
+          start_date: string
+          target: number
+          title: string
+          type: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          end_date?: string
+          id?: string
+          participants?: number | null
+          reward_badge?: string | null
+          start_date?: string
+          target?: number
+          title?: string
+          type?: string
+        }
+        Relationships: []
+      }
       log_photos: {
         Row: {
           caption: string | null
@@ -76,27 +148,116 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          created_at: string | null
+          data: Json | null
+          id: string
+          message: string
+          read: boolean | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          data?: Json | null
+          id?: string
+          message: string
+          read?: boolean | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          data?: Json | null
+          id?: string
+          message?: string
+          read?: boolean | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      parking_spots: {
+        Row: {
+          amenities: string[] | null
+          capacity: number | null
+          created_at: string | null
+          id: string
+          lat: number
+          lon: number
+          name: string | null
+          trail_id: string | null
+        }
+        Insert: {
+          amenities?: string[] | null
+          capacity?: number | null
+          created_at?: string | null
+          id?: string
+          lat: number
+          lon: number
+          name?: string | null
+          trail_id?: string | null
+        }
+        Update: {
+          amenities?: string[] | null
+          capacity?: number | null
+          created_at?: string | null
+          id?: string
+          lat?: number
+          lon?: number
+          name?: string | null
+          trail_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "parking_spots_trail_id_fkey"
+            columns: ["trail_id"]
+            isOneToOne: false
+            referencedRelation: "trails"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
+          bio: string | null
           created_at: string | null
+          full_name: string | null
           id: string
           is_admin: boolean | null
+          is_age_verified: boolean | null
+          updated_at: string | null
           username: string | null
+          website_url: string | null
         }
         Insert: {
           avatar_url?: string | null
+          bio?: string | null
           created_at?: string | null
+          full_name?: string | null
           id: string
           is_admin?: boolean | null
+          is_age_verified?: boolean | null
+          updated_at?: string | null
           username?: string | null
+          website_url?: string | null
         }
         Update: {
           avatar_url?: string | null
+          bio?: string | null
           created_at?: string | null
+          full_name?: string | null
           id?: string
           is_admin?: boolean | null
+          is_age_verified?: boolean | null
+          updated_at?: string | null
           username?: string | null
+          website_url?: string | null
         }
         Relationships: []
       }
@@ -154,6 +315,36 @@ export type Database = {
           proj4text?: string | null
           srid?: number
           srtext?: string | null
+        }
+        Relationships: []
+      }
+      stories: {
+        Row: {
+          caption: string | null
+          created_at: string | null
+          expires_at: string
+          id: string
+          location_name: string | null
+          media_url: string
+          user_id: string
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string | null
+          expires_at: string
+          id?: string
+          location_name?: string | null
+          media_url: string
+          user_id: string
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string | null
+          expires_at?: string
+          id?: string
+          location_name?: string | null
+          media_url?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -304,6 +495,39 @@ export type Database = {
           route_geojson?: Json | null
           source?: string | null
           status?: string | null
+        }
+        Relationships: []
+      }
+      user_stats: {
+        Row: {
+          created_at: string | null
+          current_streak: number | null
+          id: string
+          total_distance: number | null
+          total_elevation: number | null
+          total_trails: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          current_streak?: number | null
+          id?: string
+          total_distance?: number | null
+          total_elevation?: number | null
+          total_trails?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          current_streak?: number | null
+          id?: string
+          total_distance?: number | null
+          total_elevation?: number | null
+          total_trails?: number | null
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }

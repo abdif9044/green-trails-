@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,6 +19,7 @@ interface Profile {
   avatar_url: string | null;
   website_url: string | null;
   is_age_verified: boolean;
+  is_admin: boolean;
   created_at: string;
   updated_at: string;
 }

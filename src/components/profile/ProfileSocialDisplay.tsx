@@ -27,15 +27,15 @@ const ProfileSocialDisplay: React.FC<ProfileSocialDisplayProps> = ({ userId }) =
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          <p className="text-sm">Recent activity will appear here once you start engaging with the community.</p>
+          <p className="text-sm">Social features are being restored. Check back soon!</p>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-sm font-medium">Following</p>
-              <p className="text-2xl font-bold">0</p>
+              <p className="text-2xl font-bold">--</p>
             </div>
             <div>
               <p className="text-sm font-medium">Followers</p>
-              <p className="text-2xl font-bold">0</p>
+              <p className="text-2xl font-bold">--</p>
             </div>
           </div>
         </div>

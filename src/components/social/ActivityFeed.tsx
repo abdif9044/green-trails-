@@ -44,38 +44,20 @@ const ActivityFeed: React.FC = () => {
   const { user } = useAuth();
 
   useEffect(() => {
-    fetchActivityFeed();
+    if (user) {
+      fetchActivityFeed();
+    } else {
+      setIsLoading(false);
+    }
   }, [user]);
 
   const fetchActivityFeed = async () => {
     if (!user) return;
 
     try {
-      // Get activity from people the user follows
-      const { data: following } = await supabase
-        .from('follows')
-        .select('following_id')
-        .eq('follower_id', user.id);
-
-      const followingIds = following?.map(f => f.following_id) || [];
-      
-      // Include user's own activity
-      const userIds = [user.id, ...followingIds];
-
-      const { data, error } = await supabase
-        .from('activity_feed')
-        .select(`
-          *,
-          user:profiles(email, full_name, avatar_url),
-          trail:trails(id, name, location, difficulty, imageUrl),
-          album:albums(id, title, description)
-        `)
-        .in('user_id', userIds)
-        .order('created_at', { ascending: false })
-        .limit(50);
-
-      if (error) throw error;
-      setActivities(data || []);
+      // For now, show a placeholder message since the social features are being rebuilt
+      console.log('Activity feed is being restored...');
+      setActivities([]);
     } catch (error) {
       console.error('Error fetching activity feed:', error);
     } finally {
@@ -158,67 +140,18 @@ const ActivityFeed: React.FC = () => {
     <div className="space-y-4">
       <h2 className="text-2xl font-bold">Activity Feed</h2>
       
-      {activities.length === 0 ? (
-        <Card>
-          <CardContent className="p-8 text-center">
-            <Clock className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium mb-2">No Recent Activity</h3>
-            <p className="text-gray-600 mb-4">
-              Follow other hikers to see their trail adventures here!
-            </p>
-            <Button asChild>
-              <Link to="/discover">Discover Trails</Link>
-            </Button>
-          </CardContent>
-        </Card>
-      ) : (
-        activities.map((activity) => (
-          <Card key={activity.id} className="hover:shadow-md transition-shadow">
-            <CardContent className="p-4">
-              <div className="flex space-x-3">
-                <Avatar>
-                  <AvatarImage src={activity.user.avatar_url || undefined} />
-                  <AvatarFallback>
-                    {(activity.user.full_name || activity.user.email)[0].toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                
-                <div className="flex-1">
-                  <div className="flex items-center space-x-2 mb-1">
-                    {getActivityIcon(activity.type)}
-                    <Link 
-                      to={getActivityLink(activity)}
-                      className="text-sm font-medium hover:underline"
-                    >
-                      {getActivityText(activity)}
-                    </Link>
-                  </div>
-                  
-                  <p className="text-xs text-gray-500 mb-2">
-                    {formatDistanceToNow(new Date(activity.created_at), { addSuffix: true })}
-                  </p>
-                  
-                  {activity.trail && (
-                    <div className="flex items-center space-x-2 text-sm text-gray-600">
-                      <MapPin className="h-3 w-3" />
-                      <span>{activity.trail.location}</span>
-                      <Badge variant="outline" className="text-xs">
-                        {activity.trail.difficulty}
-                      </Badge>
-                    </div>
-                  )}
-                  
-                  {activity.content && (
-                    <p className="text-sm text-gray-700 mt-2 italic">
-                      "{activity.content}"
-                    </p>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))
-      )}
+      <Card>
+        <CardContent className="p-8 text-center">
+          <Clock className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-medium mb-2">Activity Feed Coming Soon</h3>
+          <p className="text-gray-600 mb-4">
+            Social features are being restored. Check back soon to see trail adventures from other hikers!
+          </p>
+          <Button asChild>
+            <Link to="/discover">Discover Trails</Link>
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   );
 };

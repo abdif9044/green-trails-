@@ -50,7 +50,20 @@ const MapParkingMarkers: React.FC<MapParkingMarkersProps> = ({
         }
         
         if (data && data.length > 0) {
-          setParkingSpots(data);
+          // Transform the data to match the expected interface
+          const transformedSpots: ParkingSpot[] = data.map(spot => ({
+            id: spot.id,
+            name: spot.name || 'Parking Area',
+            description: spot.description || null,
+            latitude: spot.latitude || spot.lat,
+            longitude: spot.longitude || spot.lon,
+            is_free: spot.is_free,
+            capacity: spot.capacity,
+            notes: spot.notes,
+            trail_id: spot.trail_id
+          }));
+          
+          setParkingSpots(transformedSpots);
         }
       } catch (err) {
         console.error('Failed to fetch parking spots:', err);

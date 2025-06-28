@@ -133,7 +133,14 @@ const Leaderboards: React.FC = () => {
         .order('start_date', { ascending: true });
 
       if (error) throw error;
-      setChallenges(data || []);
+      
+      // Type assertion to ensure proper type matching
+      const typedChallenges = (data || []).map(challenge => ({
+        ...challenge,
+        type: challenge.type as 'distance' | 'trails' | 'elevation' | 'streak'
+      }));
+      
+      setChallenges(typedChallenges);
     } catch (error) {
       console.error('Error fetching challenges:', error);
     }

@@ -9,6 +9,54 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      activity_feed: {
+        Row: {
+          album_id: string | null
+          content: string | null
+          created_at: string | null
+          id: string
+          target_user_id: string | null
+          trail_id: string | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          album_id?: string | null
+          content?: string | null
+          created_at?: string | null
+          id?: string
+          target_user_id?: string | null
+          trail_id?: string | null
+          type: string
+          user_id: string
+        }
+        Update: {
+          album_id?: string | null
+          content?: string | null
+          created_at?: string | null
+          id?: string
+          target_user_id?: string | null
+          trail_id?: string | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_feed_album_id_fkey"
+            columns: ["album_id"]
+            isOneToOne: false
+            referencedRelation: "albums"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activity_feed_trail_id_fkey"
+            columns: ["trail_id"]
+            isOneToOne: false
+            referencedRelation: "trails"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       albums: {
         Row: {
           cover_image_url: string | null
@@ -39,6 +87,51 @@ export type Database = {
           title?: string
           updated_at?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      bulk_import_jobs: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          error_message: string | null
+          id: string
+          started_at: string | null
+          status: string
+          total_sources: number | null
+          total_trails_requested: number | null
+          trails_added: number | null
+          trails_failed: number | null
+          trails_processed: number | null
+          trails_updated: number | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          started_at?: string | null
+          status?: string
+          total_sources?: number | null
+          total_trails_requested?: number | null
+          trails_added?: number | null
+          trails_failed?: number | null
+          trails_processed?: number | null
+          trails_updated?: number | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          started_at?: string | null
+          status?: string
+          total_sources?: number | null
+          total_trails_requested?: number | null
+          trails_added?: number | null
+          trails_failed?: number | null
+          trails_processed?: number | null
+          trails_updated?: number | null
         }
         Relationships: []
       }
@@ -116,6 +209,27 @@ export type Database = {
         }
         Relationships: []
       }
+      follows: {
+        Row: {
+          created_at: string | null
+          follower_id: string
+          following_id: string
+          id: string
+        }
+        Insert: {
+          created_at?: string | null
+          follower_id: string
+          following_id: string
+          id?: string
+        }
+        Update: {
+          created_at?: string | null
+          follower_id?: string
+          following_id?: string
+          id?: string
+        }
+        Relationships: []
+      }
       log_photos: {
         Row: {
           caption: string | null
@@ -186,30 +300,45 @@ export type Database = {
           amenities: string[] | null
           capacity: number | null
           created_at: string | null
+          description: string | null
           id: string
+          is_free: boolean | null
           lat: number
+          latitude: number | null
           lon: number
+          longitude: number | null
           name: string | null
+          notes: string | null
           trail_id: string | null
         }
         Insert: {
           amenities?: string[] | null
           capacity?: number | null
           created_at?: string | null
+          description?: string | null
           id?: string
+          is_free?: boolean | null
           lat: number
+          latitude?: number | null
           lon: number
+          longitude?: number | null
           name?: string | null
+          notes?: string | null
           trail_id?: string | null
         }
         Update: {
           amenities?: string[] | null
           capacity?: number | null
           created_at?: string | null
+          description?: string | null
           id?: string
+          is_free?: boolean | null
           lat?: number
+          latitude?: number | null
           lon?: number
+          longitude?: number | null
           name?: string | null
+          notes?: string | null
           trail_id?: string | null
         }
         Relationships: [
@@ -227,6 +356,7 @@ export type Database = {
           avatar_url: string | null
           bio: string | null
           created_at: string | null
+          email: string | null
           full_name: string | null
           id: string
           is_admin: boolean | null
@@ -239,6 +369,7 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string | null
+          email?: string | null
           full_name?: string | null
           id: string
           is_admin?: boolean | null
@@ -251,6 +382,7 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string | null
+          email?: string | null
           full_name?: string | null
           id?: string
           is_admin?: boolean | null
@@ -347,6 +479,59 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      trail_import_jobs: {
+        Row: {
+          bulk_job_id: string | null
+          completed_at: string | null
+          created_at: string | null
+          error_message: string | null
+          id: string
+          source_id: string
+          started_at: string | null
+          status: string
+          trails_added: number | null
+          trails_failed: number | null
+          trails_processed: number | null
+          trails_updated: number | null
+        }
+        Insert: {
+          bulk_job_id?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          source_id: string
+          started_at?: string | null
+          status?: string
+          trails_added?: number | null
+          trails_failed?: number | null
+          trails_processed?: number | null
+          trails_updated?: number | null
+        }
+        Update: {
+          bulk_job_id?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          source_id?: string
+          started_at?: string | null
+          status?: string
+          trails_added?: number | null
+          trails_failed?: number | null
+          trails_processed?: number | null
+          trails_updated?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trail_import_jobs_bulk_job_id_fkey"
+            columns: ["bulk_job_id"]
+            isOneToOne: false
+            referencedRelation: "bulk_import_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       trail_logs: {
         Row: {

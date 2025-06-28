@@ -1,14 +1,12 @@
-
-import React from 'react';
 import { Heart, MapPin } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
 import { StrainTag, TrailDifficulty } from '@/types/trails';
 import { TrailDifficultyBadge } from './TrailDifficultyBadge';
 import { TrailCardStats } from './TrailCardStats';
 import { TrailTagsList } from './TrailTagsList';
 import { LazyImage } from '@/components/LazyImage';
-import { GlassCard } from '@/components/glass/GlassCard';
 
 export interface TrailCardProps {
   id: string;
@@ -74,47 +72,30 @@ const TrailCard = ({
   };
   
   return (
-    <GlassCard 
-      className="overflow-hidden group"
-      glassIntensity="medium"
-      hoverable={true}
-    >
+    <Card className="overflow-hidden hover:shadow-lg transition-all duration-200 trail-card-shadow border-greentrail-200 dark:border-greentrail-800">
       <Link to={`/trail/${id}`} onClick={handleTrailClick}>
         <div className="relative h-48 overflow-hidden">
-          {/* Enhanced glass overlay on image */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent z-10" />
-          
           <LazyImage 
             src={imageUrl} 
             alt={`${name} trail in ${location}`}
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+            className="w-full h-full object-cover transition-transform hover:scale-105 duration-500"
             fallbackImage={getFallbackImage()}
             objectFit="cover"
           />
-          
-          {/* Floating glass badges */}
-          <div className="absolute top-2 right-2 flex flex-col gap-2 z-20">
-            <div className="bg-white/20 backdrop-blur-md rounded-lg border border-white/30 p-1">
-              <TrailDifficultyBadge difficulty={difficulty} />
-            </div>
+          <div className="absolute top-2 right-2 flex flex-col gap-2">
+            <TrailDifficultyBadge difficulty={difficulty} />
             {isAgeRestricted && (
-              <div className="bg-purple-500/20 backdrop-blur-md rounded-lg border border-purple-400/30 px-2 py-1">
-                <Badge className="bg-transparent text-purple-100 border-0">21+</Badge>
-              </div>
+              <Badge className="bg-purple-600 text-white">21+</Badge>
             )}
           </div>
         </div>
       </Link>
       
-      {/* Content area with glass background */}
-      <div className="relative p-4">
-        {/* Subtle glass separator */}
-        <div className="absolute top-0 left-4 right-4 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-        
+      <CardContent className="pt-4">
         <div className="flex items-start justify-between">
           <div>
             <Link to={`/trail/${id}`} onClick={handleTrailClick}>
-              <h3 className="font-bold text-greentrail-800 dark:text-greentrail-200 text-lg hover:text-greentrail-600 transition-colors duration-300">
+              <h3 className="font-bold text-greentrail-800 dark:text-greentrail-200 text-lg hover:text-greentrail-600 transition-colors">
                 {name}
               </h3>
             </Link>
@@ -123,26 +104,19 @@ const TrailCard = ({
               <span>{location}</span>
             </div>
           </div>
-          
-          {/* Glass heart container */}
-          <div className="flex items-center bg-white/10 backdrop-blur-sm rounded-full px-2 py-1 border border-white/20">
-            <Heart size={16} className="mr-1 text-red-400" />
-            <span className="text-sm font-medium">{likes}</span>
+          <div className="flex items-center text-greentrail-600 dark:text-greentrail-400">
+            <Heart size={16} className="mr-1" />
+            <span className="text-sm">{likes}</span>
           </div>
         </div>
         
-        <div className="mt-3">
-          <TrailCardStats length={length} elevation={elevation} />
-        </div>
-      </div>
+        <TrailCardStats length={length} elevation={elevation} />
+      </CardContent>
       
-      {/* Tags with glass background */}
-      <div className="px-4 pb-4">
-        <div className="bg-white/5 backdrop-blur-sm rounded-lg p-2 border border-white/10">
-          <TrailTagsList tags={tags} />
-        </div>
-      </div>
-    </GlassCard>
+      <CardFooter className="pt-0 pb-4">
+        <TrailTagsList tags={tags} />
+      </CardFooter>
+    </Card>
   );
 };
 

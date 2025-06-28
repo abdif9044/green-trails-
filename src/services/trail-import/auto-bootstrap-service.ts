@@ -1,23 +1,25 @@
 
-import { ProgressService } from './progress-service';
-import { ValidationService } from './validation-service';
-import { ImportService } from './import-service';
+import { BootstrapChecker } from './bootstrap-checker';
+import { DiagnosticsService } from './diagnostics-service';
+import { RochesterImportService } from './rochester-import-service';
+import { GeneralImportService } from './general-import-service';
 
 export class AutoBootstrapService {
   static async checkAndBootstrap(): Promise<{ needed: boolean; triggered: boolean; currentCount: number }> {
     try {
-      const { needed, currentCount } = await ProgressService.checkIfBootstrapNeeded();
+      const { needed, currentCount } = await BootstrapChecker.checkIfBootstrapNeeded();
       
       if (needed) {
+        // Auto-trigger Rochester import if count is very low
         if (currentCount < 1000) {
           console.log('🎯 Auto-triggering Rochester import for 5,555 trails...');
-          const rochesterTriggered = await ImportService.forceRochesterImport();
+          const rochesterTriggered = await RochesterImportService.forceRochesterImport();
           if (rochesterTriggered) {
             return { needed, triggered: true, currentCount };
           }
         }
         
-        const triggered = await ImportService.forceBootstrap();
+        const triggered = await GeneralImportService.forceBootstrap();
         return { needed, triggered, currentCount };
       }
       
@@ -29,23 +31,27 @@ export class AutoBootstrapService {
   }
 
   static async autoTriggerRochesterImport(): Promise<boolean> {
-    return ImportService.autoTriggerRochesterImport();
+    return RochesterImportService.autoTriggerRochesterImport();
   }
 
   static async forceBootstrap(): Promise<boolean> {
-    return ImportService.forceBootstrap();
+    return GeneralImportService.forceBootstrap();
   }
 
   static async forceRochesterImport(): Promise<boolean> {
-    return ImportService.forceRochesterImport();
+    return RochesterImportService.forceRochesterImport();
   }
 
   static async getBootstrapProgress() {
-    return ProgressService.getBootstrapProgress();
+    return BootstrapChecker.getBootstrapProgress();
   }
 
   static async runDiagnostics() {
-    return ValidationService.validateEnvironment();
+    return DiagnosticsService.runDiagnostics();
+  }
+
+  private static async getCurrentTrailCount(): Promise<number> {
+    return BootstrapChecker.getCurrentTrailCount();
   }
 }
 

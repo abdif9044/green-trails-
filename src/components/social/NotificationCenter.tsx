@@ -6,9 +6,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { useNotificationPopover } from "@/hooks/social/use-notification-popover";
 import { NotificationPopover } from "./NotificationPopover";
 import NotificationList from "./NotificationList";
-import { Database } from "@/integrations/supabase/types";
 
-type Notification = Database['public']['Tables']['notifications']['Row'];
+import type { Notification } from "@/hooks/social/use-notification-popover";
 
 const NotificationCenter: React.FC = () => {
   const { user } = useAuth();

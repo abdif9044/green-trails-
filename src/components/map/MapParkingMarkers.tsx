@@ -4,9 +4,18 @@ import mapboxgl from 'mapbox-gl';
 import ParkingMarker from './ParkingMarker';
 import { Trail } from '@/types/trails';
 import { supabase } from '@/integrations/supabase/client';
-import { Database } from '@/integrations/supabase/types';
 
-type ParkingSpot = Database['public']['Tables']['parking_spots']['Row'];
+export interface ParkingSpot {
+  id: string;
+  name: string;
+  description: string | null;
+  latitude: number;
+  longitude: number;
+  is_free: boolean | null;
+  capacity: number | null;
+  notes: string | null;
+  trail_id: string;
+}
 
 interface MapParkingMarkersProps {
   parkingSpots: ParkingSpot[];

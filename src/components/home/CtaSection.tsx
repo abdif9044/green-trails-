@@ -1,11 +1,11 @@
 
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { useEnhancedAuth } from "@/providers/enhanced-auth-provider";
+import { useAuth } from "@/hooks/use-auth";
 import { ArrowRight, Crown } from "lucide-react";
 
 const CtaSection = () => {
-  const { user } = useEnhancedAuth();
+  const { user } = useAuth();
   
   // Don't render if user is logged in
   if (user) {

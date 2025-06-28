@@ -10,26 +10,18 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useEnhancedAuth } from "@/providers/enhanced-auth-provider";
+import { useAuth } from "@/hooks/use-auth";
 import { toast } from "@/hooks/use-toast";
 import { Loader2, User, LogOut, Map, Camera } from "lucide-react";
 
 export const NavbarAuth = () => {
-  const { user, signOut, loading } = useEnhancedAuth();
+  const { user, signOut, loading } = useAuth();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
     try {
-      const result = await signOut();
-      if (result.success) {
-        navigate('/');
-      } else {
-        toast({
-          title: "Error",
-          description: result.error || "Failed to sign out. Please try again.",
-          variant: "destructive",
-        });
-      }
+      await signOut();
+      navigate('/');
     } catch (error) {
       toast({
         title: "Error",

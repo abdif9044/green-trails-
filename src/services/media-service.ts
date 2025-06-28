@@ -1,102 +1,217 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { v4 as uuidv4 } from 'uuid';
+import { DatabaseSetupService } from './database/setup-service';
 
-export interface MediaItem {
-  id: string;
-  album_id: string;
-  url: string;
-  file_type: string;
+export interface MediaUploadOptions {
+  file: File;
   caption?: string;
-  created_at: string;
+  albumId?: string;
+  trailId?: string;
+  isPrivate?: boolean;
 }
 
-export interface Album {
-  id: string;
-  title: string;
-  description?: string;
-  location?: string;
-  is_private: boolean;
-  user_id: string;
-  trail_id?: string;
-  created_at: string;
-  updated_at: string;
+interface MediaMetadata {
+  userId: string;
+  albumId?: string;
+  trailId?: string;
+  caption?: string;
 }
 
-class MediaService {
-  async uploadMedia(file: File, albumId: string, caption?: string): Promise<MediaItem | null> {
+export class MediaService {
+  /**
+   * Upload media file (image or video) to Supabase storage
+   */
+  static async uploadMedia({ file, caption, albumId, trailId, isPrivate = false }: MediaUploadOptions) {
     try {
-      // Since media and albums tables don't exist, return mock data
-      console.warn('Media and albums tables do not exist, returning mock media item');
+      // Check that user is authenticated
+      const { data: { user } } = await supabase.auth.getUser();
       
-      return {
-        id: crypto.randomUUID(),
-        album_id: albumId,
-        url: URL.createObjectURL(file),
+      if (!user) {
+        throw new Error('User must be authenticated to upload media');
+      }
+      
+      // First, ensure the media bucket exists
+      await DatabaseSetupService.ensureMediaBucketExists();
+
+      // Generate a unique file path to avoid collisions
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/${uuidv4()}.${fileExt}`;
+      
+      // Upload file to Supabase storage
+      const { data, error } = await supabase.storage
+        .from('media')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+        
+      if (error) {
+        console.error('Error uploading file:', error);
+        throw error;
+      }
+      
+      // Get public URL for the uploaded file
+      const fileUrl = supabase.storage
+        .from('media')
+        .getPublicUrl(fileName).data.publicUrl;
+      
+      // Create metadata record in the database
+      const metadata: MediaMetadata = {
+        userId: user.id,
+        caption,
+        albumId,
+        trailId
+      };
+      
+      // First check if we need to create an album
+      if (!albumId && trailId) {
+        // Create an album for this trail if one doesn't exist
+        const { data: newAlbum, error: albumError } = await supabase
+          .from('albums')
+          .insert({
+            user_id: user.id,
+            trail_id: trailId,
+            title: `Trail Photos`,
+            is_private: isPrivate
+          })
+          .select('id')
+          .single();
+          
+        if (albumError) {
+          console.error('Error creating album:', albumError);
+        } else if (newAlbum) {
+          metadata.albumId = newAlbum.id;
+        }
+      }
+      
+      // Insert the media record
+      const { data: media, error: mediaError } = await supabase
+        .from('media')
+        .insert({
+          user_id: user.id,
+          album_id: metadata.albumId,
+          file_path: fileUrl,
+          caption: metadata.caption,
+          file_type: file.type
+        })
+        .select('id')
+        .single();
+        
+      if (mediaError) {
+        console.error('Error inserting media record:', mediaError);
+        throw mediaError;
+      }
+      
+      // Log upload for security auditing
+      await DatabaseSetupService.logSecurityEvent('media_upload', {
+        user_id: user.id,
+        media_id: media?.id,
         file_type: file.type,
-        caption: caption,
-        created_at: new Date().toISOString(),
-      };
-    } catch (error) {
-      console.error('Error uploading media:', error);
-      return null;
-    }
-  }
-
-  async getAlbumMedia(albumId: string): Promise<MediaItem[]> {
-    try {
-      // Since albums and media tables don't exist, return empty array
-      console.warn('Albums and media tables do not exist, returning empty media items');
-      return [];
-    } catch (error) {
-      console.error('Error fetching album media:', error);
-      return [];
-    }
-  }
-
-  async createAlbum(albumData: Partial<Album>): Promise<Album | null> {
-    try {
-      // Since albums table doesn't exist, return mock album
-      console.warn('Albums table does not exist, returning mock album');
+        file_size: file.size,
+        timestamp: new Date().toISOString()
+      });
       
       return {
-        id: crypto.randomUUID(),
-        title: albumData.title || 'Untitled Album',
-        description: albumData.description,
-        location: albumData.location,
-        is_private: albumData.is_private || false,
-        user_id: albumData.user_id || '',
-        trail_id: albumData.trail_id,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        success: true,
+        mediaId: media?.id,
+        url: fileUrl
       };
     } catch (error) {
-      console.error('Error creating album:', error);
-      return null;
+      console.error('Error in uploadMedia:', error);
+      return {
+        success: false,
+        error
+      };
     }
   }
-
-  async deleteMedia(mediaId: string): Promise<boolean> {
+  
+  /**
+   * Delete media from storage and database
+   */
+  static async deleteMedia(mediaId: string) {
     try {
-      // Since media table doesn't exist, just return true
-      console.warn('Media table does not exist, simulating media deletion');
-      return true;
+      // Check that user is authenticated
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error('User must be authenticated to delete media');
+      }
+      
+      // Get the media record to find the file path
+      const { data: media, error: fetchError } = await supabase
+        .from('media')
+        .select('*')
+        .eq('id', mediaId)
+        .eq('user_id', user.id) // Ensure the user owns this media
+        .single();
+        
+      if (fetchError || !media) {
+        console.error('Error fetching media:', fetchError);
+        throw fetchError || new Error('Media not found');
+      }
+      
+      // Extract the path from the full URL
+      const pathParts = media.file_path.split('media/');
+      const filePath = pathParts.length > 1 ? pathParts[1] : '';
+      
+      if (!filePath) {
+        throw new Error('Invalid file path');
+      }
+      
+      // Delete from storage
+      const { error: storageError } = await supabase.storage
+        .from('media')
+        .remove([filePath]);
+        
+      if (storageError) {
+        console.error('Error removing file from storage:', storageError);
+      }
+      
+      // Delete from database
+      const { error: dbError } = await supabase
+        .from('media')
+        .delete()
+        .eq('id', mediaId)
+        .eq('user_id', user.id);
+        
+      if (dbError) {
+        console.error('Error deleting media record:', dbError);
+        throw dbError;
+      }
+      
+      // Log deletion for security auditing
+      await DatabaseSetupService.logSecurityEvent('media_delete', {
+        user_id: user.id,
+        media_id: mediaId,
+        timestamp: new Date().toISOString()
+      });
+      
+      return { success: true };
     } catch (error) {
-      console.error('Error deleting media:', error);
-      return false;
-    }
-  }
-
-  async updateMediaCaption(mediaId: string, caption: string): Promise<boolean> {
-    try {
-      // Since media table doesn't exist, just return true
-      console.warn('Media table does not exist, simulating caption update');
-      return true;
-    } catch (error) {
-      console.error('Error updating media caption:', error);
-      return false;
+      console.error('Error in deleteMedia:', error);
+      return {
+        success: false,
+        error
+      };
     }
   }
 }
 
-export const mediaService = new MediaService();
-export default mediaService;
+/**
+ * Hook for media operations in React components
+ */
+export function useMediaService() {
+  const uploadMedia = async (options: MediaUploadOptions) => {
+    return MediaService.uploadMedia(options);
+  };
+  
+  const deleteMedia = async (mediaId: string) => {
+    return MediaService.deleteMedia(mediaId);
+  };
+  
+  return {
+    uploadMedia,
+    deleteMedia
+  };
+}

@@ -12,23 +12,20 @@ export const useDeleteTrailImage = (trailId: string) => {
 
   return useMutation({
     mutationFn: async (imageId: string) => {
-      // Get image URL and check if it's primary
+      // Get image path and check if it's primary
       const { data: imageData } = await supabase
         .from('trail_images')
-        .select('url, is_primary')
+        .select('image_path, is_primary')
         .eq('id', imageId)
         .single();
 
-      if (imageData?.url) {
-        // Extract path from URL for storage deletion
-        const urlPath = imageData.url.split('/').pop();
-        if (urlPath) {
-          const { error: storageError } = await supabase.storage
-            .from('trail_images')
-            .remove([`${trailId}/${urlPath}`]);
+      if (imageData?.image_path) {
+        // Delete from storage
+        const { error: storageError } = await supabase.storage
+          .from('trail_images')
+          .remove([imageData.image_path]);
 
-          if (storageError) console.warn('Storage deletion error:', storageError);
-        }
+        if (storageError) throw storageError;
       }
 
       // Delete from database

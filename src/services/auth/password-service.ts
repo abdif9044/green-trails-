@@ -1,59 +1,71 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { DatabaseSetupService } from '../database/setup-service';
+import { DatabaseSetupService } from '@/services/database/setup-service';
 
-export class PasswordService {
-  static async resetPassword(email: string): Promise<{ success: boolean; message?: string }> {
+/**
+ * Service for handling password operations
+ */
+export const PasswordService = {
+  /**
+   * Send a password reset email to a user
+   * @param email The user's email address
+   * @returns Promise with result object containing success status and optional error message
+   */
+  resetPassword: async (email: string) => {
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`
+        redirectTo: `${window.location.origin}/auth/update-password`,
       });
 
       if (error) {
-        await this.logPasswordEvent('password_reset_failed', error.message);
+        console.error('Error resetting password:', error);
         return { success: false, message: error.message };
       }
 
-      await this.logPasswordEvent('password_reset_requested');
-      return { success: true, message: 'Password reset email sent' };
+      return { success: true };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      await this.logPasswordEvent('password_reset_error', errorMessage);
-      return { success: false, message: errorMessage };
+      console.error('Exception during password reset:', error);
+      
+      if (error instanceof Error) {
+        return { success: false, message: error.message };
+      }
+      return { success: false, message: 'An unknown error occurred' };
     }
-  }
+  },
 
-  static async updatePassword(newPassword: string): Promise<{ success: boolean; error?: string }> {
+  /**
+   * Update a user's password
+   * @param password The new password
+   * @param userId The user's ID
+   * @returns Promise with result object containing success status and optional error message
+   */
+  updatePassword: async (password: string, userId?: string) => {
     try {
       const { error } = await supabase.auth.updateUser({
-        password: newPassword
+        password,
       });
 
       if (error) {
-        await this.logPasswordEvent('password_update_failed', error.message);
-        return { success: false, error: error.message };
+        console.error('Error updating password:', error);
+        return { success: false, message: error.message };
       }
 
-      await this.logPasswordEvent('password_updated');
+      // Log password update for security audit
+      if (userId) {
+        await DatabaseSetupService.logSecurityEvent('password_updated', { 
+          user_id: userId,
+          timestamp: new Date().toISOString() 
+        });
+      }
+
       return { success: true };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      await this.logPasswordEvent('password_update_error', errorMessage);
-      return { success: false, error: errorMessage };
-    }
-  }
-
-  private static async logPasswordEvent(eventType: string, errorDetails?: string) {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
+      console.error('Exception during password update:', error);
       
-      await DatabaseSetupService.logSecurityEvent(
-        eventType,
-        user?.id,
-        errorDetails ? { error: errorDetails, timestamp: new Date().toISOString() } : { timestamp: new Date().toISOString() }
-      );
-    } catch (error) {
-      console.error('Error logging password event:', error);
+      if (error instanceof Error) {
+        return { success: false, message: error.message };
+      }
+      return { success: false, message: 'An unknown error occurred' };
     }
   }
-}
+};

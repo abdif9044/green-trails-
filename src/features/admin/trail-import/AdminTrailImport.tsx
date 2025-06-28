@@ -37,20 +37,9 @@ const AdminTrailImport = () => {
     bulkProgress,
     loadData,
     handleImport,
-    handleBulkImport: originalHandleBulkImport,
+    handleBulkImport,
     setActiveBulkJobId,
   } = useTrailImport();
-
-  // Create a wrapper that matches the expected signature
-  const handleBulkImport = async (sourceIds: string[], trailCount: number): Promise<boolean> => {
-    try {
-      await originalHandleBulkImport();
-      return true;
-    } catch (error) {
-      console.error('Bulk import failed:', error);
-      return false;
-    }
-  };
 
   // Use our custom hooks
   const { isSettingUpDb, dbSetupError, checkAndSetupDatabase, retryDatabaseSetup } = useDBSetup(loadData);
@@ -289,7 +278,7 @@ const AdminTrailImport = () => {
                   importJobs={importJobs}
                   bulkImportJobs={bulkImportJobs || []} 
                   loading={loading || isSettingUpDb}
-                  importLoading={{}}
+                  importLoading={importLoading}
                   handleImport={handleImport}
                   getSourceNameById={getSourceNameById}
                   selectAllSources={selectAllSources}
@@ -305,7 +294,7 @@ const AdminTrailImport = () => {
                   importJobs={importJobs}
                   bulkImportJobs={bulkImportJobs || []} 
                   loading={loading || isSettingUpDb}
-                  importLoading={{}}
+                  importLoading={importLoading}
                   handleImport={handleImport}
                   getSourceNameById={getSourceNameById}
                   selectAllSources={selectAllSources}

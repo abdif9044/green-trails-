@@ -46,21 +46,31 @@ export const useTrailImages = (trailId: string) => {
         // Process the data to include full image URLs
         const processedImages = data.map(image => {
           try {
-            if (!image.url) {
-              console.warn(`Missing url for image ${image.id}`);
+            if (!image.image_path) {
+              console.warn(`Missing image_path for image ${image.id}`);
               return {
                 ...image,
                 full_image_url: null
               } as TrailImage;
             }
 
-            // Use the url directly as it's already a full URL
+            // Make sure we're using a valid storage bucket name
+            const bucketName = 'trail_images';
+            const imagePath = image.image_path.startsWith(`${bucketName}/`) 
+              ? image.image_path.substring(bucketName.length + 1)
+              : image.image_path;
+              
+            const publicUrl = supabase.storage
+              .from(bucketName)
+              .getPublicUrl(imagePath)
+              .data.publicUrl;
+            
             return {
               ...image,
-              full_image_url: image.url
+              full_image_url: publicUrl
             } as TrailImage;
           } catch (e) {
-            console.error(`Error processing URL for image ${image.id}:`, e);
+            console.error(`Error getting public URL for image ${image.id}:`, e);
             return {
               ...image,
               full_image_url: null

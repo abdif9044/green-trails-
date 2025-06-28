@@ -2,10 +2,10 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Compass, ChevronDown } from 'lucide-react';
-import { useEnhancedAuth } from '@/providers/enhanced-auth-provider';
+import { useAuth } from '@/hooks/use-auth';
 
 const Hero = () => {
-  const { user } = useEnhancedAuth();
+  const { user } = useAuth();
   
   return (
     <div className="relative min-h-screen flex items-center justify-center overflow-hidden">

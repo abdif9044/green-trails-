@@ -10,13 +10,13 @@ interface NearbyTrailsButtonProps {
 }
 
 const NearbyTrailsButton: React.FC<NearbyTrailsButtonProps> = ({ onLocationFound }) => {
-  const { coordinates, error, loading, getCurrentLocation } = useGeolocation();
+  const { location, error, loading, coordinates } = useGeolocation();
   const { toast } = useToast();
 
   const handleClick = () => {
-    if (coordinates) {
-      // Use the new coordinates structure
-      onLocationFound(coordinates.longitude, coordinates.latitude);
+    if (location && location.coords) {
+      // Use location.coords rather than coordinates
+      onLocationFound(location.coords.longitude, location.coords.latitude);
       toast({
         title: "Location found",
         description: "Showing trails near your location",
@@ -24,12 +24,9 @@ const NearbyTrailsButton: React.FC<NearbyTrailsButtonProps> = ({ onLocationFound
     } else if (error) {
       toast({
         title: "Location error",
-        description: error, // error is already a string
+        description: error.message || "Unable to access location",
         variant: "destructive",
       });
-    } else {
-      // Try to get current location if not available
-      getCurrentLocation();
     }
   };
 

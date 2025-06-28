@@ -14,17 +14,17 @@ interface LocationInputProps {
 
 const LocationInput: React.FC<LocationInputProps> = ({ locationName, setLocationName }) => {
   const { toast } = useToast();
-  const { coordinates, error: locationError, getCurrentLocation } = useGeolocation();
+  const { error: locationError, getCurrentLocation } = useGeolocation();
 
-  const handleLocationCapture = () => {
-    getCurrentLocation();
-    
-    // Check if coordinates are available after calling getCurrentLocation
-    if (coordinates) {
-      const lat = coordinates.latitude.toFixed(4);
-      const lng = coordinates.longitude.toFixed(4);
-      setLocationName(`${lat}, ${lng}`);
-    } else if (locationError) {
+  const handleLocationCapture = async () => {
+    try {
+      const position = await getCurrentLocation();
+      if (position) {
+        const lat = position.coords.latitude.toFixed(4);
+        const lng = position.coords.longitude.toFixed(4);
+        setLocationName(`${lat}, ${lng}`);
+      }
+    } catch (error) {
       toast({
         title: "Location access denied",
         description: "Please enable location services to add your location",
@@ -32,15 +32,6 @@ const LocationInput: React.FC<LocationInputProps> = ({ locationName, setLocation
       });
     }
   };
-
-  // Update location name when coordinates become available
-  React.useEffect(() => {
-    if (coordinates && !locationName) {
-      const lat = coordinates.latitude.toFixed(4);
-      const lng = coordinates.longitude.toFixed(4);
-      setLocationName(`${lat}, ${lng}`);
-    }
-  }, [coordinates, locationName, setLocationName]);
 
   return (
     <div className="space-y-2">

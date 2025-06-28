@@ -43,6 +43,16 @@ export class EnhancedDebugImportService {
         console.log('✅ SELECT permission: OK');
       }
 
+      // Test the permissions check function (using corrected column name)
+      const { data: permTest, error: permError } = await supabase
+        .rpc('test_trail_permissions');
+
+      if (permError) {
+        errors.push(`Permission test function failed: ${permError.message}`);
+      } else {
+        console.log('✅ Permission test function: OK', permTest);
+      }
+
       // Test bulk_import_jobs table structure
       const { data: bulkTest, error: bulkError } = await supabase
         .from('bulk_import_jobs')

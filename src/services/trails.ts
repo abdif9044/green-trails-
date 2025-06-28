@@ -16,31 +16,6 @@ export interface TrailsResponse {
   totalPages: number;
 }
 
-// Define proper database trail type to match Supabase schema
-interface DatabaseTrail {
-  id: string;
-  name: string;
-  location: string;
-  description: string;
-  difficulty: string;
-  elevation: number;
-  elevation_gain: number;
-  geojson: any;
-  is_age_restricted: boolean;
-  is_verified: boolean;
-  latitude: number;
-  longitude: number;
-  country: string;
-  state_province: string;
-  region: string;
-  terrain_type: string;
-  trail_length: number;
-  created_at: string;
-  updated_at: string;
-  user_id: string;
-  trail_tags: Array<{ tag_name: string }> | null;
-}
-
 export const useTrails = () => {
   // Search trails with filters using Supabase - NO MOCK DATA
   const useTrailsSearch = (params: TrailSearchParams = {}) => {
@@ -59,27 +34,23 @@ export const useTrails = () => {
           limit = 50
         } = params;
 
-        // Handle nearby search
+        // Handle nearby search with PostGIS function
         if (nearbyCoordinates && nearbyCoordinates.length === 2) {
           const [lat, lng] = nearbyCoordinates;
           
-          // Use direct SQL query for nearby trails since RPC might not be available
           const { data, error } = await supabase
-            .from('trails')
-            .select(`
-              *,
-              trail_tags!left (
-                tag_name
-              )
-            `)
-            .limit(limit);
+            .rpc('trails_within_radius', {
+              center_lat: lat,
+              center_lng: lng,
+              radius_meters: radius * 1000 // Convert km to meters
+            });
 
           if (error) {
             console.error('Error fetching nearby trails:', error);
             throw error;
           }
 
-          const formattedTrails = (data || []).map((trail: any) => formatTrailFromDatabase(trail as DatabaseTrail));
+          const formattedTrails = (data || []).map(formatTrailFromDatabase);
           
           return {
             data: formattedTrails,
@@ -94,7 +65,7 @@ export const useTrails = () => {
           .from('trails')
           .select(`
             *,
-            trail_tags!left (
+            trail_tags (
               tag_name
             )
           `, { count: 'exact' });
@@ -109,7 +80,7 @@ export const useTrails = () => {
         }
 
         if (lengthRange && lengthRange.length === 2) {
-          query = query.gte('trail_length', lengthRange[0]).lte('trail_length', lengthRange[1]);
+          query = query.gte('length_km', lengthRange[0]).lte('length_km', lengthRange[1]);
         }
 
         if (country) {
@@ -135,14 +106,7 @@ export const useTrails = () => {
           throw error;
         }
 
-        const formattedTrails = (data || []).map((trail: any) => {
-          // Ensure trail_tags is properly formatted
-          const formattedTrail = {
-            ...trail,
-            trail_tags: trail.trail_tags || []
-          };
-          return formatTrailFromDatabase(formattedTrail as DatabaseTrail);
-        });
+        const formattedTrails = (data || []).map(formatTrailFromDatabase);
         
         return {
           data: formattedTrails,
@@ -163,7 +127,7 @@ export const useTrails = () => {
           .from('trails')
           .select(`
             *,
-            trail_tags!left (
+            trail_tags (
               tag_name
             )
           `)
@@ -175,40 +139,30 @@ export const useTrails = () => {
           throw error;
         }
 
-        // Ensure trail_tags is properly formatted
-        const formattedData = {
-          ...data,
-          trail_tags: data.trail_tags || []
-        };
-
-        return formatTrailFromDatabase(formattedData as DatabaseTrail);
+        return formatTrailFromDatabase(data);
       },
       enabled: !!trailId
     });
   };
 
-  // Get nearby trails using basic query - ONLY REAL DATABASE TRAILS
+  // Get nearby trails using PostGIS - ONLY REAL DATABASE TRAILS
   const useNearbyTrails = (lat: number, lng: number, radius: number = 25) => {
     return useQuery({
       queryKey: ['trails', 'nearby', lat, lng, radius],
       queryFn: async (): Promise<Trail[]> => {
-        // Use basic query since RPC might not be available
         const { data, error } = await supabase
-          .from('trails')
-          .select(`
-            *,
-            trail_tags!left (
-              tag_name
-            )
-          `)
-          .limit(50);
+          .rpc('trails_within_radius', {
+            center_lat: lat,
+            center_lng: lng,
+            radius_meters: radius * 1000
+          });
 
         if (error) {
           console.error('Error fetching nearby trails:', error);
           throw error;
         }
 
-        return (data || []).map((trail: any) => formatTrailFromDatabase(trail as DatabaseTrail));
+        return (data || []).map(formatTrailFromDatabase);
       },
       enabled: !!(lat && lng)
     });
@@ -223,7 +177,7 @@ export const useTrails = () => {
           .from('trails')
           .select(`
             *,
-            trail_tags!left (
+            trail_tags (
               tag_name
             )
           `)
@@ -235,14 +189,7 @@ export const useTrails = () => {
           throw error;
         }
 
-        return (data || []).map((trail: any) => {
-          // Ensure trail_tags is properly formatted
-          const formattedTrail = {
-            ...trail,
-            trail_tags: trail.trail_tags || []
-          };
-          return formatTrailFromDatabase(formattedTrail as DatabaseTrail);
-        });
+        return (data || []).map(formatTrailFromDatabase);
       }
     });
   };

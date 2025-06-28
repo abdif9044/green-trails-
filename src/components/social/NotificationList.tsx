@@ -7,11 +7,9 @@ import { Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Database } from "@/integrations/supabase/types";
+import type { Notification } from "@/hooks/social/use-notification-popover";
 import NotificationItem from "./NotificationItem";
 import { useAuth } from "@/hooks/use-auth";
-
-type Notification = Database['public']['Tables']['notifications']['Row'];
 
 interface Props {
   notifications: Notification[];

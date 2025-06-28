@@ -4,7 +4,7 @@
 export interface TrailImage {
   id: string;
   trail_id: string;
-  url: string; // Database uses 'url' not 'image_path'
+  image_path: string;
   full_image_url?: string; // Added for convenience
   is_primary: boolean;
   caption?: string;

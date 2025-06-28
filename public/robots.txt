@@ -1,4 +1,3 @@
-
 User-agent: Googlebot
 Allow: /
 
@@ -11,24 +10,5 @@ Allow: /
 User-agent: facebookexternalhit
 Allow: /
 
-User-agent: GPTBot
-Allow: /
-Crawl-delay: 1
-
 User-agent: *
 Allow: /
-
-# Sitemap
-Sitemap: https://greentrails.app/sitemap.xml
-
-# Important pages for AI indexing
-Allow: /
-Allow: /discover
-Allow: /auth
-Allow: /social
-Allow: /weather-prophet
-
-# Block admin and sensitive areas
-Disallow: /admin
-Disallow: /api
-Disallow: /recovery

@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const apiKey = Deno.env.get('OPENWEATHER_API_KEY') || '2f6fe1dd36e9425a3a51a182d9d9b3ca'
+    const apiKey = Deno.env.get('OPENWEATHER_API_KEY')
     return new Response(
       JSON.stringify({ apiKey }),
       { 

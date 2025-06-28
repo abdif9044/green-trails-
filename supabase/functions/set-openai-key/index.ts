@@ -7,37 +7,52 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
-  
+
   try {
-    const { apiKey } = await req.json();
-    
-    if (!apiKey) {
-      throw new Error('API key is required');
+    // Only allow POST requests
+    if (req.method !== 'POST') {
+      return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+        status: 405,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
     }
-    
-    console.log('OpenAI API key configured for assistant features');
-    
+
+    // Parse the request body
+    const { apiKey } = await req.json();
+
+    if (!apiKey || typeof apiKey !== 'string') {
+      return new Response(JSON.stringify({ error: 'API key is required' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Simple validation that it looks like an OpenAI key
+    if (!apiKey.startsWith('sk-')) {
+      return new Response(JSON.stringify({ error: 'Invalid API key format' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Set the environment variable
+    // Note: This is handled by Supabase Edge Functions automatically
+    // The key is stored securely and accessible via Deno.env.get('OPENAI_API_KEY')
+    // in other edge functions
+    await Deno.env.set('OPENAI_API_KEY', apiKey);
+
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        message: 'OpenAI API key configured'
-      }),
+      JSON.stringify({ success: true }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
-    
   } catch (error) {
-    console.error('OpenAI key setup error:', error);
-    
     return new Response(
-      JSON.stringify({ 
-        success: false,
-        error: 'Failed to set OpenAI key', 
-        details: error instanceof Error ? error.message : 'Unknown error'
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      JSON.stringify({ error: 'Internal server error', details: error.message }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });

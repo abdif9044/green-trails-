@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { BadgeCard } from '@/components/badges/BadgeCard';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { useEnhancedAuth } from '@/providers/enhanced-auth-provider';
+import { useAuth } from '@/hooks/use-auth';
 
 interface AchievementTeaserProps {
   badges: Badge[];
@@ -16,7 +16,7 @@ export const AchievementTeaser: React.FC<AchievementTeaserProps> = ({
   badges, 
   loading = false 
 }) => {
-  const { user } = useEnhancedAuth();
+  const { user } = useAuth();
   
   // Get the first 3 unlocked badges or ones closest to being unlocked
   const featuredBadges = [...badges]

@@ -7,24 +7,11 @@ interface MediaItem {
 }
 
 interface AlbumMediaGridProps {
-  mediaItems: MediaItem[];
-  isLoading?: boolean;
+  media: MediaItem[];
 }
 
-const AlbumMediaGrid = ({ mediaItems, isLoading = false }: AlbumMediaGridProps) => {
-  if (isLoading) {
-    return (
-      <div className="p-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="aspect-square bg-muted rounded-md animate-pulse" />
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  if (mediaItems.length === 0) {
+const AlbumMediaGrid = ({ media }: AlbumMediaGridProps) => {
+  if (media.length === 0) {
     return (
       <div className="p-6">
         <div className="text-center py-12">
@@ -37,7 +24,7 @@ const AlbumMediaGrid = ({ mediaItems, isLoading = false }: AlbumMediaGridProps) 
   return (
     <div className="p-6">
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-        {mediaItems.map((item) => (
+        {media.map((item) => (
           <div 
             key={item.id} 
             className="aspect-square bg-muted rounded-md overflow-hidden"

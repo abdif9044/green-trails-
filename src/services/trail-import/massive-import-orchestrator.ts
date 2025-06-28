@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -84,13 +83,25 @@ export class MassiveTrailImportOrchestrator {
   private async verifyDatabaseSetup(): Promise<void> {
     console.log('🔍 Verifying database setup...');
     
+    // Check if PostGIS functions exist
+    const { data: postgisCheck, error } = await supabase
+      .rpc('trails_within_radius', {
+        center_lat: 44.9778,
+        center_lng: -93.2650,
+        radius_meters: 1000
+      });
+      
+    if (error && error.message.includes('function does not exist')) {
+      throw new Error('PostGIS functions not available. Database setup required.');
+    }
+    
     // Check bulk import tables exist
     const { error: bulkTableError } = await supabase
       .from('bulk_import_jobs')
       .select('id')
       .limit(1);
       
-    if (bulkTableError && (bulkTableError as any).code === '42P01') {
+    if (bulkTableError && bulkTableError.code === '42P01') {
       throw new Error('Bulk import tables not found. Run database setup first.');
     }
     

@@ -4,27 +4,23 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '../use-toast';
 import { useCreateNotification } from './use-notifications';
 
-// Enhanced profile hooks - temporarily disabled until all tables are created
+// Enhanced profile hooks
 export const useEnhancedProfile = (userId: string) => {
   return useQuery({
     queryKey: ['enhanced-profile', userId],
     queryFn: async () => {
-      // Fetch basic profile first
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('*')
+        .select(`
+          *,
+          hiking_stats(*),
+          achievements(*),
+          social_stats(*)
+        `)
         .eq('id', userId)
         .single();
-      
       if (profileError) throw profileError;
-      
-      // Return basic profile for now, will add stats when tables are ready
-      return {
-        ...profile,
-        hiking_stats: null,
-        achievements: [],
-        social_stats: null
-      };
+      return profile;
     },
     enabled: !!userId,
   });
@@ -42,22 +38,16 @@ export const useUpdateHikingStats = () => {
       userId: string; 
       stats: Record<string, any> 
     }) => {
-      // Check if hiking_stats table exists
-      try {
-        const { error } = await supabase
-          .from('hiking_stats')
-          .upsert({
-            user_id: userId,
-            ...stats,
-            updated_at: new Date().toISOString()
-          }, {
-            onConflict: 'user_id'
-          });
-        if (error) throw error;
-      } catch (error) {
-        console.log('Hiking stats table not yet available:', error);
-        // Gracefully handle missing table
-      }
+      const { error } = await supabase
+        .from('hiking_stats')
+        .upsert({
+          user_id: userId,
+          ...stats,
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'user_id'
+        });
+      if (error) throw error;
     },
     onSuccess: (_, { userId }) => {
       queryClient.invalidateQueries({ queryKey: ['enhanced-profile', userId] });
@@ -65,9 +55,10 @@ export const useUpdateHikingStats = () => {
   });
 };
 
-// Achievement system hooks - temporarily disabled
+// Achievement system hooks
 export const useUnlockAchievement = () => {
   const queryClient = useQueryClient();
+  const createNotification = useCreateNotification();
   const { toast } = useToast();
   
   return useMutation({
@@ -78,8 +69,29 @@ export const useUnlockAchievement = () => {
       userId: string; 
       achievementId: string 
     }) => {
-      console.log('Achievement system not yet available');
-      // Gracefully handle missing tables
+      const { error } = await supabase
+        .from('user_achievements')
+        .insert({
+          user_id: userId,
+          achievement_id: achievementId,
+          unlocked_at: new Date().toISOString()
+        });
+      if (error) throw error;
+      // Get achievement details for notification
+      const { data: achievement } = await supabase
+        .from('achievements')
+        .select('name, description')
+        .eq('id', achievementId)
+        .single();
+      if (achievement) {
+        await createNotification.mutateAsync({
+          userId,
+          type: 'achievement',
+          title: 'Achievement Unlocked!',
+          message: `You've unlocked "${achievement.name}": ${achievement.description}`,
+          data: { achievementId }
+        });
+      }
     },
     onSuccess: (_, { userId }) => {
       queryClient.invalidateQueries({ queryKey: ['enhanced-profile', userId] });

@@ -52,12 +52,19 @@ const ImageGalleryItem: React.FC<ImageGalleryItemProps> = ({
   isDeleting,
   isSettingPrimary = false
 }) => {
-  // Use the url directly as it's already a full URL from the database
-  let imageUrl = image.full_image_url || image.url || DEFAULT_TRAIL_IMAGE;
+  // Get image URL from Supabase storage or use image's full_image_url if available
+  let imageUrl = image.full_image_url || DEFAULT_TRAIL_IMAGE;
   
-  // If no URL is available, use default
-  if (!imageUrl) {
-    imageUrl = DEFAULT_TRAIL_IMAGE;
+  // If full_image_url not available, try to generate it
+  if (!imageUrl && image.image_path) {
+    try {
+      imageUrl = supabase.storage
+        .from('trail_images')
+        .getPublicUrl(image.image_path).data.publicUrl;
+    } catch (e) {
+      console.error('Error getting image URL:', e);
+      imageUrl = DEFAULT_TRAIL_IMAGE;
+    }
   }
     
   return (

@@ -9,435 +9,69 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      admin_users: {
+      chat_history: {
         Row: {
+          conversation_id: string | null
           created_at: string | null
-          id: string
-          is_superadmin: boolean | null
-          updated_at: string | null
-          user_id: string
+          id: number
+          message: string | null
+          role: string | null
+          user_id: string | null
         }
         Insert: {
+          conversation_id?: string | null
           created_at?: string | null
-          id?: string
-          is_superadmin?: boolean | null
-          updated_at?: string | null
-          user_id: string
+          id?: never
+          message?: string | null
+          role?: string | null
+          user_id?: string | null
         }
         Update: {
+          conversation_id?: string | null
           created_at?: string | null
-          id?: string
-          is_superadmin?: boolean | null
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      albums: {
-        Row: {
-          created_at: string | null
-          description: string | null
-          id: string
-          is_private: boolean | null
-          location: string | null
-          title: string
-          trail_id: string | null
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          is_private?: boolean | null
-          location?: string | null
-          title: string
-          trail_id?: string | null
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          is_private?: boolean | null
-          location?: string | null
-          title?: string
-          trail_id?: string | null
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      bulk_import_jobs: {
-        Row: {
-          completed_at: string | null
-          id: string
-          last_updated: string | null
-          started_at: string
-          status: string
-          total_sources: number
-          total_trails_requested: number
-          trails_added: number | null
-          trails_failed: number | null
-          trails_processed: number | null
-          trails_updated: number | null
-        }
-        Insert: {
-          completed_at?: string | null
-          id?: string
-          last_updated?: string | null
-          started_at?: string
-          status: string
-          total_sources: number
-          total_trails_requested: number
-          trails_added?: number | null
-          trails_failed?: number | null
-          trails_processed?: number | null
-          trails_updated?: number | null
-        }
-        Update: {
-          completed_at?: string | null
-          id?: string
-          last_updated?: string | null
-          started_at?: string
-          status?: string
-          total_sources?: number
-          total_trails_requested?: number
-          trails_added?: number | null
-          trails_failed?: number | null
-          trails_processed?: number | null
-          trails_updated?: number | null
-        }
-        Relationships: []
-      }
-      comments: {
-        Row: {
-          content: string
-          created_at: string | null
-          id: string
-          media_id: string
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          content: string
-          created_at?: string | null
-          id?: string
-          media_id: string
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          content?: string
-          created_at?: string | null
-          id?: string
-          media_id?: string
-          updated_at?: string | null
-          user_id?: string
+          id?: never
+          message?: string | null
+          role?: string | null
+          user_id?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "comments_media_id_fkey"
-            columns: ["media_id"]
+            foreignKeyName: "chat_history_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "media"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
       }
-      follows: {
+      log_photos: {
         Row: {
-          created_at: string | null
-          follower_id: string
-          following_id: string
-          id: string
-        }
-        Insert: {
-          created_at?: string | null
-          follower_id: string
-          following_id: string
-          id?: string
-        }
-        Update: {
-          created_at?: string | null
-          follower_id?: string
-          following_id?: string
-          id?: string
-        }
-        Relationships: []
-      }
-      group_members: {
-        Row: {
-          group_id: string
-          joined_at: string
-          role: string
-          user_id: string
-        }
-        Insert: {
-          group_id: string
-          joined_at?: string
-          role?: string
-          user_id: string
-        }
-        Update: {
-          group_id?: string
-          joined_at?: string
-          role?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "group_members_group_id_fkey"
-            columns: ["group_id"]
-            isOneToOne: false
-            referencedRelation: "groups"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      groups: {
-        Row: {
-          created_at: string
-          description: string | null
-          id: string
-          image_url: string | null
-          name: string
-          owner_id: string
-        }
-        Insert: {
-          created_at?: string
-          description?: string | null
-          id?: string
-          image_url?: string | null
-          name: string
-          owner_id: string
-        }
-        Update: {
-          created_at?: string
-          description?: string | null
-          id?: string
-          image_url?: string | null
-          name?: string
-          owner_id?: string
-        }
-        Relationships: []
-      }
-      hashtags: {
-        Row: {
-          id: string
-          tag: string
-        }
-        Insert: {
-          id?: string
-          tag: string
-        }
-        Update: {
-          id?: string
-          tag?: string
-        }
-        Relationships: []
-      }
-      legal_content: {
-        Row: {
-          content: string
-          id: string
-          title: string
-          updated_at: string | null
-        }
-        Insert: {
-          content: string
-          id: string
-          title: string
-          updated_at?: string | null
-        }
-        Update: {
-          content?: string
-          id?: string
-          title?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      likes: {
-        Row: {
-          created_at: string | null
-          id: string
-          media_id: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          media_id: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          media_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "likes_media_id_fkey"
-            columns: ["media_id"]
-            isOneToOne: false
-            referencedRelation: "media"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      media: {
-        Row: {
-          album_id: string
           caption: string | null
           created_at: string | null
-          file_path: string
-          file_type: string
-          id: string
-          user_id: string
+          id: number
+          log_id: string | null
+          photo_url: string | null
         }
         Insert: {
-          album_id: string
           caption?: string | null
           created_at?: string | null
-          file_path: string
-          file_type: string
-          id?: string
-          user_id: string
+          id?: never
+          log_id?: string | null
+          photo_url?: string | null
         }
         Update: {
-          album_id?: string
           caption?: string | null
           created_at?: string | null
-          file_path?: string
-          file_type?: string
-          id?: string
-          user_id?: string
+          id?: never
+          log_id?: string | null
+          photo_url?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "media_album_id_fkey"
-            columns: ["album_id"]
+            foreignKeyName: "log_photos_log_id_fkey"
+            columns: ["log_id"]
             isOneToOne: false
-            referencedRelation: "albums"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      media_hashtags: {
-        Row: {
-          hashtag_id: string
-          id: string
-          media_id: string
-        }
-        Insert: {
-          hashtag_id: string
-          id?: string
-          media_id: string
-        }
-        Update: {
-          hashtag_id?: string
-          id?: string
-          media_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "media_hashtags_hashtag_id_fkey"
-            columns: ["hashtag_id"]
-            isOneToOne: false
-            referencedRelation: "hashtags"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "media_hashtags_media_id_fkey"
-            columns: ["media_id"]
-            isOneToOne: false
-            referencedRelation: "media"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      notifications: {
-        Row: {
-          created_at: string
-          data: Json | null
-          id: string
-          message: string
-          read: boolean
-          title: string
-          type: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          data?: Json | null
-          id?: string
-          message: string
-          read?: boolean
-          title: string
-          type: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          data?: Json | null
-          id?: string
-          message?: string
-          read?: boolean
-          title?: string
-          type?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      parking_spots: {
-        Row: {
-          capacity: number | null
-          created_at: string | null
-          description: string | null
-          id: string
-          is_free: boolean | null
-          latitude: number
-          longitude: number
-          name: string
-          notes: string | null
-          trail_id: string
-          updated_at: string | null
-        }
-        Insert: {
-          capacity?: number | null
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          is_free?: boolean | null
-          latitude: number
-          longitude: number
-          name: string
-          notes?: string | null
-          trail_id: string
-          updated_at?: string | null
-        }
-        Update: {
-          capacity?: number | null
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          is_free?: boolean | null
-          latitude?: number
-          longitude?: number
-          name?: string
-          notes?: string | null
-          trail_id?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "parking_spots_trail_id_fkey"
-            columns: ["trail_id"]
-            isOneToOne: false
-            referencedRelation: "trails"
+            referencedRelation: "trail_logs"
             referencedColumns: ["id"]
           },
         ]
@@ -445,68 +79,59 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
-          bio: string | null
           created_at: string | null
-          full_name: string | null
           id: string
-          is_age_verified: boolean | null
-          updated_at: string | null
+          is_admin: boolean | null
           username: string | null
-          website_url: string | null
         }
         Insert: {
           avatar_url?: string | null
-          bio?: string | null
           created_at?: string | null
-          full_name?: string | null
           id: string
-          is_age_verified?: boolean | null
-          updated_at?: string | null
+          is_admin?: boolean | null
           username?: string | null
-          website_url?: string | null
         }
         Update: {
           avatar_url?: string | null
-          bio?: string | null
           created_at?: string | null
-          full_name?: string | null
           id?: string
-          is_age_verified?: boolean | null
-          updated_at?: string | null
+          is_admin?: boolean | null
           username?: string | null
-          website_url?: string | null
         }
         Relationships: []
       }
-      security_audit_log: {
+      saved_trails: {
         Row: {
           created_at: string | null
-          event_details: Json | null
-          event_type: string
-          id: string
-          ip_address: string | null
-          user_agent: string | null
-          user_id: string | null
+          trail_id: string
+          user_id: string
         }
         Insert: {
           created_at?: string | null
-          event_details?: Json | null
-          event_type: string
-          id?: string
-          ip_address?: string | null
-          user_agent?: string | null
-          user_id?: string | null
+          trail_id: string
+          user_id: string
         }
         Update: {
           created_at?: string | null
-          event_details?: Json | null
-          event_type?: string
-          id?: string
-          ip_address?: string | null
-          user_agent?: string | null
-          user_id?: string | null
+          trail_id?: string
+          user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "saved_trails_trail_id_fkey"
+            columns: ["trail_id"]
+            isOneToOne: false
+            referencedRelation: "trails"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "saved_trails_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       spatial_ref_sys: {
         Row: {
@@ -532,88 +157,53 @@ export type Database = {
         }
         Relationships: []
       }
-      stories: {
-        Row: {
-          caption: string | null
-          created_at: string
-          expires_at: string
-          id: string
-          location_name: string | null
-          media_url: string
-          user_id: string
-        }
-        Insert: {
-          caption?: string | null
-          created_at?: string
-          expires_at: string
-          id?: string
-          location_name?: string | null
-          media_url: string
-          user_id: string
-        }
-        Update: {
-          caption?: string | null
-          created_at?: string
-          expires_at?: string
-          id?: string
-          location_name?: string | null
-          media_url?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      tags: {
+      trail_logs: {
         Row: {
           created_at: string | null
-          details: Json | null
+          distance: number | null
+          duration: unknown | null
+          end_time: string | null
           id: string
-          name: string
-          tag_type: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          details?: Json | null
-          id?: string
-          name: string
-          tag_type?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          details?: Json | null
-          id?: string
-          name?: string
-          tag_type?: string | null
-        }
-        Relationships: []
-      }
-      trail_comments: {
-        Row: {
-          content: string
-          created_at: string | null
-          id: string
-          trail_id: string
-          updated_at: string | null
+          notes: string | null
+          path: Json | null
+          start_time: string | null
+          trail_id: string | null
           user_id: string | null
         }
         Insert: {
-          content: string
           created_at?: string | null
+          distance?: number | null
+          duration?: unknown | null
+          end_time?: string | null
           id?: string
-          trail_id: string
-          updated_at?: string | null
+          notes?: string | null
+          path?: Json | null
+          start_time?: string | null
+          trail_id?: string | null
           user_id?: string | null
         }
         Update: {
-          content?: string
           created_at?: string | null
+          distance?: number | null
+          duration?: unknown | null
+          end_time?: string | null
           id?: string
-          trail_id?: string
-          updated_at?: string | null
+          notes?: string | null
+          path?: Json | null
+          start_time?: string | null
+          trail_id?: string | null
           user_id?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "trail_comments_user_id_fkey"
+            foreignKeyName: "trail_logs_trail_id_fkey"
+            columns: ["trail_id"]
+            isOneToOne: false
+            referencedRelation: "trails"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trail_logs_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
@@ -621,427 +211,99 @@ export type Database = {
           },
         ]
       }
-      trail_data_sources: {
+      trail_reviews: {
         Row: {
-          config: Json | null
-          country: string | null
+          comment: string | null
           created_at: string | null
-          id: string
-          is_active: boolean | null
-          last_synced: string | null
-          name: string
-          next_sync: string | null
-          region: string | null
-          source_type: string
-          state_province: string | null
-          sync_interval: unknown | null
-          updated_at: string | null
-          url: string | null
-        }
-        Insert: {
-          config?: Json | null
-          country?: string | null
-          created_at?: string | null
-          id?: string
-          is_active?: boolean | null
-          last_synced?: string | null
-          name: string
-          next_sync?: string | null
-          region?: string | null
-          source_type: string
-          state_province?: string | null
-          sync_interval?: unknown | null
-          updated_at?: string | null
-          url?: string | null
-        }
-        Update: {
-          config?: Json | null
-          country?: string | null
-          created_at?: string | null
-          id?: string
-          is_active?: boolean | null
-          last_synced?: string | null
-          name?: string
-          next_sync?: string | null
-          region?: string | null
-          source_type?: string
-          state_province?: string | null
-          sync_interval?: unknown | null
-          updated_at?: string | null
-          url?: string | null
-        }
-        Relationships: []
-      }
-      trail_images: {
-        Row: {
-          caption: string | null
-          created_at: string | null
-          id: string
-          image_path: string
-          is_primary: boolean | null
+          id: number
+          photo_url: string | null
+          rating: number | null
           trail_id: string | null
           user_id: string | null
         }
         Insert: {
-          caption?: string | null
+          comment?: string | null
           created_at?: string | null
-          id?: string
-          image_path: string
-          is_primary?: boolean | null
+          id?: never
+          photo_url?: string | null
+          rating?: number | null
           trail_id?: string | null
           user_id?: string | null
         }
         Update: {
-          caption?: string | null
+          comment?: string | null
           created_at?: string | null
-          id?: string
-          image_path?: string
-          is_primary?: boolean | null
+          id?: never
+          photo_url?: string | null
+          rating?: number | null
           trail_id?: string | null
           user_id?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "trail_images_trail_id_fkey"
+            foreignKeyName: "trail_reviews_trail_id_fkey"
             columns: ["trail_id"]
             isOneToOne: false
             referencedRelation: "trails"
             referencedColumns: ["id"]
           },
-        ]
-      }
-      trail_import_jobs: {
-        Row: {
-          bulk_job_id: string | null
-          completed_at: string | null
-          error_message: string | null
-          id: string
-          log: Json | null
-          source_id: string | null
-          started_at: string | null
-          status: string
-          trails_added: number | null
-          trails_failed: number | null
-          trails_processed: number | null
-          trails_updated: number | null
-        }
-        Insert: {
-          bulk_job_id?: string | null
-          completed_at?: string | null
-          error_message?: string | null
-          id?: string
-          log?: Json | null
-          source_id?: string | null
-          started_at?: string | null
-          status: string
-          trails_added?: number | null
-          trails_failed?: number | null
-          trails_processed?: number | null
-          trails_updated?: number | null
-        }
-        Update: {
-          bulk_job_id?: string | null
-          completed_at?: string | null
-          error_message?: string | null
-          id?: string
-          log?: Json | null
-          source_id?: string | null
-          started_at?: string | null
-          status?: string
-          trails_added?: number | null
-          trails_failed?: number | null
-          trails_processed?: number | null
-          trails_updated?: number | null
-        }
-        Relationships: [
           {
-            foreignKeyName: "trail_import_jobs_bulk_job_id_fkey"
-            columns: ["bulk_job_id"]
-            isOneToOne: false
-            referencedRelation: "bulk_import_jobs"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "trail_import_jobs_source_id_fkey"
-            columns: ["source_id"]
-            isOneToOne: false
-            referencedRelation: "trail_data_sources"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      trail_likes: {
-        Row: {
-          created_at: string | null
-          id: string
-          trail_id: string
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          trail_id: string
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          trail_id?: string
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "trail_likes_user_id_fkey"
+            foreignKeyName: "trail_reviews_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
-      }
-      trail_ratings: {
-        Row: {
-          created_at: string | null
-          id: string
-          rating: number
-          trail_id: string
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          rating: number
-          trail_id: string
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          rating?: number
-          trail_id?: string
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      trail_tags: {
-        Row: {
-          created_at: string | null
-          id: string
-          is_strain_tag: boolean | null
-          tag: string
-          tag_id: string | null
-          trail_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          is_strain_tag?: boolean | null
-          tag: string
-          tag_id?: string | null
-          trail_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          is_strain_tag?: boolean | null
-          tag?: string
-          tag_id?: string | null
-          trail_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "trail_tags_tag_id_fkey"
-            columns: ["tag_id"]
-            isOneToOne: false
-            referencedRelation: "tags"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "trail_tags_trail_id_fkey"
-            columns: ["trail_id"]
-            isOneToOne: false
-            referencedRelation: "trails"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      trail_weather: {
-        Row: {
-          condition: string | null
-          high: number | null
-          id: string
-          low: number | null
-          precipitation: string | null
-          sunrise: string | null
-          sunset: string | null
-          temperature: number | null
-          trail_id: string
-          updated_at: string | null
-          wind_direction: string | null
-          wind_speed: string | null
-        }
-        Insert: {
-          condition?: string | null
-          high?: number | null
-          id?: string
-          low?: number | null
-          precipitation?: string | null
-          sunrise?: string | null
-          sunset?: string | null
-          temperature?: number | null
-          trail_id: string
-          updated_at?: string | null
-          wind_direction?: string | null
-          wind_speed?: string | null
-        }
-        Update: {
-          condition?: string | null
-          high?: number | null
-          id?: string
-          low?: number | null
-          precipitation?: string | null
-          sunrise?: string | null
-          sunset?: string | null
-          temperature?: number | null
-          trail_id?: string
-          updated_at?: string | null
-          wind_direction?: string | null
-          wind_speed?: string | null
-        }
-        Relationships: []
       }
       trails: {
         Row: {
-          country: string | null
+          category: Database["public"]["Enums"]["trail_category"] | null
           created_at: string | null
           description: string | null
-          difficulty: string
-          elevation: number
+          difficulty: Database["public"]["Enums"]["trail_difficulty"] | null
           elevation_gain: number | null
-          geojson: Json | null
           id: string
-          is_age_restricted: boolean | null
-          is_verified: boolean | null
-          last_updated: string | null
-          latitude: number | null
-          length: number
-          length_km: number | null
-          location: string
-          longitude: number | null
+          lat: number | null
+          length: number | null
+          location: string | null
+          lon: number | null
           name: string
+          route_geojson: Json | null
           source: string | null
-          source_id: string | null
-          state_province: string | null
-          surface: string | null
-          trail_type: string | null
-          updated_at: string | null
-          user_id: string | null
+          status: string | null
         }
         Insert: {
-          country?: string | null
+          category?: Database["public"]["Enums"]["trail_category"] | null
           created_at?: string | null
           description?: string | null
-          difficulty: string
-          elevation: number
+          difficulty?: Database["public"]["Enums"]["trail_difficulty"] | null
           elevation_gain?: number | null
-          geojson?: Json | null
           id?: string
-          is_age_restricted?: boolean | null
-          is_verified?: boolean | null
-          last_updated?: string | null
-          latitude?: number | null
-          length: number
-          length_km?: number | null
-          location: string
-          longitude?: number | null
+          lat?: number | null
+          length?: number | null
+          location?: string | null
+          lon?: number | null
           name: string
+          route_geojson?: Json | null
           source?: string | null
-          source_id?: string | null
-          state_province?: string | null
-          surface?: string | null
-          trail_type?: string | null
-          updated_at?: string | null
-          user_id?: string | null
+          status?: string | null
         }
         Update: {
-          country?: string | null
+          category?: Database["public"]["Enums"]["trail_category"] | null
           created_at?: string | null
           description?: string | null
-          difficulty?: string
-          elevation?: number
+          difficulty?: Database["public"]["Enums"]["trail_difficulty"] | null
           elevation_gain?: number | null
-          geojson?: Json | null
           id?: string
-          is_age_restricted?: boolean | null
-          is_verified?: boolean | null
-          last_updated?: string | null
-          latitude?: number | null
-          length?: number
-          length_km?: number | null
-          location?: string
-          longitude?: number | null
+          lat?: number | null
+          length?: number | null
+          location?: string | null
+          lon?: number | null
           name?: string
+          route_geojson?: Json | null
           source?: string | null
-          source_id?: string | null
-          state_province?: string | null
-          surface?: string | null
-          trail_type?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      user_memory: {
-        Row: {
-          created_at: string | null
-          id: string
-          memory_key: string
-          memory_value: Json
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          memory_key: string
-          memory_value: Json
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          memory_key?: string
-          memory_value?: Json
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      user_sessions: {
-        Row: {
-          device_info: string | null
-          id: string
-          last_active: string
-          session_token: string
-          user_id: string
-        }
-        Insert: {
-          device_info?: string | null
-          id?: string
-          last_active?: string
-          session_token: string
-          user_id: string
-        }
-        Update: {
-          device_info?: string | null
-          id?: string
-          last_active?: string
-          session_token?: string
-          user_id?: string
+          status?: string | null
         }
         Relationships: []
       }
@@ -1284,16 +546,6 @@ export type Database = {
         Args: { "": unknown } | { "": unknown }
         Returns: string
       }
-      create_policy_if_not_exists: {
-        Args: {
-          policy_name: string
-          table_name: string
-          operation: string
-          using_expr?: string
-          with_check_expr?: string
-        }
-        Returns: undefined
-      }
       disablelongtransactions: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -1324,10 +576,6 @@ export type Database = {
       equals: {
         Args: { geom1: unknown; geom2: unknown }
         Returns: boolean
-      }
-      execute_sql: {
-        Args: { sql_query: string } | { sql_query: string; params?: Json }
-        Returns: Json[]
       }
       geography: {
         Args: { "": string } | { "": unknown }
@@ -1569,10 +817,6 @@ export type Database = {
         Args: { "": unknown }
         Returns: unknown
       }
-      is_service_role: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
       json: {
         Args: { "": unknown }
         Returns: Json
@@ -1580,15 +824,6 @@ export type Database = {
       jsonb: {
         Args: { "": unknown }
         Returns: Json
-      }
-      log_security_event: {
-        Args: {
-          event_type: string
-          event_details?: Json
-          ip_address?: string
-          user_agent?: string
-        }
-        Returns: string
       }
       longtransactionsenabled: {
         Args: Record<PropertyKey, never>
@@ -2853,15 +2088,6 @@ export type Database = {
         Args: { "": unknown }
         Returns: number
       }
-      test_trail_insert_permissions: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          can_insert: boolean
-          user_role: string
-          auth_uid: string
-          is_service_role: boolean
-        }[]
-      }
       text: {
         Args: { "": unknown }
         Returns: string
@@ -2882,7 +2108,8 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      trail_category: "hiking" | "biking" | "offroad"
+      trail_difficulty: "easy" | "moderate" | "hard"
     }
     CompositeTypes: {
       geometry_dump: {
@@ -3005,6 +2232,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      trail_category: ["hiking", "biking", "offroad"],
+      trail_difficulty: ["easy", "moderate", "hard"],
+    },
   },
 } as const

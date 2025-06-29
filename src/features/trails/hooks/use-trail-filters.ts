@@ -20,7 +20,7 @@ export const useTrailFilters = () => {
           if (!matchesSearch) return false;
         }
 
-        // Difficulty filter
+        // Difficulty filter - allow empty string
         if (filters.difficulty && filters.difficulty !== '') {
           if (trail.difficulty !== filters.difficulty) return false;
         }
@@ -74,7 +74,7 @@ export const useTrailFilters = () => {
       return [...trails].sort((a, b) => {
         switch (sortBy) {
           case 'difficulty':
-            const difficultyOrder = { easy: 1, moderate: 2, hard: 3, expert: 4 };
+            const difficultyOrder = { easy: 1, moderate: 2, hard: 3 };
             return difficultyOrder[a.difficulty] - difficultyOrder[b.difficulty];
           case 'length':
             return a.length - b.length;

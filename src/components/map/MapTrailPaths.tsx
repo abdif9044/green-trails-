@@ -19,7 +19,7 @@ const MapTrailPaths: React.FC<MapTrailPathsProps> = ({ trails, map, onTrailSelec
     <>
       {trails.map(trail => {
         // Skip trails without geojson data
-        if (!trail.geojson) {
+        if (!trail.geojson?.features) {
           return null;
         }
         

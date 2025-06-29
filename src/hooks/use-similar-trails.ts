@@ -47,13 +47,14 @@ export const useSimilarTrails = (trailId: string, currentTrail?: Trail) => {
             imageUrl: '/placeholder.svg',
             difficulty: trail.difficulty as 'easy' | 'moderate' | 'hard',
             length: Number(trail.length) || 0,
-            elevation: trail.elevation_gain || 0,
             elevation_gain: trail.elevation_gain || 0,
+            latitude: trail.latitude || trail.lat || 0,
+            longitude: trail.longitude || trail.lon || 0,
             tags: [],
             likes: Math.floor(Math.random() * 200) + 50,
             coordinates: [
-              trail.lon || 0,
-              trail.lat || 0
+              trail.longitude || trail.lon || 0,
+              trail.latitude || trail.lat || 0
             ] as [number, number],
             description: trail.description || 'A beautiful trail similar to your current selection.'
           })) as Trail[];
@@ -79,8 +80,9 @@ const getMockSimilarTrails = (currentTrail: Trail): Trail[] => {
       imageUrl: '/placeholder.svg',
       difficulty: 'moderate' as const,
       length: currentTrail.length * 0.8,
-      elevation: currentTrail.elevation,
       elevation_gain: currentTrail.elevation_gain * 0.9,
+      latitude: (currentTrail.latitude || 0) + 0.1,
+      longitude: (currentTrail.longitude || 0) + 0.1,
       tags: [],
       likes: Math.floor(Math.random() * 200) + 50,
       coordinates: [
@@ -96,8 +98,9 @@ const getMockSimilarTrails = (currentTrail: Trail): Trail[] => {
       imageUrl: '/placeholder.svg',
       difficulty: 'moderate' as const,
       length: currentTrail.length * 1.2,
-      elevation: currentTrail.elevation,
       elevation_gain: currentTrail.elevation_gain * 1.1,
+      latitude: (currentTrail.latitude || 0) - 0.1,
+      longitude: (currentTrail.longitude || 0) - 0.1,
       tags: [],
       likes: Math.floor(Math.random() * 200) + 50,
       coordinates: [

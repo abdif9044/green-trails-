@@ -19,6 +19,8 @@ export interface ProfileWithSocial extends Profile {
   trails_count?: number;
   is_following?: boolean;
   is_followed_by?: boolean;
+  twitter_url?: string;
+  instagram_url?: string;
 }
 
 export interface UserPreferences {

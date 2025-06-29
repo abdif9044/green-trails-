@@ -102,10 +102,10 @@ const TrailCard = memo(({
                 <span>{trail.length} km</span>
               </div>
               
-              {trail.elevation && (
+              {trail.elevation_gain && (
                 <div className="flex items-center text-muted-foreground">
                   <TrendingUp size={14} className="mr-1" />
-                  <span>{trail.elevation}m</span>
+                  <span>{trail.elevation_gain}m</span>
                 </div>
               )}
             </div>

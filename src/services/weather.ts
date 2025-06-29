@@ -1,5 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
 
 export interface WeatherData {
   temperature: number;
@@ -141,3 +142,13 @@ export class WeatherService {
     }
   }
 }
+
+// Export the hook that components are trying to import
+export const useWeather = (trailId: string) => {
+  return useQuery({
+    queryKey: ['weather', trailId],
+    queryFn: () => WeatherService.getWeatherForTrail(trailId),
+    enabled: !!trailId,
+    staleTime: 30 * 60 * 1000, // 30 minutes
+  });
+};

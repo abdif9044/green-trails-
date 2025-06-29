@@ -1,73 +1,50 @@
 
-import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { TrailComment } from '@/types/trails';
 
 export const useTrailComments = (trailId: string) => {
-  const [comments, setComments] = useState<TrailComment[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchComments = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      // Mock data for now - replace with actual API call
-      const mockComments: TrailComment[] = [
+  return useQuery({
+    queryKey: ['trail-comments', trailId],
+    queryFn: async (): Promise<TrailComment[]> => {
+      // For now return mock data since we don't have a comments table yet
+      return [
         {
           id: '1',
           user_id: 'user1',
           trail_id: trailId,
           content: 'Great trail with amazing views!',
           created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          user: {
-            username: 'hiker123',
-            full_name: 'John Doe',
-            avatar_url: '/placeholder.svg'
-          }
+        },
+        {
+          id: '2',
+          user_id: 'user2',
+          trail_id: trailId,
+          content: 'Challenging but worth it.',
+          created_at: new Date().toISOString(),
         }
       ];
-      setComments(mockComments);
-    } catch (err) {
-      setError('Failed to fetch comments');
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+    enabled: !!trailId,
+  });
+};
 
-  const addComment = async (content: string) => {
-    try {
-      const newComment: TrailComment = {
+export const useAddTrailComment = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ trailId, content }: { trailId: string; content: string }) => {
+      // Mock implementation - would normally insert into database
+      return {
         id: Date.now().toString(),
-        user_id: 'current-user',
         trail_id: trailId,
         content,
+        user_id: 'current-user',
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        user: {
-          username: 'current-user',
-          full_name: 'Current User',
-          avatar_url: '/placeholder.svg'
-        }
       };
-      setComments(prev => [newComment, ...prev]);
-      return { success: true };
-    } catch (err) {
-      return { success: false, error: 'Failed to add comment' };
-    }
-  };
-
-  useEffect(() => {
-    if (trailId) {
-      fetchComments();
-    }
-  }, [trailId]);
-
-  return {
-    comments,
-    loading,
-    error: error || '',
-    addComment,
-    refetch: fetchComments
-  };
+    },
+    onSuccess: (_, { trailId }) => {
+      queryClient.invalidateQueries({ queryKey: ['trail-comments', trailId] });
+    },
+  });
 };

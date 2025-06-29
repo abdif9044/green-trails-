@@ -45,11 +45,11 @@ const DiscoverTrailsList: React.FC<DiscoverTrailsListProps> = ({ trails, onReset
               imageUrl={trail.imageUrl}
               difficulty={trail.difficulty}
               length={trail.length}
-              elevation={trail.elevation}
+              elevation={trail.elevation_gain}
               tags={trail.tags}
               likes={trail.likes}
-              strainTags={trail.strainTags}
-              isAgeRestricted={trail.isAgeRestricted}
+              strainTags={trail.strain_tags}
+              isAgeRestricted={trail.is_age_restricted}
             />
           </Link>
         </div>

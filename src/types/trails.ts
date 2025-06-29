@@ -20,6 +20,11 @@ export interface Trail {
   is_verified?: boolean;
   created_at?: string;
   updated_at?: string;
+  // Additional properties for compatibility
+  elevation?: number; // Alias for elevation_gain
+  geojson?: any; // GeoJSON data for trail paths
+  state_province?: string;
+  strain_tags?: StrainTag[];
 }
 
 export interface DatabaseTrail {
@@ -53,9 +58,15 @@ export interface DatabaseTrail {
 
 export interface TrailFilters {
   searchQuery?: string;
-  difficulty?: 'easy' | 'moderate' | 'hard';
+  difficulty?: '' | 'easy' | 'moderate' | 'hard';
   lengthRange?: [number, number];
   tags?: string[];
+  country?: string;
+  stateProvince?: string;
+  nearbyCoordinates?: [number, number];
+  radius?: number;
+  strainTags?: StrainTag[];
+  isAgeRestricted?: boolean;
   location?: {
     lat: number;
     lng: number;
@@ -93,3 +104,23 @@ export interface HikeSession {
   created_at: string;
   updated_at: string;
 }
+
+export interface TrailComment {
+  id: string;
+  user_id: string;
+  trail_id: string;
+  content: string;
+  created_at: string;
+  updated_at?: string;
+}
+
+// Export missing types
+export type TrailDifficulty = 'easy' | 'moderate' | 'hard';
+
+export type StrainTag = 
+  | 'creative'
+  | 'energetic' 
+  | 'focused'
+  | 'relaxed'
+  | 'sleepy'
+  | 'uplifted';

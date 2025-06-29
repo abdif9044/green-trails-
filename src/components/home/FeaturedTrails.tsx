@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -13,12 +12,13 @@ const mockFeaturedTrails: Trail[] = [
     imageUrl: '/placeholder.svg',
     difficulty: 'hard' as const,
     length: 5.4,
-    elevation: 1488,
     elevation_gain: 1488,
+    latitude: 37.2692,
+    longitude: -112.9481,
     tags: ['mountain views', 'challenging', 'chains section'],
     likes: 2847,
     description: 'One of the most famous and thrilling hikes in Zion.',
-    coordinates: [37.2692, -112.9481] as [number, number]
+    coordinates: [-112.9481, 37.2692] as [number, number]
   },
   {
     id: '2', 
@@ -27,12 +27,13 @@ const mockFeaturedTrails: Trail[] = [
     imageUrl: '/placeholder.svg',
     difficulty: 'hard' as const,
     length: 16.0,
-    elevation: 8842,
     elevation_gain: 4800,
+    latitude: 37.7459,
+    longitude: -119.5332,
     tags: ['granite dome', 'cables', 'permits required'],
     likes: 3124,
     description: 'Iconic granite dome with cables for the final ascent.',
-    coordinates: [37.7459, -119.5332] as [number, number]
+    coordinates: [-119.5332, 37.7459] as [number, number]
   },
   {
     id: '3',
@@ -41,12 +42,13 @@ const mockFeaturedTrails: Trail[] = [
     imageUrl: '/placeholder.svg',
     difficulty: 'moderate' as const,
     length: 3.2,
-    elevation: 10110,
     elevation_gain: 605,
+    latitude: 40.3428,
+    longitude: -105.6836,
     tags: ['alpine lake', 'family friendly', 'scenic views'],
     likes: 1856,
     description: 'Beautiful alpine lake surrounded by towering peaks.',
-    coordinates: [40.3428, -105.6836] as [number, number]
+    coordinates: [-105.6836, 40.3428] as [number, number]
   }
 ];
 

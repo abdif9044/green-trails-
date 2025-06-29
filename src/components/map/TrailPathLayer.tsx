@@ -12,7 +12,7 @@ interface TrailPathLayerProps {
 const TrailPathLayer: React.FC<TrailPathLayerProps> = ({ trail, map, onClick }) => {
   useEffect(() => {
     // If trail has no geojson data, don't render
-    if (!trail.geojson) return;
+    if (!trail.geojson?.features) return;
     
     // Create unique source and layer IDs based on trail ID
     const sourceId = `trail-path-${trail.id}`;

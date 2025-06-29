@@ -1,6 +1,6 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Trail, DatabaseTrail, TrailFilters } from '@/types/trails';
+import { useQuery } from '@tanstack/react-query';
 
 export class TrailService {
   /**
@@ -27,7 +27,11 @@ export class TrailService {
       is_age_restricted: dbTrail.is_age_restricted,
       is_verified: dbTrail.is_verified,
       created_at: dbTrail.created_at,
-      updated_at: dbTrail.updated_at
+      updated_at: dbTrail.updated_at,
+      // Add compatibility properties
+      elevation: dbTrail.elevation_gain || 0,
+      geojson: dbTrail.geojson,
+      state_province: dbTrail.region
     };
   }
 
@@ -88,7 +92,7 @@ export class TrailService {
       }
 
       // Apply difficulty filter
-      if (filters.difficulty) {
+      if (filters.difficulty && filters.difficulty !== '') {
         query = query.eq('difficulty', filters.difficulty);
       }
 
@@ -227,3 +231,12 @@ export class TrailService {
     }
   }
 }
+
+// Export the hook that components are trying to import
+export const useTrails = (filters?: TrailFilters) => {
+  return useQuery({
+    queryKey: ['trails', filters],
+    queryFn: () => TrailService.searchTrails(filters || {}),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+};

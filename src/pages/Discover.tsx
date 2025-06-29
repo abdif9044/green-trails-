@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -13,6 +14,7 @@ import { useSearchParams } from 'react-router-dom';
 import { Badge } from "@/components/ui/badge";
 import { useEasterEggs } from '@/contexts/easter-eggs-context';
 import { SecretTrailsList } from '@/components/easter-eggs/SecretTrailCard';
+import { TrailFilters, TrailDifficulty } from '@/types/trails';
 
 const Discover = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -28,11 +30,11 @@ const Discover = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { secretTrailsUnlocked } = useEasterEggs();
 
-  const trailFilters = {
+  const trailFilters: TrailFilters = {
     searchQuery,
     country: undefined,
     stateProvince: undefined,
-    difficulty: filters.difficulty || undefined,
+    difficulty: (filters.difficulty as '' | TrailDifficulty) || undefined,
   };
 
   const { data, isLoading, error, refetch } = useTrailsQuery(trailFilters);

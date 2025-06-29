@@ -15,7 +15,7 @@ export const EnhancedSignUpService = {
     try {
       console.log('Enhanced signup process starting for:', data.email);
 
-      // Step 1: Create auth user
+      // Step 1: Create auth user with metadata
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
@@ -41,6 +41,7 @@ export const EnhancedSignUpService = {
       console.log('Auth user created:', authData.user.id);
 
       // Step 2: Update profile with additional data
+      // Note: The trigger should have created the profile row, we just need to update it
       const { error: profileError } = await supabase
         .from('profiles')
         .update({

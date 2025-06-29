@@ -36,7 +36,7 @@ export const SignUpFormFields = ({
 }: SignUpFormFieldsProps) => {
   // Generate years for dropdown (current year - 110 to current year - 13)
   const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: 110 }, (_, i) => currentYear - 13 - i);
+  const years = Array.from({ length: 98 }, (_, i) => currentYear - 13 - i);
 
   return (
     <>

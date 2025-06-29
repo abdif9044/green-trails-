@@ -8,6 +8,7 @@ import { TermsAndPrivacy } from '@/components/auth/TermsAndPrivacy';
 import { SignUpFormFields } from '@/components/auth/SignUpFormFields';
 import { SignUpSuccessMessage } from '@/components/auth/SignUpSuccessMessage';
 import { useSignUpValidation } from '@/components/auth/SignUpFormValidation';
+import { EnhancedSignUpService } from '@/services/auth/enhanced-signup-service';
 
 interface SignUpFormProps {
   onSuccess: () => void;
@@ -24,7 +25,6 @@ export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   
-  const { signUp } = useAuth();
   const { validateForm } = useSignUpValidation();
 
   const handleSignUpSubmit = async (e: React.FormEvent) => {
@@ -50,23 +50,24 @@ export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
     try {
       console.log('Attempting to create account for:', email);
       
-      const { success: signUpSuccess, message } = await signUp(email, password, {
+      const result = await EnhancedSignUpService.signUp({
+        email: email.trim(),
+        password,
         full_name: fullName.trim(),
         username: username.trim(),
-        year_of_birth: parseInt(birthYear),
-        signup_source: 'web_form'
+        year_of_birth: parseInt(birthYear)
       });
       
-      if (!signUpSuccess) {
-        console.error('Sign up failed:', message);
-        if (message?.includes('User already registered')) {
+      if (!result.success) {
+        console.error('Enhanced sign up failed:', result.message);
+        if (result.message?.includes('User already registered')) {
           setError('This email is already registered. Please sign in instead.');
-        } else if (message?.includes('Invalid email')) {
+        } else if (result.message?.includes('Invalid email')) {
           setError('Please provide a valid email address.');
-        } else if (message?.includes('Password should be at least')) {
+        } else if (result.message?.includes('Password should be at least')) {
           setError('Password must be at least 8 characters long.');
         } else {
-          setError(message || 'Failed to create account. Please try again.');
+          setError(result.message || 'Failed to create account. Please try again.');
         }
         return;
       }

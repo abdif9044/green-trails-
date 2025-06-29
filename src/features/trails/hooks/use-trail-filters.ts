@@ -20,9 +20,11 @@ export const useTrailFilters = () => {
           if (!matchesSearch) return false;
         }
 
-        // Difficulty filter - handle empty string properly
+        // Difficulty filter - handle empty string and expert mapping
         if (filters.difficulty && filters.difficulty.trim() !== '') {
-          if (trail.difficulty !== filters.difficulty) return false;
+          // Map 'expert' to 'hard' for comparison since database only has easy/moderate/hard
+          const filterDifficulty = filters.difficulty === 'expert' ? 'hard' : filters.difficulty;
+          if (trail.difficulty !== filterDifficulty) return false;
         }
 
         // Length range filter

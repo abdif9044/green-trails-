@@ -209,6 +209,38 @@ export type Database = {
         }
         Relationships: []
       }
+      event_attendees: {
+        Row: {
+          created_at: string | null
+          event_id: string
+          id: string
+          status: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          event_id: string
+          id?: string
+          status?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          event_id?: string
+          id?: string
+          status?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_attendees_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "hiking_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       follows: {
         Row: {
           created_at: string | null
@@ -229,6 +261,53 @@ export type Database = {
           id?: string
         }
         Relationships: []
+      }
+      hiking_events: {
+        Row: {
+          created_at: string | null
+          date: string
+          description: string | null
+          id: string
+          location: string | null
+          max_participants: number | null
+          organizer_id: string
+          title: string
+          trail_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          date: string
+          description?: string | null
+          id?: string
+          location?: string | null
+          max_participants?: number | null
+          organizer_id: string
+          title: string
+          trail_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          date?: string
+          description?: string | null
+          id?: string
+          location?: string | null
+          max_participants?: number | null
+          organizer_id?: string
+          title?: string
+          trail_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hiking_events_trail_id_fkey"
+            columns: ["trail_id"]
+            isOneToOne: false
+            referencedRelation: "trails"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       log_photos: {
         Row: {
@@ -628,6 +707,97 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trail_weather: {
+        Row: {
+          condition: string | null
+          created_at: string | null
+          high: number | null
+          id: string
+          low: number | null
+          precipitation: string | null
+          sunrise: string | null
+          sunset: string | null
+          temperature: number | null
+          trail_id: string
+          updated_at: string | null
+          wind_direction: string | null
+          wind_speed: string | null
+        }
+        Insert: {
+          condition?: string | null
+          created_at?: string | null
+          high?: number | null
+          id?: string
+          low?: number | null
+          precipitation?: string | null
+          sunrise?: string | null
+          sunset?: string | null
+          temperature?: number | null
+          trail_id: string
+          updated_at?: string | null
+          wind_direction?: string | null
+          wind_speed?: string | null
+        }
+        Update: {
+          condition?: string | null
+          created_at?: string | null
+          high?: number | null
+          id?: string
+          low?: number | null
+          precipitation?: string | null
+          sunrise?: string | null
+          sunset?: string | null
+          temperature?: number | null
+          trail_id?: string
+          updated_at?: string | null
+          wind_direction?: string | null
+          wind_speed?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trail_weather_trail_id_fkey"
+            columns: ["trail_id"]
+            isOneToOne: false
+            referencedRelation: "trails"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trail_weather_forecasts: {
+        Row: {
+          created_at: string | null
+          daily: Json | null
+          hourly: Json | null
+          id: string
+          trail_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          daily?: Json | null
+          hourly?: Json | null
+          id?: string
+          trail_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          daily?: Json | null
+          hourly?: Json | null
+          id?: string
+          trail_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trail_weather_forecasts_trail_id_fkey"
+            columns: ["trail_id"]
+            isOneToOne: false
+            referencedRelation: "trails"
             referencedColumns: ["id"]
           },
         ]

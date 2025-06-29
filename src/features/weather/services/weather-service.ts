@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { WeatherData, DetailedWeatherData, HourlyForecast, DailyForecast } from '@/features/weather/types/weather-types';
 import { toast } from '@/hooks/use-toast';
@@ -24,15 +25,16 @@ export const getTrailWeather = async (trailId: string, coordinates: [number, num
       // If data is less than 1 hour old, use it
       if (diffHours < 1) {
         return {
-          temperature: existingData.temperature,
-          condition: existingData.condition,
-          high: existingData.high,
-          low: existingData.low,
-          precipitation: existingData.precipitation,
-          sunrise: existingData.sunrise,
-          sunset: existingData.sunset,
-          windSpeed: existingData.wind_speed,
-          windDirection: existingData.wind_direction
+          temperature: existingData.temperature || 0,
+          condition: existingData.condition || 'Unknown',
+          high: existingData.high || 0,
+          low: existingData.low || 0,
+          precipitation: existingData.precipitation || '0%',
+          sunrise: existingData.sunrise || '6:00 AM',
+          sunset: existingData.sunset || '6:00 PM',
+          windSpeed: parseFloat(existingData.wind_speed || '0'),
+          windDirection: existingData.wind_direction || 'N',
+          humidity: 50 // Default value since not stored in DB yet
         };
       }
     }

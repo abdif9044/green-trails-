@@ -1,104 +1,114 @@
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '../use-toast';
-import { useCreateNotification } from './use-notifications';
 
-// Enhanced profile hooks
+interface EnhancedProfile {
+  id: string;
+  username: string;
+  full_name: string;
+  avatar_url: string;
+  bio: string;
+  website_url: string;
+  email: string;
+  stats: {
+    totalTrails: number;
+    totalDistance: number;
+    totalElevation: number;
+    currentStreak: number;
+  };
+  followers: number;
+  following: number;
+  recentActivities: Array<{
+    id: string;
+    type: string;
+    trail_name?: string;
+    created_at: string;
+  }>;
+}
+
 export const useEnhancedProfile = (userId: string) => {
   return useQuery({
     queryKey: ['enhanced-profile', userId],
-    queryFn: async () => {
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select(`
-          *,
-          hiking_stats(*),
-          achievements(*),
-          social_stats(*)
-        `)
-        .eq('id', userId)
-        .single();
-      if (profileError) throw profileError;
-      return profile;
-    },
-    enabled: !!userId,
-  });
-};
+    queryFn: async (): Promise<EnhancedProfile | null> => {
+      if (!userId) return null;
 
-export const useUpdateHikingStats = () => {
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
-  
-  return useMutation({
-    mutationFn: async ({ 
-      userId, 
-      stats 
-    }: { 
-      userId: string; 
-      stats: Record<string, any> 
-    }) => {
-      const { error } = await supabase
-        .from('hiking_stats')
-        .upsert({
-          user_id: userId,
-          ...stats,
-          updated_at: new Date().toISOString()
-        }, {
-          onConflict: 'user_id'
-        });
-      if (error) throw error;
-    },
-    onSuccess: (_, { userId }) => {
-      queryClient.invalidateQueries({ queryKey: ['enhanced-profile', userId] });
-    },
-  });
-};
+      try {
+        // Get basic profile
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .single();
 
-// Achievement system hooks
-export const useUnlockAchievement = () => {
-  const queryClient = useQueryClient();
-  const createNotification = useCreateNotification();
-  const { toast } = useToast();
-  
-  return useMutation({
-    mutationFn: async ({ 
-      userId, 
-      achievementId 
-    }: { 
-      userId: string; 
-      achievementId: string 
-    }) => {
-      const { error } = await supabase
-        .from('user_achievements')
-        .insert({
-          user_id: userId,
-          achievement_id: achievementId,
-          unlocked_at: new Date().toISOString()
-        });
-      if (error) throw error;
-      // Get achievement details for notification
-      const { data: achievement } = await supabase
-        .from('achievements')
-        .select('name, description')
-        .eq('id', achievementId)
-        .single();
-      if (achievement) {
-        await createNotification.mutateAsync({
-          userId,
-          type: 'achievement',
-          title: 'Achievement Unlocked!',
-          message: `You've unlocked "${achievement.name}": ${achievement.description}`,
-          data: { achievementId }
-        });
+        if (profileError) {
+          console.error('Error fetching profile:', profileError);
+          return null;
+        }
+
+        // Get user stats
+        const { data: stats, error: statsError } = await supabase
+          .from('user_stats')
+          .select('*')
+          .eq('user_id', userId)
+          .single();
+
+        if (statsError) {
+          console.log('No stats found for user, using defaults');
+        }
+
+        // Get follower/following counts
+        const { data: followerData, error: followerError } = await supabase
+          .from('follows')
+          .select('id')
+          .eq('following_id', userId);
+
+        const { data: followingData, error: followingError } = await supabase
+          .from('follows')
+          .select('id')
+          .eq('follower_id', userId);
+
+        // Get recent activities
+        const { data: activities, error: activitiesError } = await supabase
+          .from('activity_feed')
+          .select(`
+            id,
+            type,
+            content,
+            created_at,
+            trails:trail_id(name)
+          `)
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false })
+          .limit(10);
+
+        return {
+          id: profile.id,
+          username: profile.username || '',
+          full_name: profile.full_name || '',
+          avatar_url: profile.avatar_url || '',
+          bio: profile.bio || '',
+          website_url: profile.website_url || '',
+          email: profile.email || '',
+          stats: {
+            totalTrails: stats?.total_trails || 0,
+            totalDistance: stats?.total_distance || 0,
+            totalElevation: stats?.total_elevation || 0,
+            currentStreak: stats?.current_streak || 0,
+          },
+          followers: followerData?.length || 0,
+          following: followingData?.length || 0,
+          recentActivities: activities?.map(activity => ({
+            id: activity.id,
+            type: activity.type,
+            trail_name: (activity.trails as any)?.name || '',
+            created_at: activity.created_at,
+          })) || [],
+        };
+      } catch (error) {
+        console.error('Error fetching enhanced profile:', error);
+        return null;
       }
     },
-    onSuccess: (_, { userId }) => {
-      queryClient.invalidateQueries({ queryKey: ['enhanced-profile', userId] });
-      toast({
-        title: "Achievement Unlocked! 🏆",
-        description: "Check your profile to see your new achievement.",
-      });
-    },
+    enabled: !!userId,
   });
 };

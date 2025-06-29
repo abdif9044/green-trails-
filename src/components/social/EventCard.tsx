@@ -9,7 +9,7 @@ import { formatDistanceToNow, format } from "date-fns";
 
 type AttendeeType = {
   user_id: string;
-  status: 'going' | 'maybe' | 'declined';
+  status: 'attending' | 'maybe' | 'not_attending';
   user: {
     id: string;
     username: string;
@@ -19,7 +19,7 @@ type AttendeeType = {
 };
 
 interface EventCardProps {
-  event: any; // Use expanded type if available
+  event: any;
   expanded?: boolean;
   onViewDetails?: (event: any) => void;
 }
@@ -36,9 +36,9 @@ const getDifficultyColor = (difficulty: string) => {
 
 const getStatusColor = (status: string) => {
   switch (status) {
-    case 'going': return 'text-green-600';
+    case 'attending': return 'text-green-600';
     case 'maybe': return 'text-yellow-600';
-    case 'declined': return 'text-red-600';
+    case 'not_attending': return 'text-red-600';
     default: return 'text-gray-600';
   }
 };
@@ -59,19 +59,26 @@ const EventCard: React.FC<EventCardProps> = ({ event, expanded, onViewDetails })
         <h2 className="text-2xl font-semibold">{event.title}</h2>
         <p className="text-muted-foreground">{event.description}</p>
         <div>
-          <h4 className="font-semibold mb-2">What to Bring</h4>
-          <ul className="space-y-1">
-            {(event.requirements || []).map((req: string, idx: number) => (
-              <li key={idx} className="text-sm text-muted-foreground flex items-center">
-                <div className="w-1.5 h-1.5 bg-greentrail-500 rounded-full mr-2"></div>
-                {req}
-              </li>
-            ))}
-          </ul>
-        </div>
-        <div>
-          <h4 className="font-semibold mb-2">Meeting Point</h4>
-          <p className="text-sm text-muted-foreground">{event.meeting_point}</p>
+          <h4 className="font-semibold mb-2">Event Details</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div className="flex items-center">
+              <Calendar className="h-4 w-4 mr-2" />
+              {event.date ? format(new Date(event.date), 'MMM dd, yyyy') : "TBD"}
+            </div>
+            <div className="flex items-center">
+              <Clock className="h-4 w-4 mr-2" />
+              {event.date ? format(new Date(event.date), 'h:mm a') : "TBD"}
+            </div>
+            <div className="flex items-center">
+              <MapPin className="h-4 w-4 mr-2" />
+              {event.location || "Location TBD"}
+            </div>
+            <div className="flex items-center">
+              <Users className="h-4 w-4 mr-2" />
+              {attendees.filter(a => a.status === "attending").length || 0}
+              {event.max_participants ? `/${event.max_participants}` : ''} joined
+            </div>
+          </div>
         </div>
         <div>
           <h4 className="font-semibold mb-3">All Attendees ({attendees.length})</h4>
@@ -106,27 +113,25 @@ const EventCard: React.FC<EventCardProps> = ({ event, expanded, onViewDetails })
                 <h3 className="text-xl luxury-heading text-white mb-2">{event.title}</h3>
                 <p className="text-luxury-300 luxury-text leading-relaxed">{event.description}</p>
               </div>
-              <Badge className={`luxury-text ${getDifficultyColor(event.difficulty)}`}>
-                {event.difficulty}
-              </Badge>
             </div>
             {/* Event Details */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               <div className="flex items-center text-luxury-400">
                 <Calendar className="h-4 w-4 mr-2" />
-                {event.date ? format(new Date(event.date), 'MMM dd, yyyy') : "?"}
+                {event.date ? format(new Date(event.date), 'MMM dd, yyyy') : "TBD"}
               </div>
               <div className="flex items-center text-luxury-400">
                 <Clock className="h-4 w-4 mr-2" />
-                {event.date ? format(new Date(event.date), 'h:mm a') : "?"} • {event.duration}
+                {event.date ? format(new Date(event.date), 'h:mm a') : "TBD"}
               </div>
               <div className="flex items-center text-luxury-400">
                 <MapPin className="h-4 w-4 mr-2" />
-                {event.trail_name}
+                {event.location || "Location TBD"}
               </div>
               <div className="flex items-center text-luxury-400">
                 <Users className="h-4 w-4 mr-2" />
-                {attendees.filter(a => a.status === "going").length || 0}/{event.max_participants} joined
+                {attendees.filter(a => a.status === "attending").length || 0}
+                {event.max_participants ? `/${event.max_participants}` : ''} joined
               </div>
             </div>
             {/* Organizer */}
@@ -139,7 +144,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, expanded, onViewDetails })
               </Avatar>
               <div>
                 <p className="text-sm font-medium text-white">
-                  Organized by {organizer.full_name || organizer.username}
+                  Organized by {organizer.full_name || organizer.username || 'Unknown'}
                 </p>
                 <p className="text-xs text-luxury-400">
                   {event.created_at && formatDistanceToNow(new Date(event.created_at), { addSuffix: true })}
@@ -152,11 +157,11 @@ const EventCard: React.FC<EventCardProps> = ({ event, expanded, onViewDetails })
             {/* Attendees Preview */}
             <div>
               <p className="text-sm font-medium text-white mb-3">
-                Attendees ({attendees.filter(a => a.status === "going").length})
+                Attendees ({attendees.filter(a => a.status === "attending").length})
               </p>
               <div className="flex -space-x-2">
                 {attendees
-                  .filter(a => a.status === "going")
+                  .filter(a => a.status === "attending")
                   .slice(0, 5)
                   .map(att => (
                   <Avatar key={att.user_id} className="h-8 w-8 border-2 border-luxury-900">
@@ -166,10 +171,10 @@ const EventCard: React.FC<EventCardProps> = ({ event, expanded, onViewDetails })
                     </AvatarFallback>
                   </Avatar>
                 ))}
-                {attendees.filter(a => a.status === "going").length > 5 && (
+                {attendees.filter(a => a.status === "attending").length > 5 && (
                   <div className="h-8 w-8 rounded-full bg-luxury-700 border-2 border-luxury-900 flex items-center justify-center">
                     <span className="text-xs text-white">
-                      +{attendees.filter(a => a.status === "going").length - 5}
+                      +{attendees.filter(a => a.status === "attending").length - 5}
                     </span>
                   </div>
                 )}

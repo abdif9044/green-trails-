@@ -31,7 +31,8 @@ export const usePaginatedTrails = ({ filters, pageSize = 12 }: UsePaginatedTrail
         query = query.or(`name.ilike.%${filters.searchQuery}%,location.ilike.%${filters.searchQuery}%,description.ilike.%${filters.searchQuery}%`);
       }
 
-      if (filters.difficulty && ['easy', 'moderate', 'hard'].includes(filters.difficulty)) {
+      // Handle difficulty filter - database only supports easy, moderate, hard
+      if (filters.difficulty && filters.difficulty !== '' && ['easy', 'moderate', 'hard'].includes(filters.difficulty)) {
         query = query.eq('difficulty', filters.difficulty);
       }
 

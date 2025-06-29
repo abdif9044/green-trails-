@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Trail, DatabaseTrail, TrailFilters } from '@/types/trails';
 import { useQuery } from '@tanstack/react-query';
@@ -12,7 +13,7 @@ export class TrailService {
       name: dbTrail.name,
       location: dbTrail.location || 'Unknown Location',
       description: dbTrail.description || '',
-      difficulty: dbTrail.difficulty as 'easy' | 'moderate' | 'hard' | 'expert',
+      difficulty: dbTrail.difficulty as 'easy' | 'moderate' | 'hard', // Database constraint
       length: Number(dbTrail.length) || 0,
       elevation_gain: dbTrail.elevation_gain || 0,
       latitude: dbTrail.latitude || dbTrail.lat || 0,
@@ -91,8 +92,8 @@ export class TrailService {
         query = query.or(`name.ilike.%${filters.searchQuery}%,location.ilike.%${filters.searchQuery}%,description.ilike.%${filters.searchQuery}%`);
       }
 
-      // Apply difficulty filter - properly handle empty string
-      if (filters.difficulty && filters.difficulty !== '') {
+      // Apply difficulty filter - handle database constraints
+      if (filters.difficulty && filters.difficulty !== '' && filters.difficulty !== 'expert') {
         query = query.eq('difficulty', filters.difficulty);
       }
 

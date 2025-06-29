@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 interface TargetedImportConfig {
@@ -82,21 +83,6 @@ export class MinnesotaDenverImportService {
     }
   }
 
-  private static async parseCSVData(csv: string): Promise<any[]> {
-    try {
-      // Use type casting to avoid deep instantiation issues
-      const rows = csvParse(csv, { 
-        columns: true, 
-        relax_column_count: true 
-      }) as unknown[];
-      
-      return rows as any[];
-    } catch (error) {
-      console.error('Error parsing CSV data:', error);
-      return [];
-    }
-  }
-
   static async getImportStatus(): Promise<{
     totalTrails: number;
     minnesotaTrails: number;
@@ -112,13 +98,13 @@ export class MinnesotaDenverImportService {
       const { count: minnesotaCount } = await supabase
         .from('trails')
         .select('*', { count: 'exact', head: true })
-        .eq('state_province', 'Minnesota');
+        .ilike('location', '%Minnesota%');
 
       // Get Colorado/Denver trails
       const { count: coloradoCount } = await supabase
         .from('trails')
         .select('*', { count: 'exact', head: true })
-        .eq('state_province', 'Colorado');
+        .ilike('location', '%Colorado%');
 
       return {
         totalTrails: totalCount || 0,

@@ -15,6 +15,12 @@ export const useTrailComments = (trailId: string) => {
           trail_id: trailId,
           content: 'Great trail with amazing views!',
           created_at: new Date().toISOString(),
+          user: {
+            id: 'user1',
+            username: 'trailblazer',
+            avatar_url: '/placeholder.svg',
+            full_name: 'Trail Blazer'
+          }
         },
         {
           id: '2',
@@ -22,6 +28,12 @@ export const useTrailComments = (trailId: string) => {
           trail_id: trailId,
           content: 'Challenging but worth it.',
           created_at: new Date().toISOString(),
+          user: {
+            id: 'user2',
+            username: 'hiker_pro',
+            avatar_url: '/placeholder.svg',
+            full_name: 'Pro Hiker'
+          }
         }
       ];
     },
@@ -41,6 +53,12 @@ export const useAddTrailComment = () => {
         content,
         user_id: 'current-user',
         created_at: new Date().toISOString(),
+        user: {
+          id: 'current-user',
+          username: 'current_user',
+          avatar_url: '/placeholder.svg',
+          full_name: 'Current User'
+        }
       };
     },
     onSuccess: (_, { trailId }) => {

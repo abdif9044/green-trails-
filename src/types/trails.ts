@@ -1,3 +1,4 @@
+
 export interface Trail {
   id: string;
   name: string;
@@ -31,7 +32,7 @@ export interface DatabaseTrail {
   name: string;
   location: string;
   description: string;
-  difficulty: 'easy' | 'moderate' | 'hard';
+  difficulty: 'easy' | 'moderate' | 'hard'; // Database only supports these three
   length: number;
   elevation_gain: number;
   latitude: number;
@@ -57,7 +58,7 @@ export interface DatabaseTrail {
 
 export interface TrailFilters {
   searchQuery?: string;
-  difficulty?: '' | 'easy' | 'moderate' | 'hard' | 'expert';
+  difficulty?: '' | 'easy' | 'moderate' | 'hard' | 'expert'; // Allow empty string
   lengthRange?: [number, number];
   tags?: string[];
   country?: string;
@@ -111,6 +112,12 @@ export interface TrailComment {
   content: string;
   created_at: string;
   updated_at?: string;
+  user?: {
+    id: string;
+    username?: string;
+    avatar_url?: string;
+    full_name?: string;
+  };
 }
 
 // Export missing types

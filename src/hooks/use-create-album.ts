@@ -78,11 +78,9 @@ export const useCreateAlbum = () => {
         
         if (uploadError) throw uploadError;
         
-        const fileUrl = supabase.storage.from('media').getPublicUrl(filePath).data.publicUrl;
-        
-        // Add to media table
+        // Add to album_media table instead of media table
         const { error: mediaError } = await supabase
-          .from('media')
+          .from('album_media')
           .insert({
             album_id: album.id,
             user_id: user.id,

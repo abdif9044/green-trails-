@@ -22,7 +22,24 @@ export const useSimilarTrails = (trailId: string, currentTrail?: Trail) => {
       }
 
       if (dbTrails && dbTrails.length > 0) {
-        return dbTrails as Trail[];
+        // Transform database trails to match Trail interface
+        return dbTrails.map(trail => ({
+          id: trail.id,
+          name: trail.name,
+          location: trail.location || 'Unknown Location',
+          imageUrl: '/placeholder.svg',
+          difficulty: trail.difficulty as 'easy' | 'moderate' | 'hard',
+          length: Number(trail.length) || 0,
+          elevation: trail.elevation_gain || 0,
+          elevation_gain: trail.elevation_gain || 0,
+          tags: [],
+          likes: Math.floor(Math.random() * 200) + 50,
+          coordinates: [
+            trail.lon || 0,
+            trail.lat || 0
+          ] as [number, number],
+          description: trail.description || 'A beautiful trail similar to your current selection.'
+        })) as Trail[];
       }
 
       // Fallback to mock similar trails if no database trails found

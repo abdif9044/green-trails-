@@ -1,5 +1,5 @@
 
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '../use-auth';
 import { useToast } from '../use-toast';
@@ -74,6 +74,52 @@ export const useUnfollowUser = () => {
         description: "Failed to unfollow user.",
         variant: "destructive",
       });
+    },
+  });
+};
+
+// Check if current user is following a specific user
+export const useIsFollowing = (targetUserId: string) => {
+  const { user } = useAuth();
+  
+  return useQuery({
+    queryKey: ['isFollowing', user?.id, targetUserId],
+    queryFn: async () => {
+      if (!user) return false;
+      
+      const { data, error } = await supabase
+        .from('follows')
+        .select('id')
+        .eq('follower_id', user.id)
+        .eq('following_id', targetUserId)
+        .maybeSingle();
+        
+      if (error) {
+        console.error('Error checking if following:', error);
+        return false;
+      }
+      
+      return !!data;
+    },
+    enabled: !!user && !!targetUserId,
+  });
+};
+
+// Toggle follow/unfollow
+export const useToggleFollow = () => {
+  const followUser = useFollowUser();
+  const unfollowUser = useUnfollowUser();
+  const { user } = useAuth();
+  
+  return useMutation({
+    mutationFn: async ({ targetUserId, isFollowing }: { targetUserId: string; isFollowing: boolean }) => {
+      if (!user) throw new Error('User not authenticated');
+      
+      if (isFollowing) {
+        return unfollowUser.mutateAsync(targetUserId);
+      } else {
+        return followUser.mutateAsync(targetUserId);
+      }
     },
   });
 };

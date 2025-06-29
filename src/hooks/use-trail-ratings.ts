@@ -22,28 +22,17 @@ export const useTrailRatings = (trailId: string) => {
   return useQuery({
     queryKey: ['trail-ratings', trailId],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('execute_sql', {
-        sql_query: `
-          SELECT rating, user_id, trail_id
-          FROM trail_ratings
-          WHERE trail_id = $1
-        `,
-        params: JSON.stringify([trailId])
-      });
+      const { data, error } = await supabase
+        .from('trail_ratings')
+        .select('rating, user_id, trail_id')
+        .eq('trail_id', trailId);
 
       if (error) {
         console.error('Error fetching trail ratings:', error);
         throw error;
       }
       
-      return (data || []).map(item => {
-        const rating = item as Record<string, any>;
-        return {
-          rating: Number(rating.rating),
-          user_id: String(rating.user_id),
-          trail_id: String(rating.trail_id)
-        };
-      }) as TrailRating[];
+      return (data || []) as TrailRating[];
     },
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   });
@@ -63,15 +52,13 @@ export const useAddRating = (trailId: string) => {
     mutationFn: async (rating: number) => {
       if (!user) throw new Error('Must be logged in to rate trails');
 
-      const { error } = await supabase.rpc('execute_sql', {
-        sql_query: `
-          INSERT INTO trail_ratings (trail_id, user_id, rating)
-          VALUES ($1, $2, $3)
-          ON CONFLICT (trail_id, user_id) 
-          DO UPDATE SET rating = EXCLUDED.rating, updated_at = now()
-        `,
-        params: JSON.stringify([trailId, user.id, rating])
-      });
+      const { error } = await supabase
+        .from('trail_ratings')
+        .upsert({
+          trail_id: trailId,
+          user_id: user.id,
+          rating: rating
+        });
 
       if (error) {
         console.error('Error adding trail rating:', error);

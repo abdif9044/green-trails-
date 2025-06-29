@@ -23,33 +23,39 @@ export const useTrailStats = (trailId: string) => {
     queryKey: ['trail-stats', trailId],
     queryFn: async () => {
       try {
-        // Count likes
+        // Count likes using the trail_likes table
         const { count: likeCount, error: likesError } = await supabase
           .from('trail_likes')
           .select('*', { count: 'exact', head: true })
           .eq('trail_id', trailId);
           
-        if (likesError) throw likesError;
+        if (likesError) {
+          console.error('Error fetching trail likes:', likesError);
+        }
         
-        // Get average rating
+        // Get average rating from trail_ratings table
         const { data: ratingsData, error: ratingsError } = await supabase
           .from('trail_ratings')
           .select('rating')
           .eq('trail_id', trailId);
           
-        if (ratingsError) throw ratingsError;
+        if (ratingsError) {
+          console.error('Error fetching trail ratings:', ratingsError);
+        }
         
         const ratings = ratingsData || [];
         const totalRating = ratings.reduce((sum, item) => sum + item.rating, 0);
         const avgRating = ratings.length ? totalRating / ratings.length : 0;
         
-        // Count comments
+        // Count comments from trail_comments table
         const { count: commentCount, error: commentsError } = await supabase
           .from('trail_comments')
           .select('*', { count: 'exact', head: true })
           .eq('trail_id', trailId);
           
-        if (commentsError) throw commentsError;
+        if (commentsError) {
+          console.error('Error fetching trail comments:', commentsError);
+        }
         
         return {
           visit_count: likeCount || 0,

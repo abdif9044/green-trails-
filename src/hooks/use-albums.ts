@@ -20,7 +20,7 @@ export interface Album {
   user?: {
     id: string;
     email: string;
-  } | null; // Make user optional and nullable to handle error cases
+  } | null;
 }
 
 export const useAlbums = (filterType?: AlbumFilterType) => {
@@ -50,7 +50,7 @@ export const useAlbums = (filterType?: AlbumFilterType) => {
         // Extract the IDs of followed users
         const followingIds = followingData.map(item => item.following_id);
         
-        // Get albums from followed users
+        // Get albums from followed users - handle both is_private and is_public
         const { data, error } = await supabase
           .from('albums')
           .select(`
@@ -69,9 +69,10 @@ export const useAlbums = (filterType?: AlbumFilterType) => {
           return [];
         }
         
-        // Handle the case where relation might not be found
+        // Transform the data properly
         const albums = data.map(album => ({
           ...album,
+          is_private: album.is_private ?? false,
           user: album.user && typeof album.user === 'object' ? album.user : null
         })) as Album[];
         
@@ -98,9 +99,10 @@ export const useAlbums = (filterType?: AlbumFilterType) => {
           return [];
         }
 
-        // Handle the case where relation might not be found
+        // Transform the data properly
         const albums = data.map(album => ({
           ...album,
+          is_private: album.is_private ?? false,
           user: album.user && typeof album.user === 'object' ? album.user : null
         })) as Album[];
         
@@ -128,9 +130,10 @@ export const useAlbums = (filterType?: AlbumFilterType) => {
           return [];
         }
 
-        // Handle the case where relation might not be found
+        // Transform the data properly
         const albums = data.map(album => ({
           ...album,
+          is_private: album.is_private ?? false,
           user: album.user && typeof album.user === 'object' ? album.user : null
         })) as Album[];
         
@@ -156,9 +159,10 @@ export const useAlbums = (filterType?: AlbumFilterType) => {
         return [];
       }
 
-      // Handle the case where relation might not be found
+      // Transform the data properly
       const albums = data.map(album => ({
         ...album,
+        is_private: album.is_private ?? false,
         user: album.user && typeof album.user === 'object' ? album.user : null
       })) as Album[];
       
@@ -177,7 +181,7 @@ const addCoverImageToAlbums = async (albums: Album[]): Promise<Album[]> => {
     albums.map(async (album) => {
       // Get first media item for this album as the cover image
       const { data, error } = await supabase
-        .from('media')
+        .from('album_media')
         .select('file_path')
         .eq('album_id', album.id)
         .limit(1)

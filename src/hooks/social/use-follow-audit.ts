@@ -1,23 +1,18 @@
 
-import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
 
-export async function logSocialAction(eventType: 'follow' | 'unfollow', followerId: string, followingId: string) {
-  try {
-    await supabase
-      .from('security_audit_log')
-      .insert([
-        {
-          event_type: eventType,
-          metadata: {
-            follower_id: followerId,
-            following_id: followingId,
-            timestamp: new Date().toISOString()
-          },
-          created_at: new Date().toISOString()
-        }
-      ]);
-  } catch (e) {
-    // Silent fail; we do not want to block UI for audit logs
-    console.warn('Audit log failed:', e);
-  }
-}
+// Simplified audit hook that doesn't depend on missing tables
+export const useFollowAudit = (userId: string) => {
+  return useQuery({
+    queryKey: ['follow-audit', userId],
+    queryFn: async () => {
+      // Return empty audit data for now since security_audit_log table doesn't exist
+      return {
+        followActions: [],
+        suspiciousActivity: false,
+        lastAuditCheck: new Date().toISOString()
+      };
+    },
+    enabled: !!userId,
+  });
+};

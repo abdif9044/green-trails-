@@ -1,6 +1,5 @@
-
 import { supabase } from '@/integrations/supabase/client';
-import { WeatherData, DetailedWeatherData, HourlyForecast, DailyForecast } from '@/features/weather/types/weather-types';
+import { WeatherData, DetailedWeatherData } from '@/features/weather/types/weather-types';
 import { toast } from '@/hooks/use-toast';
 
 /**

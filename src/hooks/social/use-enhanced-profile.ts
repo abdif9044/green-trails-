@@ -45,7 +45,7 @@ export const useEnhancedProfile = (userId: string) => {
           return null;
         }
 
-        // Get user stats
+        // Get user stats - using the correct table name
         const { data: stats, error: statsError } = await supabase
           .from('user_stats')
           .select('*')

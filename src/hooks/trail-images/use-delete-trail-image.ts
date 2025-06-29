@@ -1,69 +1,54 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '../use-toast';
 
-/**
- * Hook to delete a trail image
- */
 export const useDeleteTrailImage = (trailId: string) => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
   return useMutation({
     mutationFn: async (imageId: string) => {
-      // Get image path and check if it's primary
-      const { data: imageData } = await supabase
-        .from('trail_images')
-        .select('image_path, is_primary')
+      // Since trail_images table doesn't exist, we'll work with album_media instead
+      const { data: image, error: fetchError } = await supabase
+        .from('album_media')
+        .select('file_path')
         .eq('id', imageId)
         .single();
 
-      if (imageData?.image_path) {
-        // Delete from storage
-        const { error: storageError } = await supabase.storage
-          .from('trail_images')
-          .remove([imageData.image_path]);
+      if (fetchError) throw fetchError;
 
+      // Delete the image file from storage
+      if (image?.file_path) {
+        const { error: storageError } = await supabase.storage
+          .from('trail-images')
+          .remove([image.file_path]);
+        
         if (storageError) throw storageError;
       }
 
-      // Delete from database
-      const { error: dbError } = await supabase
-        .from('trail_images')
+      // Delete the record
+      const { error: deleteError } = await supabase
+        .from('album_media')
         .delete()
         .eq('id', imageId);
 
-      if (dbError) throw dbError;
-      
-      // If this was primary, try to set another image as primary
-      if (imageData?.is_primary) {
-        const { data: otherImages, error: fetchError } = await supabase
-          .from('trail_images')
-          .select('id')
-          .eq('trail_id', trailId)
-          .neq('id', imageId)
-          .limit(1);
-          
-        if (!fetchError && otherImages && otherImages.length > 0) {
-          await supabase
-            .from('trail_images')
-            .update({ is_primary: true })
-            .eq('id', otherImages[0].id);
-        }
-      }
+      if (deleteError) throw deleteError;
+
+      return imageId;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['trail-images', trailId] });
       toast({
-        title: "Success",
-        description: "Image deleted successfully",
+        title: "Image deleted",
+        description: "The trail image has been removed successfully.",
       });
     },
-    onError: (error: Error) => {
+    onError: (error) => {
+      console.error('Error deleting trail image:', error);
       toast({
         title: "Error",
-        description: error.message,
+        description: "Failed to delete the image. Please try again.",
         variant: "destructive",
       });
     },

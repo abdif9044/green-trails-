@@ -38,25 +38,62 @@ const useHikingEvents = () => {
   return useQuery({
     queryKey: ['hiking-events'],
     queryFn: async (): Promise<HikingEvent[]> => {
-      const { data, error } = await supabase
+      // First get the events
+      const { data: events, error: eventsError } = await supabase
         .from('hiking_events')
-        .select(`
-          *,
-          organizer:profiles!hiking_events_organizer_id_fkey(id, username, full_name, avatar_url),
-          attendees:event_attendees(
-            user_id,
-            status,
-            user:profiles!event_attendees_user_id_fkey(id, username, full_name, avatar_url)
-          )
-        `)
+        .select('*')
         .order('date', { ascending: true });
 
-      if (error) {
-        console.error('Error fetching hiking events:', error);
+      if (eventsError) {
+        console.error('Error fetching hiking events:', eventsError);
         return [];
       }
 
-      return data || [];
+      if (!events || events.length === 0) {
+        return [];
+      }
+
+      // Get organizer profiles separately
+      const organizerIds = [...new Set(events.map(event => event.organizer_id))];
+      const { data: organizers } = await supabase
+        .from('profiles')
+        .select('id, username, full_name, avatar_url')
+        .in('id', organizerIds);
+
+      // Get attendees separately
+      const eventIds = events.map(event => event.id);
+      const { data: attendees } = await supabase
+        .from('event_attendees')
+        .select(`
+          user_id,
+          status,
+          event_id,
+          profiles!event_attendees_user_id_fkey(id, username, full_name, avatar_url)
+        `)
+        .in('event_id', eventIds);
+
+      // Combine the data
+      const enrichedEvents: HikingEvent[] = events.map(event => ({
+        ...event,
+        organizer: organizers?.find(org => org.id === event.organizer_id) || {
+          id: event.organizer_id,
+          username: 'Unknown',
+          full_name: 'Unknown User',
+          avatar_url: ''
+        },
+        attendees: attendees?.filter(att => att.event_id === event.id).map(att => ({
+          user_id: att.user_id,
+          status: att.status,
+          user: (att.profiles as any) || {
+            id: att.user_id,
+            username: 'Unknown',
+            full_name: 'Unknown User',
+            avatar_url: ''
+          }
+        })) || []
+      }));
+
+      return enrichedEvents;
     },
   });
 };

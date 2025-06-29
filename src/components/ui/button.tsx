@@ -44,7 +44,12 @@ export interface ButtonProps
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, showGoldenDots = false, children, ...props }, ref) => {
+    // When asChild is true, we can't add additional children to Slot
+    // So we disable golden dots in this case to prevent the React.Children.only error
+    const shouldShowGoldenDots = showGoldenDots && !asChild;
+    
     const Comp = asChild ? Slot : "button"
+    
     return (
       <Comp
         className={cn(buttonVariants({ variant, size, className }))}
@@ -52,7 +57,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         {...props}
       >
         {children}
-        {showGoldenDots && (
+        {shouldShowGoldenDots && (
           <div className="absolute top-1 right-1">
             <GoldenDots variant="small" count={2} />
           </div>

@@ -45,38 +45,50 @@ const Hero = () => {
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
             {!user ? (
               <>
-                <Link to="/auth">
+                <div className="relative">
+                  <Link to="/auth">
+                    <Button 
+                      size="lg" 
+                      className="bg-greentrail-600 hover:bg-greentrail-700 text-white px-8 py-3 text-lg"
+                    >
+                      Get Started
+                      <ArrowRight className="ml-2 h-5 w-5" />
+                    </Button>
+                  </Link>
+                  <div className="absolute top-1 right-1">
+                    <GoldenDots variant="small" count={2} />
+                  </div>
+                </div>
+                <div className="relative">
+                  <Link to="/discover">
+                    <Button 
+                      variant="outline" 
+                      size="lg" 
+                      className="border-greentrail-300 text-greentrail-700 hover:bg-greentrail-50 px-8 py-3 text-lg"
+                    >
+                      Explore Trails
+                    </Button>
+                  </Link>
+                  <div className="absolute top-1 right-1">
+                    <GoldenDots variant="small" count={2} />
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="relative">
+                <Link to="/discover">
                   <Button 
                     size="lg" 
-                    className="bg-greentrail-600 hover:bg-greentrail-700 text-white px-8 py-3 text-lg relative"
-                    showGoldenDots
+                    className="bg-greentrail-600 hover:bg-greentrail-700 text-white px-8 py-3 text-lg"
                   >
-                    Get Started
+                    Discover Trails
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </Link>
-                <Link to="/discover">
-                  <Button 
-                    variant="outline" 
-                    size="lg" 
-                    className="border-greentrail-300 text-greentrail-700 hover:bg-greentrail-50 px-8 py-3 text-lg"
-                    showGoldenDots
-                  >
-                    Explore Trails
-                  </Button>
-                </Link>
-              </>
-            ) : (
-              <Link to="/discover">
-                <Button 
-                  size="lg" 
-                  className="bg-greentrail-600 hover:bg-greentrail-700 text-white px-8 py-3 text-lg"
-                  showGoldenDots
-                >
-                  Discover Trails
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
-              </Link>
+                <div className="absolute top-1 right-1">
+                  <GoldenDots variant="small" count={2} />
+                </div>
+              </div>
             )}
           </div>
           

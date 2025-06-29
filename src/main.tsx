@@ -38,13 +38,16 @@ if (!container) {
 
 const root = createRoot(container);
 
-// Auto-bootstrap runs when app starts - no user action needed
-import('./hooks/use-auto-trail-bootstrap').then(({ useAutoTrailBootstrap }) => {
-  console.log('🚀 Auto trail bootstrap system loaded');
+// Safe bootstrap loading
+Promise.resolve().then(async () => {
+  try {
+    const { useAutoTrailBootstrap } = await import('./hooks/use-auto-trail-bootstrap');
+    console.log('🚀 Auto trail bootstrap system loaded');
+  } catch (error) {
+    console.warn('Auto trail bootstrap failed to load:', error);
+  }
 });
 
-// NOTE: Do NOT wrap <App /> with <BrowserRouter> here.
-// Only <App />; BrowserRouter is handled INSIDE App.tsx
 root.render(
   <React.StrictMode>
     <HelmetProvider>

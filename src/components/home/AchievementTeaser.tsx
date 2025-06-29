@@ -62,17 +62,23 @@ export const AchievementTeaser: React.FC<AchievementTeaserProps> = ({
             </div>
             
             <div className="mt-4 text-center">
-              <Button asChild variant="outline" className="w-full">
-                <Link to="/badges">View All Badges</Link>
-              </Button>
+              <Link to="/badges">
+                <Button variant="outline" className="w-full">
+                  View All Badges
+                </Button>
+              </Link>
             </div>
           </>
         ) : (
           <div className="text-center py-8 text-sm text-muted-foreground">
             <p>Sign in to track your achievements</p>
-            <Button asChild variant="default" className="mt-4 bg-greentrail-600 hover:bg-greentrail-700">
-              <Link to="/auth">Sign In</Link>
-            </Button>
+            <div className="mt-4">
+              <Link to="/auth">
+                <Button className="bg-greentrail-600 hover:bg-greentrail-700">
+                  Sign In
+                </Button>
+              </Link>
+            </div>
           </div>
         )}
       </CardContent>

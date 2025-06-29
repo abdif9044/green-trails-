@@ -40,22 +40,49 @@ export const EnhancedSignUpService = {
 
       console.log('Auth user created:', authData.user.id);
 
-      // Step 2: Update profile with additional data
-      // Note: The trigger should have created the profile row, we just need to update it
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({
-          full_name: data.full_name,
-          username: data.username,
-          year_of_birth: data.year_of_birth,
-          is_age_verified: data.year_of_birth && (new Date().getFullYear() - data.year_of_birth) >= 21
-        })
-        .eq('id', authData.user.id);
+      // Step 2: Wait for profile to be created by trigger, then update it
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second for trigger
 
-      if (profileError) {
-        console.error('Profile update error:', profileError);
-        // Don't fail the whole signup for profile update errors
-        console.warn('Profile update failed but continuing with signup');
+      // Retry profile update with backoff
+      let retryCount = 0;
+      const maxRetries = 3;
+      let profileUpdateSuccess = false;
+
+      while (retryCount < maxRetries && !profileUpdateSuccess) {
+        try {
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .upsert({
+              id: authData.user.id,
+              full_name: data.full_name,
+              username: data.username,
+              year_of_birth: data.year_of_birth,
+              is_age_verified: data.year_of_birth && (new Date().getFullYear() - data.year_of_birth) >= 21
+            }, {
+              onConflict: 'id'
+            });
+
+          if (profileError) {
+            console.error(`Profile update attempt ${retryCount + 1} failed:`, profileError);
+            retryCount++;
+            if (retryCount < maxRetries) {
+              await new Promise(resolve => setTimeout(resolve, 1000 * retryCount)); // Exponential backoff
+            }
+          } else {
+            profileUpdateSuccess = true;
+            console.log('Profile updated successfully');
+          }
+        } catch (error) {
+          console.error(`Profile update attempt ${retryCount + 1} error:`, error);
+          retryCount++;
+          if (retryCount < maxRetries) {
+            await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+          }
+        }
+      }
+
+      if (!profileUpdateSuccess) {
+        console.warn('Profile update failed after all retries, but continuing with signup');
       }
 
       // Check if email confirmation is required

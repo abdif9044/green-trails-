@@ -1,69 +1,127 @@
 
-import { Link } from 'react-router-dom';
+import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Compass, ChevronDown } from 'lucide-react';
+import { ArrowRight, Map, Users, Camera } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { GoldenDots } from '@/components/ui/golden-dots';
 import { useAuth } from '@/hooks/use-auth';
 
 const Hero = () => {
   const { user } = useAuth();
   
   return (
-    <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Luxury Background */}
-      <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-luxury-gradient"></div>
-        <div className="absolute inset-0 luxury-pattern opacity-30"></div>
-        <div className="absolute inset-0 hero-overlay"></div>
-        
-        {/* Animated Background Elements */}
-        <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-gold-500/10 rounded-full blur-3xl animate-luxury-pulse"></div>
-        <div className="absolute bottom-1/3 right-1/4 w-48 h-48 bg-greentrail-500/10 rounded-full blur-3xl animate-luxury-pulse delay-1000"></div>
+    <div className="relative bg-gradient-to-br from-greentrail-50 via-white to-greentrail-100 dark:from-greentrail-950 dark:via-gray-900 dark:to-greentrail-900 overflow-hidden">
+      {/* Background decoration */}
+      <div className="absolute inset-0 bg-[url('/lovable-uploads/f1f69aac-d6e2-4389-8835-f83b42f87d98.png')] bg-cover bg-center opacity-5"></div>
+      
+      {/* Golden dots decoration */}
+      <div className="absolute top-10 left-10">
+        <GoldenDots variant="large" count={4} />
       </div>
-
-      {/* Hero Content */}
-      <div className="relative z-10 container mx-auto px-4 text-center">
-        <div className="max-w-5xl mx-auto">
-          {/* Logo */}
-          <div className="mb-12 animate-fade-in-scale">
-            <img 
-              src="/lovable-uploads/0c2a9cc4-4fdb-4d4a-965c-47b406e4ec4e.png" 
-              alt="GreenTrails Logo" 
-              className="h-20 w-auto mx-auto drop-shadow-2xl"
-            />
-          </div>
+      <div className="absolute top-32 right-20">
+        <GoldenDots variant="medium" count={3} />
+      </div>
+      <div className="absolute bottom-20 left-1/4">
+        <GoldenDots variant="small" count={5} />
+      </div>
+      
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 sm:py-32">
+        <div className="text-center">
+          <h1 className="text-4xl sm:text-6xl font-bold text-greentrail-800 dark:text-greentrail-200 mb-6">
+            Discover Your Next
+            <span className="block text-greentrail-600 dark:text-greentrail-400 relative">
+              Adventure
+              <div className="absolute -top-2 -right-4">
+                <GoldenDots variant="medium" count={2} />
+              </div>
+            </span>
+          </h1>
           
-          {/* Main Heading */}
-          <div className="mb-8 animate-fade-in-up">
-            <h1 className="text-6xl md:text-8xl lg:text-9xl luxury-heading text-white mb-6 leading-none">
-              Blaze
-            </h1>
-            <h1 className="text-6xl md:text-8xl lg:text-9xl luxury-heading bg-gold-gradient bg-clip-text text-transparent mb-8 leading-none">
-              Your Path
-            </h1>
-          </div>
+          <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto">
+            Join the community of outdoor enthusiasts. Find trails, share experiences, 
+            and connect with fellow hikers on your journey to explore nature.
+          </p>
           
-          {/* Subtitle */}
-          <div className="mb-16 animate-fade-in-up delay-300">
-            <p className="text-xl md:text-2xl lg:text-3xl luxury-text text-luxury-100 max-w-4xl mx-auto leading-relaxed font-light">
-              Where nature meets community. Discover extraordinary trails, connect with fellow adventurers, and elevate your outdoor experience.
-            </p>
-          </div>
-          
-          {/* CTA Button */}
-          <div className="mb-16 animate-fade-in-up delay-500">
-            <Button asChild className="gold-button text-lg md:text-xl px-12 py-6 rounded-full shadow-gold hover:shadow-gold-lg group">
-              <Link to={user ? "/discover" : "/auth"}>
-                <Compass className="mr-3 group-hover:rotate-90 transition-transform duration-500" size={24} />
-                Begin Your Journey
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
+            {!user ? (
+              <>
+                <Link to="/auth">
+                  <Button 
+                    size="lg" 
+                    className="bg-greentrail-600 hover:bg-greentrail-700 text-white px-8 py-3 text-lg relative"
+                    showGoldenDots
+                  >
+                    Get Started
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Button>
+                </Link>
+                <Link to="/discover">
+                  <Button 
+                    variant="outline" 
+                    size="lg" 
+                    className="border-greentrail-300 text-greentrail-700 hover:bg-greentrail-50 px-8 py-3 text-lg"
+                    showGoldenDots
+                  >
+                    Explore Trails
+                  </Button>
+                </Link>
+              </>
+            ) : (
+              <Link to="/discover">
+                <Button 
+                  size="lg" 
+                  className="bg-greentrail-600 hover:bg-greentrail-700 text-white px-8 py-3 text-lg"
+                  showGoldenDots
+                >
+                  Discover Trails
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
               </Link>
-            </Button>
+            )}
+          </div>
+          
+          {/* Feature highlights */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16">
+            <div className="flex flex-col items-center p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 relative">
+              <div className="absolute top-2 right-2">
+                <GoldenDots variant="small" count={2} />
+              </div>
+              <Map className="h-12 w-12 text-greentrail-600 mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                Interactive Maps
+              </h3>
+              <p className="text-gray-600 dark:text-gray-300 text-center">
+                Explore detailed trail maps with elevation profiles and real-time conditions
+              </p>
+            </div>
+            
+            <div className="flex flex-col items-center p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 relative">
+              <div className="absolute top-2 right-2">
+                <GoldenDots variant="small" count={2} />
+              </div>
+              <Users className="h-12 w-12 text-greentrail-600 mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                Social Community
+              </h3>
+              <p className="text-gray-600 dark:text-gray-300 text-center">
+                Connect with fellow hikers and share your outdoor experiences
+              </p>
+            </div>
+            
+            <div className="flex flex-col items-center p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 relative">
+              <div className="absolute top-2 right-2">
+                <GoldenDots variant="small" count={2} />
+              </div>
+              <Camera className="h-12 w-12 text-greentrail-600 mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                Photo Albums
+              </h3>
+              <p className="text-gray-600 dark:text-gray-300 text-center">
+                Capture and share your adventures with beautiful photo albums
+              </p>
+            </div>
           </div>
         </div>
-      </div>
-
-      {/* Scroll Indicator */}
-      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
-        <ChevronDown className="w-8 h-8 text-white/60" />
       </div>
     </div>
   );

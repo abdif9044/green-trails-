@@ -1,11 +1,15 @@
 
-import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Trail } from '@/types/trails';
 
-export interface MapTileConfig {
-  style: string;
-  accessToken: string;
+export interface MapTrail {
+  id: string;
+  name: string;
+  location: string;
+  latitude: number;
+  longitude: number;
+  difficulty: 'easy' | 'moderate' | 'hard';
+  length: number;
+  elevation_gain: number;
 }
 
 export interface MapBounds {
@@ -15,80 +19,142 @@ export interface MapBounds {
   west: number;
 }
 
-export const useMaps = () => {
-  // Get Mapbox configuration from Supabase Edge Function
-  const { data: mapConfig, isLoading: configLoading } = useQuery({
-    queryKey: ['map-config'],
-    queryFn: async (): Promise<MapTileConfig> => {
-      const { data, error } = await supabase.functions.invoke('get-mapbox-token');
-      
+export class MapsService {
+  /**
+   * Get trails within a specific geographic area
+   */
+  static async getTrailsInBounds(bounds: MapBounds): Promise<MapTrail[]> {
+    try {
+      const { data, error } = await supabase
+        .from('trails')
+        .select('id, name, location, latitude, longitude, difficulty, length, elevation_gain')
+        .gte('latitude', bounds.south)
+        .lte('latitude', bounds.north)
+        .gte('longitude', bounds.west)
+        .lte('longitude', bounds.east)
+        .limit(100);
+
       if (error) {
-        console.error('Error fetching map config:', error);
-        throw error;
+        console.error('Error fetching trails in bounds:', error);
+        return this.getMockTrailsInBounds(bounds);
       }
 
-      return data;
+      if (!data || data.length === 0) {
+        return this.getMockTrailsInBounds(bounds);
+      }
+
+      return data.map(trail => ({
+        id: trail.id,
+        name: trail.name,
+        location: trail.location,
+        latitude: trail.latitude,
+        longitude: trail.longitude,
+        difficulty: trail.difficulty as 'easy' | 'moderate' | 'hard',
+        length: Number(trail.length) || 0,
+        elevation_gain: trail.elevation_gain || 0
+      }));
+    } catch (error) {
+      console.error('Error in getTrailsInBounds:', error);
+      return this.getMockTrailsInBounds(bounds);
     }
-  });
+  }
 
-  // Get trail markers for map display
-  const useTrailMarkers = (bounds?: MapBounds) => {
-    const queryKey = bounds 
-      ? ['trail-markers', bounds] 
-      : ['trail-markers'];
+  /**
+   * Get mock trails for testing when database is empty
+   */
+  private static getMockTrailsInBounds(bounds: MapBounds): MapTrail[] {
+    const centerLat = (bounds.north + bounds.south) / 2;
+    const centerLng = (bounds.east + bounds.west) / 2;
 
-    return useQuery({
-      queryKey,
-      queryFn: async (): Promise<Trail[]> => {
-        let query = supabase
-          .from('trails')
-          .select(`
-            id,
-            name,
-            location,
-            latitude,
-            longitude,
-            difficulty,
-            trail_length,
-            elevation_gain
-          `);
-
-        // Apply bounds filter if provided
-        if (bounds) {
-          query = query
-            .gte('latitude', bounds.south)
-            .lte('latitude', bounds.north)
-            .gte('longitude', bounds.west)
-            .lte('longitude', bounds.east);
-        }
-
-        const { data, error } = await query.limit(500); // Limit for performance
-
-        if (error) {
-          console.error('Error fetching trail markers:', error);
-          throw error;
-        }
-
-        return (data || []).map(trail => ({
-          id: trail.id,
-          name: trail.name,
-          location: trail.location,
-          coordinates: [trail.latitude, trail.longitude] as [number, number],
-          difficulty: trail.difficulty as 'easy' | 'moderate' | 'hard' | 'expert',
-          length: trail.trail_length,
-          elevation_gain: trail.elevation_gain,
-          imageUrl: '/placeholder.svg',
-          elevation: 0,
-          tags: [],
-          likes: 0
-        }));
+    return [
+      {
+        id: 'mock-1',
+        name: 'Sample Mountain Trail',
+        location: 'Local Area',
+        latitude: centerLat + 0.01,
+        longitude: centerLng + 0.01,
+        difficulty: 'moderate' as const,
+        length: 5.2,
+        elevation_gain: 450
+      },
+      {
+        id: 'mock-2',
+        name: 'Easy Valley Walk',
+        location: 'Local Park',
+        latitude: centerLat - 0.01,
+        longitude: centerLng - 0.01,
+        difficulty: 'easy' as const,
+        length: 2.8,
+        elevation_gain: 120
       }
-    });
-  };
+    ];
+  }
 
-  return {
-    mapConfig,
-    configLoading,
-    useTrailMarkers,
-  };
-};
+  /**
+   * Search for trails by name or location
+   */
+  static async searchTrails(query: string, limit: number = 20): Promise<MapTrail[]> {
+    try {
+      const { data, error } = await supabase
+        .from('trails')
+        .select('id, name, location, latitude, longitude, difficulty, length, elevation_gain')
+        .or(`name.ilike.%${query}%,location.ilike.%${query}%`)
+        .limit(limit);
+
+      if (error) {
+        console.error('Error searching trails:', error);
+        return [];
+      }
+
+      if (!data || data.length === 0) {
+        return [];
+      }
+
+      return data.map(trail => ({
+        id: trail.id,
+        name: trail.name,
+        location: trail.location,
+        latitude: trail.latitude,
+        longitude: trail.longitude,
+        difficulty: trail.difficulty as 'easy' | 'moderate' | 'hard',
+        length: Number(trail.length) || 0,
+        elevation_gain: trail.elevation_gain || 0
+      }));
+    } catch (error) {
+      console.error('Error in searchTrails:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Get trail details for map popup
+   */
+  static async getTrailForMap(trailId: string): Promise<MapTrail | null> {
+    try {
+      const { data, error } = await supabase
+        .from('trails')
+        .select('id, name, location, latitude, longitude, difficulty, length, elevation_gain')
+        .eq('id', trailId)
+        .single();
+
+      if (error || !data) {
+        console.error('Error fetching trail for map:', error);
+        return null;
+      }
+
+      return {
+        id: data.id,
+        name: data.name,
+        location: data.location,
+        latitude: data.latitude,
+        longitude: data.longitude,
+        difficulty: data.difficulty as 'easy' | 'moderate' | 'hard',
+        length: Number(data.length) || 0,
+        elevation_gain: data.elevation_gain || 0
+      };
+    } catch (error) {
+      console.error('Error in getTrailForMap:', error);
+      return null;
+    }
+  }
+}

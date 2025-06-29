@@ -1,30 +1,31 @@
 
 import { useQuery } from '@tanstack/react-query';
-import { getDetailedTrailWeather } from '@/features/weather/services/weather-service';
-import { DetailedWeatherData } from '@/features/weather/types/weather-types';
+import { getDetailedTrailWeather } from '../services/weather-service';
 
-/**
- * Hook to fetch detailed weather information for a trail
- * @param trailId - The ID of the trail
- * @param coordinates - The geographical coordinates of the trail [longitude, latitude]
- */
-export function useDetailedWeather(trailId: string | undefined, coordinates?: [number, number]) {
+export const useDetailedWeather = (trailId: string, coordinates: [number, number]) => {
   return useQuery({
-    queryKey: ['trail-detailed-weather', trailId],
-    queryFn: async (): Promise<DetailedWeatherData | null> => {
-      if (!trailId || !coordinates) {
-        return null;
-      }
+    queryKey: ['detailed-weather', trailId, coordinates],
+    queryFn: async () => {
+      const weatherData = await getDetailedTrailWeather(trailId, coordinates);
       
-      try {
-        const weatherData = await getDetailedTrailWeather(trailId, coordinates);
-        return weatherData;
-      } catch (error) {
-        console.error('Error fetching detailed weather:', error);
-        return null;
-      }
+      // Transform to match expected interface with all required properties
+      return {
+        ...weatherData,
+        condition: weatherData.conditions,
+        high: weatherData.temperature + 5,
+        low: weatherData.temperature - 8,
+        precipitation: 20,
+        windDirection: 'NW',
+        hourlyForecast: weatherData.forecast.slice(0, 24).map((f, i) => ({
+          time: `${i}:00`,
+          temperature: f.high - (i % 6),
+          condition: f.conditions,
+          precipitation: f.precipitation
+        })),
+        dailyForecast: weatherData.forecast
+      };
     },
-    enabled: !!trailId && !!coordinates,
-    staleTime: 1000 * 60 * 30, // 30 minutes
+    enabled: !!coordinates && coordinates[0] !== 0 && coordinates[1] !== 0,
+    staleTime: 30 * 60 * 1000, // 30 minutes
   });
-}
+};

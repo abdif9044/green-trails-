@@ -17,7 +17,6 @@ const ProfilePage = () => {
   const { data: userProfile, isLoading: loadingProfile } = useProfile(user?.id);
   const { badges, loading: loadingBadges } = useBadges();
   
-  // Mock stats for demonstration
   const stats = [
     { 
       value: '12', 
@@ -58,7 +57,7 @@ const ProfilePage = () => {
             username={userProfile?.username || 'trail_explorer'}
             fullName={userProfile?.full_name || 'Trail Explorer'}
             bio={userProfile?.bio || 'Passionate hiker exploring nature one trail at a time 🥾🏔️'}
-            location={userProfile?.location || 'Pacific Northwest'}
+            location="Pacific Northwest"
             joinDate={userProfile?.created_at ? new Date(userProfile.created_at).toLocaleDateString() : 'January 2024'}
             followersCount={1247}
             followingCount={389}

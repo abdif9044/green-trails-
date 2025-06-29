@@ -24,7 +24,6 @@ const Legal: React.FC = () => {
         content: type === 'terms-of-service' 
           ? 'Terms of Service content will be available soon.' 
           : 'Privacy Policy content will be available soon.',
-        created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
       

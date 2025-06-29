@@ -78,7 +78,6 @@ export const useUnfollowUser = () => {
   });
 };
 
-// Check if current user is following a specific user
 export const useIsFollowing = (targetUserId: string) => {
   const { user } = useAuth();
   
@@ -105,7 +104,6 @@ export const useIsFollowing = (targetUserId: string) => {
   });
 };
 
-// Toggle follow/unfollow
 export const useToggleFollow = () => {
   const followUser = useFollowUser();
   const unfollowUser = useUnfollowUser();

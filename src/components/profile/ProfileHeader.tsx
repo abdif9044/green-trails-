@@ -1,143 +1,157 @@
 
 import React from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { UserRoundCheck, Link as LinkIcon } from 'lucide-react';
-import { useIsFollowing, useToggleFollow, useFollowCounts } from '@/hooks/use-social-follows';
-import { Profile } from '@/hooks/use-profile';
+import { MapPin, Calendar, Users, Trophy } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useToggleFollow, useIsFollowing } from '@/hooks/social/use-follow-actions';
 
 interface ProfileHeaderProps {
-  profile: Profile | null;
-  isLoading: boolean;
-  isCurrentUser: boolean;
-  onEditProfile?: () => void;
+  userId?: string;
+  username?: string;
+  fullName?: string;
+  bio?: string;
+  location?: string;
+  joinDate?: string;
+  followersCount?: number;
+  followingCount?: number;
+  trailsCompleted?: number;
+  badges?: Array<{ id: string; name: string; icon: string }>;
 }
 
-const ProfileHeader: React.FC<ProfileHeaderProps> = ({ 
-  profile, 
-  isLoading, 
-  isCurrentUser,
-  onEditProfile 
+export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
+  userId,
+  username = 'trail_explorer',
+  fullName = 'Trail Explorer',
+  bio = 'Passionate hiker exploring nature one trail at a time 🥾🏔️',
+  location = 'Pacific Northwest',
+  joinDate = 'January 2024',
+  followersCount = 1247,
+  followingCount = 389,
+  trailsCompleted = 127,
+  badges = []
 }) => {
   const { user } = useAuth();
-  const { mutate: toggleFollow, isPending: isFollowActionPending } = useToggleFollow();
-  const { data: isFollowing, isLoading: isFollowCheckLoading } = useIsFollowing(profile?.id || '');
-  const { followersCount, followingCount, isLoading: isCountLoading } = useFollowCounts(profile?.id || '');
-  const isMobile = useIsMobile();
-  
-  if (isLoading) {
-    return (
-      <div className="flex flex-col md:flex-row gap-6 items-center md:items-start">
-        <Skeleton className="h-24 w-24 rounded-full" />
-        <div className="flex-1 space-y-4 text-center md:text-left">
-          <div className="space-y-1">
-            <Skeleton className="h-7 w-40 mx-auto md:mx-0" />
-            <Skeleton className="h-5 w-32 mx-auto md:mx-0" />
-          </div>
-          <Skeleton className="h-16 w-full" />
-          <div className="flex justify-center md:justify-start space-x-4">
-            <Skeleton className="h-9 w-24" />
-            <Skeleton className="h-9 w-24" />
-          </div>
-        </div>
-      </div>
-    );
-  }
-  
-  if (!profile) {
-    return (
-      <div className="text-center py-12">
-        <h3 className="text-lg font-medium">User not found</h3>
-        <p className="text-muted-foreground mt-2">
-          The profile you're looking for doesn't exist or has been removed.
-        </p>
-      </div>
-    );
-  }
-  
+  const { data: isFollowing, isLoading: isFollowingLoading } = useIsFollowing(userId || '');
+  const toggleFollow = useToggleFollow();
+
+  const isOwnProfile = user?.id === userId;
+
+  const handleFollowToggle = () => {
+    if (!userId) return;
+    
+    toggleFollow.mutate({ 
+      targetUserId: userId, 
+      isFollowing: isFollowing || false 
+    });
+  };
+
   return (
-    <div className="flex flex-col md:flex-row gap-6 items-center md:items-start">
-      <Avatar className="h-24 w-24 border-2 border-greentrail-100 shadow-md">
-        <AvatarImage src={profile.avatar_url || undefined} alt={profile.username} />
-        <AvatarFallback className="bg-greentrail-600 text-white">
-          {profile.username?.substring(0, 2).toUpperCase() || 'GT'}
-        </AvatarFallback>
-      </Avatar>
-      
-      <div className="flex-1 space-y-4 text-center md:text-left">
-        <div>
-          <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mb-1">
-            <h1 className="text-2xl font-bold">{profile.username}</h1>
-            {profile.is_age_verified && (
-              <Badge className="bg-greentrail-600 hover:bg-greentrail-700 gap-1">
-                <UserRoundCheck className="h-3 w-3" />
-                <span>Age Verified</span>
-              </Badge>
+    <Card className="w-full">
+      <CardContent className="p-6">
+        <div className="flex flex-col md:flex-row gap-6">
+          {/* Avatar and Basic Info */}
+          <div className="flex flex-col items-center md:items-start">
+            <Avatar className="h-24 w-24 mb-4">
+              <AvatarImage src="" alt={fullName} />
+              <AvatarFallback className="text-2xl bg-greentrail-100 text-greentrail-800">
+                {fullName.split(' ').map(n => n[0]).join('')}
+              </AvatarFallback>
+            </Avatar>
+            
+            {!isOwnProfile && userId && (
+              <Button
+                onClick={handleFollowToggle}
+                disabled={isFollowingLoading || toggleFollow.isPending}
+                variant={isFollowing ? "outline" : "default"}
+                className="w-full md:w-auto"
+              >
+                {isFollowing ? 'Unfollow' : 'Follow'}
+              </Button>
             )}
           </div>
-          {profile.full_name && (
-            <p className="text-muted-foreground">{profile.full_name}</p>
-          )}
-        </div>
-        
-        {profile.bio && (
-          <p className="text-sm max-w-prose">{profile.bio}</p>
-        )}
-        
-        {/* Social links */}
-        {profile.website_url && (
-          <div className="flex justify-center md:justify-start items-center gap-2 text-sm">
-            <LinkIcon className="h-3.5 w-3.5 text-muted-foreground" />
-            <a 
-              href={profile.website_url} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-greentrail-600 hover:text-greentrail-800 dark:text-greentrail-400 dark:hover:text-greentrail-300 hover:underline"
-            >
-              {profile.website_url.replace(/(^\w+:|^)\/\//, '').replace(/\/$/, '')}
-            </a>
+
+          {/* Profile Details */}
+          <div className="flex-1">
+            <div className="text-center md:text-left mb-4">
+              <h1 className="text-2xl font-bold text-greentrail-800 dark:text-greentrail-200">
+                {fullName}
+              </h1>
+              <p className="text-greentrail-600 dark:text-greentrail-400">
+                @{username}
+              </p>
+            </div>
+
+            <p className="text-gray-700 dark:text-gray-300 mb-4 text-center md:text-left">
+              {bio}
+            </p>
+
+            {/* Meta Information */}
+            <div className="flex flex-wrap gap-4 text-sm text-gray-600 dark:text-gray-400 mb-4 justify-center md:justify-start">
+              <div className="flex items-center gap-1">
+                <MapPin className="h-4 w-4" />
+                <span>{location}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Calendar className="h-4 w-4" />
+                <span>Joined {joinDate}</span>
+              </div>
+            </div>
+
+            {/* Stats */}
+            <div className="flex gap-6 mb-4 justify-center md:justify-start">
+              <div className="text-center">
+                <div className="font-semibold text-greentrail-800 dark:text-greentrail-200">
+                  {followersCount}
+                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  Followers
+                </div>
+              </div>
+              <div className="text-center">
+                <div className="font-semibold text-greentrail-800 dark:text-greentrail-200">
+                  {followingCount}
+                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  Following
+                </div>
+              </div>
+              <div className="text-center">
+                <div className="font-semibold text-greentrail-800 dark:text-greentrail-200">
+                  {trailsCompleted}
+                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  Trails
+                </div>
+              </div>
+            </div>
+
+            {/* Badges */}
+            {badges.length > 0 && (
+              <div className="flex flex-wrap gap-2 justify-center md:justify-start">
+                {badges.slice(0, 5).map((badge) => (
+                  <Badge
+                    key={badge.id}
+                    variant="secondary"
+                    className="flex items-center gap-1 bg-greentrail-100 text-greentrail-800"
+                  >
+                    <Trophy className="h-3 w-3" />
+                    {badge.name}
+                  </Badge>
+                ))}
+                {badges.length > 5 && (
+                  <Badge variant="outline" className="text-greentrail-600">
+                    +{badges.length - 5} more
+                  </Badge>
+                )}
+              </div>
+            )}
           </div>
-        )}
-        
-        <div className="flex flex-wrap justify-center md:justify-start gap-6 text-sm">
-          <div>
-            <span className="font-semibold">{isCountLoading ? '...' : followersCount}</span>
-            {' '}
-            <span className="text-muted-foreground">followers</span>
-          </div>
-          <div>
-            <span className="font-semibold">{isCountLoading ? '...' : followingCount}</span>
-            {' '}
-            <span className="text-muted-foreground">following</span>
-          </div>
         </div>
-        
-        <div className="pt-2">
-          {isCurrentUser ? (
-            <Button 
-              onClick={onEditProfile} 
-              variant="outline"
-              className="w-full sm:w-auto"
-            >
-              Edit Profile
-            </Button>
-          ) : user && (
-            <Button
-              onClick={() => toggleFollow(profile.id)}
-              disabled={isFollowActionPending || isFollowCheckLoading}
-              variant={isFollowing ? "outline" : "default"}
-              className={`w-full sm:w-auto ${!isFollowing ? 'bg-greentrail-600 hover:bg-greentrail-700' : ''}`}
-            >
-              {isFollowActionPending ? 'Processing...' : isFollowing ? 'Unfollow' : 'Follow'}
-            </Button>
-          )}
-        </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 

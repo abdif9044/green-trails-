@@ -9,12 +9,19 @@ export const useSimilarTrails = (trailId: string, currentTrail?: Trail) => {
     queryFn: async (): Promise<Trail[]> => {
       if (!currentTrail) return [];
 
-      // First try to get similar trails from the database
+      // Map difficulty types properly
+      const difficultyMap: Record<string, string> = {
+        'expert': 'hard'
+      };
+      
+      const mappedDifficulty = difficultyMap[currentTrail.difficulty] || currentTrail.difficulty;
+
+      // Try to get similar trails from the database
       const { data: dbTrails, error } = await supabase
         .from('trails')
         .select('*')
         .neq('id', trailId)
-        .eq('difficulty', currentTrail.difficulty)
+        .eq('difficulty', mappedDifficulty)
         .limit(6);
 
       if (error) {
@@ -42,14 +49,14 @@ export const useSimilarTrails = (trailId: string, currentTrail?: Trail) => {
         })) as Trail[];
       }
 
-      // Fallback to mock similar trails if no database trails found
+      // Fallback to mock similar trails
       const mockSimilarTrails: Trail[] = [
         {
           id: 'similar-1',
           name: 'Pine Ridge Trail',
           location: 'Similar National Park',
           imageUrl: '/placeholder.svg',
-          difficulty: currentTrail.difficulty,
+          difficulty: 'moderate' as const,
           length: currentTrail.length * 0.8,
           elevation: currentTrail.elevation,
           elevation_gain: currentTrail.elevation_gain * 0.9,
@@ -66,7 +73,7 @@ export const useSimilarTrails = (trailId: string, currentTrail?: Trail) => {
           name: 'Valley View Path',
           location: 'Nearby State Park',
           imageUrl: '/placeholder.svg',
-          difficulty: currentTrail.difficulty,
+          difficulty: 'moderate' as const,
           length: currentTrail.length * 1.2,
           elevation: currentTrail.elevation,
           elevation_gain: currentTrail.elevation_gain * 1.1,

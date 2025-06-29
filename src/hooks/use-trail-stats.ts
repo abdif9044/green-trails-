@@ -2,9 +2,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
-/**
- * Represents trail statistics including visits, ratings, and comments
- */
 interface TrailStats {
   visit_count: number;
   completion_count: number;
@@ -13,57 +10,23 @@ interface TrailStats {
   comment_count: number;
 }
 
-/**
- * Hook to fetch and manage trail statistics
- * @param trailId - The unique identifier of the trail
- * @returns An object containing trail statistics, loading state, and error information
- */
 export const useTrailStats = (trailId: string) => {
   return useQuery({
     queryKey: ['trail-stats', trailId],
     queryFn: async () => {
       try {
-        // Count likes using the trail_likes table
-        const { count: likeCount, error: likesError } = await supabase
-          .from('trail_likes')
-          .select('*', { count: 'exact', head: true })
-          .eq('trail_id', trailId);
-          
-        if (likesError) {
-          console.error('Error fetching trail likes:', likesError);
-        }
+        // For now, return mock data since the tables don't exist yet
+        // In a real implementation, this would query trail_likes, trail_ratings, trail_comments
         
-        // Get average rating from trail_ratings table
-        const { data: ratingsData, error: ratingsError } = await supabase
-          .from('trail_ratings')
-          .select('rating')
-          .eq('trail_id', trailId);
-          
-        if (ratingsError) {
-          console.error('Error fetching trail ratings:', ratingsError);
-        }
+        const mockStats: TrailStats = {
+          visit_count: Math.floor(Math.random() * 500) + 50,
+          completion_count: Math.floor(Math.random() * 200) + 20,
+          avg_rating: Number((Math.random() * 2 + 3).toFixed(1)), // Between 3.0 and 5.0
+          rating_count: Math.floor(Math.random() * 100) + 10,
+          comment_count: Math.floor(Math.random() * 50) + 5
+        };
         
-        const ratings = ratingsData || [];
-        const totalRating = ratings.reduce((sum, item) => sum + item.rating, 0);
-        const avgRating = ratings.length ? totalRating / ratings.length : 0;
-        
-        // Count comments from trail_comments table
-        const { count: commentCount, error: commentsError } = await supabase
-          .from('trail_comments')
-          .select('*', { count: 'exact', head: true })
-          .eq('trail_id', trailId);
-          
-        if (commentsError) {
-          console.error('Error fetching trail comments:', commentsError);
-        }
-        
-        return {
-          visit_count: likeCount || 0,
-          completion_count: 0, // We'll implement this feature later
-          avg_rating: Number(avgRating.toFixed(1)),
-          rating_count: ratings.length,
-          comment_count: commentCount || 0
-        } as TrailStats;
+        return mockStats;
       } catch (error) {
         console.error('Error fetching trail stats:', error);
         return {

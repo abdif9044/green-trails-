@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
-import NavbarAuth from "./NavbarAuth";
+import { NavbarAuth } from "./NavbarAuth";
 import Logo from "./Logo";
 import { cn } from "@/lib/utils";
 

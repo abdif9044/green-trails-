@@ -31,9 +31,12 @@ export const usePaginatedTrails = ({ filters, pageSize = 12 }: UsePaginatedTrail
         query = query.or(`name.ilike.%${filters.searchQuery}%,location.ilike.%${filters.searchQuery}%,description.ilike.%${filters.searchQuery}%`);
       }
 
-      // Handle difficulty filter - database only supports easy, moderate, hard
-      if (filters.difficulty && filters.difficulty !== '' && ['easy', 'moderate', 'hard'].includes(filters.difficulty)) {
-        query = query.eq('difficulty', filters.difficulty);
+      // Handle difficulty filter - map expert to hard for database query
+      if (filters.difficulty && filters.difficulty.trim() !== '') {
+        const dbDifficulty = filters.difficulty === 'expert' ? 'hard' : filters.difficulty;
+        if (['easy', 'moderate', 'hard'].includes(dbDifficulty)) {
+          query = query.eq('difficulty', dbDifficulty);
+        }
       }
 
       if (filters.lengthRange) {

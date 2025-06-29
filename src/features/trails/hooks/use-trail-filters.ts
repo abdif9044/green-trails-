@@ -20,8 +20,8 @@ export const useTrailFilters = () => {
           if (!matchesSearch) return false;
         }
 
-        // Difficulty filter - allow empty string and check properly
-        if (filters.difficulty && filters.difficulty !== '') {
+        // Difficulty filter - handle empty string properly
+        if (filters.difficulty && filters.difficulty.trim() !== '') {
           if (trail.difficulty !== filters.difficulty) return false;
         }
 

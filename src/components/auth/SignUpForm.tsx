@@ -8,19 +8,19 @@ import { TermsAndPrivacy } from '@/components/auth/TermsAndPrivacy';
 import { SignUpFormFields } from '@/components/auth/SignUpFormFields';
 import { SignUpSuccessMessage } from '@/components/auth/SignUpSuccessMessage';
 import { useSignUpValidation } from '@/components/auth/SignUpFormValidation';
-import AgeVerification from '@/components/auth/AgeVerification';
 
 interface SignUpFormProps {
   onSuccess: () => void;
 }
 
 export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
-  const [step, setStep] = useState<'signup' | 'age-verification' | 'success'>('signup');
+  const [step, setStep] = useState<'signup' | 'success'>('signup');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [username, setUsername] = useState('');
+  const [birthYear, setBirthYear] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   
@@ -31,9 +31,17 @@ export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
     e.preventDefault();
     setError('');
     
-    const validationError = validateForm(email, password, confirmPassword, fullName, username, '2000'); // Placeholder birth year
+    const validationError = validateForm(email, password, confirmPassword, fullName, username, birthYear);
     if (validationError) {
       setError(validationError);
+      return;
+    }
+
+    // Validate age (must be 21+)
+    const currentYear = new Date().getFullYear();
+    const age = currentYear - parseInt(birthYear);
+    if (age < 21) {
+      setError('You must be at least 21 years old to create an account.');
       return;
     }
     
@@ -45,6 +53,7 @@ export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
       const { success: signUpSuccess, message } = await signUp(email, password, {
         full_name: fullName.trim(),
         username: username.trim(),
+        year_of_birth: parseInt(birthYear),
         signup_source: 'web_form'
       });
       
@@ -55,7 +64,7 @@ export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
         } else if (message?.includes('Invalid email')) {
           setError('Please provide a valid email address.');
         } else if (message?.includes('Password should be at least')) {
-          setError('Password must be at least 6 characters long.');
+          setError('Password must be at least 8 characters long.');
         } else {
           setError(message || 'Failed to create account. Please try again.');
         }
@@ -63,7 +72,11 @@ export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
       }
       
       console.log('Account created successfully for:', email);
-      setStep('age-verification');
+      setStep('success');
+      
+      setTimeout(() => {
+        onSuccess();
+      }, 2000);
       
     } catch (err: any) {
       console.error('Sign up error:', err);
@@ -73,31 +86,8 @@ export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
     }
   };
 
-  const handleAgeVerified = () => {
-    setStep('success');
-    setTimeout(() => {
-      onSuccess();
-    }, 2000);
-  };
-
-  const handleSkipAge = () => {
-    setStep('success');
-    setTimeout(() => {
-      onSuccess();
-    }, 2000);
-  };
-
   if (step === 'success') {
     return <SignUpSuccessMessage />;
-  }
-
-  if (step === 'age-verification') {
-    return (
-      <AgeVerification 
-        onVerified={handleAgeVerified}
-        onSkip={handleSkipAge}
-      />
-    );
   }
 
   return (
@@ -115,14 +105,14 @@ export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
         email={email}
         password={password}
         confirmPassword={confirmPassword}
-        birthYear=""
+        birthYear={birthYear}
         loading={loading}
         onFullNameChange={setFullName}
         onUsernameChange={setUsername}
         onEmailChange={setEmail}
         onPasswordChange={setPassword}
         onConfirmPasswordChange={setConfirmPassword}
-        onBirthYearChange={() => {}} // Not used in this flow
+        onBirthYearChange={setBirthYear}
       />
       
       <TermsAndPrivacy />

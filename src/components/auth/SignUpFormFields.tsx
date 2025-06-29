@@ -34,9 +34,9 @@ export const SignUpFormFields = ({
   onConfirmPasswordChange,
   onBirthYearChange
 }: SignUpFormFieldsProps) => {
-  // Generate years for dropdown (current year - 100 to current year - 13)
+  // Generate years for dropdown (current year - 110 to current year - 13)
   const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: 88 }, (_, i) => currentYear - 13 - i);
+  const years = Array.from({ length: 110 }, (_, i) => currentYear - 13 - i);
 
   return (
     <>
@@ -50,6 +50,7 @@ export const SignUpFormFields = ({
           placeholder="Enter your full name"
           required
           disabled={loading}
+          autoComplete="name"
         />
       </div>
       
@@ -63,6 +64,7 @@ export const SignUpFormFields = ({
           placeholder="Choose a username"
           required
           disabled={loading}
+          autoComplete="username"
         />
       </div>
       
@@ -76,6 +78,7 @@ export const SignUpFormFields = ({
           placeholder="Enter your email"
           required
           disabled={loading}
+          autoComplete="email"
         />
       </div>
       
@@ -86,9 +89,10 @@ export const SignUpFormFields = ({
           type="password"
           value={password}
           onChange={(e) => onPasswordChange(e.target.value)}
-          placeholder="Create a password (min 6 characters)"
+          placeholder="Create a password (min 8 characters)"
           required
           disabled={loading}
+          autoComplete="new-password"
         />
       </div>
       
@@ -102,16 +106,17 @@ export const SignUpFormFields = ({
           placeholder="Confirm your password"
           required
           disabled={loading}
+          autoComplete="new-password"
         />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="birthYear">Year of Birth (Must be 13+)</Label>
+        <Label htmlFor="birthYear">Year of Birth (Must be 21+)</Label>
         <Select onValueChange={onBirthYearChange} value={birthYear} disabled={loading}>
-          <SelectTrigger>
+          <SelectTrigger id="birthYear">
             <SelectValue placeholder="Select your birth year" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="max-h-[200px]">
             {years.map((year) => (
               <SelectItem key={year} value={year.toString()}>
                 {year}

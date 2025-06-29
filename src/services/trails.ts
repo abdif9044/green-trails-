@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Trail, DatabaseTrail, TrailFilters } from '@/types/trails';
 import { useQuery } from '@tanstack/react-query';
@@ -92,9 +91,12 @@ export class TrailService {
         query = query.or(`name.ilike.%${filters.searchQuery}%,location.ilike.%${filters.searchQuery}%,description.ilike.%${filters.searchQuery}%`);
       }
 
-      // Apply difficulty filter - handle database constraints
-      if (filters.difficulty && filters.difficulty !== '' && filters.difficulty !== 'expert') {
-        query = query.eq('difficulty', filters.difficulty);
+      // Apply difficulty filter - map expert to hard for database query
+      if (filters.difficulty && filters.difficulty.trim() !== '') {
+        const dbDifficulty = filters.difficulty === 'expert' ? 'hard' : filters.difficulty;
+        if (['easy', 'moderate', 'hard'].includes(dbDifficulty)) {
+          query = query.eq('difficulty', dbDifficulty);
+        }
       }
 
       // Apply length range filter

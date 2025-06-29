@@ -9,7 +9,7 @@ export const useAlbumLikeCount = (albumId: string) => {
   return useQuery({
     queryKey: ['albumLikes', albumId],
     queryFn: async () => {
-      const { count, error } = await supabase
+      const { count, error } = await (supabase as any)
         .from('likes')
         .select('*', { count: 'exact', head: true })
         .eq('media_id', albumId);
@@ -34,7 +34,7 @@ export const useHasLikedAlbum = (albumId: string) => {
     queryFn: async () => {
       if (!user) return false;
       
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('likes')
         .select('id')
         .eq('media_id', albumId)
@@ -65,7 +65,7 @@ export const useToggleAlbumLike = () => {
       }
       
       // Check if user has already liked this album
-      const { data: existingLike } = await supabase
+      const { data: existingLike } = await (supabase as any)
         .from('likes')
         .select('id')
         .eq('media_id', albumId)
@@ -74,7 +74,7 @@ export const useToggleAlbumLike = () => {
       
       if (existingLike) {
         // Unlike: remove the existing like
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from('likes')
           .delete()
           .eq('id', existingLike.id);
@@ -83,7 +83,7 @@ export const useToggleAlbumLike = () => {
         return { action: 'unliked', albumId };
       } else {
         // Like: add a new like
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from('likes')
           .insert({
             media_id: albumId,

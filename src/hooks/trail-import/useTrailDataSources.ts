@@ -13,8 +13,8 @@ export function useTrailDataSources() {
   const loadDataSources = async () => {
     setLoading(true);
     try {
-      // Fetch data sources
-      const { data: sources, error: sourcesError } = await supabase
+      // Fetch data sources using type casting to work around missing types
+      const { data: sources, error: sourcesError } = await (supabase as any)
         .from("trail_data_sources")
         .select("*")
         .order("last_synced", { ascending: false });
@@ -72,7 +72,7 @@ export function useTrailDataSources() {
         }
       ];
 
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from("trail_data_sources")
         .insert(defaultSources);
         

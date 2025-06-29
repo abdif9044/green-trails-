@@ -350,6 +350,30 @@ export type Database = {
           },
         ]
       }
+      likes: {
+        Row: {
+          created_at: string | null
+          id: string
+          media_id: string
+          media_type: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          media_id: string
+          media_type?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          media_id?: string
+          media_type?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       log_photos: {
         Row: {
           caption: string | null
@@ -597,6 +621,51 @@ export type Database = {
           location_name?: string | null
           media_url?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      trail_data_sources: {
+        Row: {
+          config: Json | null
+          country: string | null
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          last_synced: string | null
+          name: string
+          region: string | null
+          source_type: string
+          state_province: string | null
+          updated_at: string | null
+          url: string
+        }
+        Insert: {
+          config?: Json | null
+          country?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_synced?: string | null
+          name: string
+          region?: string | null
+          source_type: string
+          state_province?: string | null
+          updated_at?: string | null
+          url: string
+        }
+        Update: {
+          config?: Json | null
+          country?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_synced?: string | null
+          name?: string
+          region?: string | null
+          source_type?: string
+          state_province?: string | null
+          updated_at?: string | null
+          url?: string
         }
         Relationships: []
       }

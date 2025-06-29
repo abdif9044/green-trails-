@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { WeatherData, DetailedWeatherData } from '@/features/weather/types/weather-types';
 import { toast } from '@/hooks/use-toast';
@@ -24,7 +25,7 @@ export const getTrailWeather = async (trailId: string, coordinates: [number, num
       // If data is less than 1 hour old, use it
       if (diffHours < 1) {
         return {
-          temperature: existingData.temperature || 0,
+          temperature: existingData.temperature?.toString() || '0',
           condition: existingData.condition || 'Unknown',
           high: existingData.high || 0,
           low: existingData.low || 0,

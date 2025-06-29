@@ -1,87 +1,77 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '../use-auth';
+import { useToast } from '../use-toast';
 import { v4 as uuidv4 } from 'uuid';
 
-/**
- * Hook to upload a new image for a trail
- */
+interface UploadTrailImageData {
+  file: File;
+  caption?: string;
+  isPrimary?: boolean;
+}
+
 export const useUploadTrailImage = (trailId: string) => {
-  const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async ({ 
-      file, 
-      caption, 
-      isPrimary = false 
-    }: { 
-      file: File; 
-      caption?: string; 
-      isPrimary?: boolean;
-    }) => {
-      if (!user) throw new Error('Must be logged in to upload images');
+    mutationFn: async ({ file, caption, isPrimary = false }: UploadTrailImageData) => {
+      if (!user) throw new Error('User must be authenticated');
 
+      // Generate unique filename
       const fileExt = file.name.split('.').pop();
-      const fileName = `${uuidv4()}.${fileExt}`;
-      const filePath = `${trailId}/${fileName}`;
+      const fileName = `${trailId}/${uuidv4()}.${fileExt}`;
 
       // Upload file to storage
-      const { error: uploadError } = await supabase.storage
-        .from('trail_images')
-        .upload(filePath, file, {
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('trail-images')
+        .upload(fileName, file, {
           cacheControl: '3600',
-          upsert: false,
-          contentType: file.type
+          upsert: false
         });
 
       if (uploadError) throw uploadError;
 
-      // Get the public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('trail_images')
-        .getPublicUrl(filePath);
-
-      // If this is set as primary, remove primary status from other images first
+      // If setting as primary, unset existing primary images
       if (isPrimary) {
-        const { error: updateError } = await supabase
+        await supabase
           .from('trail_images')
           .update({ is_primary: false })
           .eq('trail_id', trailId)
           .eq('is_primary', true);
-        
-        if (updateError) throw updateError;
       }
 
-      // Save image metadata to database
-      const { error: dbError } = await supabase
+      // Create database record
+      const { data: imageRecord, error: dbError } = await supabase
         .from('trail_images')
         .insert({
           trail_id: trailId,
-          image_path: filePath,
+          image_path: fileName,
+          caption: caption || '',
           is_primary: isPrimary,
-          caption,
-          user_id: user.id
-        });
+          user_id: user.id,
+        })
+        .select()
+        .single();
 
       if (dbError) throw dbError;
 
-      return publicUrl;
+      return imageRecord;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['trail-images', trailId] });
       toast({
-        title: "Success",
-        description: "Image uploaded successfully",
+        title: "Image uploaded",
+        description: "Your trail image has been uploaded successfully.",
       });
     },
-    onError: (error: Error) => {
+    onError: (error) => {
+      console.error('Error uploading trail image:', error);
       toast({
-        title: "Error",
-        description: error.message,
+        title: "Upload failed",
+        description: "Failed to upload the image. Please try again.",
         variant: "destructive",
       });
     },

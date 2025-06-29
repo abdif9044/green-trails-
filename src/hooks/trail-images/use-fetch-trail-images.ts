@@ -2,98 +2,68 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { TrailImage } from './types';
-import { useToast } from '@/hooks/use-toast';
 
-/**
- * Hook to fetch images for a specific trail with better error handling
- */
 export const useTrailImages = (trailId: string) => {
-  const { toast } = useToast();
-
   return useQuery({
     queryKey: ['trail-images', trailId],
-    queryFn: async () => {
-      if (!trailId) {
-        console.error('No trail ID provided to useTrailImages');
-        return [];
-      }
-      
+    queryFn: async (): Promise<TrailImage[]> => {
+      if (!trailId) return [];
+
       try {
-        console.log(`Fetching images for trail: ${trailId}`);
-        
-        const { data, error } = await supabase
+        const { data: images, error } = await supabase
           .from('trail_images')
-          .select('*')
+          .select(`
+            id,
+            image_path,
+            caption,
+            is_primary,
+            user_id,
+            created_at,
+            updated_at
+          `)
           .eq('trail_id', trailId)
-          .order('is_primary', { ascending: false })
           .order('created_at', { ascending: false });
 
         if (error) {
           console.error('Error fetching trail images:', error);
-          toast({
-            title: "Failed to load images",
-            description: "There was an error loading trail images",
-            variant: "destructive",
-          });
           throw error;
         }
 
-        if (!data || data.length === 0) {
-          console.log(`No images found for trail: ${trailId}`);
-          return [];
-        }
+        if (!images) return [];
 
-        // Process the data to include full image URLs
-        const processedImages = data.map(image => {
+        // Transform the data to include full image URLs
+        const transformedImages: TrailImage[] = images.map((image) => {
+          let fullImageUrl = '';
+          
           try {
-            if (!image.image_path) {
-              console.warn(`Missing image_path for image ${image.id}`);
-              return {
-                ...image,
-                full_image_url: null
-              } as TrailImage;
+            if (image.image_path) {
+              fullImageUrl = supabase.storage
+                .from('trail-images')
+                .getPublicUrl(image.image_path).data.publicUrl;
             }
-
-            // Make sure we're using a valid storage bucket name
-            const bucketName = 'trail_images';
-            const imagePath = image.image_path.startsWith(`${bucketName}/`) 
-              ? image.image_path.substring(bucketName.length + 1)
-              : image.image_path;
-              
-            const publicUrl = supabase.storage
-              .from(bucketName)
-              .getPublicUrl(imagePath)
-              .data.publicUrl;
-            
-            return {
-              ...image,
-              full_image_url: publicUrl
-            } as TrailImage;
           } catch (e) {
-            console.error(`Error getting public URL for image ${image.id}:`, e);
-            return {
-              ...image,
-              full_image_url: null
-            } as TrailImage;
+            console.error('Error generating image URL:', e);
           }
-        }) as TrailImage[];
 
-        // Log success for debugging
-        console.log(`Successfully processed ${processedImages.length} images for trail ${trailId}`);
-        
-        return processedImages;
-      } catch (error) {
-        console.error('Failed to fetch trail images:', error);
-        toast({
-          title: "Image loading error",
-          description: "Failed to load trail images. Please try again later.",
-          variant: "destructive",
+          return {
+            id: image.id,
+            trail_id: trailId,
+            image_path: image.image_path,
+            full_image_url: fullImageUrl,
+            caption: image.caption || '',
+            is_primary: image.is_primary || false,
+            user_id: image.user_id,
+            created_at: image.created_at,
+            updated_at: image.updated_at,
+          };
         });
-        return [];
+
+        return transformedImages;
+      } catch (error) {
+        console.error('Error in useTrailImages:', error);
+        throw error;
       }
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    retry: 2,
-    refetchOnWindowFocus: false,
+    enabled: !!trailId,
   });
 };

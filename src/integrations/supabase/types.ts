@@ -57,6 +57,47 @@ export type Database = {
           },
         ]
       }
+      album_media: {
+        Row: {
+          album_id: string
+          caption: string | null
+          created_at: string | null
+          file_path: string
+          file_type: string | null
+          id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          album_id: string
+          caption?: string | null
+          created_at?: string | null
+          file_path: string
+          file_type?: string | null
+          id?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          album_id?: string
+          caption?: string | null
+          created_at?: string | null
+          file_path?: string
+          file_type?: string | null
+          id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "album_media_album_id_fkey"
+            columns: ["album_id"]
+            isOneToOne: false
+            referencedRelation: "albums"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       albums: {
         Row: {
           cover_image_url: string | null
@@ -558,6 +599,47 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      trail_images: {
+        Row: {
+          caption: string | null
+          created_at: string | null
+          id: string
+          image_path: string
+          is_primary: boolean | null
+          trail_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string | null
+          id?: string
+          image_path: string
+          is_primary?: boolean | null
+          trail_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string | null
+          id?: string
+          image_path?: string
+          is_primary?: boolean | null
+          trail_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trail_images_trail_id_fkey"
+            columns: ["trail_id"]
+            isOneToOne: false
+            referencedRelation: "trails"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       trail_import_jobs: {
         Row: {

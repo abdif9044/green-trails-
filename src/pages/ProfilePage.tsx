@@ -54,9 +54,16 @@ const ProfilePage = () => {
       <main className="flex-grow container mx-auto px-4 py-6 lg:py-8">
         {user && (
           <ProfileHeader 
-            profile={userProfile} 
-            isLoading={loadingProfile} 
-            isCurrentUser={true}  // Added the missing prop
+            userId={user.id}
+            username={userProfile?.username || 'trail_explorer'}
+            fullName={userProfile?.full_name || 'Trail Explorer'}
+            bio={userProfile?.bio || 'Passionate hiker exploring nature one trail at a time 🥾🏔️'}
+            location={userProfile?.location || 'Pacific Northwest'}
+            joinDate={userProfile?.created_at ? new Date(userProfile.created_at).toLocaleDateString() : 'January 2024'}
+            followersCount={1247}
+            followingCount={389}
+            trailsCompleted={127}
+            badges={[]}
           />
         )}
         

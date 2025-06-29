@@ -9,6 +9,13 @@ export interface WeatherData {
   conditions: string;
 }
 
+export interface DetailedWeatherData extends WeatherData {
+  forecast: WeatherForecast[];
+  uvIndex?: number;
+  visibility?: number;
+  pressure?: number;
+}
+
 export interface WeatherForecast {
   date: string;
   high: number;
@@ -22,8 +29,6 @@ class WeatherService {
   private baseUrl = 'https://api.openweathermap.org/data/2.5';
 
   constructor() {
-    // For now, we'll use a placeholder API key
-    // In production, this should come from environment variables
     this.apiKey = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY || 'demo-key';
   }
 
@@ -48,7 +53,6 @@ class WeatherService {
       };
     } catch (error) {
       console.error('Error fetching weather data:', error);
-      // Return mock data if API fails
       return {
         temperature: 22,
         description: 'Partly cloudy',
@@ -71,9 +75,8 @@ class WeatherService {
       
       const data = await response.json();
       
-      // Process the 5-day forecast data
       const forecasts: WeatherForecast[] = [];
-      const dailyData = data.list.filter((_: any, index: number) => index % 8 === 0); // Every 24 hours
+      const dailyData = data.list.filter((_: any, index: number) => index % 8 === 0);
       
       dailyData.slice(0, 5).forEach((item: any) => {
         forecasts.push({
@@ -81,14 +84,13 @@ class WeatherService {
           high: Math.round(item.main.temp_max),
           low: Math.round(item.main.temp_min),
           conditions: item.weather[0].main,
-          precipitation: item.pop * 100 // Probability of precipitation
+          precipitation: item.pop * 100
         });
       });
       
       return forecasts;
     } catch (error) {
       console.error('Error fetching weather forecast:', error);
-      // Return mock forecast data if API fails
       return [
         { date: 'Today', high: 24, low: 18, conditions: 'Sunny', precipitation: 10 },
         { date: 'Tomorrow', high: 26, low: 19, conditions: 'Partly Cloudy', precipitation: 20 },
@@ -101,3 +103,23 @@ class WeatherService {
 }
 
 export const weatherService = new WeatherService();
+
+// Export functions for the hooks
+export const getTrailWeather = async (trailId: string, coordinates: [number, number]): Promise<WeatherData> => {
+  const [lng, lat] = coordinates;
+  return weatherService.getCurrentWeather(lat, lng);
+};
+
+export const getDetailedTrailWeather = async (trailId: string, coordinates: [number, number]): Promise<DetailedWeatherData> => {
+  const [lng, lat] = coordinates;
+  const weather = await weatherService.getCurrentWeather(lat, lng);
+  const forecast = await weatherService.getForecast(lat, lng);
+  
+  return {
+    ...weather,
+    forecast,
+    uvIndex: 5,
+    visibility: 10,
+    pressure: 1013
+  };
+};

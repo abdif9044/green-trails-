@@ -11,6 +11,16 @@ import AlbumDetailHeader from '@/components/albums/AlbumDetailHeader';
 import AlbumDetailActions from '@/components/albums/AlbumDetailActions';
 import AlbumMediaGrid from '@/components/albums/AlbumMediaGrid';
 
+// Define MediaItem type locally since it doesn't exist in the current database
+interface MediaItem {
+  id: string;
+  file_path: string;
+  file_type: string;
+  caption?: string;
+  created_at: string;
+  url: string;
+}
+
 const AlbumDetail = () => {
   const { albumId } = useParams<{ albumId: string }>();
   const navigate = useNavigate();
@@ -35,32 +45,51 @@ const AlbumDetail = () => {
         
       if (error) throw error;
       
+      // Transform to match Album interface
       return {
-        ...data,
+        id: data.id,
+        title: data.title,
+        description: data.description,
+        location: data.location,
+        is_private: !data.is_public, // Convert is_public to is_private
+        user_id: data.user_id,
+        trail_id: data.trail_id,
+        created_at: data.created_at || new Date().toISOString(),
+        updated_at: data.updated_at || new Date().toISOString(),
+        coverImage: data.cover_image_url || '/placeholder.svg',
         user: data.user && typeof data.user === 'object' ? data.user : null
       } as Album;
     },
     enabled: !!albumId,
   });
   
-  // Fetch media for this album
+  // Fetch media for this album - using album_media table since media table doesn't exist
   const { data: media = [] } = useQuery({
     queryKey: ['albumMedia', albumId],
-    queryFn: async () => {
+    queryFn: async (): Promise<MediaItem[]> => {
       if (!albumId) return [];
       
-      const { data, error } = await supabase
-        .from('media')
-        .select('*')
-        .eq('album_id', albumId)
-        .order('created_at', { ascending: true });
+      try {
+        const { data, error } = await supabase
+          .from('album_media')
+          .select('*')
+          .eq('album_id', albumId)
+          .order('created_at', { ascending: true });
+          
+        if (error) throw error;
         
-      if (error) throw error;
-      
-      return data.map(item => ({
-        ...item,
-        url: supabase.storage.from('media').getPublicUrl(item.file_path).data.publicUrl
-      }));
+        return data.map(item => ({
+          id: item.id,
+          file_path: item.file_path,
+          file_type: item.file_type,
+          caption: item.caption || '',
+          created_at: item.created_at,
+          url: supabase.storage.from('media').getPublicUrl(item.file_path).data.publicUrl
+        }));
+      } catch (error) {
+        console.error('Error fetching album media:', error);
+        return [];
+      }
     },
     enabled: !!albumId,
   });

@@ -2,7 +2,6 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Card, CardContent } from '@/components/ui/card';
@@ -18,16 +17,18 @@ const Legal: React.FC = () => {
   const { data, isLoading } = useQuery<LegalContentType>({
     queryKey: ['legal-content', type],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('legal_content')
-        .select('*')
-        .eq('id', type)
-        .single();
+      // Since legal_content table doesn't exist, return mock data
+      const mockContent: LegalContentType = {
+        id: type,
+        title: type === 'terms-of-service' ? 'Terms of Service' : 'Privacy Policy',
+        content: type === 'terms-of-service' 
+          ? 'Terms of Service content will be available soon.' 
+          : 'Privacy Policy content will be available soon.',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
       
-      if (error) throw error;
-      if (!data) throw new Error('Legal content not found');
-      
-      return data as LegalContentType;
+      return mockContent;
     }
   });
   

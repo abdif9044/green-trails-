@@ -31,8 +31,8 @@ export const usePaginatedTrails = ({ filters, pageSize = 12 }: UsePaginatedTrail
         query = query.or(`name.ilike.%${filters.searchQuery}%,location.ilike.%${filters.searchQuery}%,description.ilike.%${filters.searchQuery}%`);
       }
 
-      if (filters.difficulty) {
-        query = query.eq('difficulty', filters.difficulty);
+      if (filters.difficulty && ['easy', 'moderate', 'hard'].includes(filters.difficulty)) {
+        query = query.eq('difficulty', filters.difficulty as 'easy' | 'moderate' | 'hard');
       }
 
       if (filters.lengthRange) {
@@ -71,7 +71,22 @@ export const usePaginatedTrails = ({ filters, pageSize = 12 }: UsePaginatedTrail
         throw new Error(error.message);
       }
 
-      const trails = (data as Trail[]) || [];
+      // Transform database trails to match Trail interface
+      const trails: Trail[] = (data || []).map(trail => ({
+        id: trail.id,
+        name: trail.name,
+        location: trail.location || 'Unknown Location',
+        imageUrl: '/placeholder.svg', // Default placeholder
+        difficulty: trail.difficulty as 'easy' | 'moderate' | 'hard',
+        length: Number(trail.length) || 0,
+        elevation: trail.elevation_gain || 0,
+        elevation_gain: trail.elevation_gain || 0,
+        tags: trail.tags || [],
+        likes: Math.floor(Math.random() * 200) + 50, // Mock likes for now
+        coordinates: [trail.lon || 0, trail.lat || 0] as [number, number],
+        description: trail.description || 'A beautiful trail waiting to be explored.'
+      }));
+
       const hasMore = trails.length === pageSize;
       const nextCursor = hasMore ? pageParam + pageSize : null;
 

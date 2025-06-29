@@ -66,10 +66,16 @@ const Profile = () => {
       <main className="flex-grow container max-w-5xl mx-auto px-4 py-8">
         <div className="mb-8">
           <ProfileHeader
-            profile={profile}
-            isLoading={isProfileLoading}
-            isCurrentUser={isCurrentUser}
-            onEditProfile={() => setShowEditProfile(true)}
+            userId={targetUserId}
+            username={profile?.username || 'unknown_user'}
+            fullName={profile?.full_name || 'Unknown User'}
+            bio={profile?.bio || 'No bio available'}
+            location={profile?.location || 'Unknown Location'}
+            joinDate={profile?.created_at ? new Date(profile.created_at).toLocaleDateString() : 'Unknown'}
+            followersCount={0}
+            followingCount={0}
+            trailsCompleted={0}
+            badges={[]}
           />
         </div>
         

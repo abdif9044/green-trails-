@@ -1,9 +1,7 @@
 
-import { useTrails } from '@/services/trails';
+import { useTrail } from '@/services/trails';
 
 export const useTrailQueryBase = (trailId: string) => {
-  const { useTrail } = useTrails();
-  
   const query = useTrail(trailId);
   
   return {

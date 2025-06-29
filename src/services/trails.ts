@@ -12,7 +12,7 @@ export class TrailService {
       name: dbTrail.name,
       location: dbTrail.location || 'Unknown Location',
       description: dbTrail.description || '',
-      difficulty: dbTrail.difficulty,
+      difficulty: dbTrail.difficulty as 'easy' | 'moderate' | 'hard' | 'expert',
       length: Number(dbTrail.length) || 0,
       elevation_gain: dbTrail.elevation_gain || 0,
       latitude: dbTrail.latitude || dbTrail.lat || 0,
@@ -91,7 +91,7 @@ export class TrailService {
         query = query.or(`name.ilike.%${filters.searchQuery}%,location.ilike.%${filters.searchQuery}%,description.ilike.%${filters.searchQuery}%`);
       }
 
-      // Apply difficulty filter
+      // Apply difficulty filter - properly handle empty string
       if (filters.difficulty && filters.difficulty !== '') {
         query = query.eq('difficulty', filters.difficulty);
       }
@@ -232,11 +232,34 @@ export class TrailService {
   }
 }
 
-// Export the hook that components are trying to import
+// Export hooks that components are trying to import
 export const useTrails = (filters?: TrailFilters) => {
   return useQuery({
     queryKey: ['trails', filters],
     queryFn: () => TrailService.searchTrails(filters || {}),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+};
+
+export const useTrail = (id: string) => {
+  return useQuery({
+    queryKey: ['trail', id],
+    queryFn: () => TrailService.getTrailById(id),
+    enabled: !!id,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+};
+
+export const useTrailsSearch = (params: { filters?: TrailFilters; page?: number; limit?: number }) => {
+  return useQuery({
+    queryKey: ['trails-search', params],
+    queryFn: async () => {
+      const trails = await TrailService.searchTrails(params.filters || {}, params.limit || 20);
+      return {
+        data: trails,
+        count: trails.length
+      };
+    },
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };

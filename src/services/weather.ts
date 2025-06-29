@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 
@@ -114,7 +113,10 @@ export class WeatherService {
         .single();
 
       if (forecast && !error && forecast.daily) {
-        return forecast.daily.slice(0, days);
+        const dailyData = forecast.daily;
+        if (Array.isArray(dailyData)) {
+          return dailyData.slice(0, days);
+        }
       }
 
       // Generate mock forecast data
@@ -143,12 +145,43 @@ export class WeatherService {
   }
 }
 
-// Export the hook that components are trying to import
+// Export hooks that components are trying to import
 export const useWeather = (trailId: string) => {
   return useQuery({
     queryKey: ['weather', trailId],
     queryFn: () => WeatherService.getWeatherForTrail(trailId),
     enabled: !!trailId,
+    staleTime: 30 * 60 * 1000, // 30 minutes
+  });
+};
+
+export const useTrailWeather = (trailId: string) => {
+  return useQuery({
+    queryKey: ['trail-weather', trailId],
+    queryFn: () => WeatherService.getWeatherForTrail(trailId),
+    enabled: !!trailId,
+    staleTime: 30 * 60 * 1000, // 30 minutes
+  });
+};
+
+export const useCurrentWeather = (latitude: number, longitude: number) => {
+  return useQuery({
+    queryKey: ['current-weather', latitude, longitude],
+    queryFn: async () => {
+      // Mock implementation for coordinates-based weather
+      return {
+        temperature: Math.round(Math.random() * 30 + 50),
+        condition: 'Clear',
+        high: Math.round(Math.random() * 10 + 75),
+        low: Math.round(Math.random() * 10 + 55),
+        precipitation: '0%',
+        wind_speed: '5 mph',
+        wind_direction: 'N',
+        sunrise: '6:30 AM',
+        sunset: '7:30 PM'
+      };
+    },
+    enabled: !!latitude && !!longitude,
     staleTime: 30 * 60 * 1000, // 30 minutes
   });
 };

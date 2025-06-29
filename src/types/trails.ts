@@ -1,10 +1,9 @@
-
 export interface Trail {
   id: string;
   name: string;
   location: string;
   description: string;
-  difficulty: 'easy' | 'moderate' | 'hard';
+  difficulty: 'easy' | 'moderate' | 'hard' | 'expert';
   length: number;
   elevation_gain: number;
   latitude: number;
@@ -58,7 +57,7 @@ export interface DatabaseTrail {
 
 export interface TrailFilters {
   searchQuery?: string;
-  difficulty?: '' | 'easy' | 'moderate' | 'hard';
+  difficulty?: '' | 'easy' | 'moderate' | 'hard' | 'expert';
   lengthRange?: [number, number];
   tags?: string[];
   country?: string;
@@ -115,7 +114,7 @@ export interface TrailComment {
 }
 
 // Export missing types
-export type TrailDifficulty = 'easy' | 'moderate' | 'hard';
+export type TrailDifficulty = 'easy' | 'moderate' | 'hard' | 'expert';
 
 export type StrainTag = 
   | 'creative'

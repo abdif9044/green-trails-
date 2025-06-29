@@ -1,11 +1,9 @@
 
-import { useWeather } from '@/services/weather';
+import { useTrailWeather, useCurrentWeather } from '@/services/weather';
 
-export const useTrailWeather = (trailId: string, coordinates?: [number, number]) => {
-  const { useTrailWeather: useTrailWeatherService, useCurrentWeather } = useWeather();
-  
+export const useTrailWeatherHook = (trailId: string, coordinates?: [number, number]) => {
   // Try to get weather data specifically for the trail first
-  const trailWeatherQuery = useTrailWeatherService(trailId);
+  const trailWeatherQuery = useTrailWeather(trailId);
   
   // Fallback to coordinates-based weather if trail-specific weather isn't available
   const coordinatesWeatherQuery = useCurrentWeather(

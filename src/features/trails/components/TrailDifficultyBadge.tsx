@@ -11,7 +11,7 @@ const getDifficultyColor = (difficulty: TrailDifficulty) => {
     case 'easy': return 'bg-green-500';
     case 'moderate': return 'bg-blue-500';
     case 'hard': return 'bg-red-500';
-    case 'expert': return 'bg-black';
+    case 'expert': return 'bg-purple-500';
     default: return 'bg-gray-500';
   }
 };

@@ -1,13 +1,11 @@
 
-import { useTrails } from '@/services/trails';
+import { useTrailsSearch } from '@/services/trails';
 import { TrailFilters } from '@/types/trails';
 
 export const useTrailsQuery = (filters: TrailFilters = {}) => {
-  const { useTrailsSearch } = useTrails();
-  
   // Convert filters to search params format
   const searchParams = {
-    ...filters,
+    filters,
     page: 1,
     limit: 50, // Reasonable default for initial load
   };

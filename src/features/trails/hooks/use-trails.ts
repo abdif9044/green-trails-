@@ -1,56 +1,47 @@
 
 import { useQuery } from '@tanstack/react-query';
-import { Trail, TrailFilters } from '@/types/trails';
+import { Trail } from '@/types/trails';
 
-export const useTrails = (filters: TrailFilters = {}) => {
+export const useTrails = () => {
   return useQuery({
-    queryKey: ['trails', filters],
+    queryKey: ['trails'],
     queryFn: async (): Promise<Trail[]> => {
-      // Mock data for now - replace with actual API call
-      const mockTrails: Trail[] = [
+      // Mock trail data with all required properties
+      return [
         {
           id: '1',
           name: 'Mountain Peak Trail',
-          location: 'Colorado, USA',
+          location: 'Rocky Mountains, CO',
+          description: 'A challenging trail with spectacular mountain views',
           imageUrl: '/placeholder.svg',
-          difficulty: 'hard',
+          difficulty: 'hard' as const,
           length: 8.5,
           elevation: 2400,
-          elevation_gain: 1200,
-          tags: ['mountain', 'peak', 'challenging'],
-          likes: 89,
-          coordinates: [39.7392, -104.9903]
+          elevation_gain: 2400,
+          latitude: 39.7392,
+          longitude: -104.9903,
+          tags: ['mountain', 'scenic', 'challenging'],
+          likes: 142,
+          coordinates: [-104.9903, 39.7392] as [number, number],
         },
         {
           id: '2',
           name: 'Forest Loop',
-          location: 'Oregon, USA',
+          location: 'Pine Forest, OR',
+          description: 'A gentle walk through beautiful pine forest',
           imageUrl: '/placeholder.svg',
-          difficulty: 'easy',
+          difficulty: 'easy' as const,
           length: 3.2,
-          elevation: 400,
+          elevation: 200,
           elevation_gain: 200,
-          tags: ['forest', 'loop', 'family-friendly'],
-          likes: 45,
-          coordinates: [45.5152, -122.6784]
+          latitude: 45.5152,
+          longitude: -122.6784,
+          tags: ['forest', 'easy', 'family-friendly'],
+          likes: 89,
+          coordinates: [-122.6784, 45.5152] as [number, number],
         }
       ];
-
-      // Apply filters
-      let filteredTrails = mockTrails;
-      
-      if (filters.searchQuery) {
-        filteredTrails = filteredTrails.filter(trail => 
-          trail.name.toLowerCase().includes(filters.searchQuery!.toLowerCase()) ||
-          trail.location.toLowerCase().includes(filters.searchQuery!.toLowerCase())
-        );
-      }
-      
-      if (filters.difficulty) {
-        filteredTrails = filteredTrails.filter(trail => trail.difficulty === filters.difficulty);
-      }
-
-      return filteredTrails;
-    }
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };

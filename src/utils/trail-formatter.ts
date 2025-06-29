@@ -26,57 +26,45 @@ interface DatabaseTrail {
 }
 
 export const formatTrailFromDatabase = (dbTrail: DatabaseTrail): Trail => {
-  const mockStrainTags: StrainTag[] = [
-    {
-      id: '1',
-      name: 'Blue Dream',
-      type: 'hybrid',
-      effects: ['relaxed', 'creative'],
-      description: 'A balanced hybrid strain'
-    }
-  ];
+  const mockStrainTags: StrainTag[] = ['creative', 'relaxed'];
 
   return {
     id: dbTrail.id,
     name: dbTrail.name,
     location: dbTrail.location,
+    description: dbTrail.description,
     imageUrl: '/placeholder.svg',
-    difficulty: dbTrail.difficulty as 'easy' | 'moderate' | 'hard',
+    difficulty: dbTrail.difficulty as 'easy' | 'moderate' | 'hard' | 'expert',
     length: dbTrail.trail_length,
     elevation: dbTrail.elevation,
     elevation_gain: dbTrail.elevation_gain,
+    latitude: dbTrail.latitude,
+    longitude: dbTrail.longitude,
     tags: dbTrail.trail_tags.map(tag => tag.tag_name),
     likes: 45,
-    coordinates: [dbTrail.latitude, dbTrail.longitude],
-    description: dbTrail.description,
-    strainTags: mockStrainTags
+    coordinates: [dbTrail.longitude, dbTrail.latitude] as [number, number],
+    strain_tags: mockStrainTags
   };
 };
 
 export const formatTrailData = (trailId: string): Trail => {
-  const mockStrainTags: StrainTag[] = [
-    {
-      id: '1',
-      name: 'Blue Dream',
-      type: 'hybrid',
-      effects: ['relaxed', 'creative'],
-      description: 'A balanced hybrid strain'
-    }
-  ];
+  const mockStrainTags: StrainTag[] = ['creative', 'relaxed'];
 
   return {
     id: trailId,
     name: 'Sample Trail',
     location: 'Sample Location',
+    description: 'A beautiful trail with stunning views',
     imageUrl: '/placeholder.svg',
-    difficulty: 'moderate',
+    difficulty: 'moderate' as const,
     length: 5.2,
     elevation: 1200,
     elevation_gain: 800,
+    latitude: 40.7128,
+    longitude: -74.0060,
     tags: ['hiking', 'scenic'],
     likes: 45,
-    coordinates: [40.7128, -74.0060],
-    description: 'A beautiful trail with stunning views',
-    strainTags: mockStrainTags
+    coordinates: [-74.0060, 40.7128] as [number, number],
+    strain_tags: mockStrainTags
   };
 };

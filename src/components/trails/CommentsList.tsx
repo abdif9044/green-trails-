@@ -10,9 +10,9 @@ interface CommentsListProps {
 }
 
 const CommentsList: React.FC<CommentsListProps> = ({ trailId }) => {
-  const { comments, loading, error } = useTrailComments(trailId);
+  const { data: comments = [], isLoading, error } = useTrailComments(trailId);
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="space-y-4">
         {[1, 2, 3].map((i) => (
@@ -29,7 +29,7 @@ const CommentsList: React.FC<CommentsListProps> = ({ trailId }) => {
   }
 
   if (error) {
-    return <div className="text-destructive py-3">Error loading comments: {error}</div>;
+    return <div className="text-destructive py-3">Error loading comments: {error?.message ?? 'Unknown error'}</div>;
   }
 
   if (!comments?.length) {

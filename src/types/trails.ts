@@ -3,106 +3,93 @@ export interface Trail {
   id: string;
   name: string;
   location: string;
-  imageUrl: string;
-  difficulty: 'easy' | 'moderate' | 'hard' | 'expert';
+  description: string;
+  difficulty: 'easy' | 'moderate' | 'hard';
   length: number;
-  elevation: number;
   elevation_gain: number;
+  latitude: number;
+  longitude: number;
   tags: string[];
   likes: number;
-  coordinates?: [number, number];
-  description?: string;
+  coordinates: [number, number]; // [longitude, latitude] for map compatibility
+  imageUrl?: string;
+  category?: 'hiking' | 'biking' | 'offroad';
   country?: string;
-  state_province?: string;
-  surface?: string;
-  trail_type?: string;
-  source?: string;
-  source_id?: string;
+  region?: string;
+  is_age_restricted?: boolean;
+  is_verified?: boolean;
   created_at?: string;
   updated_at?: string;
-  user_id?: string;
-  is_verified?: boolean;
-  geojson?: any;
-  length_km?: number;
-  last_updated?: string;
-  latitude?: number;
-  longitude?: number;
-  isAgeRestricted?: boolean;
+}
+
+export interface DatabaseTrail {
+  id: string;
+  name: string;
+  location: string;
+  description: string;
+  difficulty: 'easy' | 'moderate' | 'hard';
+  length: number;
+  elevation_gain: number;
+  latitude: number;
+  longitude: number;
+  lat: number; // legacy column
+  lon: number; // legacy column
+  category: 'hiking' | 'biking' | 'offroad';
+  country?: string;
+  region?: string;
+  source?: string;
+  status: string;
   is_age_restricted?: boolean;
-  strainTags?: StrainTag[];
+  is_verified?: boolean;
+  created_at: string;
+  updated_at?: string;
+  route_geojson?: any;
+  elevation?: number;
+  geojson?: any;
+  terrain_type?: string;
+  user_id?: string;
+  trail_tags?: any;
 }
 
 export interface TrailFilters {
   searchQuery?: string;
-  difficulty?: string;
+  difficulty?: 'easy' | 'moderate' | 'hard';
   lengthRange?: [number, number];
   tags?: string[];
-  country?: string;
-  stateProvince?: string;
-  nearbyCoordinates?: [number, number];
-  radius?: number;
-  showAgeRestricted?: boolean;
-  filters?: any;
-}
-
-export interface TrailComment {
-  id: string;
-  user_id: string;
-  trail_id: string;
-  content: string;
-  created_at: string;
-  updated_at: string;
-  user?: {
-    username?: string;
-    full_name?: string;
-    avatar_url?: string;
+  location?: {
+    lat: number;
+    lng: number;
+    radius: number;
   };
 }
 
-export interface TrailRating {
+export interface TrailInteraction {
   id: string;
   user_id: string;
   trail_id: string;
-  rating: number;
+  interaction_type: 'view' | 'like' | 'comment' | 'share' | 'save';
+  metadata?: any;
+  created_at: string;
+}
+
+export interface TrailLike {
+  id: string;
+  user_id: string;
+  trail_id: string;
+  created_at: string;
+}
+
+export interface HikeSession {
+  id: string;
+  user_id: string;
+  trail_id?: string;
+  start_time: string;
+  end_time?: string;
+  duration?: number;
+  total_distance?: number;
+  total_elevation_gain?: number;
+  status: 'active' | 'paused' | 'completed';
+  positions?: any;
   created_at: string;
   updated_at: string;
-}
-
-export interface TrailWeather {
-  id: string;
-  trail_id: string;
-  temperature?: number;
-  high?: number;
-  low?: number;
-  condition?: string;
-  precipitation?: string;
-  wind_speed?: string;
-  wind_direction?: string;
-  sunrise?: string;
-  sunset?: string;
-  updated_at: string;
-}
-
-export interface ParkingSpot {
-  id: string;
-  trail_id: string;
-  name: string;
-  description?: string;
-  latitude: number;
-  longitude: number;
-  is_free: boolean;
-  capacity?: number;
-  notes?: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export type TrailDifficulty = 'easy' | 'moderate' | 'hard' | 'expert';
-
-export interface StrainTag {
-  id: string;
-  name: string;
-  type: 'sativa' | 'indica' | 'hybrid';
-  effects: string[];
-  description?: string;
 }

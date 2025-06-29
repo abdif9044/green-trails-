@@ -2,7 +2,7 @@
 import { useState, useCallback } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Trail, TrailFilters } from '@/types/trails';
+import { Trail, TrailFilters, DatabaseTrail } from '@/types/trails';
 
 interface UsePaginatedTrailsOptions {
   filters: TrailFilters;
@@ -32,7 +32,7 @@ export const usePaginatedTrails = ({ filters, pageSize = 12 }: UsePaginatedTrail
       }
 
       if (filters.difficulty && ['easy', 'moderate', 'hard'].includes(filters.difficulty)) {
-        query = query.eq('difficulty', filters.difficulty as 'easy' | 'moderate' | 'hard');
+        query = query.eq('difficulty', filters.difficulty);
       }
 
       if (filters.lengthRange) {
@@ -48,19 +48,27 @@ export const usePaginatedTrails = ({ filters, pageSize = 12 }: UsePaginatedTrail
       }
 
       // Transform database trails to match Trail interface
-      const trails: Trail[] = (data || []).map(trail => ({
+      const trails: Trail[] = (data || []).map((trail: DatabaseTrail) => ({
         id: trail.id,
         name: trail.name,
         location: trail.location || 'Unknown Location',
-        imageUrl: '/placeholder.svg',
-        difficulty: trail.difficulty as 'easy' | 'moderate' | 'hard',
+        description: trail.description || '',
+        difficulty: trail.difficulty,
         length: Number(trail.length) || 0,
-        elevation: trail.elevation_gain || 0,
         elevation_gain: trail.elevation_gain || 0,
-        tags: [], // Default empty array since trails table doesn't have tags column
+        latitude: trail.latitude || trail.lat || 0,
+        longitude: trail.longitude || trail.lon || 0,
+        coordinates: [trail.longitude || trail.lon || 0, trail.latitude || trail.lat || 0] as [number, number],
+        tags: [],
         likes: Math.floor(Math.random() * 200) + 50,
-        coordinates: [trail.lon || 0, trail.lat || 0] as [number, number], // Use correct column names
-        description: trail.description || 'A beautiful trail waiting to be explored.'
+        imageUrl: '/placeholder.svg',
+        category: trail.category,
+        country: trail.country,
+        region: trail.region,
+        is_age_restricted: trail.is_age_restricted,
+        is_verified: trail.is_verified,
+        created_at: trail.created_at,
+        updated_at: trail.updated_at
       }));
 
       const hasMore = trails.length === pageSize;

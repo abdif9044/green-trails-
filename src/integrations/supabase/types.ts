@@ -303,6 +303,59 @@ export type Database = {
         }
         Relationships: []
       }
+      hike_sessions: {
+        Row: {
+          created_at: string | null
+          duration: number | null
+          end_time: string | null
+          id: string
+          positions: Json | null
+          start_time: string
+          status: string
+          total_distance: number | null
+          total_elevation_gain: number | null
+          trail_id: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          duration?: number | null
+          end_time?: string | null
+          id?: string
+          positions?: Json | null
+          start_time: string
+          status?: string
+          total_distance?: number | null
+          total_elevation_gain?: number | null
+          trail_id?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          duration?: number | null
+          end_time?: string | null
+          id?: string
+          positions?: Json | null
+          start_time?: string
+          status?: string
+          total_distance?: number | null
+          total_elevation_gain?: number | null
+          trail_id?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hike_sessions_trail_id_fkey"
+            columns: ["trail_id"]
+            isOneToOne: false
+            referencedRelation: "trails"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hiking_events: {
         Row: {
           created_at: string | null
@@ -495,6 +548,33 @@ export type Database = {
           },
         ]
       }
+      performance_metrics: {
+        Row: {
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          metric_name: string
+          user_id: string | null
+          value: number
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          metric_name: string
+          user_id?: string | null
+          value: number
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          metric_name?: string
+          user_id?: string | null
+          value?: number
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -569,6 +649,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      security_audit_log: {
+        Row: {
+          created_at: string | null
+          event_data: Json | null
+          event_type: string
+          id: string
+          ip_address: unknown | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          event_data?: Json | null
+          event_type: string
+          id?: string
+          ip_address?: unknown | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          event_data?: Json | null
+          event_type?: string
+          id?: string
+          ip_address?: unknown | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
       spatial_ref_sys: {
         Row: {
@@ -759,6 +869,70 @@ export type Database = {
             columns: ["bulk_job_id"]
             isOneToOne: false
             referencedRelation: "bulk_import_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trail_interactions: {
+        Row: {
+          created_at: string | null
+          id: string
+          interaction_type: string
+          metadata: Json | null
+          trail_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          interaction_type: string
+          metadata?: Json | null
+          trail_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          interaction_type?: string
+          metadata?: Json | null
+          trail_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trail_interactions_trail_id_fkey"
+            columns: ["trail_id"]
+            isOneToOne: false
+            referencedRelation: "trails"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trail_likes: {
+        Row: {
+          created_at: string | null
+          id: string
+          trail_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          trail_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          trail_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trail_likes_trail_id_fkey"
+            columns: ["trail_id"]
+            isOneToOne: false
+            referencedRelation: "trails"
             referencedColumns: ["id"]
           },
         ]
@@ -962,9 +1136,11 @@ export type Database = {
           elevation_gain: number | null
           id: string
           lat: number | null
+          latitude: number | null
           length: number | null
           location: string | null
           lon: number | null
+          longitude: number | null
           name: string
           route_geojson: Json | null
           source: string | null
@@ -978,9 +1154,11 @@ export type Database = {
           elevation_gain?: number | null
           id?: string
           lat?: number | null
+          latitude?: number | null
           length?: number | null
           location?: string | null
           lon?: number | null
+          longitude?: number | null
           name: string
           route_geojson?: Json | null
           source?: string | null
@@ -994,13 +1172,87 @@ export type Database = {
           elevation_gain?: number | null
           id?: string
           lat?: number | null
+          latitude?: number | null
           length?: number | null
           location?: string | null
           lon?: number | null
+          longitude?: number | null
           name?: string
           route_geojson?: Json | null
           source?: string | null
           status?: string | null
+        }
+        Relationships: []
+      }
+      user_memory: {
+        Row: {
+          content: string
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          importance_score: number | null
+          memory_type: string
+          metadata: Json | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          importance_score?: number | null
+          memory_type: string
+          metadata?: Json | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          importance_score?: number | null
+          memory_type?: string
+          metadata?: Json | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_preferences: {
+        Row: {
+          created_at: string | null
+          favorite_tags: string[] | null
+          id: string
+          location_preferences: Json | null
+          preferred_difficulty: string | null
+          preferred_length_range: unknown | null
+          time_of_day: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          favorite_tags?: string[] | null
+          id?: string
+          location_preferences?: Json | null
+          preferred_difficulty?: string | null
+          preferred_length_range?: unknown | null
+          time_of_day?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          favorite_tags?: string[] | null
+          id?: string
+          location_preferences?: Json | null
+          preferred_difficulty?: string | null
+          preferred_length_range?: unknown | null
+          time_of_day?: string | null
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }

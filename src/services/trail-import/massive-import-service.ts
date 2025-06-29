@@ -72,7 +72,7 @@ export class MassiveTrailImportService {
 
       return {
         jobId: data.id,
-        status: data.status,
+        status: data.status as 'processing' | 'completed' | 'error',
         totalProcessed: data.trails_processed || 0,
         totalAdded: data.trails_added || 0,
         totalFailed: data.trails_failed || 0,

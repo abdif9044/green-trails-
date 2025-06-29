@@ -71,9 +71,8 @@ export class MediaService {
           .from('albums')
           .insert({
             user_id: user.id,
-            trail_id: trailId,
             title: `Trail Photos`,
-            is_private: isPrivate
+            is_public: !isPrivate
           })
           .select('id')
           .single();
@@ -85,9 +84,9 @@ export class MediaService {
         }
       }
       
-      // Insert the media record
+      // Insert the media record into album_media table
       const { data: media, error: mediaError } = await supabase
-        .from('media')
+        .from('album_media')
         .insert({
           user_id: user.id,
           album_id: metadata.albumId,
@@ -140,7 +139,7 @@ export class MediaService {
       
       // Get the media record to find the file path
       const { data: media, error: fetchError } = await supabase
-        .from('media')
+        .from('album_media')
         .select('*')
         .eq('id', mediaId)
         .eq('user_id', user.id) // Ensure the user owns this media
@@ -170,7 +169,7 @@ export class MediaService {
       
       // Delete from database
       const { error: dbError } = await supabase
-        .from('media')
+        .from('album_media')
         .delete()
         .eq('id', mediaId)
         .eq('user_id', user.id);

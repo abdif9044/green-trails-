@@ -40,14 +40,6 @@ export const usePaginatedTrails = ({ filters, pageSize = 12 }: UsePaginatedTrail
         query = query.gte('length', minLength).lte('length', maxLength);
       }
 
-      if (filters.country) {
-        query = query.eq('country', filters.country);
-      }
-
-      if (filters.stateProvince) {
-        query = query.eq('state_province', filters.stateProvince);
-      }
-
       const { data, error } = await query;
 
       if (error) {
@@ -67,7 +59,7 @@ export const usePaginatedTrails = ({ filters, pageSize = 12 }: UsePaginatedTrail
         elevation_gain: trail.elevation_gain || 0,
         tags: [], // Default empty array since trails table doesn't have tags column
         likes: Math.floor(Math.random() * 200) + 50,
-        coordinates: [trail.longitude || 0, trail.latitude || 0] as [number, number],
+        coordinates: [trail.lon || 0, trail.lat || 0] as [number, number], // Use correct column names
         description: trail.description || 'A beautiful trail waiting to be explored.'
       }));
 

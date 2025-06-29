@@ -27,11 +27,11 @@ export class MapsService {
     try {
       const { data, error } = await supabase
         .from('trails')
-        .select('id, name, location, latitude, longitude, difficulty, length, elevation_gain')
-        .gte('latitude', bounds.south)
-        .lte('latitude', bounds.north)
-        .gte('longitude', bounds.west)
-        .lte('longitude', bounds.east)
+        .select('id, name, location, lat, lon, difficulty, length, elevation_gain')
+        .gte('lat', bounds.south)
+        .lte('lat', bounds.north)
+        .gte('lon', bounds.west)
+        .lte('lon', bounds.east)
         .limit(100);
 
       if (error) {
@@ -47,8 +47,8 @@ export class MapsService {
         id: trail.id,
         name: trail.name,
         location: trail.location,
-        latitude: trail.latitude,
-        longitude: trail.longitude,
+        latitude: trail.lat,
+        longitude: trail.lon,
         difficulty: trail.difficulty as 'easy' | 'moderate' | 'hard',
         length: Number(trail.length) || 0,
         elevation_gain: trail.elevation_gain || 0
@@ -97,7 +97,7 @@ export class MapsService {
     try {
       const { data, error } = await supabase
         .from('trails')
-        .select('id, name, location, latitude, longitude, difficulty, length, elevation_gain')
+        .select('id, name, location, lat, lon, difficulty, length, elevation_gain')
         .or(`name.ilike.%${query}%,location.ilike.%${query}%`)
         .limit(limit);
 
@@ -114,8 +114,8 @@ export class MapsService {
         id: trail.id,
         name: trail.name,
         location: trail.location,
-        latitude: trail.latitude,
-        longitude: trail.longitude,
+        latitude: trail.lat,
+        longitude: trail.lon,
         difficulty: trail.difficulty as 'easy' | 'moderate' | 'hard',
         length: Number(trail.length) || 0,
         elevation_gain: trail.elevation_gain || 0
@@ -133,7 +133,7 @@ export class MapsService {
     try {
       const { data, error } = await supabase
         .from('trails')
-        .select('id, name, location, latitude, longitude, difficulty, length, elevation_gain')
+        .select('id, name, location, lat, lon, difficulty, length, elevation_gain')
         .eq('id', trailId)
         .single();
 
@@ -146,8 +146,8 @@ export class MapsService {
         id: data.id,
         name: data.name,
         location: data.location,
-        latitude: data.latitude,
-        longitude: data.longitude,
+        latitude: data.lat,
+        longitude: data.lon,
         difficulty: data.difficulty as 'easy' | 'moderate' | 'hard',
         length: Number(data.length) || 0,
         elevation_gain: data.elevation_gain || 0

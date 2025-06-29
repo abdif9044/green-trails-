@@ -3,6 +3,6 @@
 // with existing imports.
 // For new code, prefer importing directly from the database module structure.
 
-import { DatabaseSetupService, useDatabaseSetup } from './database/setup-service';
+import { DatabaseSetupService } from './database/setup-service';
 
-export { DatabaseSetupService, useDatabaseSetup };
+export { DatabaseSetupService };

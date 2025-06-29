@@ -1,114 +1,149 @@
 
 import { supabase } from '@/integrations/supabase/client';
 
-export interface GPSPosition {
-  latitude: number;
-  longitude: number;
-  altitude?: number;
-  accuracy?: number;
-  timestamp: number;
-}
-
 export interface HikeSession {
   id: string;
-  trail_id: string;
   user_id: string;
+  trail_id?: string;
   start_time: string;
   end_time?: string;
-  positions: GPSPosition[];
+  duration: number;
   total_distance: number;
   total_elevation_gain: number;
   status: 'active' | 'paused' | 'completed';
+  positions: Array<{
+    lat: number;
+    lng: number;
+    timestamp: string;
+    elevation?: number;
+  }>;
 }
 
-export class GPSTrackingService {
-  private static currentSession: HikeSession | null = null;
-  private static watchId: number | null = null;
+class GPSTrackingServiceClass {
+  private currentSession: HikeSession | null = null;
+  private isTracking = false;
+  private watchId: number | null = null;
+  private intervalId: NodeJS.Timeout | null = null;
 
-  /**
-   * Start tracking a new hike session
-   */
-  static async startHikeSession(trailId: string, userId: string): Promise<HikeSession | null> {
+  get isCurrentlyTracking(): boolean {
+    return this.isTracking;
+  }
+
+  get currentDistance(): number {
+    return this.currentSession?.total_distance || 0;
+  }
+
+  get currentElevationGain(): number {
+    return this.currentSession?.total_elevation_gain || 0;
+  }
+
+  get currentDuration(): number {
+    return this.currentSession?.duration || 0;
+  }
+
+  get currentHikeSession(): HikeSession | null {
+    return this.currentSession;
+  }
+
+  async startTracking(trailId?: string): Promise<boolean> {
     try {
+      // Check if geolocation is available
+      if (!navigator.geolocation) {
+        console.error('Geolocation is not supported');
+        return false;
+      }
+
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        console.error('User not authenticated');
+        return false;
+      }
+
+      // Create new session using trail_logs table since hike_sessions doesn't exist
       const newSession: HikeSession = {
         id: crypto.randomUUID(),
+        user_id: user.id,
         trail_id: trailId,
-        user_id: userId,
         start_time: new Date().toISOString(),
-        positions: [],
+        duration: 0,
         total_distance: 0,
         total_elevation_gain: 0,
-        status: 'active'
+        status: 'active',
+        positions: []
       };
 
-      // Start GPS tracking
-      if (navigator.geolocation) {
-        this.watchId = navigator.geolocation.watchPosition(
-          (position) => this.handlePositionUpdate(position),
-          (error) => console.error('GPS error:', error),
-          { enableHighAccuracy: true, maximumAge: 1000, timeout: 5000 }
-        );
+      // Store in trail_logs table with mock data since we can't create hike_sessions table
+      try {
+        await supabase
+          .from('trail_logs')
+          .insert({
+            id: newSession.id,
+            user_id: user.id,
+            trail_id: trailId,
+            start_time: newSession.start_time,
+            distance: 0,
+            notes: 'GPS tracking session'
+          });
+      } catch (error) {
+        console.warn('Could not save to trail_logs:', error);
+        // Continue anyway - we'll track in memory
       }
 
       this.currentSession = newSession;
-      return newSession;
+      this.isTracking = true;
+
+      // Start GPS tracking
+      this.watchId = navigator.geolocation.watchPosition(
+        this.handlePositionUpdate.bind(this),
+        this.handlePositionError.bind(this),
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
+        }
+      );
+
+      // Start duration counter
+      this.intervalId = setInterval(() => {
+        if (this.currentSession && this.isTracking) {
+          this.currentSession.duration += 1;
+        }
+      }, 1000);
+
+      return true;
     } catch (error) {
-      console.error('Error starting hike session:', error);
-      return null;
+      console.error('Error starting GPS tracking:', error);
+      return false;
     }
   }
 
-  /**
-   * Handle GPS position updates
-   */
-  private static handlePositionUpdate(position: GeolocationPosition) {
-    if (!this.currentSession) return;
-
-    const newPosition: GPSPosition = {
-      latitude: position.coords.latitude,
-      longitude: position.coords.longitude,
-      altitude: position.coords.altitude || undefined,
-      accuracy: position.coords.accuracy,
-      timestamp: Date.now()
-    };
-
-    this.currentSession.positions.push(newPosition);
-    
-    // Calculate distance and elevation gain
-    if (this.currentSession.positions.length > 1) {
-      const lastPos = this.currentSession.positions[this.currentSession.positions.length - 2];
-      const distance = this.calculateDistance(lastPos, newPosition);
-      this.currentSession.total_distance += distance;
-
-      if (newPosition.altitude && lastPos.altitude) {
-        const elevationGain = Math.max(0, newPosition.altitude - lastPos.altitude);
-        this.currentSession.total_elevation_gain += elevationGain;
+  async pauseTracking(): Promise<void> {
+    if (this.currentSession) {
+      this.currentSession.status = 'paused';
+      this.isTracking = false;
+      if (this.intervalId) {
+        clearInterval(this.intervalId);
+        this.intervalId = null;
       }
     }
   }
 
-  /**
-   * Calculate distance between two GPS points using Haversine formula
-   */
-  private static calculateDistance(pos1: GPSPosition, pos2: GPSPosition): number {
-    const R = 6371e3; // Earth's radius in meters
-    const φ1 = pos1.latitude * Math.PI / 180;
-    const φ2 = pos2.latitude * Math.PI / 180;
-    const Δφ = (pos2.latitude - pos1.latitude) * Math.PI / 180;
-    const Δλ = (pos2.longitude - pos1.longitude) * Math.PI / 180;
-
-    const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
-              Math.cos(φ1) * Math.cos(φ2) *
-              Math.sin(Δλ/2) * Math.sin(Δλ/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-
-    return R * c; // Distance in meters
+  async resumeTracking(): Promise<void> {
+    if (this.currentSession) {
+      this.currentSession.status = 'active';
+      this.isTracking = true;
+      
+      // Restart duration counter
+      this.intervalId = setInterval(() => {
+        if (this.currentSession && this.isTracking) {
+          this.currentSession.duration += 1;
+        }
+      }, 1000);
+    }
   }
 
-  /**
-   * End the current hike session
-   */
-  static async endHikeSession(): Promise<HikeSession | null> {
+  async stopTracking(): Promise<HikeSession | null> {
     if (!this.currentSession) return null;
 
     try {
@@ -118,89 +153,102 @@ export class GPSTrackingService {
         this.watchId = null;
       }
 
-      // Update session
+      // Stop duration counter
+      if (this.intervalId) {
+        clearInterval(this.intervalId);
+        this.intervalId = null;
+      }
+
+      // Finalize session
       this.currentSession.end_time = new Date().toISOString();
       this.currentSession.status = 'completed';
 
-      const completedSession = this.currentSession;
-      this.currentSession = null;
+      // Try to update trail_logs
+      try {
+        await supabase
+          .from('trail_logs')
+          .update({
+            end_time: this.currentSession.end_time,
+            duration: `${this.currentSession.duration} seconds`,
+            distance: this.currentSession.total_distance,
+            notes: `Completed GPS tracking session. Distance: ${this.currentSession.total_distance.toFixed(2)} miles`
+          })
+          .eq('id', this.currentSession.id);
+      } catch (error) {
+        console.warn('Could not update trail_logs:', error);
+      }
 
-      console.log('Hike session completed:', completedSession);
+      const completedSession = { ...this.currentSession };
+      
+      // Reset state
+      this.currentSession = null;
+      this.isTracking = false;
+
       return completedSession;
     } catch (error) {
-      console.error('Error ending hike session:', error);
+      console.error('Error stopping GPS tracking:', error);
       return null;
     }
   }
 
-  /**
-   * Get all hike sessions for a user (mock implementation)
-   */
-  static async getUserHikeSessions(userId: string): Promise<HikeSession[]> {
-    try {
-      // Mock implementation since hike_sessions table doesn't exist
-      const mockSessions: HikeSession[] = [
-        {
-          id: '1',
-          trail_id: 'trail-1',
-          user_id: userId,
-          start_time: new Date(Date.now() - 86400000).toISOString(),
-          end_time: new Date(Date.now() - 82800000).toISOString(),
-          positions: [],
-          total_distance: 5200,
-          total_elevation_gain: 450,
-          status: 'completed'
+  private handlePositionUpdate(position: GeolocationPosition): void {
+    if (!this.currentSession || !this.isTracking) return;
+
+    const newPosition = {
+      lat: position.coords.latitude,
+      lng: position.coords.longitude,
+      timestamp: new Date().toISOString(),
+      elevation: position.coords.altitude || undefined
+    };
+
+    // Calculate distance from last position
+    if (this.currentSession.positions.length > 0) {
+      const lastPos = this.currentSession.positions[this.currentSession.positions.length - 1];
+      const distance = this.calculateDistance(
+        lastPos.lat, lastPos.lng,
+        newPosition.lat, newPosition.lng
+      );
+      this.currentSession.total_distance += distance;
+
+      // Calculate elevation gain
+      if (newPosition.elevation && lastPos.elevation) {
+        const elevationDiff = newPosition.elevation - lastPos.elevation;
+        if (elevationDiff > 0) {
+          this.currentSession.total_elevation_gain += elevationDiff * 3.28084; // Convert to feet
         }
-      ];
-
-      return mockSessions;
-    } catch (error) {
-      console.error('Error fetching hike sessions:', error);
-      return [];
-    }
-  }
-
-  /**
-   * Get current active session
-   */
-  static getCurrentSession(): HikeSession | null {
-    return this.currentSession;
-  }
-
-  /**
-   * Pause current session
-   */
-  static pauseSession(): boolean {
-    if (this.currentSession && this.currentSession.status === 'active') {
-      this.currentSession.status = 'paused';
-      
-      if (this.watchId !== null) {
-        navigator.geolocation.clearWatch(this.watchId);
-        this.watchId = null;
       }
-      
-      return true;
     }
-    return false;
+
+    this.currentSession.positions.push(newPosition);
   }
 
-  /**
-   * Resume paused session
-   */
-  static resumeSession(): boolean {
-    if (this.currentSession && this.currentSession.status === 'paused') {
-      this.currentSession.status = 'active';
-      
-      if (navigator.geolocation) {
-        this.watchId = navigator.geolocation.watchPosition(
-          (position) => this.handlePositionUpdate(position),
-          (error) => console.error('GPS error:', error),
-          { enableHighAccuracy: true, maximumAge: 1000, timeout: 5000 }
-        );
-      }
-      
-      return true;
-    }
-    return false;
+  private handlePositionError(error: GeolocationPositionError): void {
+    console.error('GPS tracking error:', error);
+  }
+
+  private calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+    const R = 3959; // Earth's radius in miles
+    const dLat = this.deg2rad(lat2 - lat1);
+    const dLon = this.deg2rad(lon2 - lon1);
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(this.deg2rad(lat1)) * Math.cos(this.deg2rad(lat2)) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  }
+
+  private deg2rad(deg: number): number {
+    return deg * (Math.PI/180);
+  }
+
+  async getAllSessions(): Promise<HikeSession[]> {
+    // Since hike_sessions table doesn't exist, return empty array
+    console.log('Getting all GPS tracking sessions (mock data)');
+    return [];
   }
 }
+
+export const gpsTrackingService = new GPSTrackingServiceClass();
+export const GPSTrackingService = GPSTrackingServiceClass;
+export default gpsTrackingService;

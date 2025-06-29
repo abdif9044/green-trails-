@@ -75,15 +75,19 @@ class PerformanceMonitor {
     this.metrics = [];
 
     try {
-      const { error } = await supabase
-        .from('performance_metrics')
-        .insert(metricsToSend);
-
-      if (error) {
-        console.error('Failed to send performance metrics:', error);
-        // Re-add metrics to queue for retry
-        this.metrics.unshift(...metricsToSend);
-      }
+      // For now, just log metrics since performance_metrics table doesn't exist
+      console.log('Performance metrics:', metricsToSend);
+      
+      // TODO: Once performance_metrics table is created, uncomment this:
+      // const { error } = await supabase
+      //   .from('performance_metrics')
+      //   .insert(metricsToSend);
+      //
+      // if (error) {
+      //   console.error('Failed to send performance metrics:', error);
+      //   // Re-add metrics to queue for retry
+      //   this.metrics.unshift(...metricsToSend);
+      // }
     } catch (error) {
       console.error('Error sending performance metrics:', error);
     }

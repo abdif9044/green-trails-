@@ -2,14 +2,10 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { useAlbums } from '@/hooks/use-albums';
 import { supabase } from '@/integrations/supabase/client';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import SEOProvider from '@/components/SEOProvider';
-import AlbumDetailHeader from '@/components/albums/AlbumDetailHeader';
-import AlbumDetailActions from '@/components/albums/AlbumDetailActions';
-import AlbumMediaGrid from '@/components/albums/AlbumMediaGrid';
 import { Card, CardContent } from '@/components/ui/card';
 
 const AlbumDetail = () => {
@@ -88,25 +84,53 @@ const AlbumDetail = () => {
       <Navbar />
       
       <main className="flex-grow container mx-auto px-4 py-8">
-        <AlbumDetailHeader
-          title={album.title}
-          description={album.description}
-          createdAt={album.created_at}
-          username="trail_explorer" // Mock username since we don't have user data
-          location="Unknown Location" // Mock location
-          trailName={null} // Mock trail name
-        />
+        {/* Album Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-2">{album.title}</h1>
+          {album.description && (
+            <p className="text-muted-foreground mb-4">{album.description}</p>
+          )}
+          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+            <span>Created: {new Date(album.created_at).toLocaleDateString()}</span>
+            <span>Public</span>
+          </div>
+        </div>
         
-        <AlbumDetailActions
-          albumId={album.id}
-          isOwner={false} // Mock ownership - would check if current user owns this album
-          isPublic={album.is_public}
-        />
+        {/* Album Actions */}
+        <div className="mb-6">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">
+              {album.album_media?.length || 0} photos
+            </span>
+          </div>
+        </div>
         
-        <AlbumMediaGrid
-          albumId={album.id}
-          media={album.album_media || []}
-        />
+        {/* Media Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {album.album_media?.map((media: any, index: number) => (
+            <div key={media.id} className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
+              <img
+                src={media.file_path}
+                alt={media.caption || `Photo ${index + 1}`}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = '/placeholder.svg';
+                }}
+              />
+              {media.caption && (
+                <div className="p-2 bg-black bg-opacity-50 text-white text-sm">
+                  {media.caption}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+        
+        {(!album.album_media || album.album_media.length === 0) && (
+          <div className="text-center py-12">
+            <p className="text-muted-foreground">No photos in this album yet.</p>
+          </div>
+        )}
       </main>
       
       <Footer />

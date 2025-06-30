@@ -1137,6 +1137,7 @@ export type Database = {
           description: string | null
           difficulty: Database["public"]["Enums"]["trail_difficulty"] | null
           elevation_gain: number | null
+          geom: unknown | null
           id: string
           lat: number | null
           latitude: number | null
@@ -1155,6 +1156,7 @@ export type Database = {
           description?: string | null
           difficulty?: Database["public"]["Enums"]["trail_difficulty"] | null
           elevation_gain?: number | null
+          geom?: unknown | null
           id?: string
           lat?: number | null
           latitude?: number | null
@@ -1173,6 +1175,7 @@ export type Database = {
           description?: string | null
           difficulty?: Database["public"]["Enums"]["trail_difficulty"] | null
           elevation_gain?: number | null
+          geom?: unknown | null
           id?: string
           lat?: number | null
           latitude?: number | null
@@ -1526,6 +1529,13 @@ export type Database = {
       box3dtobox: {
         Args: { "": unknown }
         Returns: unknown
+      }
+      bulk_insert_trails: {
+        Args: { payload: Json }
+        Returns: {
+          inserted_count: number
+          updated_count: number
+        }[]
       }
       bytea: {
         Args: { "": unknown } | { "": unknown }

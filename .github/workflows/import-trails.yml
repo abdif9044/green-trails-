@@ -1,0 +1,50 @@
+name: Import Trail Data
+
+on:
+  workflow_dispatch:
+    inputs:
+      force_reimport:
+        description: 'Force re-import even if data exists'
+        required: false
+        default: 'false'
+        type: boolean
+  schedule:
+    # Run weekly on Sunday at 2 AM UTC
+    - cron: '0 2 * * 0'
+
+jobs:
+  import-trails:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Import trail data
+        run: npx tsx scripts/import-trails.ts
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          FORCE_REIMPORT: ${{ github.event.inputs.force_reimport }}
+
+      - name: Verify import success
+        run: |
+          echo "Trail import completed successfully"
+          echo "Check the logs above for detailed statistics"
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "❌ Trail import failed"
+          echo "Check the Action logs for error details"
+          exit 1

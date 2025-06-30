@@ -38,21 +38,21 @@ if (!container) {
 
 const root = createRoot(container);
 
-// Safe bootstrap loading
-Promise.resolve().then(async () => {
-  try {
-    const { useAutoTrailBootstrap } = await import('./hooks/use-auto-trail-bootstrap');
-    console.log('🚀 Auto trail bootstrap system loaded');
-  } catch (error) {
-    console.warn('Auto trail bootstrap failed to load:', error);
-  }
-});
+// Safe async bootstrap - replaced unsafe Promise pattern with proper lazy loading
+const BootstrapLoader = React.lazy(() => 
+  import('./components/BootstrapLoader').catch(() => ({
+    default: () => null // Fallback component if bootstrap fails
+  }))
+);
 
 root.render(
   <React.StrictMode>
     <HelmetProvider>
       <QueryClientProvider client={queryClient}>
         <App />
+        <React.Suspense fallback={null}>
+          <BootstrapLoader />
+        </React.Suspense>
       </QueryClientProvider>
     </HelmetProvider>
   </React.StrictMode>

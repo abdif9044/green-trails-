@@ -56,8 +56,8 @@ export const EnhancedSignUpService = {
               id: authData.user.id,
               full_name: data.full_name,
               username: data.username,
-              year_of_birth: data.year_of_birth,
-              is_age_verified: data.year_of_birth && (new Date().getFullYear() - data.year_of_birth) >= 21
+              year_of_birth: data.year_of_birth || null, // Handle nullable year_of_birth
+              is_age_verified: data.year_of_birth ? (new Date().getFullYear() - data.year_of_birth) >= 21 : false
             }, {
               onConflict: 'id'
             });

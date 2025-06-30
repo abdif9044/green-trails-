@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   avatar_url TEXT,
   bio TEXT,
   website_url TEXT,
-  year_of_birth SMALLINT CHECK (year_of_birth BETWEEN 1900 AND EXTRACT(YEAR FROM NOW())::INT),
+  year_of_birth SMALLINT CHECK (year_of_birth IS NULL OR (year_of_birth BETWEEN 1900 AND EXTRACT(YEAR FROM NOW())::INT)),
   is_age_verified BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -17,11 +17,21 @@ CREATE TABLE IF NOT EXISTS public.profiles (
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.profiles (id, full_name, username)
+  INSERT INTO public.profiles (id, full_name, username, year_of_birth, is_age_verified)
   VALUES (
     NEW.id,
     NEW.raw_user_meta_data ->> 'full_name',
-    NEW.raw_user_meta_data ->> 'username'
+    NEW.raw_user_meta_data ->> 'username',
+    CASE 
+      WHEN NEW.raw_user_meta_data ->> 'year_of_birth' IS NOT NULL 
+      THEN (NEW.raw_user_meta_data ->> 'year_of_birth')::SMALLINT 
+      ELSE NULL 
+    END,
+    CASE 
+      WHEN NEW.raw_user_meta_data ->> 'year_of_birth' IS NOT NULL 
+      THEN (EXTRACT(YEAR FROM NOW())::INT - (NEW.raw_user_meta_data ->> 'year_of_birth')::INT) >= 21
+      ELSE FALSE 
+    END
   );
   RETURN NEW;
 END;

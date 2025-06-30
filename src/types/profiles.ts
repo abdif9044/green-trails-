@@ -9,6 +9,7 @@ export interface Profile {
   email?: string;
   is_admin?: boolean;
   is_age_verified?: boolean;
+  year_of_birth?: number | null; // Make this explicitly nullable
   created_at?: string;
   updated_at?: string;
 }

@@ -3,7 +3,7 @@ import * as React from 'react';
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from '@/providers/theme-provider'
-import { AuthProvider } from '@/providers/auth-provider';
+import { UnifiedAuthProvider } from '@/hooks/auth/use-unified-auth';
 import { ErrorBoundary } from 'react-error-boundary'
 import { Layout } from '@/components/layout/layout';
 import MapContainer from '@/components/map/MapContainer';
@@ -13,7 +13,7 @@ import LoadingFallback from '@/components/LoadingFallback';
 import { Helmet } from 'react-helmet-async';
 
 const AuthPage = React.lazy(() => import('@/pages/AuthPage'));
-const HomePage = React.lazy(() => import('@/pages/HomePage'));
+const HomePage = React.lazy(() => import('@/features/home'));
 const NotFoundPage = React.lazy(() => import('@/pages/NotFoundPage'));
 
 const ErrorFallback = ({ error, resetErrorBoundary }: { error: Error; resetErrorBoundary: () => void }) => (
@@ -35,7 +35,7 @@ function App() {
   return (
     <ThemeProvider>
       <EasterEggsProvider>
-        <AuthProvider>
+        <UnifiedAuthProvider>
           <BrowserRouter>
             <Helmet>
               <title>GreenTrails - Discover Nature's Path</title>
@@ -64,7 +64,7 @@ function App() {
             </div>
           </BrowserRouter>
           <Toaster />
-        </AuthProvider>
+        </UnifiedAuthProvider>
       </EasterEggsProvider>
     </ThemeProvider>
   );

@@ -7,7 +7,7 @@ import DiscoverFilters from "@/components/discover/DiscoverFilters";
 import DiscoverTrailsList from "@/features/discover/components/DiscoverTrailsList";
 import DiscoverViewControls from "@/features/discover/components/DiscoverViewControls";
 import { TrailStatsOverview } from "@/components/discover/TrailStatsOverview";
-import TrailMap from "@/features/map/components/TrailMap";
+import TrailMap from "@/features/map/TrailMap";
 import SEOProvider from "@/components/SEOProvider";
 import { useTrailsQuery } from "@/features/trails/hooks/use-trails-query";
 import { useSearchParams } from 'react-router-dom';

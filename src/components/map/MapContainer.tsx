@@ -1,8 +1,7 @@
 
 import React from 'react';
-import { MapProvider } from './MapContext';
-import MapContent from './MapContent';
 import { Trail } from '@/types/trails';
+import MapContent from './MapContent';
 
 interface MapContainerProps {
   trails?: Trail[];
@@ -20,11 +19,7 @@ interface MapContainerProps {
 }
 
 const MapContainer: React.FC<MapContainerProps> = (props) => {
-  return (
-    <MapProvider>
-      <MapContent {...props} />
-    </MapProvider>
-  );
+  return <MapContent {...props} />;
 };
 
 export default MapContainer;

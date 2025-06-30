@@ -2,7 +2,7 @@
 import React from 'react';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { Trail } from '@/types/trails';
-import MapContainer from '../map/components/MapContainer';
+import MapContainer from '@/components/map/MapContainer';
 import { MapProvider } from './context/MapContext';
 
 interface TrailMapProps {

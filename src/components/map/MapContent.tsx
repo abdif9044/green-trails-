@@ -1,16 +1,16 @@
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef } from 'react';
 import { useMapInitialization } from '@/hooks/use-map-initialization';
 import { useMapLayers } from '@/hooks/use-map-layers';
 import { Trail } from '@/types/trails';
 import { useParkingSpots } from '@/hooks/use-parking-spots';
-import { useMap } from './MapContext';
+import { useMap } from '@/features/map/context/MapContext';
 import MapControls from './MapControls';
-import MapLoadingState from './MapLoadingState';
-import MapTrailMarkers from './MapTrailMarkers';
-import MapParkingMarkers from './MapParkingMarkers';
-import MapTrailPaths from './MapTrailPaths';
-import MapWeatherLayer from './MapWeatherLayer';
+import MapLoadingState from '@/features/map/components/MapLoadingState';
+import MapTrailMarkers from '@/features/map/components/MapTrailMarkers';
+import MapParkingMarkers from '@/components/map/MapParkingMarkers';
+import MapTrailPaths from '@/features/map/components/MapTrailPaths';
+import MapWeatherLayer from '@/features/map/components/MapWeatherLayer';
 import { mapStyles } from '@/features/map/utils/mapStyles';
 
 interface MapContentProps {
@@ -21,8 +21,6 @@ interface MapContentProps {
   className?: string;
   showParking?: boolean;
   showTrailPaths?: boolean;
-  showWeatherLayer?: boolean;
-  weatherLayerType?: 'temperature' | 'precipitation' | 'clouds' | 'wind';
   country?: string;
   stateProvince?: string;
   difficulty?: string;
@@ -35,9 +33,7 @@ const MapContent: React.FC<MapContentProps> = ({
   zoom = 10,
   className = 'h-[500px] w-full',
   showParking = true,
-  showTrailPaths = false,
-  showWeatherLayer = false,
-  weatherLayerType = 'temperature'
+  showTrailPaths = false
 }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const { map } = useMap();
@@ -52,12 +48,7 @@ const MapContent: React.FC<MapContentProps> = ({
     currentMapStyle,
     handleStyleChange,
     handleResetView
-  } = useMapLayers(showParking, showTrailPaths, showWeatherLayer);
-
-  // Set initial weather layer state based on prop
-  useEffect(() => {
-    setWeatherLayer(showWeatherLayer);
-  }, [showWeatherLayer, setWeatherLayer]);
+  } = useMapLayers(showParking, showTrailPaths);
 
   const { isLoading } = useMapInitialization({
     mapContainer,
@@ -104,6 +95,7 @@ const MapContent: React.FC<MapContentProps> = ({
             <MapParkingMarkers
               parkingSpots={relevantParkingSpots}
               map={map}
+              trails={trails}
             />
           )}
           
@@ -117,10 +109,7 @@ const MapContent: React.FC<MapContentProps> = ({
         </>
       )}
 
-      <MapWeatherLayer 
-        enabled={weatherLayer} 
-        type={weatherLayerType} 
-      />
+      <MapWeatherLayer enabled={weatherLayer} />
       
       {isLoading && <MapLoadingState />}
     </div>

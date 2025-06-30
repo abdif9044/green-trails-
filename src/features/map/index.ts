@@ -1,6 +1,6 @@
 
 // Public API for the map feature
-export { default as TrailMap } from './components/TrailMap';
+export { default as TrailMap } from './TrailMap';
 export { MapProvider, useMap } from './context/MapContext';
 
 // Types

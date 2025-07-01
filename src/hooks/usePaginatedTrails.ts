@@ -2,7 +2,31 @@
 import { useState, useCallback } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Trail, TrailFilters, DatabaseTrail } from '@/types/trails';
+import { Trail, TrailFilters } from '@/types/trails';
+
+// Updated DatabaseTrail interface to match new schema
+interface DatabaseTrail {
+  id: string;
+  name: string;
+  location: string;
+  description: string;
+  difficulty: 'easy' | 'moderate' | 'hard' | 'expert';
+  length: number;
+  elevation_gain: number;
+  latitude: number;
+  longitude: number;
+  lat: number;
+  lon: number;
+  source: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+  category: string;
+  country: string;
+  region: string;
+  is_age_restricted: boolean;
+  is_verified: boolean;
+}
 
 interface UsePaginatedTrailsOptions {
   filters: TrailFilters;
@@ -53,7 +77,7 @@ export const usePaginatedTrails = ({ filters, pageSize = 12 }: UsePaginatedTrail
       }
 
       // Transform database trails to match Trail interface
-      const trails: Trail[] = (data || []).map((trail: DatabaseTrail) => ({
+      const trails: Trail[] = (data || []).map((trail: any) => ({
         id: trail.id,
         name: trail.name,
         location: trail.location || 'Unknown Location',
@@ -64,16 +88,16 @@ export const usePaginatedTrails = ({ filters, pageSize = 12 }: UsePaginatedTrail
         latitude: trail.latitude || trail.lat || 0,
         longitude: trail.longitude || trail.lon || 0,
         coordinates: [trail.longitude || trail.lon || 0, trail.latitude || trail.lat || 0] as [number, number],
-        tags: [],
+        tags: trail.tags || [],
         likes: Math.floor(Math.random() * 200) + 50,
-        imageUrl: '/placeholder.svg',
-        category: trail.category,
-        country: trail.country,
-        region: trail.region,
-        is_age_restricted: trail.is_age_restricted,
-        is_verified: trail.is_verified,
+        imageUrl: trail.photos?.[0] || '/placeholder.svg',
+        category: (trail.category as 'hiking' | 'biking' | 'offroad') || 'hiking',
+        country: trail.country || '',
+        region: trail.region || '',
+        is_age_restricted: trail.is_age_restricted || false,
+        is_verified: trail.is_verified || false,
         created_at: trail.created_at,
-        updated_at: trail.updated_at
+        updated_at: trail.updated_at || trail.created_at
       }));
 
       const hasMore = trails.length === pageSize;

@@ -55,6 +55,13 @@ export type Database = {
             referencedRelation: "trails"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "activity_feed_trail_id_fkey"
+            columns: ["trail_id"]
+            isOneToOne: false
+            referencedRelation: "v_trail_preview"
+            referencedColumns: ["id"]
+          },
         ]
       }
       album_media: {
@@ -363,6 +370,13 @@ export type Database = {
             referencedRelation: "trails"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "hike_sessions_trail_id_fkey"
+            columns: ["trail_id"]
+            isOneToOne: false
+            referencedRelation: "v_trail_preview"
+            referencedColumns: ["id"]
+          },
         ]
       }
       hiking_events: {
@@ -408,6 +422,13 @@ export type Database = {
             columns: ["trail_id"]
             isOneToOne: false
             referencedRelation: "trails"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hiking_events_trail_id_fkey"
+            columns: ["trail_id"]
+            isOneToOne: false
+            referencedRelation: "v_trail_preview"
             referencedColumns: ["id"]
           },
         ]
@@ -555,6 +576,13 @@ export type Database = {
             referencedRelation: "trails"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "parking_spots_trail_id_fkey"
+            columns: ["trail_id"]
+            isOneToOne: false
+            referencedRelation: "v_trail_preview"
+            referencedColumns: ["id"]
+          },
         ]
       }
       performance_metrics: {
@@ -595,6 +623,7 @@ export type Database = {
           is_admin: boolean | null
           is_age_verified: boolean | null
           updated_at: string | null
+          user_id: string
           username: string | null
           website_url: string | null
           year_of_birth: number | null
@@ -609,6 +638,7 @@ export type Database = {
           is_admin?: boolean | null
           is_age_verified?: boolean | null
           updated_at?: string | null
+          user_id: string
           username?: string | null
           website_url?: string | null
           year_of_birth?: number | null
@@ -623,6 +653,7 @@ export type Database = {
           is_admin?: boolean | null
           is_age_verified?: boolean | null
           updated_at?: string | null
+          user_id?: string
           username?: string | null
           website_url?: string | null
           year_of_birth?: number | null
@@ -651,6 +682,13 @@ export type Database = {
             columns: ["trail_id"]
             isOneToOne: false
             referencedRelation: "trails"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "saved_trails_trail_id_fkey"
+            columns: ["trail_id"]
+            isOneToOne: false
+            referencedRelation: "v_trail_preview"
             referencedColumns: ["id"]
           },
           {
@@ -830,6 +868,13 @@ export type Database = {
             referencedRelation: "trails"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "trail_images_trail_id_fkey"
+            columns: ["trail_id"]
+            isOneToOne: false
+            referencedRelation: "v_trail_preview"
+            referencedColumns: ["id"]
+          },
         ]
       }
       trail_import_jobs: {
@@ -918,6 +963,13 @@ export type Database = {
             referencedRelation: "trails"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "trail_interactions_trail_id_fkey"
+            columns: ["trail_id"]
+            isOneToOne: false
+            referencedRelation: "v_trail_preview"
+            referencedColumns: ["id"]
+          },
         ]
       }
       trail_likes: {
@@ -945,6 +997,13 @@ export type Database = {
             columns: ["trail_id"]
             isOneToOne: false
             referencedRelation: "trails"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trail_likes_trail_id_fkey"
+            columns: ["trail_id"]
+            isOneToOne: false
+            referencedRelation: "v_trail_preview"
             referencedColumns: ["id"]
           },
         ]
@@ -995,6 +1054,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "trail_logs_trail_id_fkey"
+            columns: ["trail_id"]
+            isOneToOne: false
+            referencedRelation: "v_trail_preview"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "trail_logs_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
@@ -1037,6 +1103,13 @@ export type Database = {
             columns: ["trail_id"]
             isOneToOne: false
             referencedRelation: "trails"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trail_reviews_trail_id_fkey"
+            columns: ["trail_id"]
+            isOneToOne: false
+            referencedRelation: "v_trail_preview"
             referencedColumns: ["id"]
           },
           {
@@ -1102,6 +1175,13 @@ export type Database = {
             referencedRelation: "trails"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "trail_weather_trail_id_fkey"
+            columns: ["trail_id"]
+            isOneToOne: false
+            referencedRelation: "v_trail_preview"
+            referencedColumns: ["id"]
+          },
         ]
       }
       trail_weather_forecasts: {
@@ -1137,6 +1217,13 @@ export type Database = {
             referencedRelation: "trails"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "trail_weather_forecasts_trail_id_fkey"
+            columns: ["trail_id"]
+            isOneToOne: false
+            referencedRelation: "v_trail_preview"
+            referencedColumns: ["id"]
+          },
         ]
       }
       trails: {
@@ -1148,16 +1235,22 @@ export type Database = {
           elevation_gain: number | null
           geom: unknown | null
           id: string
+          is_active: boolean | null
           lat: number | null
           latitude: number | null
           length: number | null
+          length_miles: number | null
           location: string | null
           lon: number | null
           longitude: number | null
           name: string
+          photos: string[] | null
+          rating: number | null
           route_geojson: Json | null
           source: string | null
+          state: string | null
           status: string | null
+          tags: string[] | null
         }
         Insert: {
           category?: Database["public"]["Enums"]["trail_category"] | null
@@ -1167,16 +1260,22 @@ export type Database = {
           elevation_gain?: number | null
           geom?: unknown | null
           id?: string
+          is_active?: boolean | null
           lat?: number | null
           latitude?: number | null
           length?: number | null
+          length_miles?: number | null
           location?: string | null
           lon?: number | null
           longitude?: number | null
           name: string
+          photos?: string[] | null
+          rating?: number | null
           route_geojson?: Json | null
           source?: string | null
+          state?: string | null
           status?: string | null
+          tags?: string[] | null
         }
         Update: {
           category?: Database["public"]["Enums"]["trail_category"] | null
@@ -1186,16 +1285,22 @@ export type Database = {
           elevation_gain?: number | null
           geom?: unknown | null
           id?: string
+          is_active?: boolean | null
           lat?: number | null
           latitude?: number | null
           length?: number | null
+          length_miles?: number | null
           location?: string | null
           lon?: number | null
           longitude?: number | null
           name?: string
+          photos?: string[] | null
+          rating?: number | null
           route_geojson?: Json | null
           source?: string | null
+          state?: string | null
           status?: string | null
+          tags?: string[] | null
         }
         Relationships: []
       }
@@ -1345,6 +1450,42 @@ export type Database = {
           f_table_schema?: unknown | null
           srid?: number | null
           type?: string | null
+        }
+        Relationships: []
+      }
+      v_trail_preview: {
+        Row: {
+          blurb: string | null
+          cover_photo: string | null
+          difficulty: Database["public"]["Enums"]["trail_difficulty"] | null
+          id: string | null
+          length_miles: number | null
+          location: string | null
+          name: string | null
+          rating: number | null
+          state: string | null
+        }
+        Insert: {
+          blurb?: never
+          cover_photo?: never
+          difficulty?: Database["public"]["Enums"]["trail_difficulty"] | null
+          id?: string | null
+          length_miles?: number | null
+          location?: string | null
+          name?: string | null
+          rating?: number | null
+          state?: string | null
+        }
+        Update: {
+          blurb?: never
+          cover_photo?: never
+          difficulty?: Database["public"]["Enums"]["trail_difficulty"] | null
+          id?: string | null
+          length_miles?: number | null
+          location?: string | null
+          name?: string | null
+          rating?: number | null
+          state?: string | null
         }
         Relationships: []
       }
@@ -1808,6 +1949,20 @@ export type Database = {
       get_proj4_from_srid: {
         Args: { "": number }
         Returns: string
+      }
+      get_trail_preview: {
+        Args: { p_id: string }
+        Returns: {
+          blurb: string | null
+          cover_photo: string | null
+          difficulty: Database["public"]["Enums"]["trail_difficulty"] | null
+          id: string | null
+          length_miles: number | null
+          location: string | null
+          name: string | null
+          rating: number | null
+          state: string | null
+        }[]
       }
       gettransactionid: {
         Args: Record<PropertyKey, never>
@@ -3122,7 +3277,7 @@ export type Database = {
     }
     Enums: {
       trail_category: "hiking" | "biking" | "offroad"
-      trail_difficulty: "easy" | "moderate" | "hard"
+      trail_difficulty: "easy" | "moderate" | "hard" | "expert"
     }
     CompositeTypes: {
       geometry_dump: {
@@ -3247,7 +3402,7 @@ export const Constants = {
   public: {
     Enums: {
       trail_category: ["hiking", "biking", "offroad"],
-      trail_difficulty: ["easy", "moderate", "hard"],
+      trail_difficulty: ["easy", "moderate", "hard", "expert"],
     },
   },
 } as const

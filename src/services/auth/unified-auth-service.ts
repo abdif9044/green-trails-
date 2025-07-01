@@ -310,13 +310,11 @@ export class UnifiedAuthService {
     try {
       const { error } = await supabase
         .from('profiles')
-        .upsert({
-          id: userId,
+        .update({
           ...updates,
           updated_at: new Date().toISOString()
-        }, {
-          onConflict: 'id'
-        });
+        })
+        .eq('user_id', userId);
 
       if (error) {
         console.error('Profile update error:', error);

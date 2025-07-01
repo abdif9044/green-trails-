@@ -52,15 +52,13 @@ export const EnhancedSignUpService = {
         try {
           const { error: profileError } = await supabase
             .from('profiles')
-            .upsert({
-              id: authData.user.id,
+            .update({
               full_name: data.full_name,
               username: data.username,
-              year_of_birth: data.year_of_birth || null, // Handle nullable year_of_birth
+              year_of_birth: data.year_of_birth || null,
               is_age_verified: data.year_of_birth ? (new Date().getFullYear() - data.year_of_birth) >= 21 : false
-            }, {
-              onConflict: 'id'
-            });
+            })
+            .eq('user_id', authData.user.id);
 
           if (profileError) {
             console.error(`Profile update attempt ${retryCount + 1} failed:`, profileError);

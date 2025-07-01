@@ -6,16 +6,16 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Trail generation with realistic data
+// Trail generation with realistic Minnesota data
 function generateTrail(sourceType: string, index: number, location?: any) {
   const trailTypes = ['loop', 'out-and-back', 'point-to-point'];
   const difficulties = ['easy', 'moderate', 'hard', 'expert'];
   const surfaces = ['dirt', 'gravel', 'paved', 'rock', 'boardwalk'];
   
-  // Base coordinates (default to Minnesota if no location provided)
-  const baseLat = location?.lat || 44.9537;
-  const baseLng = location?.lng || -93.0900;
-  const radius = location?.radius || 50; // miles
+  // Minnesota coordinates - focus on Minnesota area trails
+  const baseLat = location?.lat || 46.7296; // Minnesota center
+  const baseLng = location?.lng || -94.6859; // Minnesota center  
+  const radius = location?.radius || 200; // Cover all of Minnesota
   
   // Generate location within radius
   const latOffset = (Math.random() - 0.5) * (radius * 0.014); // ~1 mile per 0.014 degrees lat

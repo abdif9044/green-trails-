@@ -4,6 +4,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import SEOProvider from '@/components/SEOProvider';
 import MassiveImportButton from '@/components/trails/MassiveImportButton';
+import SmallBatchImport from '@/components/trails/SmallBatchImport';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { MapPin, Database, Users, Zap } from 'lucide-react';
 
@@ -79,9 +80,29 @@ const AdminTrailImport: React.FC = () => {
             </Card>
           </div>
 
-          {/* Import Component */}
-          <div className="flex justify-center">
-            <MassiveImportButton />
+          {/* Import Components */}
+          <div className="space-y-8">
+            {/* Test Import Section */}
+            <div className="text-center">
+              <h2 className="text-2xl font-bold text-greentrail-800 dark:text-greentrail-200 mb-4">
+                Start with Test Import
+              </h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">
+                Test the system with smaller batches before running full imports
+              </p>
+              <SmallBatchImport />
+            </div>
+            
+            {/* Full Import Section */}
+            <div className="text-center">
+              <h2 className="text-2xl font-bold text-greentrail-800 dark:text-greentrail-200 mb-4">
+                Full Scale Import
+              </h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">
+                Import the complete trail database (50,000+ trails)
+              </p>
+              <MassiveImportButton />
+            </div>
           </div>
 
           {/* Information Section */}

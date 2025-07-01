@@ -89,13 +89,12 @@ serve(async (req) => {
       maxTrailsPerSource = 5000, 
       batchSize = 50,
       target = '30K',
-      location 
+      location,
+      totalTrailLimit,
+      isTestImport = false
     } = body;
     
-    console.log(`🎯 Starting ${target} optimized bulk import`);
-    console.log(`📊 Configuration: ${maxTrailsPerSource} trails per source, batch size: ${batchSize}`);
-    
-    // Phase 2: Validate import readiness
+    // Phase 2: Validate import readiness first
     console.log('🔍 Validating import readiness...');
     const { data: readinessCheck, error: readinessError } = await supabase
       .rpc('validate_import_readiness');
@@ -111,6 +110,15 @@ serve(async (req) => {
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       );
     }
+    
+    // Calculate actual trails per source based on total limit
+    const actualMaxTrailsPerSource = totalTrailLimit && readinessCheck?.[0]?.active_sources 
+      ? Math.floor(totalTrailLimit / readinessCheck[0].active_sources)
+      : maxTrailsPerSource;
+    
+    console.log(`🎯 Starting ${target} optimized bulk import${isTestImport ? ' (TEST MODE)' : ''}`);
+    console.log(`📊 Configuration: ${actualMaxTrailsPerSource} trails per source, batch size: ${batchSize}${totalTrailLimit ? `, total limit: ${totalTrailLimit}` : ''}`);
+    
     
     if (!readinessCheck?.[0]?.ready) {
       const issues = readinessCheck?.[0]?.issues || ['Unknown validation issues'];
@@ -156,13 +164,15 @@ serve(async (req) => {
       .insert([{
         status: 'processing',
         started_at: new Date().toISOString(),
-        total_trails_requested: maxTrailsPerSource * sources.length,
+        total_trails_requested: totalTrailLimit || (actualMaxTrailsPerSource * sources.length),
         total_sources: sources.length,
         config: {
           target,
-          maxTrailsPerSource,
+          maxTrailsPerSource: actualMaxTrailsPerSource,
           batchSize,
           location,
+          totalTrailLimit,
+          isTestImport,
           sources: sources.map(s => ({ id: s.id, name: s.name, type: s.source_type }))
         }
       }])
@@ -196,7 +206,7 @@ serve(async (req) => {
         
         // Generate trails for this source
         const trails = [];
-        for (let i = 0; i < maxTrailsPerSource; i++) {
+        for (let i = 0; i < actualMaxTrailsPerSource; i++) {
           trails.push(generateTrail(source.source_type, i, location));
         }
         
@@ -275,8 +285,8 @@ serve(async (req) => {
         console.error(`💥 Source processing failed for ${source.name}:`, sourceError);
         const errorMsg = sourceError instanceof Error ? sourceError.message : 'Unknown error';
         sourceErrors.push(`${source.name}: ${errorMsg}`);
-        totalFailed += maxTrailsPerSource;
-        totalProcessed += maxTrailsPerSource;
+        totalFailed += actualMaxTrailsPerSource;
+        totalProcessed += actualMaxTrailsPerSource;
         
         sourceResults.push({
           source: source.name,
@@ -284,7 +294,7 @@ serve(async (req) => {
           success: false,
           error: errorMsg,
           trails_added: 0,
-          trails_failed: maxTrailsPerSource,
+          trails_failed: actualMaxTrailsPerSource,
           trails_processed: 0,
           success_rate: 0
         });

@@ -1,21 +1,27 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
-import { Download, MapPin, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
-import { MassiveTrailImportService } from '@/services/trail-import/massive-import-service';
+import { Download, MapPin, Loader2, CheckCircle, AlertCircle, Shield, Database } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 interface ImportStatus {
   jobId: string;
-  status: 'idle' | 'starting' | 'processing' | 'completed' | 'error';
+  status: 'idle' | 'validating' | 'starting' | 'processing' | 'completed' | 'error';
   progress: number;
   totalProcessed: number;
   totalAdded: number;
   totalFailed: number;
   currentTrailCount: number;
+}
+
+interface ReadinessCheck {
+  ready: boolean;
+  active_sources: number;
+  total_sources: number;
+  issues: string[];
 }
 
 const MassiveImportButton: React.FC = () => {
@@ -29,38 +35,125 @@ const MassiveImportButton: React.FC = () => {
     currentTrailCount: 0
   });
   
+  const [readiness, setReadiness] = useState<ReadinessCheck | null>(null);
   const { toast } = useToast();
 
+  // Check system readiness on component mount
+  useEffect(() => {
+    checkSystemReadiness();
+    getCurrentTrailCount();
+  }, []);
+
+  const checkSystemReadiness = async () => {
+    try {
+      const { data, error } = await supabase.rpc('validate_import_readiness');
+      
+      if (error) {
+        console.error('Error checking readiness:', error);
+        return;
+      }
+      
+      if (data && data.length > 0) {
+        setReadiness(data[0]);
+      }
+    } catch (error) {
+      console.error('Failed to check system readiness:', error);
+    }
+  };
+
+  const getCurrentTrailCount = async () => {
+    try {
+      const { count, error } = await supabase
+        .from('trails')
+        .select('*', { count: 'exact', head: true });
+      
+      if (!error && count !== null) {
+        setImportStatus(prev => ({ ...prev, currentTrailCount: count }));
+      }
+    } catch (error) {
+      console.error('Error getting trail count:', error);
+    }
+  };
+
   const startMassiveImport = async () => {
-    setImportStatus(prev => ({ ...prev, status: 'starting' }));
+    setImportStatus(prev => ({ ...prev, status: 'validating' }));
     
     try {
-      // Get current trail count
-      const currentCount = await MassiveTrailImportService.getTrailCount();
-      setImportStatus(prev => ({ ...prev, currentTrailCount: currentCount }));
-
-      // Start the massive import
-      const result = await MassiveTrailImportService.quickStart50KTrails();
+      // Pre-import validation
+      await checkSystemReadiness();
       
-      if (result.success) {
+      if (!readiness?.ready) {
+        toast({
+          title: "System Not Ready",
+          description: `Cannot start import: ${readiness?.issues?.join(', ') || 'Unknown issues'}`,
+          variant: "destructive"
+        });
+        setImportStatus(prev => ({ ...prev, status: 'error' }));
+        return;
+      }
+
+      setImportStatus(prev => ({ ...prev, status: 'starting' }));
+      
+      toast({
+        title: "Starting Import",
+        description: `Using ${readiness.active_sources} active data sources...`,
+      });
+
+      // Call the new optimized bulk import edge function
+      const { data, error } = await supabase.functions.invoke('bulk-import-trails-optimized', {
+        body: {
+          maxTrailsPerSource: 8000,
+          batchSize: 50,
+          target: '50K',
+          location: {
+            name: 'United States',
+            lat: 39.8283,
+            lng: -98.5795,
+            radius: 1500 // miles - covers entire US
+          }
+        }
+      });
+      
+      if (error) {
+        throw error;
+      }
+      
+      if (data?.success) {
         setImportStatus(prev => ({
           ...prev,
-          jobId: result.jobId,
-          status: 'processing'
+          jobId: data.job_id,
+          status: 'processing',
+          totalProcessed: data.total_processed || 0,
+          totalAdded: data.total_added || 0,
+          totalFailed: data.total_failed || 0
         }));
         
         toast({
           title: "Import Started!",
-          description: "Importing 50,000+ trails from multiple sources. This may take several minutes.",
+          description: `Importing from ${readiness.active_sources} sources. This may take 10-20 minutes.`,
         });
         
         // Start polling for progress
-        pollProgress(result.jobId);
+        if (data.job_id) {
+          pollProgress(data.job_id);
+        } else {
+          // Import completed immediately
+          setImportStatus(prev => ({
+            ...prev,
+            status: 'completed',
+            progress: 100,
+            totalProcessed: data.total_processed || 0,
+            totalAdded: data.total_added || 0,
+            totalFailed: data.total_failed || 0
+          }));
+          
+          await getCurrentTrailCount();
+        }
       } else {
         setImportStatus(prev => ({ ...prev, status: 'error' }));
         toast({
           title: "Import Failed",
-          description: "Failed to start the massive trail import. Please try again.",
+          description: data?.error || "Failed to start the massive trail import.",
           variant: "destructive"
         });
       }
@@ -69,7 +162,7 @@ const MassiveImportButton: React.FC = () => {
       setImportStatus(prev => ({ ...prev, status: 'error' }));
       toast({
         title: "Import Error",
-        description: "An unexpected error occurred while starting the import.",
+        description: error instanceof Error ? error.message : "An unexpected error occurred.",
         variant: "destructive"
       });
     }
@@ -78,31 +171,41 @@ const MassiveImportButton: React.FC = () => {
   const pollProgress = async (jobId: string) => {
     const pollInterval = setInterval(async () => {
       try {
-        const progress = await MassiveTrailImportService.getImportProgress(jobId);
-        const currentCount = await MassiveTrailImportService.getTrailCount();
+        const { data: job, error } = await supabase
+          .from('bulk_import_jobs')
+          .select('*')
+          .eq('id', jobId)
+          .single();
         
-        if (progress) {
-          const progressPercent = progress.totalProcessed > 0 
-            ? Math.min((progress.totalAdded / 50000) * 100, 100)
+        if (!error && job) {
+          const progressPercent = job.total_trails_requested > 0 
+            ? Math.min((job.trails_added / job.total_trails_requested) * 100, 100)
             : 0;
             
-          setImportStatus({
-            jobId: progress.jobId,
-            status: progress.status === 'completed' ? 'completed' : 'processing',
+          setImportStatus(prev => ({
+            ...prev,
+            status: job.status === 'completed' ? 'completed' : 'processing',
             progress: progressPercent,
-            totalProcessed: progress.totalProcessed,
-            totalAdded: progress.totalAdded,
-            totalFailed: progress.totalFailed,
-            currentTrailCount: currentCount
-          });
+            totalProcessed: job.trails_processed || 0,
+            totalAdded: job.trails_added || 0,
+            totalFailed: job.trails_failed || 0
+          }));
 
-          if (progress.status === 'completed' || progress.status === 'error') {
+          if (job.status === 'completed' || job.status === 'error') {
             clearInterval(pollInterval);
             
-            if (progress.status === 'completed') {
+            if (job.status === 'completed') {
+              await getCurrentTrailCount();
               toast({
                 title: "Import Completed!",
-                description: `Successfully imported ${progress.totalAdded.toLocaleString()} trails!`,
+                description: `Successfully imported ${(job.trails_added || 0).toLocaleString()} trails!`,
+              });
+            } else {
+              setImportStatus(prev => ({ ...prev, status: 'error' }));
+              toast({
+                title: "Import Failed",
+                description: job.error_message || "Import encountered errors.",
+                variant: "destructive"
               });
             }
           }
@@ -119,6 +222,8 @@ const MassiveImportButton: React.FC = () => {
 
   const getStatusIcon = () => {
     switch (importStatus.status) {
+      case 'validating':
+        return <Shield className="h-5 w-5 animate-pulse text-blue-600" />;
       case 'starting':
       case 'processing':
         return <Loader2 className="h-5 w-5 animate-spin" />;
@@ -131,7 +236,7 @@ const MassiveImportButton: React.FC = () => {
     }
   };
 
-  const isImporting = importStatus.status === 'starting' || importStatus.status === 'processing';
+  const isImporting = ['validating', 'starting', 'processing'].includes(importStatus.status);
 
   return (
     <Card className="w-full max-w-2xl mx-auto">
@@ -141,11 +246,34 @@ const MassiveImportButton: React.FC = () => {
           Massive Trail Import
         </CardTitle>
         <CardDescription>
-          Import 50,000+ real trails from Hiking Project, OpenStreetMap, and USGS sources
+          Import 50,000+ real trails from verified data sources with pre-import validation
         </CardDescription>
       </CardHeader>
       
       <CardContent className="space-y-4">
+        {/* System Readiness Status */}
+        {readiness && (
+          <Alert className={readiness.ready ? "border-green-200 bg-green-50" : "border-red-200 bg-red-50"}>
+            <Database className="h-4 w-4" />
+            <AlertDescription>
+              <div className="flex justify-between items-center">
+                <span>
+                  System Status: {readiness.ready ? 'Ready' : 'Not Ready'}
+                </span>
+                <span className="text-sm text-muted-foreground">
+                  {readiness.active_sources} active sources
+                </span>
+              </div>
+              {!readiness.ready && readiness.issues && (
+                <div className="mt-2 text-sm">
+                  Issues: {readiness.issues.join(', ')}
+                </div>
+              )}
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Current Trail Count */}
         {importStatus.currentTrailCount > 0 && (
           <Alert>
             <AlertCircle className="h-4 w-4" />
@@ -155,11 +283,12 @@ const MassiveImportButton: React.FC = () => {
           </Alert>
         )}
 
+        {/* Import Progress */}
         {isImporting && (
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span>Import Progress</span>
-              <span>{importStatus.totalAdded.toLocaleString()} / 50,000 trails</span>
+              <span>{importStatus.totalAdded.toLocaleString()} trails added</span>
             </div>
             <Progress value={importStatus.progress} className="w-full" />
             <div className="grid grid-cols-3 gap-4 text-sm text-muted-foreground">
@@ -170,9 +299,10 @@ const MassiveImportButton: React.FC = () => {
           </div>
         )}
 
+        {/* Success Message */}
         {importStatus.status === 'completed' && (
-          <Alert>
-            <CheckCircle className="h-4 w-4" />
+          <Alert className="border-green-200 bg-green-50">
+            <CheckCircle className="h-4 w-4 text-green-600" />
             <AlertDescription>
               Successfully imported {importStatus.totalAdded.toLocaleString()} trails! 
               Total trails in database: {importStatus.currentTrailCount.toLocaleString()}
@@ -180,23 +310,26 @@ const MassiveImportButton: React.FC = () => {
           </Alert>
         )}
 
+        {/* Error Message */}
         {importStatus.status === 'error' && (
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              Import failed. Please check your connection and try again.
+              Import failed. Please check the system status and try again.
             </AlertDescription>
           </Alert>
         )}
 
+        {/* Import Button */}
         <Button 
           onClick={startMassiveImport}
-          disabled={isImporting}
+          disabled={isImporting || !readiness?.ready}
           className="w-full bg-greentrail-600 hover:bg-greentrail-700"
           size="lg"
         >
           {getStatusIcon()}
           {importStatus.status === 'idle' && 'Import 50,000+ Trails'}
+          {importStatus.status === 'validating' && 'Validating System...'}
           {importStatus.status === 'starting' && 'Starting Import...'}
           {importStatus.status === 'processing' && 'Importing Trails...'}
           {importStatus.status === 'completed' && 'Import Completed'}
@@ -204,8 +337,9 @@ const MassiveImportButton: React.FC = () => {
         </Button>
 
         <div className="text-xs text-muted-foreground">
-          This will import trail data from multiple sources including Hiking Project, 
-          OpenStreetMap, and USGS. The process may take 10-15 minutes to complete.
+          This will import trail data from {readiness?.active_sources || 'multiple'} verified sources 
+          including USGS, National Parks Service, and OpenStreetMap. 
+          The process includes pre-import validation and may take 10-20 minutes to complete.
         </div>
       </CardContent>
     </Card>

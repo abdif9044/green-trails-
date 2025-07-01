@@ -134,9 +134,12 @@ export type Database = {
       bulk_import_jobs: {
         Row: {
           completed_at: string | null
+          config: Json | null
           created_at: string | null
           error_message: string | null
           id: string
+          results: Json | null
+          source_errors: Json | null
           started_at: string | null
           status: string
           total_sources: number | null
@@ -148,9 +151,12 @@ export type Database = {
         }
         Insert: {
           completed_at?: string | null
+          config?: Json | null
           created_at?: string | null
           error_message?: string | null
           id?: string
+          results?: Json | null
+          source_errors?: Json | null
           started_at?: string | null
           status?: string
           total_sources?: number | null
@@ -162,9 +168,12 @@ export type Database = {
         }
         Update: {
           completed_at?: string | null
+          config?: Json | null
           created_at?: string | null
           error_message?: string | null
           id?: string
+          results?: Json | null
+          source_errors?: Json | null
           started_at?: string | null
           status?: string
           total_sources?: number | null
@@ -3100,6 +3109,15 @@ export type Database = {
           new_srid_in: number
         }
         Returns: string
+      }
+      validate_import_readiness: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          ready: boolean
+          active_sources: number
+          total_sources: number
+          issues: string[]
+        }[]
       }
     }
     Enums: {

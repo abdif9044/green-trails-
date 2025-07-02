@@ -433,6 +433,62 @@ export type Database = {
           },
         ]
       }
+      import_logs: {
+        Row: {
+          api_response_sample: Json | null
+          batch_number: number | null
+          created_at: string | null
+          end_time: string | null
+          error_details: Json | null
+          failed_imports: number | null
+          id: string
+          job_id: string | null
+          source_name: string
+          source_type: string
+          start_time: string | null
+          successful_imports: number | null
+          total_requested: number | null
+        }
+        Insert: {
+          api_response_sample?: Json | null
+          batch_number?: number | null
+          created_at?: string | null
+          end_time?: string | null
+          error_details?: Json | null
+          failed_imports?: number | null
+          id?: string
+          job_id?: string | null
+          source_name: string
+          source_type: string
+          start_time?: string | null
+          successful_imports?: number | null
+          total_requested?: number | null
+        }
+        Update: {
+          api_response_sample?: Json | null
+          batch_number?: number | null
+          created_at?: string | null
+          end_time?: string | null
+          error_details?: Json | null
+          failed_imports?: number | null
+          id?: string
+          job_id?: string | null
+          source_name?: string
+          source_type?: string
+          start_time?: string | null
+          successful_imports?: number | null
+          total_requested?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "import_logs_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "bulk_import_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       likes: {
         Row: {
           created_at: string | null
@@ -786,13 +842,17 @@ export type Database = {
       }
       trail_data_sources: {
         Row: {
+          api_key: string | null
           config: Json | null
           country: string | null
           created_at: string | null
+          error_count: number | null
           id: string
           is_active: boolean | null
+          last_error: string | null
           last_synced: string | null
           name: string
+          rate_limit_per_minute: number | null
           region: string | null
           source_type: string
           state_province: string | null
@@ -800,13 +860,17 @@ export type Database = {
           url: string
         }
         Insert: {
+          api_key?: string | null
           config?: Json | null
           country?: string | null
           created_at?: string | null
+          error_count?: number | null
           id?: string
           is_active?: boolean | null
+          last_error?: string | null
           last_synced?: string | null
           name: string
+          rate_limit_per_minute?: number | null
           region?: string | null
           source_type: string
           state_province?: string | null
@@ -814,13 +878,17 @@ export type Database = {
           url: string
         }
         Update: {
+          api_key?: string | null
           config?: Json | null
           country?: string | null
           created_at?: string | null
+          error_count?: number | null
           id?: string
           is_active?: boolean | null
+          last_error?: string | null
           last_synced?: string | null
           name?: string
+          rate_limit_per_minute?: number | null
           region?: string | null
           source_type?: string
           state_province?: string | null
@@ -828,6 +896,51 @@ export type Database = {
           url?: string
         }
         Relationships: []
+      }
+      trail_duplicates: {
+        Row: {
+          created_at: string | null
+          duplicate_data: Json | null
+          duplicate_source: string
+          duplicate_source_id: string
+          id: string
+          original_trail_id: string | null
+          similarity_score: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          duplicate_data?: Json | null
+          duplicate_source: string
+          duplicate_source_id: string
+          id?: string
+          original_trail_id?: string | null
+          similarity_score?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          duplicate_data?: Json | null
+          duplicate_source?: string
+          duplicate_source_id?: string
+          id?: string
+          original_trail_id?: string | null
+          similarity_score?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trail_duplicates_original_trail_id_fkey"
+            columns: ["original_trail_id"]
+            isOneToOne: false
+            referencedRelation: "trails"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trail_duplicates_original_trail_id_fkey"
+            columns: ["original_trail_id"]
+            isOneToOne: false
+            referencedRelation: "v_trail_preview"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       trail_images: {
         Row: {
@@ -1230,12 +1343,15 @@ export type Database = {
         Row: {
           category: Database["public"]["Enums"]["trail_category"] | null
           created_at: string | null
+          data_quality_score: number | null
           description: string | null
           difficulty: Database["public"]["Enums"]["trail_difficulty"] | null
           elevation_gain: number | null
           geom: unknown | null
           id: string
+          import_job_id: string | null
           is_active: boolean | null
+          last_verified: string | null
           lat: number | null
           latitude: number | null
           length: number | null
@@ -1255,12 +1371,15 @@ export type Database = {
         Insert: {
           category?: Database["public"]["Enums"]["trail_category"] | null
           created_at?: string | null
+          data_quality_score?: number | null
           description?: string | null
           difficulty?: Database["public"]["Enums"]["trail_difficulty"] | null
           elevation_gain?: number | null
           geom?: unknown | null
           id?: string
+          import_job_id?: string | null
           is_active?: boolean | null
+          last_verified?: string | null
           lat?: number | null
           latitude?: number | null
           length?: number | null
@@ -1280,12 +1399,15 @@ export type Database = {
         Update: {
           category?: Database["public"]["Enums"]["trail_category"] | null
           created_at?: string | null
+          data_quality_score?: number | null
           description?: string | null
           difficulty?: Database["public"]["Enums"]["trail_difficulty"] | null
           elevation_gain?: number | null
           geom?: unknown | null
           id?: string
+          import_job_id?: string | null
           is_active?: boolean | null
+          last_verified?: string | null
           lat?: number | null
           latitude?: number | null
           length?: number | null
@@ -1302,7 +1424,15 @@ export type Database = {
           status?: string | null
           tags?: string[] | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "trails_import_job_id_fkey"
+            columns: ["import_job_id"]
+            isOneToOne: false
+            referencedRelation: "bulk_import_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_memory: {
         Row: {
@@ -1690,6 +1820,17 @@ export type Database = {
       bytea: {
         Args: { "": unknown } | { "": unknown }
         Returns: string
+      }
+      calculate_trail_quality_score: {
+        Args: {
+          trail_name: string
+          trail_description: string
+          trail_length: number
+          trail_elevation: number
+          trail_lat: number
+          trail_lon: number
+        }
+        Returns: number
       }
       disablelongtransactions: {
         Args: Record<PropertyKey, never>

@@ -26,8 +26,8 @@ const App = () => (
           <BrowserRouter>
             <ErrorBoundary>
               <Routes>
-                {navItems.map(({ to, page }) => (
-                  <Route key={to} path={to} element={page} />
+                {navItems.map(({ to, page: PageComponent }) => (
+                  <Route key={to} path={to} element={<PageComponent />} />
                 ))}
                 <Route path="/admin/import-debug" element={<ImportDebugPage />} />
               </Routes>

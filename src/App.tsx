@@ -8,6 +8,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ToasterWrapper } from "@/components/ToasterWrapper";
 import { navItems } from "./nav-items";
 import ImportDebugPage from "./pages/admin/ImportDebug";
+import { errorReporter } from "@/utils/error-reporting";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -19,6 +20,15 @@ const queryClient = new QueryClient({
 });
 
 const App: React.FC = () => {
+  React.useEffect(() => {
+    // Initialize production monitoring
+    errorReporter.trackEvent('app_start', {
+      timestamp: Date.now(),
+      userAgent: navigator.userAgent,
+      environment: import.meta.env.MODE
+    });
+  }, []);
+
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>

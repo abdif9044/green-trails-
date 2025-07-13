@@ -1,4 +1,5 @@
 
+import React from "react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
@@ -17,26 +18,28 @@ const queryClient = new QueryClient({
   },
 });
 
-const App = () => (
-  <ErrorBoundary>
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="system" storageKey="greentrails-theme">
-        <TooltipProvider>
-          <ToasterWrapper />
-          <BrowserRouter>
-            <ErrorBoundary>
-              <Routes>
-                {navItems.map(({ to, page: PageComponent }) => (
-                  <Route key={to} path={to} element={<PageComponent />} />
-                ))}
-                <Route path="/admin/import-debug" element={<ImportDebugPage />} />
-              </Routes>
-            </ErrorBoundary>
-          </BrowserRouter>
-        </TooltipProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
-  </ErrorBoundary>
-);
+const App: React.FC = () => {
+  return (
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider defaultTheme="system" storageKey="greentrails-theme">
+          <TooltipProvider>
+            <ToasterWrapper />
+            <BrowserRouter>
+              <ErrorBoundary>
+                <Routes>
+                  {navItems.map(({ to, page: PageComponent }) => (
+                    <Route key={to} path={to} element={<PageComponent />} />
+                  ))}
+                  <Route path="/admin/import-debug" element={<ImportDebugPage />} />
+                </Routes>
+              </ErrorBoundary>
+            </BrowserRouter>
+          </TooltipProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
+  );
+};
 
 export default App;

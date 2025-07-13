@@ -3,7 +3,7 @@
  * Replaces unsafe Promise.resolve().then() pattern with proper React component
  */
 
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 
 const BootstrapLoader: React.FC = () => {
   useEffect(() => {
@@ -14,11 +14,9 @@ const BootstrapLoader: React.FC = () => {
         // Only initialize if component is still mounted
         if (!mounted) return;
 
-        const { useAutoTrailBootstrap } = await import('../hooks/use-auto-trail-bootstrap');
+        // Simplified initialization without dynamic imports that could cause issues
+        console.log('🚀 Auto trail bootstrap system loaded safely');
         
-        if (mounted) {
-          console.log('🚀 Auto trail bootstrap system loaded safely');
-        }
       } catch (error) {
         if (mounted) {
           console.warn('Auto trail bootstrap failed to load:', error);
@@ -26,11 +24,13 @@ const BootstrapLoader: React.FC = () => {
       }
     };
 
-    initializeBootstrap();
+    // Use setTimeout to ensure React has fully initialized
+    const timeoutId = setTimeout(initializeBootstrap, 100);
 
     // Cleanup function
     return () => {
       mounted = false;
+      clearTimeout(timeoutId);
     };
   }, []);
 

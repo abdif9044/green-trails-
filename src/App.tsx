@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/providers/theme-provider";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ToasterWrapper } from "@/components/ToasterWrapper";
+import { AuthProvider } from "@/providers/auth-provider";
 import { navItems } from "./nav-items";
 import ImportDebugPage from "./pages/admin/ImportDebug";
 import { errorReporter } from "@/utils/error-reporting";
@@ -33,19 +34,21 @@ const App: React.FC = () => {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider defaultTheme="system" storageKey="greentrails-theme">
-          <TooltipProvider>
-            <ToasterWrapper />
-            <BrowserRouter>
-              <ErrorBoundary>
-                <Routes>
-                  {navItems.map(({ to, page: PageComponent }) => (
-                    <Route key={to} path={to} element={<PageComponent />} />
-                  ))}
-                  <Route path="/admin/import-debug" element={<ImportDebugPage />} />
-                </Routes>
-              </ErrorBoundary>
-            </BrowserRouter>
-          </TooltipProvider>
+          <AuthProvider>
+            <TooltipProvider>
+              <ToasterWrapper />
+              <BrowserRouter>
+                <ErrorBoundary>
+                  <Routes>
+                    {navItems.map(({ to, page: PageComponent }) => (
+                      <Route key={to} path={to} element={<PageComponent />} />
+                    ))}
+                    <Route path="/admin/import-debug" element={<ImportDebugPage />} />
+                  </Routes>
+                </ErrorBoundary>
+              </BrowserRouter>
+            </TooltipProvider>
+          </AuthProvider>
         </ThemeProvider>
       </QueryClientProvider>
     </ErrorBoundary>

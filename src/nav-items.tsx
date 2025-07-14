@@ -3,6 +3,10 @@ import React from 'react';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import HomePage from '@/pages/HomePage';
 import ImportDebugPage from '@/pages/admin/ImportDebug';
+import AuthPage from '@/pages/AuthPage';
+import TrailsPage from '@/pages/TrailsPage';
+import SearchPage from '@/pages/SearchPage';
+import ProfilePage from '@/pages/ProfilePage';
 
 // Wrap each page component with error boundary
 const withErrorBoundary = (Component: React.ComponentType) => {
@@ -22,32 +26,22 @@ export const navItems = [
   {
     title: "Trails",
     to: "/trails",
-    page: withErrorBoundary(() => (
-      <div className="p-8">
-        <h1 className="text-2xl font-bold mb-4">Trail Discovery</h1>
-        <p className="text-gray-600">Trail discovery feature coming soon!</p>
-      </div>
-    )),
+    page: withErrorBoundary(TrailsPage),
   },
   {
     title: "Search",
     to: "/search", 
-    page: withErrorBoundary(() => (
-      <div className="p-8">
-        <h1 className="text-2xl font-bold mb-4">Search Trails</h1>
-        <p className="text-gray-600">Advanced trail search coming soon!</p>
-      </div>
-    )),
+    page: withErrorBoundary(SearchPage),
   },
   {
     title: "Profile",
     to: "/profile",
-    page: withErrorBoundary(() => (
-      <div className="p-8">
-        <h1 className="text-2xl font-bold mb-4">User Profile</h1>
-        <p className="text-gray-600">User profile management coming soon!</p>
-      </div>
-    )),
+    page: withErrorBoundary(ProfilePage),
+  },
+  {
+    title: "Auth",
+    to: "/auth",
+    page: withErrorBoundary(AuthPage),
   },
   {
     title: "Admin Debug",

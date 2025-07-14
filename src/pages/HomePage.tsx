@@ -1,10 +1,13 @@
 
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Loading } from '@/components/Loading';
+import { useAuth } from '@/hooks/use-auth';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   Mountain, 
   MapPin, 
@@ -12,10 +15,13 @@ import {
   Star,
   ArrowRight,
   Leaf,
-  Activity
+  Activity,
+  LogIn
 } from 'lucide-react';
 
 const HomePage: React.FC = () => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [stats, setStats] = useState({
     totalTrails: 0,
@@ -24,23 +30,31 @@ const HomePage: React.FC = () => {
   });
 
   useEffect(() => {
-    // Simulate loading app data
     const loadAppData = async () => {
       try {
-        // In a real app, this would fetch from Supabase
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Fetch real trail count from Supabase
+        const { count: trailCount } = await supabase
+          .from('trails')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'approved')
+          .eq('is_active', true);
+
+        // Fetch user count from profiles
+        const { count: userCount } = await supabase
+          .from('profiles')
+          .select('*', { count: 'exact', head: true });
         
         setStats({
-          totalTrails: 15420,
-          activeUsers: 8932,
-          totalDistance: 127384
+          totalTrails: trailCount || 0,
+          activeUsers: userCount || 0,
+          totalDistance: Math.floor((trailCount || 0) * 3.2) // Estimated based on average trail length
         });
       } catch (error) {
         console.error('Error loading app data:', error);
         // Fallback to demo data
         setStats({
-          totalTrails: 10000,
-          activeUsers: 5000,
+          totalTrails: 20000,
+          activeUsers: 1200,
           totalDistance: 75000
         });
       } finally {
@@ -89,15 +103,35 @@ const HomePage: React.FC = () => {
             </div>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" className="bg-green-600 hover:bg-green-700">
+              <Button 
+                size="lg" 
+                className="bg-green-600 hover:bg-green-700"
+                onClick={() => navigate('/trails')}
+              >
                 <MapPin className="h-5 w-5 mr-2" />
                 Discover Trails
                 <ArrowRight className="h-5 w-5 ml-2" />
               </Button>
-              <Button size="lg" variant="outline">
-                <Activity className="h-5 w-5 mr-2" />
-                View Debug System
-              </Button>
+              
+              {user ? (
+                <Button 
+                  size="lg" 
+                  variant="outline"
+                  onClick={() => navigate('/admin/import-debug')}
+                >
+                  <Activity className="h-5 w-5 mr-2" />
+                  Admin Dashboard
+                </Button>
+              ) : (
+                <Button 
+                  size="lg" 
+                  variant="outline"
+                  onClick={() => navigate('/auth')}
+                >
+                  <LogIn className="h-5 w-5 mr-2" />
+                  Sign In / Join
+                </Button>
+              )}
             </div>
           </div>
 
@@ -180,7 +214,7 @@ const HomePage: React.FC = () => {
                 <Button 
                   variant="outline" 
                   className="w-full"
-                  onClick={() => window.location.href = '/admin/import-debug'}
+                  onClick={() => navigate('/admin/import-debug')}
                 >
                   Open Debug Dashboard
                 </Button>

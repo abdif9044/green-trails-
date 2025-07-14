@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { HelmetProvider } from 'react-helmet-async'
 import App from './App.tsx'
+import BootstrapLoader from './components/BootstrapLoader'
 import './index.css'
 
 // Create a client for React Query with optimized settings
@@ -38,21 +39,12 @@ if (!container) {
 
 const root = createRoot(container);
 
-// Safe async bootstrap - replaced unsafe Promise pattern with proper lazy loading
-const BootstrapLoader = React.lazy(() => 
-  import('./components/BootstrapLoader').catch(() => ({
-    default: () => null // Fallback component if bootstrap fails
-  }))
-);
-
 root.render(
   <React.StrictMode>
     <HelmetProvider>
       <QueryClientProvider client={queryClient}>
         <App />
-        <React.Suspense fallback={null}>
-          <BootstrapLoader />
-        </React.Suspense>
+        <BootstrapLoader />
       </QueryClientProvider>
     </HelmetProvider>
   </React.StrictMode>

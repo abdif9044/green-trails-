@@ -5,7 +5,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/providers/theme-provider";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ToasterWrapper } from "@/components/ToasterWrapper";
-import { AuthProvider } from "@/providers/auth-provider";
+import { UnifiedAuthProvider } from "@/hooks/auth/use-unified-auth";
 import { navItems } from "./nav-items";
 import ImportDebugPage from "./pages/admin/ImportDebug";
 import { errorReporter } from "@/utils/error-reporting";
@@ -23,7 +23,7 @@ const App: React.FC = () => {
   return (
     <ErrorBoundary>
       <ThemeProvider defaultTheme="system" storageKey="greentrails-theme">
-        <AuthProvider>
+        <UnifiedAuthProvider>
           <TooltipProvider>
             <ToasterWrapper />
             <BrowserRouter>
@@ -37,7 +37,7 @@ const App: React.FC = () => {
               </ErrorBoundary>
             </BrowserRouter>
           </TooltipProvider>
-        </AuthProvider>
+        </UnifiedAuthProvider>
       </ThemeProvider>
     </ErrorBoundary>
   );

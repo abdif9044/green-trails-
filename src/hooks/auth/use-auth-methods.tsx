@@ -1,3 +1,4 @@
+
 import { User } from '@supabase/supabase-js';
 import { SimpleAuthService } from '@/services/auth/simple-auth-service';
 import { SimpleUserService } from '@/services/auth/simple-user-service';

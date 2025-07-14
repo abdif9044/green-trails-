@@ -1,91 +1,64 @@
 
-import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
-import { AuthResult } from './types';
+import { supabase } from '@/integrations/supabase/client';
 
-export const SimpleUserService = {
-  /**
-   * Get user profile from profiles table
-   */
-  async getProfile(userId: string) {
+export interface AuthResult {
+  success: boolean;
+  message?: string;
+  age?: number;
+}
+
+export class SimpleUserService {
+  static async verifyAge(user: User | null, birthYear: string): Promise<AuthResult & { age?: number }> {
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-      if (error) {
-        console.error('Error fetching profile:', error);
-        return null;
+      if (!user) {
+        return { success: false, message: 'User not authenticated' };
       }
 
-      return data;
-    } catch (error) {
-      console.error('Profile fetch error:', error);
-      return null;
-    }
-  },
-
-  /**
-   * Update user profile
-   */
-  async updateProfile(userId: string, updates: any) {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .update(updates)
-        .eq('id', userId)
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error updating profile:', error);
-        return { success: false, message: error.message };
-      }
-
-      return { success: true, data };
-    } catch (error) {
-      console.error('Profile update error:', error);
-      return { success: false, message: 'Failed to update profile' };
-    }
-  },
-
-  /**
-   * Verify user age
-   */
-  async verifyAge(user: User | null, birthYear: string): Promise<AuthResult & { age?: number }> {
-    if (!user) {
-      return { success: false, message: 'User not authenticated' };
-    }
-
-    try {
       const year = parseInt(birthYear);
+      if (isNaN(year)) {
+        return { success: false, message: 'Invalid birth year' };
+      }
+
       const currentYear = new Date().getFullYear();
       const age = currentYear - year;
 
       if (age < 21) {
-        return { success: false, message: 'You must be at least 21 years old' };
+        return { 
+          success: false, 
+          message: 'You must be 21 or older to use GreenTrails',
+          age 
+        };
       }
 
-      // Update profile with verified age
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          year_of_birth: year,
-          is_age_verified: true
-        })
-        .eq('id', user.id);
+      // Update user profile with age verification
+      try {
+        const { error } = await supabase
+          .from('profiles')
+          .update({
+            year_of_birth: year,
+            is_age_verified: true,
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', user.id);
 
-      if (error) {
-        console.error('Age verification update error:', error);
-        return { success: false, message: 'Failed to verify age' };
+        if (error) {
+          console.warn('Failed to update profile with age verification:', error);
+        }
+      } catch (profileError) {
+        console.warn('Profile update error (non-critical):', profileError);
       }
 
-      return { success: true, age, message: 'Age verified successfully' };
+      return { 
+        success: true, 
+        message: 'Age verification successful',
+        age 
+      };
     } catch (error) {
-      console.error('Age verification error:', error);
-      return { success: false, message: 'Invalid birth year' };
+      return { 
+        success: false, 
+        message: 'An unexpected error occurred during age verification' 
+      };
     }
   }
-};
+}

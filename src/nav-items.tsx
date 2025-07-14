@@ -44,6 +44,18 @@ export const navItems = [
     page: withErrorBoundary(AuthPage),
   },
   {
+    title: "Reset Password",
+    to: "/auth/reset-password",
+    page: withErrorBoundary(() => {
+      const ResetPasswordPage = React.lazy(() => import('@/pages/ResetPasswordPage'));
+      return (
+        <React.Suspense fallback={<div>Loading...</div>}>
+          <ResetPasswordPage />
+        </React.Suspense>
+      );
+    }),
+  },
+  {
     title: "Admin Debug",
     to: "/admin/import-debug",
     page: withErrorBoundary(ImportDebugPage),

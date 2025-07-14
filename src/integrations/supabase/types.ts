@@ -2122,6 +2122,10 @@ export type Database = {
         Args: { "": unknown }
         Returns: unknown
       }
+      is_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       json: {
         Args: { "": unknown }
         Returns: Json
@@ -2129,6 +2133,10 @@ export type Database = {
       jsonb: {
         Args: { "": unknown }
         Returns: Json
+      }
+      log_performance_improvement: {
+        Args: Record<PropertyKey, never>
+        Returns: string
       }
       longtransactionsenabled: {
         Args: Record<PropertyKey, never>

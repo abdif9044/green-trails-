@@ -845,6 +845,54 @@ export type Database = {
         }
         Relationships: []
       }
+      trail_3d_models: {
+        Row: {
+          file_size_kb: number | null
+          generated_at: string | null
+          id: string
+          last_updated: string | null
+          model_data: Json
+          model_type: string
+          quality_level: string | null
+          trail_id: string
+        }
+        Insert: {
+          file_size_kb?: number | null
+          generated_at?: string | null
+          id?: string
+          last_updated?: string | null
+          model_data: Json
+          model_type: string
+          quality_level?: string | null
+          trail_id: string
+        }
+        Update: {
+          file_size_kb?: number | null
+          generated_at?: string | null
+          id?: string
+          last_updated?: string | null
+          model_data?: Json
+          model_type?: string
+          quality_level?: string | null
+          trail_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trail_3d_models_trail_id_fkey"
+            columns: ["trail_id"]
+            isOneToOne: false
+            referencedRelation: "trails"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trail_3d_models_trail_id_fkey"
+            columns: ["trail_id"]
+            isOneToOne: false
+            referencedRelation: "v_trail_preview"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trail_data_sources: {
         Row: {
           api_key: string | null
@@ -1239,6 +1287,69 @@ export type Database = {
           },
         ]
       }
+      trail_waypoints: {
+        Row: {
+          coordinates_3d: Json | null
+          created_at: string | null
+          description: string | null
+          distance_from_start: number | null
+          elevation: number | null
+          id: string
+          latitude: number
+          longitude: number
+          name: string
+          photos: string[] | null
+          trail_id: string
+          updated_at: string | null
+          waypoint_type: string
+        }
+        Insert: {
+          coordinates_3d?: Json | null
+          created_at?: string | null
+          description?: string | null
+          distance_from_start?: number | null
+          elevation?: number | null
+          id?: string
+          latitude: number
+          longitude: number
+          name: string
+          photos?: string[] | null
+          trail_id: string
+          updated_at?: string | null
+          waypoint_type: string
+        }
+        Update: {
+          coordinates_3d?: Json | null
+          created_at?: string | null
+          description?: string | null
+          distance_from_start?: number | null
+          elevation?: number | null
+          id?: string
+          latitude?: number
+          longitude?: number
+          name?: string
+          photos?: string[] | null
+          trail_id?: string
+          updated_at?: string | null
+          waypoint_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trail_waypoints_trail_id_fkey"
+            columns: ["trail_id"]
+            isOneToOne: false
+            referencedRelation: "trails"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trail_waypoints_trail_id_fkey"
+            columns: ["trail_id"]
+            isOneToOne: false
+            referencedRelation: "v_trail_preview"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trail_weather: {
         Row: {
           condition: string | null
@@ -1346,12 +1457,19 @@ export type Database = {
       }
       trails: {
         Row: {
+          accessibility_features: string[] | null
+          best_seasons: string[] | null
+          camping_available: boolean | null
           category: Database["public"]["Enums"]["trail_category"] | null
           created_at: string | null
           data_quality_score: number | null
           description: string | null
           difficulty: Database["public"]["Enums"]["trail_difficulty"] | null
+          dogs_allowed: boolean | null
           elevation_gain: number | null
+          elevation_profile: Json | null
+          estimated_time: string | null
+          features: string[] | null
           geom: unknown | null
           id: string
           import_job_id: string | null
@@ -1365,21 +1483,35 @@ export type Database = {
           lon: number | null
           longitude: number | null
           name: string
+          permit_required: boolean | null
           photos: string[] | null
           rating: number | null
           route_geojson: Json | null
+          seasonal_conditions: Json | null
           source: string | null
           state: string | null
           status: string | null
+          surface_type: string | null
           tags: string[] | null
+          terrain_mesh_data: Json | null
+          trail_type: Database["public"]["Enums"]["trail_type"] | null
+          trailhead_info: Json | null
+          waypoints: Json | null
         }
         Insert: {
+          accessibility_features?: string[] | null
+          best_seasons?: string[] | null
+          camping_available?: boolean | null
           category?: Database["public"]["Enums"]["trail_category"] | null
           created_at?: string | null
           data_quality_score?: number | null
           description?: string | null
           difficulty?: Database["public"]["Enums"]["trail_difficulty"] | null
+          dogs_allowed?: boolean | null
           elevation_gain?: number | null
+          elevation_profile?: Json | null
+          estimated_time?: string | null
+          features?: string[] | null
           geom?: unknown | null
           id?: string
           import_job_id?: string | null
@@ -1393,21 +1525,35 @@ export type Database = {
           lon?: number | null
           longitude?: number | null
           name: string
+          permit_required?: boolean | null
           photos?: string[] | null
           rating?: number | null
           route_geojson?: Json | null
+          seasonal_conditions?: Json | null
           source?: string | null
           state?: string | null
           status?: string | null
+          surface_type?: string | null
           tags?: string[] | null
+          terrain_mesh_data?: Json | null
+          trail_type?: Database["public"]["Enums"]["trail_type"] | null
+          trailhead_info?: Json | null
+          waypoints?: Json | null
         }
         Update: {
+          accessibility_features?: string[] | null
+          best_seasons?: string[] | null
+          camping_available?: boolean | null
           category?: Database["public"]["Enums"]["trail_category"] | null
           created_at?: string | null
           data_quality_score?: number | null
           description?: string | null
           difficulty?: Database["public"]["Enums"]["trail_difficulty"] | null
+          dogs_allowed?: boolean | null
           elevation_gain?: number | null
+          elevation_profile?: Json | null
+          estimated_time?: string | null
+          features?: string[] | null
           geom?: unknown | null
           id?: string
           import_job_id?: string | null
@@ -1421,13 +1567,20 @@ export type Database = {
           lon?: number | null
           longitude?: number | null
           name?: string
+          permit_required?: boolean | null
           photos?: string[] | null
           rating?: number | null
           route_geojson?: Json | null
+          seasonal_conditions?: Json | null
           source?: string | null
           state?: string | null
           status?: string | null
+          surface_type?: string | null
           tags?: string[] | null
+          terrain_mesh_data?: Json | null
+          trail_type?: Database["public"]["Enums"]["trail_type"] | null
+          trailhead_info?: Json | null
+          waypoints?: Json | null
         }
         Relationships: [
           {
@@ -3432,6 +3585,7 @@ export type Database = {
     Enums: {
       trail_category: "hiking" | "biking" | "offroad"
       trail_difficulty: "easy" | "moderate" | "hard" | "expert"
+      trail_type: "loop" | "out_and_back" | "point_to_point"
     }
     CompositeTypes: {
       geometry_dump: {
@@ -3569,6 +3723,7 @@ export const Constants = {
     Enums: {
       trail_category: ["hiking", "biking", "offroad"],
       trail_difficulty: ["easy", "moderate", "hard", "expert"],
+      trail_type: ["loop", "out_and_back", "point_to_point"],
     },
   },
 } as const

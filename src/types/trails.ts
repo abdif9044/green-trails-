@@ -25,6 +25,21 @@ export interface Trail {
   geojson?: any; // GeoJSON data for trail paths
   state_province?: string;
   strain_tags?: StrainTag[];
+  // Enhanced 3D and Navigation Features
+  trail_type?: 'loop' | 'out_and_back' | 'point_to_point';
+  estimated_time?: string;
+  elevation_profile?: number[];
+  terrain_mesh_data?: any;
+  waypoints?: Waypoint[];
+  seasonal_conditions?: SeasonalConditions;
+  trailhead_info?: TrailheadInfo;
+  features?: string[];
+  best_seasons?: string[];
+  surface_type?: string;
+  accessibility_features?: string[];
+  permit_required?: boolean;
+  dogs_allowed?: boolean;
+  camping_available?: boolean;
 }
 
 export interface DatabaseTrail {
@@ -130,3 +145,52 @@ export type StrainTag =
   | 'relaxed'
   | 'sleepy'
   | 'uplifted';
+
+// Enhanced 3D and Navigation Types
+export interface Waypoint {
+  id: string;
+  name: string;
+  description?: string;
+  type: 'junction' | 'viewpoint' | 'hazard' | 'rest' | 'water' | 'summit' | 'trailhead' | 'camping';
+  coordinates: [number, number, number]; // [longitude, latitude, elevation]
+  distance_from_start?: number;
+  photos?: string[];
+}
+
+export interface SeasonalConditions {
+  spring?: string;
+  summer?: string;
+  fall?: string;
+  winter?: string;
+  best_time?: string;
+  warnings?: string[];
+}
+
+export interface TrailheadInfo {
+  parking?: string;
+  facilities?: string[];
+  access_notes?: string;
+  coordinates?: [number, number];
+  hours?: string;
+  fees?: string;
+}
+
+export interface Trail3DModel {
+  id: string;
+  trail_id: string;
+  model_type: 'terrain_mesh' | 'elevation_profile' | 'flythrough_path';
+  model_data: any;
+  quality_level: 'low' | 'medium' | 'high';
+  file_size_kb?: number;
+  generated_at: string;
+  last_updated: string;
+}
+
+export interface NavigationState {
+  isNavigating: boolean;
+  currentPosition?: [number, number, number];
+  nextWaypoint?: Waypoint;
+  distanceToNext?: number;
+  totalProgress?: number;
+  estimatedTimeRemaining?: string;
+}

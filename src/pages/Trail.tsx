@@ -1,13 +1,14 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTrailInteractions } from '@/hooks/use-trail-interactions';
 import { useTrailQueryBase } from '@/features/trails/hooks/use-trail-query-base';
 import TrailSidebar from '@/components/trails/TrailSidebar';
 import SimilarTrails from '@/components/trails/SimilarTrails';
 import HikeTracker from '@/components/mobile/HikeTracker';
+import TrailViewer3D from '@/components/trail-3d/TrailViewer3D';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, AlertTriangle, View, Mountain } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 
 const Trail: React.FC = () => {
@@ -15,6 +16,7 @@ const Trail: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const trailId = id || '';
+  const [view3D, setView3D] = useState(false);
   
   // Add debug logging
   console.log('Trail page: trailId =', trailId, 'type:', typeof trailId);
@@ -104,11 +106,22 @@ const Trail: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
-              <img 
-                src={trail.imageUrl} 
-                alt={trail.name}
-                className="w-full h-64 object-cover"
-              />
+              {view3D ? (
+                <TrailViewer3D 
+                  trail={trail} 
+                  className="h-64"
+                  onStartNavigation={() => {
+                    // TODO: Implement navigation start
+                    console.log('Starting navigation for trail:', trail.name);
+                  }}
+                />
+              ) : (
+                <img 
+                  src={trail.imageUrl} 
+                  alt={trail.name}
+                  className="w-full h-64 object-cover"
+                />
+              )}
               <div className="p-6">
                 <div className="flex items-start justify-between mb-4">
                   <div>
@@ -118,22 +131,39 @@ const Trail: React.FC = () => {
                     <p className="text-gray-600 dark:text-gray-400 mb-4">
                       {trail.location}
                     </p>
+                    {trail.trail_type && (
+                      <span className="inline-block px-2 py-1 bg-greentrail-100 dark:bg-greentrail-900 text-greentrail-800 dark:text-greentrail-200 rounded text-sm">
+                        {trail.trail_type.replace('_', ' ')} trail
+                      </span>
+                    )}
                   </div>
-                  <button
-                    onClick={toggleLike}
-                    disabled={isLoading}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                      isLiked 
-                        ? 'bg-red-500 text-white' 
-                        : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-                    }`}
-                  >
-                    <span>{isLiked ? '♥' : '♡'}</span>
-                    <span>{likeCount}</span>
-                  </button>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() => setView3D(!view3D)}
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-2"
+                    >
+                      {view3D ? <View className="h-4 w-4" /> : <Mountain className="h-4 w-4" />}
+                      {view3D ? '2D View' : '3D View'}
+                    </Button>
+                    
+                    <button
+                      onClick={toggleLike}
+                      disabled={isLoading}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                        isLiked 
+                          ? 'bg-red-500 text-white' 
+                          : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                      }`}
+                    >
+                      <span>{isLiked ? '♥' : '♡'}</span>
+                      <span>{likeCount}</span>
+                    </button>
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-4 mb-6">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                   <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                     <div className="text-2xl font-bold text-green-600">{trail.length}</div>
                     <div className="text-sm text-gray-600 dark:text-gray-400">miles</div>
@@ -146,6 +176,12 @@ const Trail: React.FC = () => {
                     <div className="text-2xl font-bold text-orange-600 capitalize">{trail.difficulty}</div>
                     <div className="text-sm text-gray-600 dark:text-gray-400">difficulty</div>
                   </div>
+                  {trail.estimated_time && (
+                    <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                      <div className="text-lg font-bold text-purple-600">{trail.estimated_time}</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400">estimated time</div>
+                    </div>
+                  )}
                 </div>
 
                 {trail.description && (

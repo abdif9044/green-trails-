@@ -7,6 +7,7 @@ import TrailSidebar from '@/components/trails/TrailSidebar';
 import SimilarTrails from '@/components/trails/SimilarTrails';
 import HikeTracker from '@/components/mobile/HikeTracker';
 import TrailViewer3D from '@/components/trail-3d/TrailViewer3D';
+import NavigationEngine from '@/components/navigation/NavigationEngine';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, AlertTriangle, View, Mountain } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
@@ -209,11 +210,24 @@ const Trail: React.FC = () => {
                   </div>
                 )}
 
-                {/* Hike Tracker Section for logged-in users */}
+                {/* Enhanced Hike Tracker Section for logged-in users */}
                 {user && (
-                  <div className="mt-8">
-                    <h2 className="text-xl font-semibold mb-4">Track Your Hike</h2>
-                    <HikeTracker trailId={trailId} trailName={trail.name} />
+                  <div className="mt-8 space-y-6">
+                    <div>
+                      <h2 className="text-xl font-semibold mb-4">Track Your Hike</h2>
+                      <HikeTracker trailId={trailId} trailName={trail.name} />
+                    </div>
+                    
+                    <div>
+                      <h2 className="text-xl font-semibold mb-4">GPS Navigation</h2>
+                      <NavigationEngine 
+                        trail={trail}
+                        onNavigationEnd={(stats) => {
+                          console.log('Navigation completed:', stats);
+                          // TODO: Show completion modal with stats
+                        }}
+                      />
+                    </div>
                   </div>
                 )}
               </div>

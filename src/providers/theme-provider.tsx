@@ -22,47 +22,60 @@ export function ThemeProvider({
   defaultTheme?: Theme
   storageKey?: string
 }) {
+  // Initialize with default theme to prevent null states
   const [theme, setTheme] = React.useState<Theme>(defaultTheme)
-
   const [resolvedTheme, setResolvedTheme] = React.useState<"dark" | "light">("light")
 
   // Initialize theme from localStorage after component mounts
   React.useEffect(() => {
-    const storedTheme = localStorage.getItem(storageKey) as Theme | null
-    if (storedTheme) {
-      setTheme(storedTheme)
-    }
-    
-    if (storedTheme && storedTheme !== "system") {
-      setResolvedTheme(storedTheme)
-    } else {
+    try {
+      const storedTheme = localStorage.getItem(storageKey) as Theme | null
+      if (storedTheme && (storedTheme === "dark" || storedTheme === "light" || storedTheme === "system")) {
+        setTheme(storedTheme)
+      }
+      
+      if (storedTheme && storedTheme !== "system") {
+        setResolvedTheme(storedTheme as "dark" | "light")
+      } else {
+        const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark"
+          : "light"
+        setResolvedTheme(systemTheme)
+      }
+    } catch (error) {
+      console.warn('Failed to load theme from localStorage:', error)
+      // Fallback to system theme
       const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
         ? "dark"
         : "light"
       setResolvedTheme(systemTheme)
     }
-  }, [])
+  }, [storageKey])
 
   React.useEffect(() => {
-    const root = window.document.documentElement
-    root.classList.remove("light", "dark")
+    try {
+      const root = window.document.documentElement
+      root.classList.remove("light", "dark")
 
-    let effectiveTheme: Theme | "dark" | "light" = theme
-    if (theme === "system") {
-      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
-        .matches
-        ? "dark"
-        : "light"
-      effectiveTheme = systemTheme
+      let effectiveTheme: "dark" | "light" = theme === "system" 
+        ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
+        : theme
+
+      setResolvedTheme(effectiveTheme)
+      root.classList.add(effectiveTheme)
+    } catch (error) {
+      console.warn('Failed to apply theme:', error)
     }
-
-    setResolvedTheme(effectiveTheme as "dark" | "light")
-    root.classList.add(effectiveTheme)
   }, [theme])
 
   const handleSetTheme = (newTheme: Theme) => {
-    localStorage.setItem(storageKey, newTheme)
-    setTheme(newTheme)
+    try {
+      localStorage.setItem(storageKey, newTheme)
+      setTheme(newTheme)
+    } catch (error) {
+      console.warn('Failed to save theme to localStorage:', error)
+      setTheme(newTheme)
+    }
   }
 
   const value = {

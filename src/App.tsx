@@ -23,8 +23,8 @@ const App: React.FC = () => {
   return (
     <ErrorBoundary>
       <ThemeProvider defaultTheme="system" storageKey="greentrails-theme">
-        <UnifiedAuthProvider>
-          <TooltipProvider>
+        <TooltipProvider>
+          <UnifiedAuthProvider>
             <ToasterWrapper />
             <BrowserRouter>
               <ErrorBoundary>
@@ -36,8 +36,8 @@ const App: React.FC = () => {
                 </Routes>
               </ErrorBoundary>
             </BrowserRouter>
-          </TooltipProvider>
-        </UnifiedAuthProvider>
+          </UnifiedAuthProvider>
+        </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>
   );

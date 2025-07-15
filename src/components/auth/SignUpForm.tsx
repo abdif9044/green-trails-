@@ -77,6 +77,7 @@ export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
       
       setTimeout(() => {
         onSuccess();
+        window.location.href = '/trails';
       }, 2000);
       
     } catch (err: any) {

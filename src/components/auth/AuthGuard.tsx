@@ -21,7 +21,7 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({
       if (requireAuth && !user) {
         navigate('/auth');
       } else if (!requireAuth && user) {
-        navigate('/');
+        navigate('/trails');
       }
     }
   }, [user, loading, requireAuth, navigate]);

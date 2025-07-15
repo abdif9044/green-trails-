@@ -44,13 +44,37 @@ export const navItems = [
     page: withErrorBoundary(AuthPage),
   },
   {
+    title: "Forgot Password",
+    to: "/auth/forgot-password",
+    page: withErrorBoundary(() => {
+      const ForgotPasswordPage = React.lazy(() => import('@/pages/ForgotPasswordPage'));
+      return (
+        <React.Suspense fallback={<div>Loading...</div>}>
+          <ForgotPasswordPage />
+        </React.Suspense>
+      );
+    }),
+  },
+  {
+    title: "Update Password",
+    to: "/auth/update-password",
+    page: withErrorBoundary(() => {
+      const UpdatePasswordPage = React.lazy(() => import('@/pages/UpdatePasswordPage'));
+      return (
+        <React.Suspense fallback={<div>Loading...</div>}>
+          <UpdatePasswordPage />
+        </React.Suspense>
+      );
+    }),
+  },
+  {
     title: "Reset Password",
     to: "/auth/reset-password",
     page: withErrorBoundary(() => {
-      const ResetPasswordPage = React.lazy(() => import('@/pages/ResetPasswordPage'));
+      const ForgotPasswordPage = React.lazy(() => import('@/pages/ForgotPasswordPage'));
       return (
         <React.Suspense fallback={<div>Loading...</div>}>
-          <ResetPasswordPage />
+          <ForgotPasswordPage />
         </React.Suspense>
       );
     }),

@@ -31,7 +31,7 @@ export const LoginForm = () => {
     const result = await signIn(email, password);
     
     if (result.success) {
-      navigate('/');
+      navigate('/trails');
     } else {
       setError(result.message || 'Failed to sign in');
     }
@@ -94,7 +94,7 @@ export const LoginForm = () => {
               type="button"
               variant="link"
               className="text-sm"
-              onClick={() => navigate('/auth/reset-password')}
+              onClick={() => navigate('/auth/forgot-password')}
             >
               Forgot your password?
             </Button>

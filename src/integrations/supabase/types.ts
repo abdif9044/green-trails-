@@ -1928,6 +1928,16 @@ export type Database = {
             }
         Returns: string
       }
+      audit_user_data_isolation: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          table_name: string
+          policy_name: string
+          policy_command: string
+          has_user_isolation: boolean
+          security_status: string
+        }[]
+      }
       box: {
         Args: { "": unknown } | { "": unknown }
         Returns: unknown

@@ -1,5 +1,5 @@
 
-import React from "react"
+import React, { createContext, useState, useEffect, ReactNode } from 'react'
 
 type Theme = "dark" | "light" | "system"
 
@@ -9,97 +9,95 @@ interface ThemeProviderState {
   resolvedTheme: "dark" | "light"
 }
 
-const ThemeProviderContext = React.createContext<ThemeProviderState | undefined>(
-  undefined
-)
+const ThemeProviderContext = createContext<ThemeProviderState | undefined>(undefined)
+
+interface ThemeProviderProps {
+  children: ReactNode
+  defaultTheme?: Theme
+  storageKey?: string
+}
 
 export function ThemeProvider({
   children,
   defaultTheme = "system",
   storageKey = "vite-ui-theme",
-}: {
-  children: React.ReactNode
-  defaultTheme?: Theme
-  storageKey?: string
-}) {
-  // Use a more defensive initialization approach
-  const [isInitialized, setIsInitialized] = React.useState(false)
-  const [theme, setTheme] = React.useState<Theme>(defaultTheme)
-  const [resolvedTheme, setResolvedTheme] = React.useState<"dark" | "light">("light")
+}: ThemeProviderProps) {
+  const [theme, setTheme] = useState<Theme>(defaultTheme)
+  const [resolvedTheme, setResolvedTheme] = useState<"dark" | "light">("light")
+  const [isInitialized, setIsInitialized] = useState(false)
 
-  // Initialize theme from localStorage after component mounts
-  React.useEffect(() => {
-    if (isInitialized) return
-    
+  useEffect(() => {
+    // Load theme from localStorage and apply it
     try {
       const storedTheme = localStorage.getItem(storageKey) as Theme | null
       if (storedTheme && (storedTheme === "dark" || storedTheme === "light" || storedTheme === "system")) {
         setTheme(storedTheme)
       }
-      
-      const getSystemTheme = () => {
+
+      const getSystemTheme = (): "dark" | "light" => {
         try {
           return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
         } catch {
           return "light"
         }
       }
-      
-      if (storedTheme && storedTheme !== "system") {
-        setResolvedTheme(storedTheme as "dark" | "light")
-      } else {
-        setResolvedTheme(getSystemTheme())
-      }
-      
+
+      // Determine resolved theme
+      const currentTheme = storedTheme || defaultTheme
+      const resolved = currentTheme === "system" ? getSystemTheme() : (currentTheme as "dark" | "light")
+      setResolvedTheme(resolved)
+
+      // Apply theme to DOM
+      const root = window.document.documentElement
+      root.classList.remove("light", "dark")
+      root.classList.add(resolved)
+
       setIsInitialized(true)
     } catch (error) {
-      console.warn('Failed to load theme from localStorage:', error)
+      console.warn('Failed to initialize theme:', error)
       setResolvedTheme("light")
       setIsInitialized(true)
     }
-  }, [storageKey, isInitialized])
+  }, []) // Empty dependency array - runs once on mount
 
-  React.useEffect(() => {
+  // Update DOM when theme changes
+  useEffect(() => {
     if (!isInitialized) return
-    
+
     try {
+      const getSystemTheme = (): "dark" | "light" => {
+        try {
+          return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
+        } catch {
+          return "light"
+        }
+      }
+
+      const resolved = theme === "system" ? getSystemTheme() : (theme as "dark" | "light")
+      setResolvedTheme(resolved)
+
       const root = window.document.documentElement
       root.classList.remove("light", "dark")
+      root.classList.add(resolved)
 
-      let effectiveTheme: "dark" | "light" = theme === "system" 
-        ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
-        : theme
-
-      setResolvedTheme(effectiveTheme)
-      root.classList.add(effectiveTheme)
+      // Save to localStorage
+      localStorage.setItem(storageKey, theme)
     } catch (error) {
       console.warn('Failed to apply theme:', error)
     }
-  }, [theme, isInitialized])
+  }, [theme, isInitialized, storageKey])
 
-  const handleSetTheme = React.useCallback((newTheme: Theme) => {
-    try {
-      localStorage.setItem(storageKey, newTheme)
-      setTheme(newTheme)
-    } catch (error) {
-      console.warn('Failed to save theme to localStorage:', error)
-      setTheme(newTheme)
-    }
-  }, [storageKey])
+  const handleSetTheme = (newTheme: Theme) => {
+    setTheme(newTheme)
+  }
 
-  const value = React.useMemo(() => ({
-    theme,
-    setTheme: handleSetTheme,
-    resolvedTheme,
-  }), [theme, handleSetTheme, resolvedTheme])
-
-  // Don't render children until initialized to prevent hydration issues
+  // Don't render children until initialized
   if (!isInitialized) {
-    return <div style={{ visibility: 'hidden' }}>{children}</div>
+    return null
   }
 
   return (
-    <ThemeProviderContext.Provider value={value}>
+    <ThemeProviderContext.Provider value={{ theme, setTheme: handleSetTheme, resolvedTheme }}>
       {children}
     </ThemeProviderContext.Provider>
   )

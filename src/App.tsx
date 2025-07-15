@@ -21,27 +21,25 @@ const App: React.FC = () => {
   }, []);
 
   return (
-    <React.StrictMode>
-      <ErrorBoundary>
-        <ThemeProvider defaultTheme="system" storageKey="greentrails-theme">
-          <TooltipProvider>
-            <UnifiedAuthProvider>
-              <BrowserRouter>
-                <ToasterWrapper />
-                <ErrorBoundary>
-                  <Routes>
-                    {navItems.map(({ to, page: PageComponent }) => (
-                      <Route key={to} path={to} element={<PageComponent />} />
-                    ))}
-                    <Route path="/admin/import-debug" element={<ImportDebugPage />} />
-                  </Routes>
-                </ErrorBoundary>
-              </BrowserRouter>
-            </UnifiedAuthProvider>
-          </TooltipProvider>
-        </ThemeProvider>
-      </ErrorBoundary>
-    </React.StrictMode>
+    <ErrorBoundary>
+      <ThemeProvider defaultTheme="system" storageKey="greentrails-theme">
+        <TooltipProvider>
+          <UnifiedAuthProvider>
+            <BrowserRouter>
+              <ToasterWrapper />
+              <ErrorBoundary>
+                <Routes>
+                  {navItems.map(({ to, page: PageComponent }) => (
+                    <Route key={to} path={to} element={<PageComponent />} />
+                  ))}
+                  <Route path="/admin/import-debug" element={<ImportDebugPage />} />
+                </Routes>
+              </ErrorBoundary>
+            </BrowserRouter>
+          </UnifiedAuthProvider>
+        </TooltipProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 };
 

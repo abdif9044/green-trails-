@@ -2010,6 +2010,10 @@ export type Database = {
         }
         Returns: number
       }
+      check_user_permission: {
+        Args: { required_permission: string; resource_id?: string }
+        Returns: boolean
+      }
       disablelongtransactions: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -2310,6 +2314,10 @@ export type Database = {
       log_performance_improvement: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      log_security_error: {
+        Args: { error_type: string; error_message: string; context_data?: Json }
+        Returns: undefined
       }
       longtransactionsenabled: {
         Args: Record<PropertyKey, never>

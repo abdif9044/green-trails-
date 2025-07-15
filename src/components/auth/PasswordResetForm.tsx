@@ -1,106 +1,86 @@
-
 import { useState } from 'react';
-import { useAuth } from '@/hooks/use-auth';
-import { useToast } from '@/hooks/use-toast';
+import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle, ArrowLeft, Loader2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { 
+  Loader2, 
+  AlertCircle, 
+  CheckCircle, 
+  Mail, 
+  ArrowLeft,
+  Send
+} from 'lucide-react';
 
 interface PasswordResetFormProps {
-  onBack: () => void;
+  onBack?: () => void;
 }
 
 export const PasswordResetForm = ({ onBack }: PasswordResetFormProps) => {
   const [email, setEmail] = useState('');
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [formTouched, setFormTouched] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
   
-  const { resetPassword } = useAuth();
   const { toast } = useToast();
-
-  const validateEmail = (email: string): boolean => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
-
-  const handleFieldChange = () => {
-    if (!formTouched) setFormTouched(true);
-    if (error) setError('');
-  };
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
-    
-    if (!email) {
-      setError('Email is required');
-      setLoading(false);
-      return;
-    }
-    
-    if (!validateEmail(email)) {
-      setError('Please enter a valid email address');
-      setLoading(false);
-      return;
-    }
-    
+
     try {
-      const { success, message } = await resetPassword(email);
-      if (!success) {
-        setError(message || 'Failed to send password reset email');
-        return;
-      }
-      
-      setSubmitted(true);
-      toast({
-        title: "Password reset email sent",
-        description: "Check your inbox for instructions to reset your password.",
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
+        redirectTo: `${window.location.origin}/auth/update-password`,
       });
+
+      if (error) {
+        setError(error.message);
+      } else {
+        setSuccess(true);
+        toast({
+          title: "Reset link sent!",
+          description: "Check your email for password reset instructions.",
+        });
+      }
     } catch (err: any) {
-      console.error('Password reset error:', err);
-      setError(err.message || 'Failed to send password reset email');
+      setError('Network error. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <>
-      <div className="flex justify-start mb-4">
-        <Button 
-          variant="ghost" 
-          type="button" 
-          className="p-0" 
-          onClick={onBack}
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to sign in
+  if (success) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="text-center py-8"
+      >
+        <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-4" />
+        <h3 className="text-2xl font-bold text-greentrail-800 mb-4">Check Your Email</h3>
+        <p className="text-greentrail-600 mb-6">We've sent a reset link to {email}</p>
+        <Button variant="outline" onClick={() => navigate('/auth')}>
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back to Sign In
         </Button>
-      </div>
-  
-      {submitted ? (
-        <div className="text-center py-8">
-          <h3 className="text-lg font-semibold mb-2">Password Reset Email Sent</h3>
-          <p className="text-muted-foreground mb-4">
-            If an account exists for {email}, you'll receive an email with instructions to reset your password.
-          </p>
-          <Button onClick={onBack} variant="outline">Return to sign in</Button>
-        </div>
-      ) : (
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2 text-center mb-6">
-            <h3 className="text-lg font-semibold">Reset Your Password</h3>
-            <p className="text-sm text-muted-foreground">
-              Enter your email address and we'll send you instructions to reset your password.
-            </p>
-          </div>
-  
+      </motion.div>
+    );
+  }
+
+  return (
+    <Card className="bg-white/80 backdrop-blur-sm border-greentrail-200 shadow-xl">
+      <CardHeader className="text-center">
+        <CardTitle className="text-2xl font-bold text-greentrail-800">Reset Password</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-6">
           {error && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
@@ -109,44 +89,38 @@ export const PasswordResetForm = ({ onBack }: PasswordResetFormProps) => {
           )}
           
           <div className="space-y-2">
-            <Label htmlFor="email-reset">Email</Label>
+            <Label htmlFor="email">Email Address</Label>
             <Input
-              id="email-reset"
+              id="email"
               type="email"
-              placeholder="Enter your email"
               value={email}
-              onChange={(e) => {
-                setEmail(e.target.value);
-                handleFieldChange();
-              }}
-              className={cn(
-                formTouched && !validateEmail(email) && email ? "border-red-500 focus-visible:ring-red-500" : ""
-              )}
-              autoComplete="email"
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="your@email.com"
               required
+              disabled={loading}
             />
-            {formTouched && !validateEmail(email) && email && (
-              <p className="text-xs text-red-500 mt-1">Please enter a valid email</p>
-            )}
           </div>
           
           <Button 
             type="submit" 
-            className="w-full"
-            disabled={loading || (!email || (formTouched && !validateEmail(email)))}
+            className="w-full bg-greentrail-600 hover:bg-greentrail-700"
+            disabled={loading || !email}
           >
             {loading ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                 Sending...
               </>
             ) : (
-              'Send Reset Instructions'
+              <>
+                <Send className="mr-2 h-5 w-5" />
+                Send Reset Link
+              </>
             )}
           </Button>
         </form>
-      )}
-    </>
+      </CardContent>
+    </Card>
   );
 };
 

@@ -1928,6 +1928,16 @@ export type Database = {
             }
         Returns: string
       }
+      audit_all_table_security: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          table_name: string
+          rls_enabled: boolean
+          policy_count: number
+          has_user_policies: boolean
+          security_recommendation: string
+        }[]
+      }
       audit_user_data_isolation: {
         Args: Record<PropertyKey, never>
         Returns: {

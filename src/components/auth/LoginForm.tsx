@@ -23,193 +23,203 @@ export const LoginForm = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  // Enhanced email validation regex
+  const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
   // Real-time email validation
   useEffect(() => {
-    if (email && !email.includes('@')) {
+    if (email && !EMAIL_REGEX.test(email)) {
       setEmailError('Please enter a valid email address');
     } else {
       setEmailError('');
     }
   }, [email]);
 
-  // Real-time password validation
+  // Real-time password validation (updated to 8+ characters per security requirements)
   useEffect(() => {
-    if (password && password.length < 6) {
-      setPasswordError('Password must be at least 6 characters');
+    if (password && password.length < 8) {
+      setPasswordError('Password must be at least 8 characters');
     } else {
       setPasswordError('');
     }
   }, [password]);
 
   const validateForm = () => {
+    // Clear previous errors
+    setError('');
+    setEmailError('');
+    setPasswordError('');
+
     if (!email.trim()) {
       setError('Email is required');
       return false;
     }
-    if (!email.includes('@') || !email.includes('.')) {
+
+    if (!EMAIL_REGEX.test(email)) {
       setError('Please enter a valid email address');
       return false;
     }
+
     if (!password) {
       setError('Password is required');
       return false;
     }
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters');
+
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters');
       return false;
     }
+
     return true;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
     
     if (!validateForm()) {
       return;
     }
 
     setLoading(true);
+    setError('');
 
     try {
-      const result = await signIn(email.trim().toLowerCase(), password);
-      
-      if (result.success) {
-        toast({
-          title: "Welcome back!",
-          description: "You've successfully signed in to GreenTrails.",
-        });
-        navigate('/trails');
-      } else {
-        setError(result.message || 'Failed to sign in. Please check your credentials.');
-      }
-    } catch (err: any) {
+      await signIn(email, password);
+      toast({
+        title: "Welcome back!",
+        description: "You've successfully signed in.",
+      });
+      navigate('/dashboard'); // or wherever you want to redirect
+    } catch (err) {
       console.error('Login error:', err);
-      setError('Network error. Please check your connection and try again.');
+      
+      // Enhanced error handling based on error type
+      if (err.message?.includes('Invalid login credentials')) {
+        setError('Invalid email or password. Please check your credentials and try again.');
+      } else if (err.message?.includes('Email not confirmed')) {
+        setError('Please check your email and click the confirmation link before signing in.');
+      } else if (err.message?.includes('Too many requests')) {
+        setError('Too many login attempts. Please wait a moment and try again.');
+      } else if (err.message?.includes('network')) {
+        setError('Network error. Please check your connection and try again.');
+      } else {
+        setError('An unexpected error occurred. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const handleForgotPassword = () => {
-    navigate('/auth/forgot-password');
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
   };
 
   return (
-    <motion.div
+    <motion.div 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-      className="space-y-6"
+      transition={{ duration: 0.5 }}
+      className="w-full max-w-md mx-auto space-y-6"
     >
-      <div className="text-center mb-6">
-        <h2 className="text-2xl font-bold text-greentrail-800 mb-2">Welcome Back</h2>
-        <p className="text-greentrail-600">Sign in to continue your adventure</p>
+      <div className="text-center space-y-2">
+        <h2 className="text-2xl font-bold text-gray-900">Welcome back</h2>
+        <p className="text-gray-600">Sign in to your GreenTrails account</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-5">
-        {error && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.2 }}
-          >
-            <Alert variant="destructive" className="border-red-200 bg-red-50">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription className="text-red-800">{error}</AlertDescription>
-            </Alert>
-          </motion.div>
-        )}
-        
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="email" className="text-sm font-semibold text-greentrail-700 flex items-center gap-2">
-            <Mail className="w-4 h-4" />
-            Email Address
-          </Label>
+          <Label htmlFor="email">Email</Label>
           <div className="relative">
+            <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
             <Input
               id="email"
               type="email"
+              placeholder="Enter your email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="your@email.com"
-              className={`pl-4 pr-4 py-3 border-2 transition-all duration-200 ${
-                emailError 
-                  ? 'border-red-300 focus:border-red-500' 
-                  : 'border-greentrail-200 focus:border-greentrail-500'
-              } rounded-lg`}
+              className={`pl-10 ${emailError ? 'border-red-500' : ''}`}
               disabled={loading}
-              autoComplete="email"
+              required
             />
           </div>
           {emailError && (
-            <p className="text-sm text-red-600 mt-1">{emailError}</p>
+            <p className="text-sm text-red-500">{emailError}</p>
           )}
         </div>
-        
+
         <div className="space-y-2">
-          <Label htmlFor="password" className="text-sm font-semibold text-greentrail-700 flex items-center gap-2">
-            <Lock className="w-4 h-4" />
-            Password
-          </Label>
+          <Label htmlFor="password">Password</Label>
           <div className="relative">
+            <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
             <Input
               id="password"
               type={showPassword ? 'text' : 'password'}
+              placeholder="Enter your password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
-              className={`pl-4 pr-12 py-3 border-2 transition-all duration-200 ${
-                passwordError 
-                  ? 'border-red-300 focus:border-red-500' 
-                  : 'border-greentrail-200 focus:border-greentrail-500'
-              } rounded-lg`}
+              className={`pl-10 pr-10 ${passwordError ? 'border-red-500' : ''}`}
               disabled={loading}
-              autoComplete="current-password"
+              required
             />
             <button
               type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-greentrail-500 hover:text-greentrail-700 transition-colors"
+              onClick={togglePasswordVisibility}
+              className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+              disabled={loading}
             >
-              {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
           {passwordError && (
-            <p className="text-sm text-red-600 mt-1">{passwordError}</p>
+            <p className="text-sm text-red-500">{passwordError}</p>
           )}
         </div>
-        
+
         <Button 
           type="submit" 
-          className="w-full bg-greentrail-600 hover:bg-greentrail-700 text-white py-3 rounded-lg font-semibold text-base transition-all duration-200 shadow-lg hover:shadow-xl group"
+          className="w-full"
           disabled={loading || !!emailError || !!passwordError}
         >
           {loading ? (
             <>
-              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Signing in...
             </>
           ) : (
             <>
               Sign In
-              <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+              <ArrowRight className="ml-2 h-4 w-4" />
             </>
           )}
         </Button>
-        
-        <div className="text-center pt-2">
-          <Button
-            type="button"
-            variant="link"
-            className="text-greentrail-600 hover:text-greentrail-800 font-medium"
-            onClick={handleForgotPassword}
-            disabled={loading}
-          >
-            Forgot your password?
-          </Button>
-        </div>
       </form>
+
+      <div className="text-center space-y-2">
+        <button
+          type="button"
+          onClick={() => navigate('/forgot-password')}
+          className="text-sm text-blue-600 hover:text-blue-700 underline"
+        >
+          Forgot your password?
+        </button>
+        <p className="text-sm text-gray-600">
+          Don't have an account?{' '}
+          <button
+            type="button"
+            onClick={() => navigate('/signup')}
+            className="text-blue-600 hover:text-blue-700 underline"
+          >
+            Sign up
+          </button>
+        </p>
+      </div>
     </motion.div>
   );
 };

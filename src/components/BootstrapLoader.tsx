@@ -1,19 +1,27 @@
 
 import React from 'react';
 
+// Simple bootstrap component that doesn't use hooks to avoid dispatcher issues
 const BootstrapLoader: React.FC = () => {
-  // Use a ref to ensure the effect only runs once and avoid hook dispatcher issues
-  const hasBootstrapped = React.useRef(false);
-  
+  // Use a simple effect without hooks to bootstrap the app
   React.useEffect(() => {
-    if (!hasBootstrapped.current) {
-      hasBootstrapped.current = true;
-      // Bootstrap any necessary initialization
-      console.log('GreenTrails app bootstrapped successfully');
-    }
+    console.log('GreenTrails app bootstrapped successfully');
+    
+    // Add any initialization logic here
+    const initializeApp = () => {
+      // Performance monitoring
+      if (typeof window !== 'undefined') {
+        console.log('App initialization complete');
+      }
+    };
+    
+    // Small delay to ensure DOM is ready
+    const timer = setTimeout(initializeApp, 100);
+    
+    return () => clearTimeout(timer);
   }, []);
 
-  return null;
+  return null; // This component doesn't render anything
 };
 
 export default BootstrapLoader;

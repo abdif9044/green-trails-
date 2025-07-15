@@ -4,7 +4,6 @@ import { createRoot } from 'react-dom/client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { HelmetProvider } from 'react-helmet-async'
 import App from './App.tsx'
-import BootstrapLoader from './components/BootstrapLoader'
 import './index.css'
 
 // Create a client for React Query with optimized settings
@@ -40,12 +39,9 @@ if (!container) {
 const root = createRoot(container);
 
 root.render(
-  <React.StrictMode>
-    <HelmetProvider>
-      <QueryClientProvider client={queryClient}>
-        <App />
-        <BootstrapLoader />
-      </QueryClientProvider>
-    </HelmetProvider>
-  </React.StrictMode>
+  <HelmetProvider>
+    <QueryClientProvider client={queryClient}>
+      <App />
+    </QueryClientProvider>
+  </HelmetProvider>
 );

@@ -1938,6 +1938,18 @@ export type Database = {
           security_recommendation: string
         }[]
       }
+      audit_security_comprehensive: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          category: string
+          table_name: string
+          issue_type: string
+          severity: string
+          description: string
+          recommendation: string
+          sql_fix: string
+        }[]
+      }
       audit_user_data_isolation: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -2299,6 +2311,15 @@ export type Database = {
         Args: { "": unknown }
         Returns: unknown
       }
+      greentrails_health_check: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          component: string
+          status: string
+          details: string
+          recommendation: string
+        }[]
+      }
       is_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
@@ -2322,6 +2343,16 @@ export type Database = {
       longtransactionsenabled: {
         Args: Record<PropertyKey, never>
         Returns: boolean
+      }
+      monitor_security_events: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          event_time: string
+          event_type: string
+          user_id: string
+          details: Json
+          severity: string
+        }[]
       }
       path: {
         Args: { "": unknown }
@@ -3582,6 +3613,15 @@ export type Database = {
         Args: { "": unknown }
         Returns: number
       }
+      test_rls_policies: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          table_name: string
+          test_type: string
+          result: string
+          details: string
+        }[]
+      }
       text: {
         Args: { "": unknown }
         Returns: string
@@ -3599,6 +3639,14 @@ export type Database = {
           new_srid_in: number
         }
         Returns: string
+      }
+      validate_auth_requirements: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          check_name: string
+          status: string
+          message: string
+        }[]
       }
       validate_import_readiness: {
         Args: Record<PropertyKey, never>

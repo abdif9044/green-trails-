@@ -54,7 +54,7 @@ export interface Waypoint {
   distance_from_start?: number;
   photos?: string[];
   coordinates_3d?: any;
-  coordinates?: [number, number];
+  coordinates?: [number, number, number]; // Updated to support 3D coordinates for 3D viewer
   type?: string;
 }
 

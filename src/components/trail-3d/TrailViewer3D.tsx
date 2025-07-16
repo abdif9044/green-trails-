@@ -178,6 +178,9 @@ function generateSampleWaypoints(trail: Trail): Waypoint[] {
     {
       id: '1',
       name: 'Trailhead',
+      latitude: trail.latitude,
+      longitude: trail.longitude,
+      waypoint_type: 'trailhead',
       type: 'trailhead',
       coordinates: [trail.longitude, trail.latitude, 1000],
       distance_from_start: 0
@@ -189,6 +192,9 @@ function generateSampleWaypoints(trail: Trail): Waypoint[] {
     waypoints.push({
       id: '2',
       name: 'Scenic Overlook',
+      latitude: trail.latitude + 0.01,
+      longitude: trail.longitude + 0.01,
+      waypoint_type: 'viewpoint',
       type: 'viewpoint',
       coordinates: [trail.longitude + 0.01, trail.latitude + 0.01, 1000 + trail.elevation_gain * 0.7],
       distance_from_start: trail.length * 0.6

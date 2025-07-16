@@ -37,6 +37,7 @@ const NavigationEngine: React.FC<NavigationEngineProps> = ({
   className = '' 
 }) => {
   const [navigationState, setNavigationState] = useState<NavigationState>({
+    currentPosition: [trail.longitude, trail.latitude],
     isNavigating: false
   });
   const [startTime, setStartTime] = useState<number | null>(null);
@@ -161,7 +162,7 @@ const NavigationEngine: React.FC<NavigationEngineProps> = ({
 
       setNavigationState(prev => ({
         ...prev,
-        currentPosition: [position.longitude, position.latitude, position.altitude || 0],
+        currentPosition: [position.longitude, position.latitude],
         nextWaypoint: nearestWaypoint,
         distanceToNext: distance
       }));
@@ -169,7 +170,10 @@ const NavigationEngine: React.FC<NavigationEngineProps> = ({
   }, [position, navigationState.isNavigating, findNearestWaypoint, calculateDistance, handleWaypointReached, generateInstruction]);
 
   const startNavigation = () => {
-    setNavigationState({ isNavigating: true });
+    setNavigationState(prev => ({
+      ...prev,
+      isNavigating: true
+    }));
     setStartTime(Date.now());
     setTotalDistance(0);
     setWayPointsReached([]);
@@ -195,7 +199,10 @@ const NavigationEngine: React.FC<NavigationEngineProps> = ({
       averageSpeed: duration > 0 ? totalDistance / (duration / 60) : 0
     };
 
-    setNavigationState({ isNavigating: false });
+    setNavigationState(prev => ({
+      ...prev,
+      isNavigating: false
+    }));
     stopTracking();
     speakInstruction('Navigation completed');
     

@@ -43,9 +43,9 @@ const WaypointMarkers: React.FC<WaypointMarkersProps> = ({ waypoints, isAnimatin
     const firstWaypoint = waypoints[0];
     
     return waypoints.map(waypoint => {
-      const x = (waypoint.coordinates[0] - firstWaypoint.coordinates[0]) * 1000;
-      const z = (waypoint.coordinates[1] - firstWaypoint.coordinates[1]) * 1000;
-      const y = (waypoint.coordinates[2] - firstWaypoint.coordinates[2]) * 0.1;
+      const x = (waypoint.coordinates?.[0] || waypoint.longitude - firstWaypoint.coordinates?.[0] || firstWaypoint.longitude) * 1000;
+      const z = (waypoint.coordinates?.[1] || waypoint.latitude - firstWaypoint.coordinates?.[1] || firstWaypoint.latitude) * 1000;
+      const y = ((waypoint.coordinates?.[2] || waypoint.elevation || 0) - (firstWaypoint.coordinates?.[2] || firstWaypoint.elevation || 0)) * 0.1;
       
       return {
         ...waypoint,

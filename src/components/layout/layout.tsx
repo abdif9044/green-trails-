@@ -1,6 +1,8 @@
 
 import React from 'react';
 import PWAInstallPrompt from '@/components/mobile/PWAInstallPrompt';
+import MobileBottomNav from '@/components/mobile/MobileBottomNav';
+import MobileHeader from '@/components/mobile/MobileHeader';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -9,7 +11,11 @@ interface LayoutProps {
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
     <>
-      {children}
+      <MobileHeader />
+      <main className="pb-16 md:pb-0">
+        {children}
+      </main>
+      <MobileBottomNav />
       <PWAInstallPrompt />
     </>
   );

@@ -1,62 +1,72 @@
-
 {
-  "name": "GreenTrails - Discover Nature's Hidden Gems",
+  "name": "GreenTrails - Cannabis-Friendly Hiking App",
   "short_name": "GreenTrails",
-  "description": "Discover and share hiking trails and outdoor adventures with the GreenTrails community.",
+  "description": "Discover cannabis-friendly trails and connect with fellow outdoor enthusiasts",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f0f9f0",
+  "background_color": "#ffffff",
   "theme_color": "#16a34a",
   "orientation": "portrait-primary",
-  "categories": ["travel", "sports", "lifestyle"],
+  "scope": "/",
+  "lang": "en",
+  "categories": ["travel", "lifestyle", "social"],
   "icons": [
     {
-      "src": "/icons/icon-72x72.png",
-      "sizes": "72x72",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "src": "/favicon.ico",
+      "sizes": "any",
+      "type": "image/x-icon"
     },
     {
-      "src": "/icons/icon-96x96.png", 
-      "sizes": "96x96",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/icons/icon-128x128.png",
-      "sizes": "128x128", 
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/icons/icon-144x144.png",
-      "sizes": "144x144",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/icons/icon-152x152.png",
-      "sizes": "152x152",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/icons/icon-192x192.png",
+      "src": "/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/icons/icon-384x384.png",
-      "sizes": "384x384",
-      "type": "image/png", 
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/icons/icon-512x512.png",
+      "src": "/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Discover Trails",
+      "short_name": "Discover",
+      "description": "Find new trails to explore",
+      "url": "/discover",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Trail Map",
+      "short_name": "Map",
+      "description": "View trails on the map",
+      "url": "/map",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshot-mobile.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "/screenshot-desktop.png",
+      "sizes": "1920x1080",
+      "type": "image/png",
+      "form_factor": "wide"
     }
   ]
 }

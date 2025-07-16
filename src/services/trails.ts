@@ -13,7 +13,7 @@ export class TrailService {
       name: dbTrail.name || 'Unnamed Trail',
       location: dbTrail.location || 'Unknown Location',
       description: dbTrail.description || '',
-      difficulty: dbTrail.difficulty as 'easy' | 'moderate' | 'hard',
+      difficulty: (dbTrail.difficulty || 'moderate') as 'easy' | 'moderate' | 'hard' | 'expert',
       length: Number(dbTrail.length) || 0,
       elevation_gain: dbTrail.elevation_gain || 0,
       latitude: dbTrail.latitude || dbTrail.lat || 0,
@@ -217,7 +217,7 @@ export class TrailService {
   ): Promise<Trail[]> {
     try {
       const { data, error } = await supabase.rpc('get_trail_recommendations', {
-        user_difficulty: userDifficulty || null,
+        user_difficulty: (userDifficulty as 'easy' | 'moderate' | 'hard') || null,
         user_length_preference: userLengthPreference || null,
         user_location_lat: userLat || null,
         user_location_lng: userLng || null,

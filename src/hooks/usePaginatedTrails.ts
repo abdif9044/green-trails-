@@ -84,6 +84,7 @@ export const usePaginatedTrails = ({ filters, pageSize = 12 }: UsePaginatedTrail
         description: trail.description || '',
         difficulty: trail.difficulty,
         length: Number(trail.length) || 0,
+        elevation: trail.elevation_gain || 0,
         elevation_gain: trail.elevation_gain || 0,
         latitude: trail.latitude || trail.lat || 0,
         longitude: trail.longitude || trail.lon || 0,

@@ -39,6 +39,46 @@ export interface Trail {
   dogs_allowed?: boolean;
   camping_available?: boolean;
   data_quality_score?: number;
+  elevation_profile?: any[];
+  waypoints?: Waypoint[];
+}
+
+export interface Waypoint {
+  id: string;
+  name: string;
+  latitude: number;
+  longitude: number;
+  elevation?: number;
+  description?: string;
+  waypoint_type: string;
+  distance_from_start?: number;
+  photos?: string[];
+  coordinates_3d?: any;
+  coordinates?: [number, number];
+  type?: string;
+}
+
+export interface NavigationState {
+  currentPosition: [number, number];
+  targetWaypoint?: Waypoint;
+  isNavigating: boolean;
+  route?: [number, number][];
+  nextWaypoint?: Waypoint;
+  distanceToNext?: number;
+}
+
+export interface TrailComment {
+  id: string;
+  user_id: string;
+  trail_id: string;
+  content: string;
+  created_at: string;
+  user: {
+    id: string;
+    username: string;
+    avatar_url: string;
+    full_name: string;
+  };
 }
 
 export interface DatabaseTrail {
@@ -82,6 +122,8 @@ export interface TrailFilters {
   tags?: string[];
   category?: TrailCategory;
   isAgeRestricted?: boolean;
+  nearbyCoordinates?: [number, number];
+  radius?: number;
 }
 
 export interface TrailSearchParams {

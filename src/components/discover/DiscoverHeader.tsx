@@ -1,31 +1,35 @@
 
 import React from 'react';
-import { Badge } from "@/components/ui/badge";
+import { Mountain } from 'lucide-react';
 
-export interface DiscoverHeaderProps {
+interface DiscoverHeaderProps {
   trailCount: number;
-  totalTrails?: number;
+  totalTrails: number;
 }
 
 const DiscoverHeader: React.FC<DiscoverHeaderProps> = ({ trailCount, totalTrails }) => {
   return (
-    <div className="bg-greentrail-800 dark:bg-greentrail-900 text-white py-12">
+    <div className="bg-gradient-to-r from-greentrail-600 to-greentrail-700 text-white py-12">
       <div className="container mx-auto px-4">
-        <div className="flex flex-col md:flex-row justify-between items-center">
-          <div>
-            <h1 className="text-3xl md:text-4xl font-bold mb-2">Discover Trails</h1>
-            <p className="text-greentrail-200">Find your next adventure</p>
+        <div className="text-center">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <Mountain className="h-12 w-12" />
+            <h1 className="text-4xl font-bold">Discover Trails</h1>
           </div>
-          <div className="mt-4 md:mt-0 flex flex-col sm:flex-row gap-2 items-center">
-            <Badge className="bg-greentrail-600 hover:bg-greentrail-700 text-white py-2 px-4 text-lg">
-              {trailCount} trails found
-            </Badge>
-            {totalTrails ? (
-              <span className="text-greentrail-200 text-sm">
-                from {totalTrails} total trails
-              </span>
-            ) : null}
-          </div>
+          <p className="text-xl text-greentrail-100 mb-2">
+            Explore amazing hiking trails from across the country
+          </p>
+          <p className="text-greentrail-200">
+            {totalTrails > 0 ? (
+              <>
+                Showing {trailCount.toLocaleString()} of {totalTrails.toLocaleString()} trails
+              </>
+            ) : (
+              <>
+                {trailCount.toLocaleString()} trails available
+              </>
+            )}
+          </p>
         </div>
       </div>
     </div>

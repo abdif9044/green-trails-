@@ -1,16 +1,32 @@
 
-import { useTrailsSearch } from '@/services/trails';
+import { TrailService } from '@/services/trails';
 import { TrailFilters } from '@/types/trails';
+import { useQuery } from '@tanstack/react-query';
 
 export const useTrailsQuery = (filters: TrailFilters = {}) => {
-  // Convert filters to search params format
-  const searchParams = {
-    filters,
-    page: 1,
-    limit: 50, // Reasonable default for initial load
-  };
+  console.log('useTrailsQuery called with filters:', filters);
   
-  const query = useTrailsSearch(searchParams);
+  const query = useQuery({
+    queryKey: ['trails-query', filters],
+    queryFn: async () => {
+      console.log('useTrailsQuery: Executing query with filters:', filters);
+      
+      try {
+        const result = await TrailService.searchTrails(filters, 50, 0);
+        console.log(`useTrailsQuery: Found ${result.data.length} trails`);
+        
+        return {
+          data: result.data,
+          count: result.count
+        };
+      } catch (error) {
+        console.error('useTrailsQuery: Error in query:', error);
+        return { data: [], count: 0 };
+      }
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+  });
   
   return {
     data: query.data || { data: [], count: 0 },

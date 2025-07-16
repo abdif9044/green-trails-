@@ -2299,6 +2299,38 @@ export type Database = {
           state: string | null
         }[]
       }
+      get_trail_recommendations: {
+        Args: {
+          user_difficulty?: Database["public"]["Enums"]["trail_difficulty"]
+          user_length_preference?: number
+          user_location_lat?: number
+          user_location_lng?: number
+          recommendation_limit?: number
+        }
+        Returns: {
+          id: string
+          name: string
+          location: string
+          difficulty: Database["public"]["Enums"]["trail_difficulty"]
+          length: number
+          elevation_gain: number
+          latitude: number
+          longitude: number
+          tags: string[]
+          photos: string[]
+          recommendation_score: number
+        }[]
+      }
+      get_trail_statistics: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          total_trails: number
+          active_trails: number
+          trails_by_difficulty: Json
+          average_length: number
+          total_elevation_gain: number
+        }[]
+      }
       gettransactionid: {
         Args: Record<PropertyKey, never>
         Returns: unknown
@@ -2543,6 +2575,39 @@ export type Database = {
       postgis_wagyu_version: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      search_trails: {
+        Args: {
+          search_query?: string
+          filter_difficulty?: Database["public"]["Enums"]["trail_difficulty"]
+          filter_length_min?: number
+          filter_length_max?: number
+          filter_tags?: string[]
+          filter_features?: string[]
+          sort_by?: string
+          limit_count?: number
+          offset_count?: number
+        }
+        Returns: {
+          id: string
+          name: string
+          location: string
+          description: string
+          difficulty: Database["public"]["Enums"]["trail_difficulty"]
+          length: number
+          elevation_gain: number
+          latitude: number
+          longitude: number
+          tags: string[]
+          photos: string[]
+          features: string[]
+          surface_type: string
+          permit_required: boolean
+          dogs_allowed: boolean
+          camping_available: boolean
+          data_quality_score: number
+          created_at: string
+        }[]
       }
       spheroid_in: {
         Args: { "": unknown }
@@ -3625,6 +3690,31 @@ export type Database = {
       text: {
         Args: { "": unknown }
         Returns: string
+      }
+      trails_within_radius: {
+        Args: { center_lat: number; center_lng: number; radius_km?: number }
+        Returns: {
+          id: string
+          name: string
+          location: string
+          description: string
+          difficulty: Database["public"]["Enums"]["trail_difficulty"]
+          length: number
+          elevation_gain: number
+          latitude: number
+          longitude: number
+          tags: string[]
+          photos: string[]
+          features: string[]
+          best_seasons: string[]
+          surface_type: string
+          accessibility_features: string[]
+          permit_required: boolean
+          dogs_allowed: boolean
+          camping_available: boolean
+          created_at: string
+          data_quality_score: number
+        }[]
       }
       unlockrows: {
         Args: { "": string }

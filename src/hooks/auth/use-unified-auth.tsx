@@ -8,6 +8,7 @@ interface AuthState {
   session: Session | null;
   loading: boolean;
   initialized: boolean;
+  guestMode: boolean;
 }
 
 export interface UnifiedAuthContextType {
@@ -15,12 +16,16 @@ export interface UnifiedAuthContextType {
   session: Session | null;
   loading: boolean;
   isInitialized: boolean;
+  guestMode: boolean;
   signIn: (email: string, password: string) => Promise<AuthResult>;
   signUp: (signUpData: SignUpData) => Promise<AuthResult>;
   signOut: () => Promise<AuthResult>;
+  signInWithSocial: (options: { provider: 'google' | 'apple' }) => Promise<AuthResult>;
   verifyAge: (birthYear: string) => Promise<AuthResult & { age?: number }>;
   resetPassword: (email: string) => Promise<AuthResult>;
   updatePassword: (password: string) => Promise<AuthResult>;
+  enableGuestMode: () => void;
+  exitGuestMode: () => void;
 }
 
 const UnifiedAuthContext = React.createContext<UnifiedAuthContextType | undefined>(undefined);
@@ -34,7 +39,8 @@ export const UnifiedAuthProvider: React.FC<UnifiedAuthProviderProps> = ({ childr
     user: null,
     session: null,
     loading: true,
-    initialized: false
+    initialized: false,
+    guestMode: false
   });
 
   React.useEffect(() => {
@@ -91,17 +97,33 @@ export const UnifiedAuthProvider: React.FC<UnifiedAuthProviderProps> = ({ childr
     };
   }, []);
 
+  const enableGuestMode = () => {
+    setState(prev => ({ ...prev, guestMode: true }));
+  };
+
+  const exitGuestMode = () => {
+    setState(prev => ({ ...prev, guestMode: false }));
+  };
+
+  const signInWithSocial = (options: { provider: 'google' | 'apple' }) => {
+    return UnifiedAuthService.signInWithSocial(options);
+  };
+
   const value: UnifiedAuthContextType = {
     user: state.user,
     session: state.session,
     loading: state.loading,
     isInitialized: state.initialized,
+    guestMode: state.guestMode,
     signIn: UnifiedAuthService.signIn,
     signUp: UnifiedAuthService.signUp,
     signOut: UnifiedAuthService.signOut,
+    signInWithSocial,
     verifyAge: UnifiedAuthService.verifyAge,
     resetPassword: UnifiedAuthService.resetPassword,
     updatePassword: UnifiedAuthService.updatePassword,
+    enableGuestMode,
+    exitGuestMode,
   };
 
   return (

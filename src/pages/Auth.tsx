@@ -4,7 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { SignInForm } from '@/components/auth/SignInForm';
+import { MobileAuthScreen } from '@/components/auth/MobileAuthScreen';
 import { SignUpForm } from '@/components/auth/SignUpForm';
 import PasswordResetForm from '@/components/auth/PasswordResetForm';
 import UpdatePasswordForm from '@/components/auth/UpdatePasswordForm';
@@ -140,7 +140,7 @@ const Auth = () => {
               </TabsList>
               
               <TabsContent value="signin" className="mt-4">
-                <SignInForm onForgotPassword={() => setShowPasswordReset(true)} />
+                <MobileAuthScreen onGuestMode={() => navigate('/')} />
               </TabsContent>
               
               <TabsContent value="signup" className="mt-4">

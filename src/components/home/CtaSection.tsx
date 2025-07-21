@@ -64,7 +64,7 @@ const CtaSection = () => {
           <div className="mt-16 pt-8 border-t border-white/10">
             <div className="grid grid-cols-3 gap-8 max-w-2xl mx-auto">
               <div className="text-center">
-                <div className="text-2xl font-bold text-gold-400 luxury-text mb-1">21+</div>
+                <div className="text-2xl font-bold text-gold-400 luxury-text mb-1">18+</div>
                 <div className="text-sm text-luxury-400 luxury-text">Age Verified</div>
               </div>
               <div className="text-center">

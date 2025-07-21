@@ -28,18 +28,22 @@ const Hero = () => {
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 sm:py-32">
         <div className="text-center">
           <h1 className="text-4xl sm:text-6xl font-bold text-greentrail-800 dark:text-greentrail-200 mb-6">
-            Discover Your Next
+            The Future of
             <span className="block text-greentrail-600 dark:text-greentrail-400 relative">
-              Adventure
+              Trail Exploration
               <div className="absolute -top-2 -right-4">
                 <GoldenDots variant="medium" count={2} />
               </div>
             </span>
           </h1>
           
-          <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto">
-            Join the community of outdoor enthusiasts. Find trails, share experiences, 
-            and connect with fellow hikers on your journey to explore nature.
+          <p className="text-xl text-gray-600 dark:text-gray-300 mb-4 max-w-3xl mx-auto">
+            <span className="font-semibold text-greentrail-700 dark:text-greentrail-300">Discover Hidden Gems, Conquer New Heights</span>
+          </p>
+          
+          <p className="text-lg text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto">
+            AI-powered trail discovery meets real-time safety intelligence. Join 100,000+ explorers using 
+            the most advanced hiking companion ever created.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
@@ -92,45 +96,19 @@ const Hero = () => {
             )}
           </div>
           
-          {/* Feature highlights */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16">
-            <div className="flex flex-col items-center p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 relative">
-              <div className="absolute top-2 right-2">
-                <GoldenDots variant="small" count={2} />
-              </div>
-              <Map className="h-12 w-12 text-greentrail-600 mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                Interactive Maps
-              </h3>
-              <p className="text-gray-600 dark:text-gray-300 text-center">
-                Explore detailed trail maps with elevation profiles and real-time conditions
-              </p>
+          {/* Social Proof */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-8 text-gray-600 dark:text-gray-300">
+            <div className="flex items-center gap-2">
+              <span className="text-2xl font-bold text-greentrail-600">100K+</span>
+              <span>Explorers</span>
             </div>
-            
-            <div className="flex flex-col items-center p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 relative">
-              <div className="absolute top-2 right-2">
-                <GoldenDots variant="small" count={2} />
-              </div>
-              <Users className="h-12 w-12 text-greentrail-600 mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                Social Community
-              </h3>
-              <p className="text-gray-600 dark:text-gray-300 text-center">
-                Connect with fellow hikers and share your outdoor experiences
-              </p>
+            <div className="flex items-center gap-2">
+              <span className="text-2xl font-bold text-greentrail-600">20K+</span>
+              <span>Verified Trails</span>
             </div>
-            
-            <div className="flex flex-col items-center p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 relative">
-              <div className="absolute top-2 right-2">
-                <GoldenDots variant="small" count={2} />
-              </div>
-              <Camera className="h-12 w-12 text-greentrail-600 mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                Photo Albums
-              </h3>
-              <p className="text-gray-600 dark:text-gray-300 text-center">
-                Capture and share your adventures with beautiful photo albums
-              </p>
+            <div className="flex items-center gap-2">
+              <span className="text-2xl font-bold text-greentrail-600">4.9★</span>
+              <span>App Store Rating</span>
             </div>
           </div>
         </div>

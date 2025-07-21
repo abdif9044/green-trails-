@@ -61,9 +61,9 @@ const AgeVerificationForm: React.FC<AgeVerificationFormProps> = ({ onVerified, o
       return;
     }
     
-    // Check if user is 21 or older
-    if (age < 21) {
-      setError('You must be 21 or older to use this app');
+    // Check if user is 18 or older
+    if (age < 18) {
+      setError('You must be 18 or older to use this app');
       return;
     }
     
@@ -84,7 +84,7 @@ const AgeVerificationForm: React.FC<AgeVerificationFormProps> = ({ onVerified, o
         <div className="space-y-6">
           <div className="text-center mb-4">
             <p className="text-greentrail-700 dark:text-greentrail-300">
-              You must be 21 years or older to use GreenTrails.
+              You must be 18 years or older to use GreenTrails.
             </p>
             <p className="text-sm text-muted-foreground mt-1">
               Please verify your date of birth.

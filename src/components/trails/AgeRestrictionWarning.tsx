@@ -48,7 +48,7 @@ const AgeRestrictionWarning: React.FC<AgeRestrictionWarningProps> = ({ onVerifie
             <AlertTitle>Age-Restricted Content</AlertTitle>
             <AlertDescription className="space-y-3">
               <p>
-                This content is only available to verified users 21 years of age or older.
+                This content is only available to verified users 18 years of age or older.
                 You must verify your age to access this content.
               </p>
               

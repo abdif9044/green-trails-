@@ -1,3 +1,4 @@
+
 # GreenTrails - Play Store Assets & Listing
 
 ## App Listing Content
@@ -9,7 +10,7 @@
 
 **🥾 Discover Your Next Adventure with GreenTrails**
 
-GreenTrails is the ultimate hiking companion for outdoor enthusiasts aged 21+. Whether you're a seasoned hiker or just starting your trail journey, our app connects you with nature and fellow adventurers.
+GreenTrails is the ultimate hiking companion for outdoor enthusiasts aged 18+. Whether you're a seasoned hiker or just starting your trail journey, our app connects you with nature and fellow adventurers.
 
 **🗺️ Comprehensive Trail Database**
 • Access 20,000+ verified hiking trails worldwide
@@ -42,8 +43,8 @@ GreenTrails is the ultimate hiking companion for outdoor enthusiasts aged 21+. W
 • Save favorite trails for future adventures
 • Receive safety tips and trail condition updates
 
-**🌿 Cannabis-Friendly Community**
-For verified users 21+, GreenTrails provides a welcoming space for cannabis-friendly outdoor enthusiasts to connect and share experiences responsibly.
+**🌿 Family-Friendly Community**
+For users 18+, GreenTrails provides a welcoming space for outdoor enthusiasts to connect and share experiences responsibly with comprehensive safety features and community guidelines.
 
 **🔒 Privacy & Safety First**
 • Secure user data with industry-standard encryption
@@ -58,7 +59,7 @@ Download GreenTrails today and transform the way you explore the outdoors!
 **Secondary:** Travel & Local
 
 ### Keywords/Tags
-hiking, trails, outdoor, nature, GPS, tracking, community, cannabis-friendly, adventure, exploration, fitness, health, maps, weather, photography
+hiking, trails, outdoor, nature, GPS, tracking, community, adventure, exploration, fitness, health, maps, weather, photography, family-friendly
 
 ### Contact Information
 - **Developer:** GreenTrails Team
@@ -102,20 +103,20 @@ hiking, trails, outdoor, nature, GPS, tracking, community, cannabis-friendly, ad
 
 ## Content Rating Information
 
-### ESRB Rating: Teen (13+)
-**Note:** Although app requires 21+, content rating reflects general content suitability
+### ESRB Rating: Everyone (E)
+**Note:** App requires 18+, but content rating reflects general content suitability
 
 ### Content Descriptors:
 - **Mild Language:** User-generated content may contain mild language
 - **Simulated Gambling:** None
 - **Violence:** None
 - **Sexual Content:** None
-- **Drug/Alcohol Reference:** Cannabis-friendly features for 21+ users
+- **Drug/Alcohol Reference:** None
 
 ### Target Audience:
-- **Primary:** Adults 21-45 interested in outdoor activities
-- **Secondary:** Cannabis-friendly outdoor enthusiasts
-- **Geographic:** Global, with focus on US, Canada, and legal cannabis markets
+- **Primary:** Adults 18-65 interested in outdoor activities
+- **Secondary:** Families with teens interested in hiking
+- **Geographic:** Global, with focus on North America and Europe
 
 ## Store Optimization (ASO)
 
@@ -129,27 +130,28 @@ hiking, trails, outdoor, nature, GPS, tracking, community, cannabis-friendly, ad
 ### Long-tail Keywords:
 1. hiking trails near me
 2. outdoor adventure app
-3. cannabis friendly hiking
+3. family hiking app
 4. trail discovery app
 5. hiking community social
 
 ### Competitor Analysis:
-- **AllTrails:** More comprehensive, but not cannabis-friendly
-- **Hiking Project:** Technical focus, less social
+- **AllTrails:** More comprehensive, but less social features
+- **Hiking Project:** Technical focus, less family-oriented
 - **Komoot:** European focus, route planning
 - **Strava:** Fitness focus, less trail-specific
 
 ## Launch Strategy
 
 ### Soft Launch Markets:
-1. Canada (legal cannabis market)
-2. Colorado, California, Washington (US legal states)
-3. Netherlands (cannabis-tolerant)
+1. United States (outdoor activity focus)
+2. Canada (hiking culture)
+3. United Kingdom (countryside access)
+4. Australia (outdoor lifestyle)
 
 ### Marketing Channels:
 1. Organic App Store Optimization
 2. Hiking and outdoor activity forums
-3. Cannabis-friendly community partnerships
+3. Family outdoor activity partnerships
 4. Social media (Instagram, TikTok focus on outdoor content)
 5. Influencer partnerships with outdoor enthusiasts
 

@@ -22,9 +22,9 @@ export const AgeVerificationService = {
       // Calculate user's age
       const age = calculateAge(birthdate);
       
-      // Check if user is at least 21
-      if (age < 21) {
-        console.warn(`Age verification failed: User is ${age} years old (minimum 21 required)`);
+      // Check if user is at least 18
+      if (age < 18) {
+        console.warn(`Age verification failed: User is ${age} years old (minimum 18 required)`);
         return false;
       }
       

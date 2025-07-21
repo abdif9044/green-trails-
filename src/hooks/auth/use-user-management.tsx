@@ -78,7 +78,7 @@ export const useUserManagement = (currentUser: User | null) => {
         console.error('Age verification failed for user:', currentUser.id);
         toast({
           title: "Age verification failed",
-          description: "You must be 21 or older to use GreenTrails",
+          description: "You must be 18 or older to use GreenTrails",
           variant: "destructive",
         });
       } else {

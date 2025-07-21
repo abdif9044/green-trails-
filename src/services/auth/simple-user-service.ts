@@ -23,10 +23,10 @@ export class SimpleUserService {
       const currentYear = new Date().getFullYear();
       const age = currentYear - year;
 
-      if (age < 21) {
+      if (age < 18) {
         return { 
           success: false, 
-          message: 'You must be 21 or older to use GreenTrails',
+          message: 'You must be 18 or older to use GreenTrails',
           age 
         };
       }

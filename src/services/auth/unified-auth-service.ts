@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { AuthError } from '@supabase/supabase-js';
 
@@ -206,10 +207,10 @@ export class UnifiedAuthService {
       const currentYear = new Date().getFullYear();
       const age = currentYear - parseInt(birthYear);
 
-      if (age < 21) {
+      if (age < 18) {
         return {
           success: false,
-          message: 'You must be 21 or older to access age-restricted content'
+          message: 'You must be 18 or older to access age-restricted content'
         };
       }
 

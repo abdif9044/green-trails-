@@ -2,14 +2,14 @@
 import { supabase } from '@/integrations/supabase/client';
 
 /**
- * Service for handling age verification (21+ requirement for GreenTrails)
+ * Service for handling age verification (18+ requirement for GreenTrails)
  */
 export const AgeVerificationService = {
   /**
-   * Verify if user is 21 or older
+   * Verify if user is 18 or older
    * @param birthdate The user's birth date
    * @param userId The user's ID
-   * @returns Promise with boolean indicating if user is 21+
+   * @returns Promise with boolean indicating if user is 18+
    */
   verifyAge: async (birthdate: Date, userId: string): Promise<boolean> => {
     try {
@@ -23,7 +23,7 @@ export const AgeVerificationService = {
         ? age - 1 
         : age;
       
-      const isVerified = actualAge >= 21;
+      const isVerified = actualAge >= 18;
       
       if (isVerified) {
         // Update user profile to mark as age verified

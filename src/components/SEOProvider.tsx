@@ -12,7 +12,7 @@ interface SEOProps {
 
 const SEOProvider: React.FC<SEOProps> = ({
   title = 'GreenTrails - Discover Nature\'s Path',
-  description = 'Discover and share cannabis-friendly hiking trails and outdoor adventures with the GreenTrails community.',
+  description = 'Discover and share amazing hiking trails and outdoor adventures with the GreenTrails community. Find your perfect trail today.',
   image = '/lovable-uploads/0c2a9cc4-4fdb-4d4a-965c-47b406e4ec4e.png',
   type = 'website',
   children,

@@ -210,7 +210,7 @@ export class UnifiedAuthService {
       if (age < 18) {
         return {
           success: false,
-          message: 'You must be 18 or older to access age-restricted content'
+          message: 'You must be 18 or older to access all features'
         };
       }
 

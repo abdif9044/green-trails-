@@ -25,7 +25,7 @@ const PrivacyPolicy: React.FC = () => {
                 <ul>
                   <li>Email address and username</li>
                   <li>Profile information (name, bio, avatar)</li>
-                  <li>Age verification data (21+ requirement)</li>
+                  <li>Age verification data (18+ requirement)</li>
                 </ul>
                 
                 <h4>Location Data</h4>
@@ -91,8 +91,8 @@ const PrivacyPolicy: React.FC = () => {
                 <h3>6. Data Retention</h3>
                 <p>We retain your data as long as your account is active. Upon account deletion, we remove personal data within 30 days, except where required by law.</p>
                 
-                <h3>7. Children's Privacy</h3>
-                <p>GreenTrails is designed for users 21 and older. We do not knowingly collect information from individuals under 21.</p>
+                <h3>7. Age Requirements</h3>
+                <p>GreenTrails requires users to be 18 or older. We do not knowingly collect information from individuals under 18.</p>
                 
                 <h3>8. Changes to Privacy Policy</h3>
                 <p>We may update this policy periodically. Significant changes will be communicated via app notifications or email.</p>

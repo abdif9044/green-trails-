@@ -12,12 +12,14 @@ import InteractiveMapPreview from '@/components/home/InteractiveMapPreview';
 import CommunityActivityFeed from '@/components/home/CommunityActivityFeed';
 import AppInstallPrompt from '@/components/home/AppInstallPrompt';
 import { useAuth } from '@/hooks/use-auth';
+import Navbar from '@/components/Navbar';
 
 const HomeContent: React.FC = () => {
   const { user } = useAuth();
   
   return (
     <div className="min-h-screen">
+      <Navbar />
       <Hero />
       <ProblemSolution />
       

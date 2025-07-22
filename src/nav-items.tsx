@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import HomePage from '@/pages/HomePage';
+import HomeContent from '@/components/home/HomeContent';
 import ImportDebugPage from '@/pages/admin/ImportDebug';
 import AuthPage from '@/pages/AuthPage';
 import TrailsPage from '@/pages/TrailsPage';
@@ -21,7 +21,7 @@ export const navItems = [
   {
     title: "Home",
     to: "/",
-    page: withErrorBoundary(HomePage),
+    page: withErrorBoundary(HomeContent),
   },
   {
     title: "Trails",

@@ -9,6 +9,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { navItems } from "./nav-items";
 import ImportDebugPage from "./pages/admin/ImportDebug";
 import { errorReporter } from "@/utils/error-reporting";
+import { Layout } from "@/components/layout/layout";
 
 const App: React.FC = () => {
   React.useEffect(() => {
@@ -29,10 +30,12 @@ const App: React.FC = () => {
               <ToasterWrapper />
               <ErrorBoundary>
                 <Routes>
-                  {navItems.map(({ to, page: PageComponent }) => (
-                    <Route key={to} path={to} element={<PageComponent />} />
-                  ))}
-                  <Route path="/admin/import-debug" element={<ImportDebugPage />} />
+                  <Route element={<Layout />}>
+                    {navItems.map(({ to, page: PageComponent }) => (
+                      <Route key={to} path={to} element={<PageComponent />} />
+                    ))}
+                    <Route path="/admin/import-debug" element={<ImportDebugPage />} />
+                  </Route>
                 </Routes>
               </ErrorBoundary>
             </BrowserRouter>

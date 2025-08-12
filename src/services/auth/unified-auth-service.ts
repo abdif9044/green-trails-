@@ -207,10 +207,10 @@ export class UnifiedAuthService {
       const currentYear = new Date().getFullYear();
       const age = currentYear - parseInt(birthYear);
 
-      if (age < 18) {
+      if (age < 21) {
         return {
           success: false,
-          message: 'You must be 18 or older to access all features'
+          message: 'You must be 21 or older to access all features'
         };
       }
 

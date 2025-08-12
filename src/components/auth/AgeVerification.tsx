@@ -72,7 +72,7 @@ const AgeVerification: React.FC<AgeVerificationProps> = ({ onVerified, onVerify,
         </div>
         <CardTitle className="text-2xl">Age Verification Required</CardTitle>
         <CardDescription>
-          GreenTrails is an 18+ community. Please verify your age to continue.
+          GreenTrails is a 21+ community. Please verify your age to continue.
         </CardDescription>
       </CardHeader>
       

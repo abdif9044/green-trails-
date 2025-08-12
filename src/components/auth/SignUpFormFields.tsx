@@ -3,8 +3,9 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useSignUpValidation } from './SignUpFormValidation';
+import PasswordStrengthIndicator, { validatePasswordStrength } from './PasswordStrengthIndicator';
+import BirthYearInput from './BirthYearInput';
 import { 
   User, 
   AtSign, 
@@ -14,7 +15,6 @@ import {
   EyeOff, 
   Check, 
   X, 
-  Calendar,
   AlertCircle
 } from 'lucide-react';
 
@@ -62,9 +62,8 @@ export const SignUpFormFields = ({
     validateAge 
   } = useSignUpValidation();
 
-  // Generate years for dropdown (current year - 110 to current year - 13)
-  const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: 98 }, (_, i) => currentYear - 13 - i);
+  // Password strength validation
+  const passwordStrength = validatePasswordStrength(password);
 
   // Real-time validation
   useEffect(() => {
@@ -86,8 +85,9 @@ export const SignUpFormFields = ({
     }
     
     if (fieldTouched.password && password) {
-      const passwordError = validatePassword(password);
-      if (passwordError) errors.password = passwordError;
+      if (!passwordStrength.isValid) {
+        errors.password = 'Password must meet all requirements';
+      }
     }
     
     if (fieldTouched.confirmPassword && confirmPassword) {
@@ -303,11 +303,8 @@ export const SignUpFormFields = ({
             {fieldErrors.password}
           </p>
         )}
-        {password && !fieldErrors.password && (
-          <div className="text-xs text-green-600 flex items-center gap-1">
-            <Check className="w-3 h-3" />
-            Password meets requirements
-          </div>
+        {password && (
+          <PasswordStrengthIndicator password={password} className="mt-2" />
         )}
       </motion.div>
       
@@ -359,61 +356,13 @@ export const SignUpFormFields = ({
       </motion.div>
 
       {/* Birth Year Field */}
-      <motion.div 
-        className="space-y-2"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.35 }}
-      >
-        <Label htmlFor="birthYear" className="text-sm font-semibold text-greentrail-700 flex items-center gap-2">
-          <Calendar className="w-4 h-4" />
-          Year of Birth (Must be 21+)
-        </Label>
-        <div className="relative">
-          <Select 
-            onValueChange={(value) => {
-              onBirthYearChange(value);
-              handleFieldBlur('birthYear');
-            }} 
-            value={birthYear} 
-            disabled={loading}
-          >
-            <SelectTrigger 
-              id="birthYear"
-              className={`${getInputClassName('birthYear', birthYear)} pl-10`}
-            >
-              <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-                <Calendar className={`w-5 h-5 ${
-                  getFieldStatus('birthYear', birthYear) === 'error' ? 'text-red-500' : 
-                  getFieldStatus('birthYear', birthYear) === 'success' ? 'text-green-500' : 
-                  'text-greentrail-500'
-                }`} />
-              </div>
-              <SelectValue placeholder="Select your birth year" />
-            </SelectTrigger>
-            <SelectContent className="max-h-[200px]">
-              {years.map((year) => (
-                <SelectItem key={year} value={year.toString()}>
-                  {year}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {getFieldStatus('birthYear', birthYear) !== 'default' && renderValidationIcon('birthYear', birthYear)}
-        </div>
-        {fieldErrors.birthYear && (
-          <p className="text-sm text-red-600 flex items-center gap-1">
-            <X className="w-4 h-4" />
-            {fieldErrors.birthYear}
-          </p>
-        )}
-        {birthYear && !fieldErrors.birthYear && (
-          <div className="text-xs text-green-600 flex items-center gap-1">
-            <Check className="w-3 h-3" />
-            Age verified for full access
-          </div>
-        )}
-      </motion.div>
+      <BirthYearInput
+        value={birthYear}
+        onChange={onBirthYearChange}
+        onBlur={() => handleFieldBlur('birthYear')}
+        error={fieldErrors.birthYear}
+        disabled={loading}
+      />
     </div>
   );
 };

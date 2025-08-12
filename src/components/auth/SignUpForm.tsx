@@ -7,7 +7,9 @@ import { AlertCircle, Loader2 } from 'lucide-react';
 import { TermsAndPrivacy } from '@/components/auth/TermsAndPrivacy';
 import { SignUpFormFields } from '@/components/auth/SignUpFormFields';
 import { SignUpSuccessMessage } from '@/components/auth/SignUpSuccessMessage';
+import EmailVerificationNotice from '@/components/auth/EmailVerificationNotice';
 import { useSignUpValidation } from '@/components/auth/SignUpFormValidation';
+import { validatePasswordStrength } from '@/components/auth/PasswordStrengthIndicator';
 import { EnhancedSignUpService } from '@/services/auth/enhanced-signup-service';
 
 interface SignUpFormProps {
@@ -15,13 +17,13 @@ interface SignUpFormProps {
 }
 
 export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
-  const [step, setStep] = useState<'signup' | 'success'>('signup');
+  const [step, setStep] = useState<'signup' | 'verification' | 'success'>('signup');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [username, setUsername] = useState('');
-  const [birthYear, setBirthYear] = useState('');
+  const [birthYear, setBirthYear] = useState('2004'); // Default to 2004 for easier 21+ selection
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   
@@ -73,12 +75,8 @@ export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
       }
       
       console.log('Account created successfully for:', email);
-      setStep('success');
-      
-      setTimeout(() => {
-        onSuccess();
-        window.location.href = '/trails';
-      }, 2000);
+      // Show email verification step instead of immediate success
+      setStep('verification');
       
     } catch (err: any) {
       console.error('Sign up error:', err);
@@ -87,6 +85,24 @@ export const SignUpForm = ({ onSuccess }: SignUpFormProps) => {
       setLoading(false);
     }
   };
+
+  const handleEmailVerified = () => {
+    setStep('success');
+    setTimeout(() => {
+      onSuccess();
+    }, 1000);
+  };
+
+  if (step === 'verification') {
+    return (
+      <EmailVerificationNotice 
+        email={email}
+        onResendSuccess={() => {
+          // Could show a toast or update UI
+        }}
+      />
+    );
+  }
 
   if (step === 'success') {
     return <SignUpSuccessMessage />;

@@ -22,7 +22,7 @@ const Footer: React.FC = () => {
           <p className="mt-6 text-sm text-greentrail-600 dark:text-greentrail-400 text-center">
             &copy; {currentYear} GreenTrails Global. All rights reserved.
             <br />
-            <span className="text-xs">Age verification required for full access to all features.</span>
+            <span className="text-xs">21+ age verification required for full access to all features.</span>
           </p>
         </div>
       </div>

@@ -56,7 +56,7 @@ export function useAgeVerification() {
       if (!result.success) {
         toast({
           title: "Age verification failed",
-          description: result.message || "You must be 18 or older to access all features.",
+          description: result.message || "You must be 21 or older to access all features.",
           variant: "destructive",
         });
       }

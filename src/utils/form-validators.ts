@@ -125,7 +125,7 @@ export const validateDateOfBirth = (day: string, month: string, year: string): {
       return { 
         isValid: false, 
         birthDate, 
-        message: `You must be 21 or older to use this app. You are currently ${age} years old.` 
+        message: `You must be 21 or older to access GreenTrails. You are currently ${age} years old.` 
       };
     }
     

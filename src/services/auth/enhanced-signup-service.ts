@@ -15,11 +15,12 @@ export const EnhancedSignUpService = {
     try {
       console.log('Enhanced signup process starting for:', data.email);
 
-      // Step 1: Create auth user with metadata
+      // Step 1: Create auth user with metadata and email verification
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
         options: {
+          emailRedirectTo: `${window.location.origin}/auth?verified=true`,
           data: {
             full_name: data.full_name,
             username: data.username,

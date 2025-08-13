@@ -10,8 +10,8 @@ import { useAuth } from '@/hooks/use-auth';
 interface LeaderboardEntry {
   user_id: string;
   user: {
-    email: string;
     full_name?: string;
+    username?: string;
     avatar_url?: string;
   };
   total_trails: number;
@@ -170,7 +170,7 @@ const Leaderboards: React.FC = () => {
   const LeaderboardTable = ({ entries, type }: { entries: LeaderboardEntry[], type: string }) => (
     <div className="space-y-2">
       {entries.map((entry) => {
-        const userName = entry.user.full_name || entry.user.email.split('@')[0];
+        const userName = entry.user.full_name || entry.user.username || 'Anonymous';
         const isCurrentUser = user?.id === entry.user_id;
         
         return (

@@ -673,6 +673,172 @@ export type Database = {
         }
         Relationships: []
       }
+      product_images: {
+        Row: {
+          alt_text: string | null
+          created_at: string
+          id: string
+          image_type: string | null
+          image_url: string
+          product_id: string
+          sort_order: number | null
+        }
+        Insert: {
+          alt_text?: string | null
+          created_at?: string
+          id?: string
+          image_type?: string | null
+          image_url: string
+          product_id: string
+          sort_order?: number | null
+        }
+        Update: {
+          alt_text?: string | null
+          created_at?: string
+          id?: string
+          image_type?: string | null
+          image_url?: string
+          product_id?: string
+          sort_order?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_images_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_variations: {
+        Row: {
+          additional_price: number | null
+          created_at: string
+          id: string
+          is_available: boolean | null
+          metadata: Json | null
+          product_id: string
+          stock_quantity: number | null
+          variation_label: string
+          variation_type: string
+          variation_value: string
+        }
+        Insert: {
+          additional_price?: number | null
+          created_at?: string
+          id?: string
+          is_available?: boolean | null
+          metadata?: Json | null
+          product_id: string
+          stock_quantity?: number | null
+          variation_label: string
+          variation_type: string
+          variation_value: string
+        }
+        Update: {
+          additional_price?: number | null
+          created_at?: string
+          id?: string
+          is_available?: boolean | null
+          metadata?: Json | null
+          product_id?: string
+          stock_quantity?: number | null
+          variation_label?: string
+          variation_type?: string
+          variation_value?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_variations_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          category: string
+          created_at: string
+          cultural_story: string | null
+          cultures: string[] | null
+          currency: string
+          full_description: string | null
+          heritage: Json | null
+          id: string
+          is_active: boolean | null
+          is_featured: boolean | null
+          materials: string[] | null
+          name: string
+          occasions: string[] | null
+          original_price: number | null
+          price: number
+          seo_description: string | null
+          seo_keywords: string[] | null
+          seo_title: string | null
+          short_description: string | null
+          slug: string
+          sort_order: number | null
+          specifications: Json | null
+          stock_quantity: number | null
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          cultural_story?: string | null
+          cultures?: string[] | null
+          currency?: string
+          full_description?: string | null
+          heritage?: Json | null
+          id?: string
+          is_active?: boolean | null
+          is_featured?: boolean | null
+          materials?: string[] | null
+          name: string
+          occasions?: string[] | null
+          original_price?: number | null
+          price: number
+          seo_description?: string | null
+          seo_keywords?: string[] | null
+          seo_title?: string | null
+          short_description?: string | null
+          slug: string
+          sort_order?: number | null
+          specifications?: Json | null
+          stock_quantity?: number | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          cultural_story?: string | null
+          cultures?: string[] | null
+          currency?: string
+          full_description?: string | null
+          heritage?: Json | null
+          id?: string
+          is_active?: boolean | null
+          is_featured?: boolean | null
+          materials?: string[] | null
+          name?: string
+          occasions?: string[] | null
+          original_price?: number | null
+          price?: number
+          seo_description?: string | null
+          seo_keywords?: string[] | null
+          seo_title?: string | null
+          short_description?: string | null
+          slug?: string
+          sort_order?: number | null
+          specifications?: Json | null
+          stock_quantity?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -2057,6 +2223,10 @@ export type Database = {
         Args: { geom1: unknown; geom2: unknown }
         Returns: boolean
       }
+      generate_product_slug: {
+        Args: { product_name: string }
+        Returns: string
+      }
       geography: {
         Args: { "": string } | { "": unknown }
         Returns: unknown
@@ -2281,6 +2451,12 @@ export type Database = {
         Args: { "": string }
         Returns: unknown
       }
+      get_product_by_slug: {
+        Args: { product_slug: string }
+        Returns: {
+          product_data: Json
+        }[]
+      }
       get_proj4_from_srid: {
         Args: { "": number }
         Returns: string
@@ -2446,7 +2622,7 @@ export type Database = {
         Args:
           | { tbl_oid: unknown; use_typmod?: boolean }
           | { use_typmod?: boolean }
-        Returns: string
+        Returns: number
       }
       postgis_addbbox: {
         Args: { "": unknown }

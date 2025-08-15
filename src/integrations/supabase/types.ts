@@ -1865,6 +1865,15 @@ export type Database = {
       }
     }
     Views: {
+      app_geometry_metadata: {
+        Row: {
+          column_type: string | null
+          geometry_column: unknown | null
+          schema_name: string | null
+          table_name: unknown | null
+        }
+        Relationships: []
+      }
       geography_columns: {
         Row: {
           coord_dimension: number | null

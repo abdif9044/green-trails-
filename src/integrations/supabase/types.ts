@@ -2532,6 +2532,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      is_service_role: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       json: {
         Args: { "": unknown }
         Returns: Json
@@ -3861,6 +3865,15 @@ export type Database = {
           result: string
           table_name: string
           test_type: string
+        }[]
+      }
+      test_trail_insert_permissions: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          auth_uid: string
+          can_insert: boolean
+          current_user_role: string
+          is_service_role: boolean
         }[]
       }
       text: {

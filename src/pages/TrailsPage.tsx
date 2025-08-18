@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { Loading } from '@/components/Loading';
+import { useScrollAnimation } from '@/hooks/use-scroll-animation';
 import { 
   Mountain, 
   MapPin, 
@@ -122,69 +123,78 @@ const TrailsPage: React.FC = () => {
 
         {/* Trail Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredTrails.map((trail) => (
-            <Card key={trail.id} className="border-green-200 dark:border-green-800 hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <div className="flex justify-between items-start">
-                  <CardTitle className="text-lg">{trail.name}</CardTitle>
-                  {trail.rating && (
-                    <div className="flex items-center gap-1">
-                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                      <span className="text-sm text-gray-600">{trail.rating.toFixed(1)}</span>
-                    </div>
-                  )}
-                </div>
-                <CardDescription className="flex items-center gap-1">
-                  <MapPin className="h-4 w-4" />
-                  {trail.location}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex gap-2 flex-wrap">
-                    {trail.difficulty && (
-                      <Badge variant={
-                        trail.difficulty === 'easy' ? 'secondary' :
-                        trail.difficulty === 'moderate' ? 'default' : 'destructive'
-                      }>
-                        {trail.difficulty}
-                      </Badge>
-                    )}
-                    {trail.length_miles && (
-                      <Badge variant="outline">
-                        {trail.length_miles} mi
-                      </Badge>
-                    )}
-                    {trail.elevation_gain && (
-                      <Badge variant="outline">
-                        {trail.elevation_gain}ft gain
-                      </Badge>
+          {filteredTrails.map((trail, index) => {
+            const { elementRef, isVisible, animationClass } = useScrollAnimation(index);
+            return (
+              <Card 
+                key={trail.id} 
+                ref={elementRef}
+                className={`border-green-200 dark:border-green-800 hover:shadow-lg transition-all duration-300 ${
+                  isVisible ? animationClass : 'card-hidden'
+                }`}
+              >
+                <CardHeader>
+                  <div className="flex justify-between items-start">
+                    <CardTitle className="text-lg">{trail.name}</CardTitle>
+                    {trail.rating && (
+                      <div className="flex items-center gap-1">
+                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                        <span className="text-sm text-gray-600">{trail.rating.toFixed(1)}</span>
+                      </div>
                     )}
                   </div>
-                  
-                  {trail.description && (
-                    <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2">
-                      {trail.description}
-                    </p>
-                  )}
-
-                  {trail.tags && trail.tags.length > 0 && (
-                    <div className="flex gap-1 flex-wrap">
-                      {trail.tags.slice(0, 3).map((tag, index) => (
-                        <Badge key={index} variant="secondary" className="text-xs">
-                          {tag}
+                  <CardDescription className="flex items-center gap-1">
+                    <MapPin className="h-4 w-4" />
+                    {trail.location}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="flex gap-2 flex-wrap">
+                      {trail.difficulty && (
+                        <Badge variant={
+                          trail.difficulty === 'easy' ? 'secondary' :
+                          trail.difficulty === 'moderate' ? 'default' : 'destructive'
+                        }>
+                          {trail.difficulty}
                         </Badge>
-                      ))}
+                      )}
+                      {trail.length_miles && (
+                        <Badge variant="outline">
+                          {trail.length_miles} mi
+                        </Badge>
+                      )}
+                      {trail.elevation_gain && (
+                        <Badge variant="outline">
+                          {trail.elevation_gain}ft gain
+                        </Badge>
+                      )}
                     </div>
-                  )}
-                  
-                  <Button className="w-full mt-4" variant="outline">
-                    View Details
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                    
+                    {trail.description && (
+                      <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2">
+                        {trail.description}
+                      </p>
+                    )}
+
+                    {trail.tags && trail.tags.length > 0 && (
+                      <div className="flex gap-1 flex-wrap">
+                        {trail.tags.slice(0, 3).map((tag, index) => (
+                          <Badge key={index} variant="secondary" className="text-xs">
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                    
+                    <Button className="w-full mt-4" variant="outline">
+                      View Details
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
 
         {filteredTrails.length === 0 && !isLoading && (

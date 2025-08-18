@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { MapPin, Clock, TrendingUp } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useScrollAnimation } from '@/hooks/use-scroll-animation';
 
 interface TrailsGridProps {
   trails: Trail[];
@@ -14,7 +15,7 @@ interface TrailsGridProps {
   onLoadMore?: () => void;
 }
 
-const TrailCard: React.FC<{ trail: Trail }> = ({ trail }) => {
+const TrailCard: React.FC<{ trail: Trail; index: number }> = ({ trail, index }) => {
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
       case 'easy': return 'bg-green-100 text-green-800';
@@ -24,13 +25,20 @@ const TrailCard: React.FC<{ trail: Trail }> = ({ trail }) => {
     }
   };
 
+  const { elementRef, isVisible, animationClass } = useScrollAnimation(index);
+  
   const handleTrailClick = () => {
     console.log(`TrailsGrid: Navigating to trail ${trail.id}`);
   };
 
   return (
     <Link to={`/trail/${trail.id}`} onClick={handleTrailClick}>
-      <Card className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">
+      <Card 
+        ref={elementRef}
+        className={`overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer ${
+          isVisible ? animationClass : 'card-hidden'
+        }`}
+      >
         <div className="aspect-video bg-gray-200 overflow-hidden">
           <img 
             src={trail.imageUrl} 
@@ -98,10 +106,11 @@ const TrailsGrid: React.FC<TrailsGridProps> = ({
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {trails.map((trail) => (
+        {trails.map((trail, index) => (
           <TrailCard
             key={trail.id}
             trail={trail}
+            index={index}
           />
         ))}
       </div>

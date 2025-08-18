@@ -2460,6 +2460,24 @@ export type Database = {
         Args: { "": string }
         Returns: unknown
       }
+      get_current_user_profile: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string | null
+          email: string | null
+          full_name: string | null
+          id: string
+          is_admin: boolean | null
+          is_age_verified: boolean | null
+          updated_at: string | null
+          user_id: string
+          username: string | null
+          website_url: string | null
+          year_of_birth: number | null
+        }
+      }
       get_product_by_slug: {
         Args: { product_slug: string }
         Returns: {
@@ -2560,6 +2578,16 @@ export type Database = {
       log_security_error: {
         Args: { context_data?: Json; error_message: string; error_type: string }
         Returns: undefined
+      }
+      log_security_event: {
+        Args: {
+          p_event_data?: Json
+          p_event_type: string
+          p_ip_address?: unknown
+          p_user_agent?: string
+          p_user_id?: string
+        }
+        Returns: string
       }
       longtransactionsenabled: {
         Args: Record<PropertyKey, never>

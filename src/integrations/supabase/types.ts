@@ -1929,7 +1929,7 @@ export type Database = {
           state: string | null
         }
         Insert: {
-          blurb?: never
+          blurb?: string | null
           cover_photo?: never
           difficulty?: Database["public"]["Enums"]["trail_difficulty"] | null
           id?: string | null
@@ -1940,7 +1940,7 @@ export type Database = {
           state?: string | null
         }
         Update: {
-          blurb?: never
+          blurb?: string | null
           cover_photo?: never
           difficulty?: Database["public"]["Enums"]["trail_difficulty"] | null
           id?: string | null
@@ -2487,20 +2487,6 @@ export type Database = {
       get_proj4_from_srid: {
         Args: { "": number }
         Returns: string
-      }
-      get_trail_preview: {
-        Args: { p_id: string }
-        Returns: {
-          blurb: string | null
-          cover_photo: string | null
-          difficulty: Database["public"]["Enums"]["trail_difficulty"] | null
-          id: string | null
-          length_miles: number | null
-          location: string | null
-          name: string | null
-          rating: number | null
-          state: string | null
-        }[]
       }
       get_trail_recommendations: {
         Args: {

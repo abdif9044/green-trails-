@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">GreenTrails</string>
+    <string name="title_activity_main">GreenTrails</string>
+    <string name="package_name">app.greentrails.hiking</string>
+    <string name="custom_url_scheme">app.greentrails.hiking</string>
+</resources>
